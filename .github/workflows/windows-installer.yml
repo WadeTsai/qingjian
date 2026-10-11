@@ -78,12 +78,13 @@ jobs:
           fi
           exe="$(ls target/installer/*.exe | head -1)"
           sha="$(sha256sum "$exe" | cut -d' ' -f1)"
-          notes="青簡 Windows 安裝包（繁體中文）${version}，建自 ${GITHUB_SHA}。
-
-- 檔案：$(basename "$exe")
-- SHA-256：${sha}
-- 同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下選用「青簡」預設輸出繁體字。
-- 測試版沒有程式碼簽章，SmartScreen 會攔：點「其他資訊 → 仍要執行」。安裝目錄請保持預設的 C:\\Program Files\\Qingjian。"
+          notes="$(printf '%s\n' \
+            "青簡 Windows 安裝包（繁體中文）${version}，建自 ${GITHUB_SHA}。" \
+            "" \
+            "- 檔案：$(basename "$exe")" \
+            "- SHA-256：${sha}" \
+            "- 同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下選用「青簡」預設輸出繁體字。" \
+            "- 測試版沒有程式碼簽章，SmartScreen 會攔：點「其他資訊 → 仍要執行」。安裝目錄請保持預設的 C:\\Program Files\\Qingjian。")"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$tag" "$exe" --repo "$GITHUB_REPOSITORY" --clobber
           else

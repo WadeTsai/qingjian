@@ -34,7 +34,7 @@ impl Router {
             english: self.english,
             traditional: self.traditional_output(),
             full_width: self.full_width_for(self.english),
-            scheme: scheme_name(self.config.scheme, self.config.wubi),
+            scheme: scheme_name(self.scheme(), self.config.wubi),
         }
     }
 

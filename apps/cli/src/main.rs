@@ -320,6 +320,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
     tracing::info!(pinyin = scheme.key(), wubi, "输入方案已启用");
     engine.set_shuangpin(scheme.shuangpin());
     engine.set_zhuyin_mode(scheme == Scheme::Zhuyin);
+    engine.set_zhuyin_layout(config.general.zhuyin_layout());
     // 拼音側關掉且形碼開著才是「只用形碼」；兩邊都關著時留拼音兜底
     engine.set_phonetic(scheme.is_on() || !wubi);
     // 形碼的碼錶由 `--wubi` 顯式給（方案本身只說「用哪套」，碼錶檔案在哪由殼決定）

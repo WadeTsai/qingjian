@@ -69,8 +69,8 @@ Name: "cht"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 [Messages]
 ; 完成頁：DLL 會裝進每個應用程序，裝之前就開著的應用要用新版必須重啟（見檔案頭「升級」）。
 ; 這是最容易被誤解成「設定/新版沒生效」的一點，所以放在完成頁明說。
-chs.FinishedLabel=安装完成。请注销后重新登录（或重启电脑），青简才会在所有应用里生效。%n%n不方便注销的话，先关掉再重新打开要打字的应用也可以。%n%n青简同时登记在「中文(简体)」与「中文(台灣)」两种语言下；在「中文(台灣)」下选用的「青簡」默认输出繁体。
-cht.FinishedLabel=安裝完成。請登出後重新登入（或重新啟動電腦），青簡才會在所有應用程式裡生效。%n%n不方便登出的話，先關掉再重新開啟要打字的應用程式也可以。%n%n青簡同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下選用的「青簡」預設輸出繁體字，從「設定 → 時間與語言 → 語言與地區 → 中文(台灣) → 語言選項 → 新增鍵盤」加入。
+chs.FinishedLabel=安装完成。请注销后重新登录（或重启电脑），青简才会在所有应用里生效。%n%n不方便注销的话，先关掉再重新打开要打字的应用也可以。%n%n青简同时登记在「中文(简体)」与「中文(台灣)」两种语言下；在「中文(台灣)」下有「青簡」（拼音）与「青簡注音」（注音）两个，都默认输出繁体。
+cht.FinishedLabel=安裝完成。請登出後重新登入（或重新啟動電腦），青簡才會在所有應用程式裡生效。%n%n不方便登出的話，先關掉再重新開啟要打字的應用程式也可以。%n%n青簡同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下有「青簡」（拼音）與「青簡注音」（注音，鍵盤排列可在設定裡選標準或倚天）兩個，都預設輸出繁體字，從「設定 → 時間與語言 → 語言與地區 → 中文(台灣) → 語言選項 → 新增鍵盤」加入。
 
 [CustomMessages]
 chs.StatusAppContainer=配置应用容器权限…
@@ -134,7 +134,7 @@ Name: "{commonstartup}\青简 Server"; Filename: "{app}\qingjian-server.exe"; Wo
 ; ① UWP/AppContainer 應用要能讀安裝目錄才能載入 DLL（*S-1-15-2-1 = ALL APPLICATION PACKAGES，按 SID 與語言無關）。
 Filename: "{sys}\icacls.exe"; Parameters: """{app}"" /grant *S-1-15-2-1:(OI)(CI)RX /T /C /Q"; \
   Flags: runhidden waituntilterminated; StatusMsg: "{cm:StatusAppContainer}"
-; ② 註冊文本服務（寫 HKCR + 圖示到 %ProgramData%\Qingjian\qingjian.ico；語言 profile 在「中文(簡體)」與「中文(台灣)」下各一個，
+; ② 註冊文本服務（寫 HKCR + 圖示到 %ProgramData%\Qingjian\qingjian.ico；語言 profile 在「中文(簡體)」下一個、「中文(台灣)」下兩個（拼音 / 注音），
 ;    由 DLL 的 DllRegisterServer 登記）。註冊的是本版本的 DLL，
 ;    InprocServer32 指向新檔案；舊版本的 DLL **不能** regsvr32 /u（那會把整個 CLSID 登出掉）。
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\{#TsfDll}"""; \

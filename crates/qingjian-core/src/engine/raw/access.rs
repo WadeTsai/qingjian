@@ -11,9 +11,11 @@ impl Engine {
     /// 未知鍵沿用解碼器聚到末尾的行為，游標跟隨其輸出位置，可能不單調。
     /// 首位始終為 0，末位始終為完整文本末尾。
     pub fn raw_preedit(&self) -> RawPreedit {
-        if self.is_zhuyin_mode() && !self.english_mode {
+        if let Some(layout) = self.zhuyin
+            && !self.english_mode
+        {
             let (decoded, cursor_bytes) =
-                zhuyin::decode_at(self.composition.text(), self.composition.cursor());
+                zhuyin::decode_at(layout, self.composition.text(), self.composition.cursor());
             RawPreedit {
                 text: decoded.marked(),
                 cursor_bytes,

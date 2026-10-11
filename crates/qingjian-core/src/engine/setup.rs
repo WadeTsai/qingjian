@@ -77,16 +77,35 @@ impl Engine {
         self.aux_show = show;
     }
 
-    /// 設定是否啟用注音模式。開啟後鍵盤輸入按大千佈局解析。
     /// 學習開關（`[general] learning`）：關掉後不再記詞頻、使用者詞、個人 n-gram 與敲錯表，已學的照常參與排序；
     /// 私密輸入是另一個獨立的開關（[`Self::set_private`]）。
     pub fn set_learning(&mut self, enabled: bool) {
         self.learner.set_disabled(!enabled);
     }
 
+    /// 設定是否啟用注音模式。開啟後鍵盤輸入按當前排列（[`Self::set_zhuyin_layout`]）解析。
     pub fn set_zhuyin_mode(&mut self, on: bool) {
-        self.zhuyin = on;
+        self.zhuyin = on.then_some(self.zhuyin_layout);
         self.forget_span_cache();
+    }
+
+    /// 換注音鍵盤排列（`[general] zhuyin_layout`）：大千 / 倚天。注音關著時只記下，開啟時按它解。
+    pub fn set_zhuyin_layout(&mut self, layout: ZhuyinLayout) {
+        self.zhuyin_layout = layout;
+        if self.zhuyin.is_some() {
+            self.zhuyin = Some(layout);
+            self.forget_span_cache();
+        }
+    }
+
+    /// 當前的注音鍵盤排列（注音關著時也有值）。
+    pub fn zhuyin_layout(&self) -> ZhuyinLayout {
+        self.zhuyin_layout
+    }
+
+    /// 注音模式下這個鍵是不是符號 / 聲調鍵（殼據此把數字、標點收進緩衝區）；注音關著時一律不是，空格另算。
+    pub fn is_zhuyin_key(&self, c: char) -> bool {
+        self.zhuyin.is_some_and(|layout| layout.is_key(c))
     }
 
     /// 設定是否啟用繁體輸出模式。
@@ -102,7 +121,7 @@ impl Engine {
 
     /// 目前是否處於注音模式。
     pub fn is_zhuyin_mode(&self) -> bool {
-        self.zhuyin
+        self.zhuyin.is_some()
     }
 
     /// 換形碼碼錶（五筆），`None` 回到拼音的諸方案。編碼與拼音是兩套鍵，糾錯快取一併清掉。
@@ -137,14 +156,14 @@ impl Engine {
     /// 判斷注音模式下目前是否還需要輸入聲調。
     /// 供殼（平臺層）用來判斷空白鍵是應該進緩衝區作為聲調，還是直接用來選詞。
     pub fn zhuyin_needs_tone(&self) -> bool {
-        if !self.zhuyin {
+        let Some(layout) = self.zhuyin else {
             return false;
-        }
+        };
         let raw = self.composition.text();
         if raw.is_empty() {
             return false;
         }
-        let decoded = crate::zhuyin::decode(raw);
+        let decoded = crate::zhuyin::decode(layout, raw);
         if let Some(last) = decoded.units().last() {
             !last.complete && last.pinyin != "'"
         } else {
@@ -190,7 +209,7 @@ impl Engine {
     pub fn takes_mode_letter(&self, c: char) -> bool {
         let modes = self.modes();
         (self.shuangpin.is_some() || self.mixed())
-            && !self.zhuyin
+            && self.zhuyin.is_none()
             && (c == modes.expression || c == modes.question)
     }
 
@@ -201,8 +220,8 @@ impl Engine {
 
     /// 雙拼開著時把一段鍵解成全拼；全拼下為 `None`，呼叫方原樣用鍵。
     pub(super) fn decode(&self, keys: &str) -> Option<EngineDecoded> {
-        if self.zhuyin {
-            Some(EngineDecoded::Zhuyin(crate::zhuyin::decode(keys)))
+        if let Some(layout) = self.zhuyin {
+            Some(EngineDecoded::Zhuyin(crate::zhuyin::decode(layout, keys)))
         } else {
             self.shuangpin
                 .map(|scheme| EngineDecoded::Shuangpin(scheme.decode(keys)))

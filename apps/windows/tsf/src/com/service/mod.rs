@@ -32,6 +32,7 @@ use super::key::KeyTap;
 use super::mode::ModeState;
 use super::mode::sink::Advice;
 use super::poll::PollTimer;
+use super::profile::ProfileFlags;
 use crate::client::EngineClient;
 use crate::client::pipe::PipeStream;
 
@@ -96,8 +97,8 @@ pub struct TextService {
     /// 啟用後一小段時間內忽略轉換模式 compartment 的變化，見 [`TextService_Impl::sync_from_conversion_mode`]。
     conversion_guard_until: Cell<Option<Instant>>,
 
-    /// 上次報給 Server 的「本執行緒用的是繁體 profile」；`None` 是這條連線上還沒報過（見 [`profile`]）。
-    profile_traditional: Cell<Option<bool>>,
+    /// 上次報給 Server 的本執行緒 profile 的輸入行為（簡 / 繁、注音與否）；`None` 是這條連線上還沒報過（見 [`profile`]）。
+    profile_flags: Cell<Option<ProfileFlags>>,
 }
 
 thread_local! {
@@ -159,10 +160,10 @@ pub(super) fn on_indicator_state(state: IndicatorState) {
     with_active(|service| service.indicator_state.set(state));
 }
 
-/// 本執行緒切到了青簡的某個語言 profile（見 [`crate::com::profile`]）：是繁體那個就讓 Server 出繁體。
+/// 本執行緒切到了青簡的某個語言 profile（見 [`crate::com::profile`]）：把它的輸入行為（簡 / 繁、注音與否）報給 Server。
 /// 啟用過程中來的通知到不了這裡（`ACTIVE` 還沒設），那一次由 `connect` 自己查。
-pub(super) fn on_profile_activated(traditional: bool) {
-    with_active(|service| service.adopt_profile(traditional));
+pub(super) fn on_profile_activated(flags: ProfileFlags) {
+    with_active(|service| service.adopt_profile(flags));
 }
 
 impl TextService {
@@ -188,7 +189,7 @@ impl TextService {
             input_settings: Cell::new(None),
             indicator_state: Cell::new(IndicatorState::default()),
             conversion_guard_until: Cell::new(None),
-            profile_traditional: Cell::new(None),
+            profile_flags: Cell::new(None),
         }
     }
 }

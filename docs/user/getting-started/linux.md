@@ -66,7 +66,7 @@ apps/linux/scripts/install.sh
 當前預編譯包隨附含章·通變與含章·知微：優先用通變處理拼音整句與糾錯，沒有通變時回退到知微。自己的 `.qjm` 也可放入 `~/.local/share/qingjian/models/` 下對應的模型目錄。`[model] enabled = false` 可關閉本地模型，見 [本地整句模型](../input/local-model.md)。
 
 `[general] shift_letter = "compose"` 讓 Shift 大寫字母參與中文組句，預設 `"passthrough"` 保持臨時英文輸入。
-`scheme = "zhuyin"` 啟用大千注音；雙拼下 `Shift + V` / `Shift + U` 可進入表示式 / 碼點輸入。
+`scheme = "zhuyin"` 啟用注音（鍵盤排列 `zhuyin_layout = "dachen"` 標準或 `"eten"` 倚天）；雙拼下 `Shift + V` / `Shift + U` 可進入表示式 / 碼點輸入。
 數字沒有對應候選時繼續輸入，英文直輸內容以空格結束時保留空格；英文候選開啟後可用數字、翻頁鍵、空格或 Tab 選詞。
 具體規則見 [按鍵與快捷鍵](keys.md#Linux（Fcitx5）)。
 

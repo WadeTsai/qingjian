@@ -102,7 +102,7 @@ impl Engine {
     /// 日誌裡必須能分辨這幾種：形碼那些行的「拼音」列其實是編碼，回放要照著它裝配引擎，
     /// 混輸的行兩邊都要裝配。`wubi` 單獨出現是「只用形碼」，不是「全拼 + 五筆」。
     pub(super) fn scheme_key(&self) -> String {
-        let phonetic = if self.zhuyin {
+        let phonetic = if self.zhuyin.is_some() {
             "zhuyin".to_owned()
         } else {
             self.shuangpin
@@ -229,8 +229,10 @@ impl Engine {
         self.note_edit();
         let cursor = self.composition.cursor();
         let before = &self.composition.text()[..cursor];
-        let plain =
-            self.raw_mode() || self.expression_mode() || self.question_mode() || self.zhuyin;
+        let plain = self.raw_mode()
+            || self.expression_mode()
+            || self.question_mode()
+            || self.zhuyin.is_some();
         let len = unit_len_before(before, self.shuangpin.is_some(), plain);
         self.composition.delete_before_cursor(len)
     }
@@ -239,8 +241,10 @@ impl Engine {
     pub fn move_cursor_syllable_left(&mut self) -> bool {
         let cursor = self.composition.cursor();
         let before = &self.composition.text()[..cursor];
-        let plain =
-            self.raw_mode() || self.expression_mode() || self.question_mode() || self.zhuyin;
+        let plain = self.raw_mode()
+            || self.expression_mode()
+            || self.question_mode()
+            || self.zhuyin.is_some();
         let len = unit_len_before(before, self.shuangpin.is_some(), plain);
         len > 0 && (0..len).all(|_| self.composition.move_left())
     }
@@ -249,8 +253,10 @@ impl Engine {
     pub fn move_cursor_syllable_right(&mut self) -> bool {
         let cursor = self.composition.cursor();
         let after = &self.composition.text()[cursor..];
-        let plain =
-            self.raw_mode() || self.expression_mode() || self.question_mode() || self.zhuyin;
+        let plain = self.raw_mode()
+            || self.expression_mode()
+            || self.question_mode()
+            || self.zhuyin.is_some();
         let len = unit_len_after(after, self.shuangpin.is_some(), plain);
         len > 0 && (0..len).all(|_| self.composition.move_right())
     }

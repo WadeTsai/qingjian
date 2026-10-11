@@ -34,6 +34,8 @@ use std::time::{Duration, Instant};
 
 use qingjian_dictionary::{AuxCodeLookup, CodeTable, Dictionary, Match, WordList};
 
+use crate::zhuyin::ZhuyinLayout;
+
 pub use alignment::Alignment;
 pub use annotation::AnnotationReport;
 pub use aux_code::is_valid_aux_code_key;
@@ -249,8 +251,11 @@ pub struct Engine {
     /// 雙拼方案下 preedit 顯示原始按鍵（如 `ljse`）還是展開成全拼（`lan'se`）。
     shuangpin_raw_preedit: bool,
 
-    /// 注音模式開關，開著時緩衝區裡是注音大千鍵位，查詞前先解成拼音（見 [`crate::zhuyin`]）。
-    zhuyin: bool,
+    /// 注音模式：`Some` 時緩衝區裡是注音鍵位，按這套排列解成符號再解成拼音（見 [`crate::zhuyin`]）；`None` 關。
+    zhuyin: Option<ZhuyinLayout>,
+
+    /// 注音鍵盤排列（`[general] zhuyin_layout`）。單獨記一份：關掉再開注音時排列不丟。
+    zhuyin_layout: ZhuyinLayout,
 
     /// 形碼碼錶（五筆）。`Some` 時編碼參與查詢，按字首查表（見 [`Engine::query_code`]）。
     code: Option<CodeTable>,
@@ -445,7 +450,8 @@ impl Engine {
             fuzzy: FuzzyRules::default(),
             shuangpin: None,
             shuangpin_raw_preedit: false,
-            zhuyin: false,
+            zhuyin: None,
+            zhuyin_layout: ZhuyinLayout::default(),
             code: None,
             phonetic: true,
             emoji: None,
@@ -463,17 +469,17 @@ impl Engine {
 }
 
 /// 緩衝區是否是英文直輸段：含拼音鍵與 `'` 以外的字元（`no-way`、`a.b`），且不是表示式 / 問字模式。
-/// 微軟 / 搜狗雙拼下 `;` 也是拼音鍵。
-fn is_raw(text: &str, modes: ModeKeys, shuangpin: Option<Scheme>, zhuyin: bool) -> bool {
-    let is_key = |c: char| {
-        if zhuyin {
-            crate::zhuyin::layout::map_key(c).is_some() || c == ' '
-        } else {
-            match shuangpin {
-                Some(scheme) => scheme.is_key(c),
-                None => c.is_ascii_lowercase(),
-            }
-        }
+/// 微軟 / 搜狗雙拼下 `;` 也是拼音鍵；注音下按排列的鍵位表算，空格是一聲。
+fn is_raw(
+    text: &str,
+    modes: ModeKeys,
+    shuangpin: Option<Scheme>,
+    zhuyin: Option<ZhuyinLayout>,
+) -> bool {
+    let is_key = |c: char| match (zhuyin, shuangpin) {
+        (Some(layout), _) => layout.map_key(c).is_some(),
+        (None, Some(scheme)) => scheme.is_key(c),
+        (None, None) => c.is_ascii_lowercase(),
     };
     !text.is_empty()
         && !modes.is_expression(text, zhuyin)

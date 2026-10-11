@@ -58,5 +58,10 @@
    - TSF DLL 同時登記「中文(简体)」0x0804 的「青简」與「中文(台灣)」0x0404 的「青簡」兩個語言 profile（`apps/windows/tsf/src/com/profile/language.rs`），
      繁體中文系統的使用者在自己的語言下就能加入；「青簡」下不用開開關就輸出繁體（DLL 以 `ClientMessage::Profile` 報給 Server，按會話生效）。
    - 安裝程式隨系統語言顯示簡體或繁體介面（Inno Setup 7.0.2 起自帶兩份翻譯）。
-3. **[後續] 實作 Rust 原生的台灣注音資料打包工具 (`qingjian-dict-convert`)**：
+3. **[已完成] 「中文(台灣)」下的「青簡注音」profile**：
+   - 同一語言下再登記一個注音的 profile（與微軟在同一語言下分「注音」「拼音」兩個輸入法一樣），注音使用者在輸入法列表裡直接選，
+     鍵盤排列仿微軟注音的「鍵盤配置」做成設定 `[general] zhuyin_layout`（標準（大千）/ 倚天，Core 的 `ZhuyinLayout`），
+     不必進設定改 `[general] scheme`。DLL 以 `ClientMessage::Profile { traditional: true, zhuyin: true }` 報給 Server，Server 按會話把引擎切成注音；
+     狀態條、候選窗主題顯示注音。Core 的注音解析沿用既有的 `crates/qingjian-core/src/zhuyin`，讀音仍按底層簡體詞庫（下一項才解決台灣審定音）。
+4. **[後續] 實作 Rust 原生的台灣注音資料打包工具 (`qingjian-dict-convert`)**：
    - 將原有的 Python 腳本雛形，用 Rust 改寫並整合進 `tools/dict-convert` 中，釋出官方的「台灣注音資料包」與生成工具。

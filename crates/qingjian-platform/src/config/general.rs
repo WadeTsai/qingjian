@@ -1,4 +1,4 @@
-use qingjian_core::ShuangpinScheme;
+use qingjian_core::{ShuangpinScheme, ZhuyinLayout};
 use serde::{Deserialize, Serialize};
 
 use super::scheme::{Scheme, scheme_label};
@@ -121,6 +121,10 @@ pub struct GeneralConfig {
     /// 預設關（展開成全拼音節）；常在雙拼中打英文詞或需要核對按鍵的人可開啟。
     pub shuangpin_raw_preedit: bool,
 
+    /// 注音鍵盤排列：`dachen`（標準，預設）/ `eten`（倚天），見 [`ZhuyinLayout`]。方案選注音時與 Windows
+    /// 「中文(台灣)」下的「青簡注音」都按它解鍵；寫得不認識時按大千並警告。
+    pub zhuyin_layout: String,
+
     /// 形碼側方案：空串為關，`wubi86` 為五筆（86 版）。**與拼音同時開著就是混輸**，見 [`Self::mixed`]。
     pub wubi: String,
 
@@ -176,6 +180,7 @@ impl Default for GeneralConfig {
             aux_code_keep_empty: true,
             scheme: String::new(),
             shuangpin_raw_preedit: false,
+            zhuyin_layout: String::new(),
             wubi: String::new(),
             shuangpin: None,
             zhuyin: None,
@@ -256,9 +261,23 @@ impl GeneralConfig {
         self.scheme().shuangpin()
     }
 
-    /// 當前方案是不是大千注音。
+    /// 當前方案是不是注音。
     pub fn is_zhuyin(&self) -> bool {
         self.scheme() == Scheme::Zhuyin
+    }
+
+    /// 注音鍵盤排列；沒寫或空串是大千，認不出來時警告並按大千。
+    pub fn zhuyin_layout(&self) -> ZhuyinLayout {
+        match self.zhuyin_layout.parse() {
+            Ok(layout) => layout,
+            Err(_) => {
+                tracing::warn!(
+                    key = self.zhuyin_layout.trim(),
+                    "不认识的注音键盘排列，按大千"
+                );
+                ZhuyinLayout::Dachen
+            }
+        }
     }
 
     /// 形碼側（五筆）開沒開。`wubi` 認 `wubi86`；認不出來時警告並按關。
@@ -373,6 +392,21 @@ mod tests {
     #[test]
     fn aux_code_keep_empty_defaults_on() {
         assert!(GeneralConfig::default().aux_code_keep_empty);
+    }
+
+    /// 注音鍵盤排列（`[general] zhuyin_layout`）預設大千，認不出來的寫法也退回大千。
+    #[test]
+    fn zhuyin_layout_defaults_to_dachen_and_unknown_names_fall_back() {
+        let mut general = GeneralConfig::default();
+        assert_eq!(general.zhuyin_layout(), ZhuyinLayout::Dachen);
+        general.zhuyin_layout = "eten".to_owned();
+        assert_eq!(general.zhuyin_layout(), ZhuyinLayout::Eten);
+        general.zhuyin_layout = " standard ".to_owned();
+        assert_eq!(general.zhuyin_layout(), ZhuyinLayout::Dachen);
+        general.zhuyin_layout = "hsu".to_owned();
+        assert_eq!(general.zhuyin_layout(), ZhuyinLayout::Dachen);
+        let general: GeneralConfig = toml::from_str("zhuyin_layout = \"eten\"\n").unwrap();
+        assert_eq!(general.zhuyin_layout(), ZhuyinLayout::Eten);
     }
 
     #[test]

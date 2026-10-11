@@ -389,6 +389,7 @@ fn traditional_profile_outputs_traditional_without_the_config_switch() {
         router.handle(ClientMessage::Profile {
             session: SESSION,
             traditional: true,
+            zhuyin: false,
         }),
         None
     );
@@ -414,6 +415,7 @@ fn traditional_profile_outputs_traditional_without_the_config_switch() {
     let _ = router.handle(ClientMessage::Profile {
         session: SESSION,
         traditional: false,
+        zhuyin: false,
     });
     let (_, _, frame) = type_letters(&mut router, "kaifa");
     assert_eq!(candidate_texts(&frame)[0], "开发");
@@ -427,6 +429,7 @@ fn switching_profile_mid_composition_resets_it() {
     let _ = router.handle(ClientMessage::Profile {
         session: SESSION,
         traditional: true,
+        zhuyin: false,
     });
     let (_, _, frame) = type_letters(&mut router, "fa");
     assert_eq!(preedit(&frame), "fa");
@@ -441,6 +444,7 @@ fn traditional_profile_is_per_session() {
     let _ = router.handle(ClientMessage::Profile {
         session: other,
         traditional: true,
+        zhuyin: false,
     });
     let (_, _, frame) = type_letters(&mut router, "kaifa");
     assert_eq!(candidate_texts(&frame)[0], "开发");

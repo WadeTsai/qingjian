@@ -1,20 +1,21 @@
-//! 按既有注音規則解碼，同時對映輸入游標，不改變單元或尾串的順序。
+//! 按既有注音規則解碼，同時對映輸入游標，不改變單元或尾串的順序。按鍵按哪套排列解看 [`ZhuyinLayout`]。
 use super::{cursor::Cursor, result::Decoded, unit::Unit};
-use crate::zhuyin::{layout::map_key, syllable::ZhuyinSyllable};
+use crate::zhuyin::{layout::ZhuyinLayout, syllable::ZhuyinSyllable};
 
-pub fn decode(input: &str) -> Decoded {
-    decode_at(input, input.len()).0
+pub fn decode(layout: ZhuyinLayout, input: &str) -> Decoded {
+    decode_at(layout, input, input.len()).0
 }
 
-pub(crate) fn decode_at(input: &str, cursor: usize) -> (Decoded, usize) {
+pub(crate) fn decode_at(layout: ZhuyinLayout, input: &str, cursor: usize) -> (Decoded, usize) {
     let mut units = Vec::new();
     let mut current = ZhuyinSyllable::new();
     let mut tail = String::new();
-    let mut mapping = Cursor::new(cursor);
+    let mut mapping = Cursor::new(layout, cursor);
     let mut start = 0;
 
     for (offset, c) in input.char_indices() {
-        if c == '\'' {
+        // 倚天排列裡 `'` 是 ㄘ，不再是隔音符；大千下仍是隔音符
+        if c == '\'' && layout.map_key(c).is_none() {
             if !current.is_empty() {
                 push_syllable(&mut units, &mut mapping, start, &current);
                 current = ZhuyinSyllable::new();
@@ -29,7 +30,7 @@ pub(crate) fn decode_at(input: &str, cursor: usize) -> (Decoded, usize) {
             continue;
         }
 
-        if let Some(comp) = map_key(c) {
+        if let Some(comp) = layout.map_key(c) {
             if current.is_empty() {
                 start = offset;
             }

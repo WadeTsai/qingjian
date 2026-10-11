@@ -40,15 +40,17 @@ impl Engine {
 
     /// 日期 / 時間 / 星期這類快捷候選插在本地首選之後：`rq` 首選仍是詞庫裡的詞，快捷寫法緊隨其後。
     pub(super) fn insert_shortcuts(&self, items: &mut Vec<Candidate>, scope: &str) {
-        let expression_char =
-            if self.zhuyin && crate::zhuyin::layout::map_key(self.modes().expression).is_some() {
-                '\0'
-            } else {
-                self.modes().expression
-            };
+        let expression_char = if self
+            .zhuyin
+            .is_some_and(|layout| layout.map_key(self.modes().expression).is_some())
+        {
+            '\0'
+        } else {
+            self.modes().expression
+        };
         // 嗯 的標準音 ng 不是拼音音節（音節表不收嘆詞寫法）；整段正好是 ng 時按快捷候選給它，排第一。
         // 只認全拼：雙拼與注音裡這兩個鍵是別的音
-        if scope == "ng" && self.shuangpin.is_none() && !self.zhuyin {
+        if scope == "ng" && self.shuangpin.is_none() && self.zhuyin.is_none() {
             items.insert(
                 0,
                 Candidate {

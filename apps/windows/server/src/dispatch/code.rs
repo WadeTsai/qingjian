@@ -68,15 +68,17 @@ impl Router {
     /// 啟動時把找好的碼錶路徑交給路由器，並按當前配置裝配一次。
     pub fn configure_code_table(&mut self, table: Option<PathBuf>) {
         self.code_table = table;
+        let scheme = self.scheme();
         apply_scheme(
             &mut self.engine,
-            self.config.scheme,
+            scheme,
             self.config.wubi,
             self.code_table.as_deref(),
         );
     }
 
-    /// 熱載入：方案變了就按同一個路徑重新裝配（不重新找檔案，與本地模型一致）。
+    /// 熱載入與焦點換到另一個 profile 的會話：方案變了就按同一個路徑重新裝配（不重新找檔案，與本地模型一致）。
+    /// 拼音側傳聚焦會話算出來的方案（`Router::scheme`），不直接傳配置的：注音 profile 蓋過配置。
     pub(super) fn reload_code_table(&mut self, pinyin: Scheme, wubi: bool) {
         apply_scheme(&mut self.engine, pinyin, wubi, self.code_table.as_deref());
     }

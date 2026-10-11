@@ -69,7 +69,7 @@ pub struct RouterConfig {
     /// 關掉恢復老行為：標點進英文直輸段。預設開。
     pub punct_commits: bool,
 
-    /// 大千注音（[general] zhuyin）。
+    /// 注音（`[general] scheme = "zhuyin"`）。
     pub zhuyin: bool,
 
     /// 按應用的設定（`[apps]`），按宿主 exe 名認。

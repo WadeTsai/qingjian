@@ -213,8 +213,6 @@ impl Router {
         {
             tracing::warn!(%error, "自定义短语配置未应用，保持原短语");
         }
-        // 拼音側與形碼側一起裝配（雙拼 / 注音 / 混輸都在裡面）
-        self.reload_code_table(config.general.scheme(), config.general.wubi());
         self.engine.set_learning(config.general.learning);
         self.engine.set_mode_keys(config.shortcut.mode);
         self.engine
@@ -231,12 +229,16 @@ impl Router {
             .set_shift_letter_compose(config.general.shift_letter.compose());
         self.engine
             .set_shuangpin_raw_preedit(config.general.shuangpin_raw_preedit);
+        self.engine
+            .set_zhuyin_layout(config.general.zhuyin_layout());
         let previous = self.config.render_settings();
         let themes_stamp = self.config.themes_stamp;
         self.config = RouterConfig::from(config);
         self.config.themes_stamp = themes_stamp;
-        // 繁體輸出要等新配置就位再算：它還看聚焦會話的語言 profile（見 session 的 traditional_output）
+        // 繁體輸出與拼音側方案要等新配置就位再算：它們還看聚焦會話的語言 profile（見 session 的 traditional_output / scheme）。
+        // 拼音側與形碼側一起裝配（雙拼 / 注音 / 混輸都在裡面）
         self.engine.set_traditional_mode(self.traditional_output());
+        self.reload_code_table(self.scheme(), self.config.wubi);
         let settings = self.config.render_settings();
         if settings != previous {
             self.candidates.configure(settings);

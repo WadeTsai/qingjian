@@ -4,7 +4,7 @@ pub use std::path::PathBuf;
 pub use std::sync::{Arc, Mutex};
 
 pub use qingjian_core::sentence::SentenceScorer;
-pub use qingjian_core::{Language, ModeKeys, ShuangpinScheme};
+pub use qingjian_core::{Language, ModeKeys, ShuangpinScheme, ZhuyinLayout};
 pub use qingjian_platform::protocol::{
     ClientMessage, Frame, KeyEvent, KeyModifiers, KeyOutcome, PROTOCOL_VERSION, ScreenRect,
     ServerMessage, SessionId,

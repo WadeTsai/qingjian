@@ -377,3 +377,74 @@ fn self_drawn_window_gets_input_mode() {
     assert!(!mode.english && mode.traditional && mode.full_width);
     assert_eq!(mode.scheme, "小鹤双拼");
 }
+
+/// 「中文(台灣)」下的青簡：DLL 报来繁体 profile，配置没开繁体输出也出繁体候选，自绘窗的输入状态跟着显示繁；
+/// 切回简体 profile 就回简体。
+#[test]
+fn traditional_profile_outputs_traditional_without_the_config_switch() {
+    let mut router = router();
+    let sink = RecordingCandidates::default();
+    router.set_candidate_sink(Box::new(sink.clone()));
+    assert_eq!(
+        router.handle(ClientMessage::Profile {
+            session: SESSION,
+            traditional: true,
+        }),
+        None
+    );
+    let (_, _, frame) = type_letters(&mut router, "kaifa");
+    assert_eq!(candidate_texts(&frame)[0], "開發");
+    let _ = router.handle(ClientMessage::PositionCandidates {
+        session: SESSION,
+        rect: rect(),
+    });
+    assert!(sink.1.lock().unwrap().last().expect("自绘窗收到过帧").traditional);
+    // 上屏的也是繁体
+    let (_, commit, _) = press(&mut router, digit(1));
+    assert_eq!(commit.as_deref(), Some("開發"));
+
+    // 切回「中文(简体)」的青简
+    let _ = router.handle(ClientMessage::Profile {
+        session: SESSION,
+        traditional: false,
+    });
+    let (_, _, frame) = type_letters(&mut router, "kaifa");
+    assert_eq!(candidate_texts(&frame)[0], "开发");
+}
+
+/// 组句中切 profile：组句清掉，不留简繁混着的候选。
+#[test]
+fn switching_profile_mid_composition_resets_it() {
+    let mut router = router();
+    type_letters(&mut router, "kai");
+    let _ = router.handle(ClientMessage::Profile {
+        session: SESSION,
+        traditional: true,
+    });
+    let (_, _, frame) = type_letters(&mut router, "fa");
+    assert_eq!(preedit(&frame), "fa");
+}
+
+/// 繁体 profile 只管报它的那个会话：别的会话仍按配置出简体。
+#[test]
+fn traditional_profile_is_per_session() {
+    let mut router = router();
+    let other = SessionId(2);
+    open_session(&mut router, other, Some("notepad.exe".to_owned()));
+    let _ = router.handle(ClientMessage::Profile {
+        session: other,
+        traditional: true,
+    });
+    let (_, _, frame) = type_letters(&mut router, "kaifa");
+    assert_eq!(candidate_texts(&frame)[0], "开发");
+    // 焦点换到报了繁体的那个会话：它出繁体
+    let mut last = None;
+    for c in "kaifa".chars() {
+        last = Some(key_result(router.handle(ClientMessage::Key {
+            session: other,
+            event: letter(c),
+        })));
+    }
+    let (_, _, frame) = last.expect("typed");
+    assert_eq!(candidate_texts(&frame)[0], "開發");
+}

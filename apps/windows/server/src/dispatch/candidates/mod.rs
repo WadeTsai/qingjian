@@ -32,7 +32,7 @@ impl Router {
     pub(super) fn input_mode(&self) -> Mode {
         Mode {
             english: self.english,
-            traditional: self.config.traditional,
+            traditional: self.traditional_output(),
             full_width: self.full_width_for(self.english),
             scheme: scheme_name(self.config.scheme, self.config.wubi),
         }

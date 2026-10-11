@@ -11,6 +11,7 @@ mod menu;
 mod mode;
 mod next;
 mod processor;
+mod profile;
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -94,6 +95,9 @@ pub struct TextService {
 
     /// 激活后一小段时间内忽略转换模式 compartment 的变化，见 [`TextService_Impl::sync_from_conversion_mode`]。
     conversion_guard_until: Cell<Option<Instant>>,
+
+    /// 上次报给 Server 的「本线程用的是繁体 profile」；`None` 是这条连接上还没报过（见 [`profile`]）。
+    profile_traditional: Cell<Option<bool>>,
 }
 
 thread_local! {
@@ -155,6 +159,12 @@ pub(super) fn on_indicator_state(state: IndicatorState) {
     with_active(|service| service.indicator_state.set(state));
 }
 
+/// 本线程切到了青简的某个语言 profile（见 [`crate::com::profile`]）：是繁体那个就让 Server 出繁体。
+/// 激活过程中来的通知到不了这里（`ACTIVE` 还没设），那一次由 `connect` 自己查。
+pub(super) fn on_profile_activated(traditional: bool) {
+    with_active(|service| service.adopt_profile(traditional));
+}
+
 impl TextService {
     #[allow(clippy::new_without_default)] // 有 lock_module 副作用
     pub fn new() -> Self {
@@ -178,6 +188,7 @@ impl TextService {
             input_settings: Cell::new(None),
             indicator_state: Cell::new(IndicatorState::default()),
             conversion_guard_until: Cell::new(None),
+            profile_traditional: Cell::new(None),
         }
     }
 }

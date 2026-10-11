@@ -190,6 +190,14 @@ impl<S: Read + Write> EngineClient<S> {
         })
     }
 
+    /// 报本线程用的是不是繁体那个语言 profile（「中文(台灣)」下的青簡）；Server 开会话时按简体算。不回话。
+    pub fn profile(&mut self, traditional: bool) -> Result<(), ClientError> {
+        self.send(&ClientMessage::Profile {
+            session: self.session,
+            traditional,
+        })
+    }
+
     /// 任务栏图标右键菜单里点的项交给 Server。不回话。
     pub fn indicator(&mut self, command: IndicatorCommand) -> Result<(), ClientError> {
         self.send(&ClientMessage::Indicator {

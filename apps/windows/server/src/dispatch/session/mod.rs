@@ -27,6 +27,29 @@ impl Router {
             self.engine.set_application(app);
             let private = self.focused_private();
             self.engine.set_private(private);
+            self.engine.set_traditional_mode(self.traditional_output());
+        }
+    }
+
+    /// 聚焦会话该不该出繁体：配置开着就是；关着时看它用的是不是繁体那个语言 profile（Windows「中文(台灣)」下的青簡）。
+    pub(super) fn traditional_output(&self) -> bool {
+        self.config.traditional
+            || self
+                .focused
+                .and_then(|session| self.sessions.get(&session))
+                .is_some_and(|info| info.traditional)
+    }
+
+    /// DLL 报来该会话用的语言 profile 是不是繁体的：记下；是当前会话且变了就清掉组句再切 Engine
+    /// （组句中切 profile 极少见，候选里简繁混着不如从头来）。
+    pub(super) fn set_profile(&mut self, session: SessionId, traditional: bool) {
+        let before = self.traditional_output();
+        if let Some(info) = self.sessions.get_mut(&session) {
+            info.traditional = traditional;
+        }
+        if self.focused == Some(session) && self.traditional_output() != before {
+            self.reset_composition();
+            self.engine.set_traditional_mode(self.traditional_output());
         }
     }
 

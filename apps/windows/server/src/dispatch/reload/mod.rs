@@ -215,7 +215,6 @@ impl Router {
         }
         // 拼音侧与形码侧一起装配（双拼 / 注音 / 混输都在里面）
         self.reload_code_table(config.general.scheme(), config.general.wubi());
-        self.engine.set_traditional_mode(config.general.traditional);
         self.engine.set_learning(config.general.learning);
         self.engine.set_mode_keys(config.shortcut.mode);
         self.engine
@@ -236,6 +235,8 @@ impl Router {
         let themes_stamp = self.config.themes_stamp;
         self.config = RouterConfig::from(config);
         self.config.themes_stamp = themes_stamp;
+        // 繁体输出要等新配置就位再算：它还看聚焦会话的语言 profile（见 session 的 traditional_output）
+        self.engine.set_traditional_mode(self.traditional_output());
         let settings = self.config.render_settings();
         if settings != previous {
             self.candidates.configure(settings);

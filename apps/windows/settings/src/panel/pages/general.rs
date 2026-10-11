@@ -101,7 +101,8 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         ),
         field(
             "繁体输出",
-            "打字时将候选词转换为繁体中文。",
+            "打字时将候选词转换为繁体中文。关着时，在系统「中文(台灣)」语言下选用的「青簡」仍然输出繁体，\
+             「中文(简体)」下的「青简」输出简体。",
             ToggleSwitch::new()
                 .is_on(g.traditional)
                 .on_toggled(context.callback(Message::Traditional)),

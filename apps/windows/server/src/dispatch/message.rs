@@ -38,6 +38,7 @@ impl Router {
                         app,
                         private: false,
                         protocol,
+                        traditional: false,
                     },
                 );
                 // 按键行为设置回一次，让 DLL 不必自己读配置文件。**只回给会读这条回包的 DLL**：
@@ -101,6 +102,14 @@ impl Router {
             ClientMessage::ImeSwitched { session } => {
                 tracing::debug!(?session, "切成了别的输入法");
                 self.handle_ime_switched();
+                None
+            }
+            ClientMessage::Profile {
+                session,
+                traditional,
+            } => {
+                tracing::debug!(?session, traditional, "语言 profile");
+                self.set_profile(session, traditional);
                 None
             }
             ClientMessage::Indicator { session, command } => {

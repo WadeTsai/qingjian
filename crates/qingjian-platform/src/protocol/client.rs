@@ -127,6 +127,18 @@ pub enum ClientMessage {
         session: SessionId,
     },
 
+    /// 这个会话所在线程用的是青简的哪个语言 profile（v9 起）：Windows 上青简在「中文(简体)」与「中文(台灣)」下各登记一个，
+    /// 「中文(台灣)」下的那个不看 `[general] traditional` 就出繁体（配置开着时两个都出繁体）。
+    /// 开会话后是繁体 profile 才报一次，之后同一线程在两个 profile 间切换再报；没有 profile 概念的平台（Linux）不发，
+    /// Server 按简体 profile 算。不等回话。
+    Profile {
+        /// 会话标识。
+        session: SessionId,
+
+        /// 当前是繁体的那个 profile（「中文(台灣)」下的青簡）。
+        traditional: bool,
+    },
+
     /// 任务栏「中 / 英」图标右键菜单里点了一项（v7 起）。不等回话。
     Indicator {
         /// 会话标识。

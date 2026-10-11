@@ -3,6 +3,7 @@
 //!
 //! - [`key`]：按键翻译、单击中英切换键判定、翻译快捷键的保留键。
 //! - [`mode`]：中 / 英模式的指示（转换模式 compartment、语言栏按钮）与反向同步（任务栏点选、系统热键关掉输入法）。
+//! - [`profile`]：登记的两个语言 profile（「中文(简体)」的青简 / 「中文(台灣)」的青簡）与切换通知。
 //! - [`edit`]：编辑会话（写组句 / 读选区 / 读前文与输入范围）与候选窗口锚点；[`context`]：上下文的键盘禁用开关（密码框）。
 //! - [`composition`]：组句 preedit；[`display_attribute`]：组句内联下划线；[`poll`]：轮询定时器。
 #![allow(non_snake_case)] // 导出的 Dll* 入口按 COM 约定命名
@@ -43,13 +44,7 @@ pub(crate) const CLSID_QINGJIAN: GUID = GUID::from_u128(0x4fdca82d_e923_49bf_9e7
 /// [`CLSID_QINGJIAN`] 的注册表字符串形式，两者必须同步改。
 pub(crate) const CLSID_QINGJIAN_STR: &str = "{4FDCA82D-E923-49BF-9E75-BB906B93B8BB}";
 
-/// 语言 profile 的 GUID。
-pub(crate) const GUID_PROFILE: GUID = GUID::from_u128(0x8119f8e0_cf81_423b_9189_c0d7374324b3);
-
-/// zh-CN。
-pub(crate) const LANGID_ZH_CN: u16 = 0x0804;
-
-/// 输入法在系统里显示的名字。
+/// 文本服务（CLSID 注册表项）的名字。各语言下显示的名字跟 profile 走，见 [`profile::language`]。
 pub(crate) const SERVICE_DESCRIPTION: &str = "青简";
 
 /// 存活的 COM 对象 + LockServer 计数，[`DllCanUnloadNow`] 据它判断能否卸载。

@@ -93,7 +93,8 @@ regsvr32 target\debug\qingjian_tsf.dll
 :: 3) 起 Server（引擎在这里；没起时 DLL 吃掉字母键但没有候选，起来后下一键 / 下次聚焦自动重连）
 cargo run -p qingjian-windows-server
 
-:: 4) 在系统「语言 / 输入法」里应能看到「青简」，切到它，在任意输入框敲字
+:: 4) 在系统「语言 / 输入法」里应能看到「青简」（中文(简体) 下）与「青簡」（中文(台灣) 下，装了这个语言才显示；缺省出繁体），
+::    切到它，在任意输入框敲字
 ::    日志都在 %LOCALAPPDATA%\Qingjian\logs\：server.<日期>.log / tsf.<日期>.log / settings.<日期>.log（按天，留 7 天）
 
 :: 反注册

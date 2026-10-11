@@ -57,14 +57,28 @@ UninstallDisplayIcon={app}\qingjian.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+; 按系统界面语言挑安装语言（简体 / 繁体），对不上才问。
+ShowLanguageDialog=auto
 
 [Languages]
+; 简体与繁体两套界面文案（Inno Setup 7.0.2 起两份翻译都随编译器带，见 build.ps1 对 ISCC 版本的要求）。
+; 快捷方式、程序组、启动项的名字不随语言变：升级时换了语言会留下另一套同功能的快捷方式（启动项会起两个 Server）。
 Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "cht"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 
 [Messages]
 ; 完成页：DLL 会装进每个应用进程，装之前就开着的应用要用新版必须重启（见文件头「升级」）。
 ; 这是最容易被误解成「设置/新版没生效」的一点，所以放在完成页明说。
-FinishedLabel=安装完成。请注销后重新登录（或重启电脑），青简才会在所有应用里生效。%n%n不方便注销的话，先关掉再重新打开要打字的应用也可以。
+chs.FinishedLabel=安装完成。请注销后重新登录（或重启电脑），青简才会在所有应用里生效。%n%n不方便注销的话，先关掉再重新打开要打字的应用也可以。%n%n青简同时登记在「中文(简体)」与「中文(台灣)」两种语言下；在「中文(台灣)」下选用的「青簡」默认输出繁体。
+cht.FinishedLabel=安裝完成。請登出後重新登入（或重新啟動電腦），青簡才會在所有應用程式裡生效。%n%n不方便登出的話，先關掉再重新開啟要打字的應用程式也可以。%n%n青簡同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下選用的「青簡」預設輸出繁體字，從「設定 → 時間與語言 → 語言與地區 → 中文(台灣) → 語言選項 → 新增鍵盤」加入。
+
+[CustomMessages]
+chs.StatusAppContainer=配置应用容器权限…
+cht.StatusAppContainer=設定應用程式容器權限…
+chs.StatusRegister=注册输入法…
+cht.StatusRegister=註冊輸入法…
+chs.StatusRegister32=注册输入法（32 位）…
+cht.StatusRegister32=註冊輸入法（32 位元）…
 
 [Files]
 ; —— 二进制 ——
@@ -119,14 +133,15 @@ Name: "{commonstartup}\青简 Server"; Filename: "{app}\qingjian-server.exe"; Wo
 [Run]
 ; ① UWP/AppContainer 应用要能读安装目录才能加载 DLL（*S-1-15-2-1 = ALL APPLICATION PACKAGES，按 SID 与语言无关）。
 Filename: "{sys}\icacls.exe"; Parameters: """{app}"" /grant *S-1-15-2-1:(OI)(CI)RX /T /C /Q"; \
-  Flags: runhidden waituntilterminated; StatusMsg: "配置应用容器权限…"
-; ② 注册文本服务（写 HKCR + 图标到 %ProgramData%\Qingjian\qingjian.ico）。注册的是本版本的 DLL，
+  Flags: runhidden waituntilterminated; StatusMsg: "{cm:StatusAppContainer}"
+; ② 注册文本服务（写 HKCR + 图标到 %ProgramData%\Qingjian\qingjian.ico；语言 profile 在「中文(简体)」与「中文(台灣)」下各一个，
+;    由 DLL 的 DllRegisterServer 登记）。注册的是本版本的 DLL，
 ;    InprocServer32 指向新文件；旧版本的 DLL **不能** regsvr32 /u（那会把整个 CLSID 注销掉）。
 Filename: "{sys}\regsvr32.exe"; Parameters: "/s ""{app}\{#TsfDll}"""; \
-  Flags: runhidden waituntilterminated; StatusMsg: "注册输入法…"
+  Flags: runhidden waituntilterminated; StatusMsg: "{cm:StatusRegister}"
 ; 32 位那份用 SysWOW64 里的 32 位 regsvr32 注册，InprocServer32 才落到 WOW6432Node 下给 32 位进程用。
 Filename: "{syswow64}\regsvr32.exe"; Parameters: "/s ""{app}\{#TsfDll32}"""; \
-  Flags: runhidden waituntilterminated; StatusMsg: "注册输入法（32 位）…"
+  Flags: runhidden waituntilterminated; StatusMsg: "{cm:StatusRegister32}"
 ; ④ 装完立即起一次 Server 见 [Code] 的 NextButtonClick：uiAccess=true 的 exe 不能用
 ;    CreateProcess / runasoriginaluser 拉起（报 740），必须走 ShellExecute（等同双击）。
 

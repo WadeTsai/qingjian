@@ -23,6 +23,8 @@ impl TextService_Impl {
                 log("已连上 Server");
                 // 按键行为设置随 `OpenSession` 的回包一起下来（DLL 不读配置文件，AppContainer 里读不到）。
                 self.apply_input_settings(input);
+                // Server 开会话按简体算；本线程用的是「中文(台灣)」的青簡就告诉它出繁体。
+                self.report_profile();
             }
             Err(error) => {
                 self.last_connect_failure.set(Some(Instant::now()));
@@ -64,6 +66,7 @@ impl TextService_Impl {
     pub(super) fn disconnect(&self) {
         *self.engine.borrow_mut() = None;
         self.last_connect_failure.set(None);
+        self.profile_traditional.set(None);
         self.shared.end_composing();
     }
 }

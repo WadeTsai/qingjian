@@ -1,4 +1,5 @@
-//! 自注册：写 COM 的 InprocServer32，经 `ITfInputProcessorProfiles` / `ITfCategoryMgr` 把青简登记成键盘类文本服务。
+//! 自注册：写 COM 的 InprocServer32，经 `ITfInputProcessorProfiles` / `ITfCategoryMgr` 把青简登记成键盘类文本服务，
+//! 语言 profile 在「中文(简体)」与「中文(台灣)」下各登记一个（见 [`crate::com::profile::language`]）。
 //! 写的是 `HKEY_CLASSES_ROOT`，所以 regsvr32 要管理员。输入法图标文件在 [`icon`]。
 
 mod icon;
@@ -17,9 +18,8 @@ use windows::Win32::UI::TextServices::{
 use windows::core::{GUID, Result};
 use windows_registry::CLASSES_ROOT;
 
-use crate::com::{
-    CLSID_QINGJIAN, CLSID_QINGJIAN_STR, GUID_PROFILE, LANGID_ZH_CN, SERVICE_DESCRIPTION,
-};
+use crate::com::profile::language::PROFILES;
+use crate::com::{CLSID_QINGJIAN, CLSID_QINGJIAN_STR, SERVICE_DESCRIPTION};
 
 /// 除「键盘类 TIP」外还要声明沉浸式 / 系统托盘等能力，否则 Win10/11 的输入切换器会把它过滤掉（表现为「装上又消失」）。
 const CATEGORIES: &[GUID] = &[
@@ -44,37 +44,40 @@ pub(crate) fn register() -> Result<()> {
     let inproc = base.create("InprocServer32")?;
     inproc.set_string("", module.to_string())?;
     inproc.set_string("ThreadingModel", "Apartment")?;
-    register_profile()
+    register_profiles()
 }
 
 /// 撤销 [`register`]，尽力而为。
 pub(crate) fn unregister() -> Result<()> {
-    let _ = unregister_profile();
+    let _ = unregister_profiles();
     icon::uninstall();
     let _ = CLASSES_ROOT.remove_tree(clsid_key());
     Ok(())
 }
 
-fn register_profile() -> Result<()> {
+fn register_profiles() -> Result<()> {
     com_scope(|| {
         let profiles: ITfInputProcessorProfiles = unsafe {
             CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)?
         };
-        // AddLanguageProfile 按 null 扫描读字符串，不补 0 会多读相邻内存（曾显示成「青简C」）。
-        let description = wide_z(SERVICE_DESCRIPTION);
+        // 两个 profile 共用一张图标。
         let icon = icon::install()
             .map(|path| wide_z(&path.to_string_lossy()))
             .unwrap_or_else(|| vec![0]);
-        unsafe {
-            profiles.Register(&CLSID_QINGJIAN)?;
-            profiles.AddLanguageProfile(
-                &CLSID_QINGJIAN,
-                LANGID_ZH_CN,
-                &GUID_PROFILE,
-                &description,
-                &icon,
-                0,
-            )?;
+        unsafe { profiles.Register(&CLSID_QINGJIAN)? };
+        for profile in &PROFILES {
+            // AddLanguageProfile 按 null 扫描读字符串，不补 0 会多读相邻内存（曾显示成「青简C」）。
+            let description = wide_z(profile.description);
+            unsafe {
+                profiles.AddLanguageProfile(
+                    &CLSID_QINGJIAN,
+                    profile.langid,
+                    &profile.guid,
+                    &description,
+                    &icon,
+                    0,
+                )?;
+            }
         }
         let category: ITfCategoryMgr =
             unsafe { CoCreateInstance(&CLSID_TF_CategoryMgr, None, CLSCTX_INPROC_SERVER)? };
@@ -85,7 +88,7 @@ fn register_profile() -> Result<()> {
     })
 }
 
-fn unregister_profile() -> Result<()> {
+fn unregister_profiles() -> Result<()> {
     com_scope(|| {
         if let Ok(category) = unsafe {
             CoCreateInstance::<_, ITfCategoryMgr>(&CLSID_TF_CategoryMgr, None, CLSCTX_INPROC_SERVER)
@@ -103,8 +106,13 @@ fn unregister_profile() -> Result<()> {
             )
         } {
             unsafe {
-                let _ =
-                    profiles.RemoveLanguageProfile(&CLSID_QINGJIAN, LANGID_ZH_CN, &GUID_PROFILE);
+                for profile in &PROFILES {
+                    let _ = profiles.RemoveLanguageProfile(
+                        &CLSID_QINGJIAN,
+                        profile.langid,
+                        &profile.guid,
+                    );
+                }
                 let _ = profiles.Unregister(&CLSID_QINGJIAN);
             }
         }

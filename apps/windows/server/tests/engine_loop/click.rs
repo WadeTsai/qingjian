@@ -52,10 +52,11 @@ fn a_key_before_the_poll_carries_the_clicked_text() {
 fn old_dlls_do_not_take_clicks() {
     let mut router = router();
     let old = SessionId(2);
+    // v8 起的 DLL 才會把 `Update.commit` 寫進文件（見 dispatch/key/click.rs 的 CLICK_SINCE），拿 v7 當老 DLL
     router.handle(ClientMessage::OpenSession {
         session: old,
         app: None,
-        protocol: PROTOCOL_VERSION - 1,
+        protocol: 7,
     });
     for c in "nihao".chars() {
         press_in(&mut router, old, letter(c));

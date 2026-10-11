@@ -83,9 +83,8 @@ pub(super) fn advise(thread_mgr: &ITfThreadMgr, session: SessionId) -> Result<u3
 /// 本執行緒當前啟用的是青簡的繁體 profile 嗎；查不到（還沒啟用任何一個）為 `None`。
 /// 啟用時 TSF 已把 profile 記為當前，`Activate` 裡就能查。
 pub(super) fn active_traditional() -> Option<bool> {
-    let created: Result<ITfInputProcessorProfiles> = unsafe {
-        CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)
-    };
+    let created: Result<ITfInputProcessorProfiles> =
+        unsafe { CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER) };
     let profiles = created.ok()?;
     let mut langid = 0u16;
     let mut guid = GUID::zeroed();

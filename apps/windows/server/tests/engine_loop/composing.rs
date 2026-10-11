@@ -398,7 +398,14 @@ fn traditional_profile_outputs_traditional_without_the_config_switch() {
         session: SESSION,
         rect: rect(),
     });
-    assert!(sink.1.lock().unwrap().last().expect("自绘窗收到过帧").traditional);
+    assert!(
+        sink.1
+            .lock()
+            .unwrap()
+            .last()
+            .expect("自绘窗收到过帧")
+            .traditional
+    );
     // 上屏的也是繁體
     let (_, commit, _) = press(&mut router, digit(1));
     assert_eq!(commit.as_deref(), Some("開發"));

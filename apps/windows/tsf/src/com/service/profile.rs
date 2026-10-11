@@ -30,7 +30,11 @@ impl TextService_Impl {
         let Some(client) = engine.as_mut() else {
             return;
         };
-        let script = if traditional { "繁體（中文(台灣)）" } else { "簡體" };
+        let script = if traditional {
+            "繁體（中文(台灣)）"
+        } else {
+            "簡體"
+        };
         match client.profile(traditional) {
             Ok(()) => log(&format!("語言 profile：{script}")),
             Err(error) => log(&format!("報語言 profile 失敗: {error}")),

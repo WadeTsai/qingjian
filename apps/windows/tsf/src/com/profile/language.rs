@@ -40,7 +40,9 @@ pub(crate) const PROFILES: [LanguageProfile; 2] = [PROFILE_ZH_CN, PROFILE_ZH_TW]
 
 /// 某個 profile GUID 是不是繁體的那個；不認識的 GUID（不該出現）按簡體。
 pub(crate) fn is_traditional(profile: &GUID) -> bool {
-    PROFILES.iter().any(|candidate| candidate.traditional && candidate.guid == *profile)
+    PROFILES
+        .iter()
+        .any(|candidate| candidate.traditional && candidate.guid == *profile)
 }
 
 #[cfg(test)]

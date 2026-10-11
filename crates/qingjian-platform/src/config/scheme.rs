@@ -1,4 +1,5 @@
-//! 拼音側方案：全拼 / 雙拼七套 / 大千注音 / 關。配置項 `[general] scheme` 的值。
+//! 拼音側方案：全拼 / 雙拼七套 / 注音 / 關。配置項 `[general] scheme` 的值。
+//! 注音的鍵盤排列（大千 / 倚天）是另一個配置項 `[general] zhuyin_layout`，不在方案裡分開列。
 //!
 //! 「輸入方案是配置項，不是模式」：中英切換始終是布林，換方案不改變別的方案的既定按鍵行為。
 //!
@@ -21,7 +22,7 @@ pub enum Scheme {
     /// 雙拼，七套鍵位見 [`ShuangpinScheme`]。
     Shuangpin(ShuangpinScheme),
 
-    /// 大千注音。
+    /// 注音（鍵盤排列另配）。
     Zhuyin,
 
     /// 關：拼音側不參與查詢，只用形碼。形碼也關著的話沒有候選。
@@ -58,7 +59,7 @@ impl Scheme {
         match self {
             Self::Pinyin => "全拼",
             Self::Shuangpin(scheme) => scheme.label(),
-            Self::Zhuyin => "大千注音",
+            Self::Zhuyin => "注音",
             Self::Off => "关（只用形码）",
         }
     }
@@ -145,7 +146,7 @@ mod tests {
     #[test]
     fn scheme_name_always_says_something() {
         assert_eq!(scheme_name(Scheme::Pinyin, false), "全拼");
-        assert_eq!(scheme_name(Scheme::Zhuyin, false), "大千注音");
+        assert_eq!(scheme_name(Scheme::Zhuyin, false), "注音");
         assert_eq!(
             scheme_name(Scheme::Pinyin, true),
             scheme_label(Scheme::Pinyin, true)

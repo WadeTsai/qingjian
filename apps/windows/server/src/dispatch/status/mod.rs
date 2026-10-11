@@ -115,9 +115,9 @@ impl Router {
             Some(english) if self.config.status_enabled => {
                 self.status.show_status(StatusView {
                     english,
-                    zhuyin: self.config.scheme == Scheme::Zhuyin,
-                    // 現算，不存下來：存了會與 scheme / wubi 冗餘、手搓配置的地方就漂移
-                    scheme: Some(scheme_label(self.config.scheme, self.config.wubi))
+                    zhuyin: self.scheme() == Scheme::Zhuyin,
+                    // 現算，不存下來：存了會與 scheme / wubi 冗餘、手搓配置的地方就漂移；方案還看聚焦會話的 profile
+                    scheme: Some(scheme_label(self.scheme(), self.config.wubi))
                         .filter(|label| !label.is_empty()),
                     full_width: self.full_width_for(english),
                     appearance: self.config.appearance,

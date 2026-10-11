@@ -1,12 +1,13 @@
-//! 語言 profile：青簡登記的兩個 profile（簡 / 繁，[`language`]）、查當前啟用的是哪個、以及切換通知。
+//! 語言 profile：青簡登記的三個 profile（簡 / 繁 / 繁體注音，[`language`]）、查當前啟用的是哪個、以及切換通知。
 //!
 //! 本執行緒把輸入法切成別的（微軟拼音等）時告訴 Server 收狀態條。
 //! 應用退出時只有 `Deactivate`、沒有別的 profile 被啟用，所以狀態條不跟會話開關走。
 //! 通知在青簡停用**之後**到來，那時會話連線已關，用一條臨時連線發。
-//! 在青簡自己的兩個 profile 之間切換（「中文(簡體)」的青簡 ↔「中文(台灣)」的青簡）TSF 不停用再啟用，
-//! 只來這條通知，據它把簡 / 繁報給 Server。
+//! 在青簡自己的 profile 之間切換（「中文(簡體)」的青簡 ↔「中文(台灣)」的青簡 / 青簡注音）TSF 不停用再啟用，
+//! 只來這條通知，據它把 profile 的輸入行為（[`ProfileFlags`]）報給 Server。
 //! sink 掛在執行緒管理器上，啟用一次、之後不撤（執行緒管理器銷燬時自然釋放），重複啟用不再掛。
 
+mod flags;
 pub(crate) mod language;
 
 use windows::Win32::System::Com::{CLSCTX_INPROC_SERVER, CoCreateInstance};
@@ -18,6 +19,7 @@ use windows::core::{BOOL, GUID, Interface, Result, implement};
 
 use qingjian_platform::protocol::SessionId;
 
+pub(crate) use self::flags::ProfileFlags;
 use super::log::log;
 use crate::client::EngineClient;
 use crate::client::pipe::connect_default;
@@ -55,9 +57,12 @@ impl ITfActiveLanguageProfileNotifySink_Impl for ProfileSink_Impl {
             return Ok(());
         }
         if unsafe { *clsid } == super::CLSID_QINGJIAN {
-            let traditional =
-                !guidprofile.is_null() && language::is_traditional(unsafe { &*guidprofile });
-            super::service::on_profile_activated(traditional);
+            let flags = if guidprofile.is_null() {
+                ProfileFlags::default()
+            } else {
+                language::flags_of(unsafe { &*guidprofile })
+            };
+            super::service::on_profile_activated(flags);
             return Ok(());
         }
         let sent = connect_default()
@@ -80,9 +85,9 @@ pub(super) fn advise(thread_mgr: &ITfThreadMgr, session: SessionId) -> Result<u3
     unsafe { source.AdviseSink(&ITfActiveLanguageProfileNotifySink::IID, &sink) }
 }
 
-/// 本執行緒當前啟用的是青簡的繁體 profile 嗎；查不到（還沒啟用任何一個）為 `None`。
+/// 本執行緒當前啟用的青簡 profile 的輸入行為；查不到（還沒啟用任何一個）為 `None`。
 /// 啟用時 TSF 已把 profile 記為當前，`Activate` 裡就能查。
-pub(super) fn active_traditional() -> Option<bool> {
+pub(super) fn active_flags() -> Option<ProfileFlags> {
     let created: Result<ITfInputProcessorProfiles> =
         unsafe { CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER) };
     let profiles = created.ok()?;
@@ -92,5 +97,5 @@ pub(super) fn active_traditional() -> Option<bool> {
         profiles.GetActiveLanguageProfile(&super::CLSID_QINGJIAN, &mut langid, &mut guid)
     };
     active.ok()?;
-    Some(language::is_traditional(&guid))
+    Some(language::flags_of(&guid))
 }

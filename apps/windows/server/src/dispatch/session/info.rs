@@ -13,7 +13,11 @@ pub(crate) struct SessionInfo {
     /// 見 composed 裡的 downgrade_for_old_dll。
     pub(crate) protocol: u32,
 
-    /// 該會話用的是繁體那個語言 profile（「中文(台灣)」下的青簡，DLL 隨 `ClientMessage::Profile` 報來）：
-    /// 不看 `[general] traditional` 就出繁體。開會話時按簡體算，DLL 只在是繁體時才報。
+    /// 該會話用的是繁體的語言 profile（「中文(台灣)」下的青簡 / 青簡注音，DLL 隨 `ClientMessage::Profile` 報來）：
+    /// 不看 `[general] traditional` 就出繁體。開會話時按簡體算，DLL 只在不是預設 profile 時才報。
     pub(crate) traditional: bool,
+
+    /// 該會話用的是注音的語言 profile（「中文(台灣)」下的青簡注音）：不看 `[general] scheme`，拼音側按大千注音。
+    /// 開會話時按不是算。
+    pub(crate) zhuyin: bool,
 }

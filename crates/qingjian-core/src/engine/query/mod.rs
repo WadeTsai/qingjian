@@ -38,7 +38,7 @@ impl Engine {
                 Query::custom_only(
                     &self.composition.typed_text(),
                     self.composition.cursor(),
-                    self.shuangpin.is_some() || self.zhuyin,
+                    self.shuangpin.is_some() || self.zhuyin.is_some(),
                     self.shuangpin.is_some() && self.shuangpin_raw_preedit,
                     self.composition.scope(),
                     self.marked_rest(self.composition.rest()),

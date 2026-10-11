@@ -2,6 +2,7 @@
 
 mod info;
 
+use qingjian_platform::Scheme;
 use qingjian_platform::protocol::SessionId;
 
 pub(super) use self::info::SessionInfo;
@@ -28,10 +29,11 @@ impl Router {
             let private = self.focused_private();
             self.engine.set_private(private);
             self.engine.set_traditional_mode(self.traditional_output());
+            self.apply_session_scheme();
         }
     }
 
-    /// 聚焦會話該不該出繁體：配置開著就是；關著時看它用的是不是繁體那個語言 profile（Windows「中文(台灣)」下的青簡）。
+    /// 聚焦會話該不該出繁體：配置開著就是；關著時看它用的是不是繁體的語言 profile（Windows「中文(台灣)」下的青簡 / 青簡注音）。
     pub(super) fn traditional_output(&self) -> bool {
         self.config.traditional
             || self
@@ -40,17 +42,53 @@ impl Router {
                 .is_some_and(|info| info.traditional)
     }
 
-    /// DLL 報來該會話用的語言 profile 是不是繁體的：記下；是當前會話且變了就清掉組句再切 Engine
-    /// （組句中切 profile 極少見，候選裡簡繁混著不如從頭來）。
-    pub(super) fn set_profile(&mut self, session: SessionId, traditional: bool) {
-        let before = self.traditional_output();
+    /// 聚焦會話的拼音側方案：用的是注音 profile（Windows「中文(台灣)」下的青簡注音）就是大千注音，否則按配置。
+    /// 形碼側不受 profile 影響，仍看 `config.wubi`。
+    pub(super) fn scheme(&self) -> Scheme {
+        let zhuyin = self
+            .focused
+            .and_then(|session| self.sessions.get(&session))
+            .is_some_and(|info| info.zhuyin);
+        if zhuyin {
+            Scheme::Zhuyin
+        } else {
+            self.config.scheme
+        }
+    }
+
+    /// 聚焦會話的方案與 Engine 現在裝的不一致（焦點換到用另一個 profile 的會話）就重新裝配。
+    /// 只在注音與否變了時裝：裝配會重讀形碼碼錶，焦點每換一次都裝太浪費。
+    fn apply_session_scheme(&mut self) {
+        let scheme = self.scheme();
+        if self.engine.is_zhuyin_mode() != (scheme == Scheme::Zhuyin) {
+            self.reload_code_table(scheme, self.config.wubi);
+            self.reconcile_status();
+        }
+    }
+
+    /// DLL 報來該會話用的語言 profile（繁體與否、注音與否）：記下；是當前會話且有變化就清掉組句再切 Engine
+    /// （組句中切 profile 極少見，候選裡簡繁 / 拼音注音混著不如從頭來）。
+    /// 不是當前會話、而此刻沒在組句：把焦點給它——profile 是在前臺執行緒上切的，使用者在輸入法列表裡選了
+    /// 「青簡注音」，狀態條該立刻顯示注音，不等敲第一個鍵。
+    pub(super) fn set_profile(&mut self, session: SessionId, traditional: bool, zhuyin: bool) {
+        let before = (self.traditional_output(), self.scheme());
         if let Some(info) = self.sessions.get_mut(&session) {
             info.traditional = traditional;
+            info.zhuyin = zhuyin;
         }
-        if self.focused == Some(session) && self.traditional_output() != before {
-            self.reset_composition();
-            self.engine.set_traditional_mode(self.traditional_output());
+        if self.focused != Some(session) {
+            if self.engine.composition().is_empty() {
+                self.ensure_focus(session);
+            }
+            return;
         }
+        let after = (self.traditional_output(), self.scheme());
+        if after == before {
+            return;
+        }
+        self.reset_composition();
+        self.engine.set_traditional_mode(after.0);
+        self.apply_session_scheme();
     }
 
     /// 當前聚焦的會話在私密輸入框裡（Engine 不學不記不發雲端）。

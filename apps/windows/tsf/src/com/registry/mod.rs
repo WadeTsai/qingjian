@@ -1,5 +1,5 @@
 //! 自注冊：寫 COM 的 InprocServer32，經 `ITfInputProcessorProfiles` / `ITfCategoryMgr` 把青簡登記成鍵盤類文本服務，
-//! 語言 profile 在「中文(簡體)」與「中文(台灣)」下各登記一個（見 [`crate::com::profile::language`]）。
+//! 語言 profile 在「中文(簡體)」下登記一個、「中文(台灣)」下登記兩個（拼音與注音，見 [`crate::com::profile::language`]）。
 //! 寫的是 `HKEY_CLASSES_ROOT`，所以 regsvr32 要管理員。輸入法圖示檔案在 [`icon`]。
 
 mod icon;
@@ -60,7 +60,7 @@ fn register_profiles() -> Result<()> {
         let profiles: ITfInputProcessorProfiles = unsafe {
             CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)?
         };
-        // 兩個 profile 共用一張圖示。
+        // 三個 profile 共用一張圖示。
         let icon = icon::install()
             .map(|path| wide_z(&path.to_string_lossy()))
             .unwrap_or_else(|| vec![0]);

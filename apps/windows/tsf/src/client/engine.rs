@@ -190,11 +190,13 @@ impl<S: Read + Write> EngineClient<S> {
         })
     }
 
-    /// 報本執行緒用的是不是繁體那個語言 profile（「中文(台灣)」下的青簡）；Server 開會話時按簡體算。不回話。
-    pub fn profile(&mut self, traditional: bool) -> Result<(), ClientError> {
+    /// 報本執行緒用的語言 profile 的輸入行為：是不是繁體（「中文(台灣)」下的青簡 / 青簡注音）、是不是注音（青簡注音）；
+    /// Server 開會話時按簡體、配置方案算。不回話。
+    pub fn profile(&mut self, traditional: bool, zhuyin: bool) -> Result<(), ClientError> {
         self.send(&ClientMessage::Profile {
             session: self.session,
             traditional,
+            zhuyin,
         })
     }
 

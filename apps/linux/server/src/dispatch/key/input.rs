@@ -178,9 +178,8 @@ impl Router {
     /// 配 `[general] shift_letter = "compose"` 時大寫也收進緩衝區（Core 按小寫匹配、原樣上屏時還原大小寫）。
     /// 沒在組句時的其他字元走全形標點；組句中會轉全形的標點先上屏高亮候選再補標點，其餘符號仍進英文直輸段（見 apply_printable）。
     fn apply_chinese(&mut self, c: char, event: &KeyEvent) -> Effect {
-        // 注音模式下數字與 `- ; , . /` 就是鍵盤上的音節鍵，跟著進緩衝區。
-        let is_zhuyin_key = self.engine.is_zhuyin_mode()
-            && (c.is_ascii_digit() || matches!(c, '-' | ';' | ',' | '.' | '/'));
+        // 注音模式下數字與一部分標點（大千 `- ; , . /`，倚天還有 `' =`）就是鍵盤上的音節鍵，跟著進緩衝區；哪些鍵由排列定。
+        let is_zhuyin_key = self.engine.is_zhuyin_key(c);
         if c.is_ascii_lowercase()
             || is_zhuyin_key
             || (c.is_ascii_uppercase() && self.config.shift_letter_compose)

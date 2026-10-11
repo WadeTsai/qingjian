@@ -1,7 +1,9 @@
 //! 按輸入來源對映注音游標；未知尾串與已解碼音節分別累計。
-use crate::zhuyin::{layout::map_key, syllable::ZhuyinSyllable};
+use crate::zhuyin::{layout::ZhuyinLayout, syllable::ZhuyinSyllable};
 
 pub(super) struct Cursor {
+    layout: ZhuyinLayout,
+
     input: usize,
 
     units_len: usize,
@@ -14,8 +16,9 @@ pub(super) struct Cursor {
 }
 
 impl Cursor {
-    pub(super) fn new(input: usize) -> Self {
+    pub(super) fn new(layout: ZhuyinLayout, input: usize) -> Self {
         Self {
+            layout,
             input,
             units_len: 0,
             tail_len: 0,
@@ -34,7 +37,7 @@ impl Cursor {
                     if start + offset + key.len_utf8() > self.input {
                         break;
                     }
-                    if let Some(component) = map_key(key) {
+                    if let Some(component) = self.layout.map_key(key) {
                         prefix.push(component, key);
                     }
                 }

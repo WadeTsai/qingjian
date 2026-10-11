@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::shortcut::EXPRESSION_PREFIX;
+use crate::zhuyin::ZhuyinLayout;
 
 /// 問字模式的標點入口：[`ModeKeys::question_mark`] 開啟時任何配置下 `?` 開頭都進問字模式，也是英文模式下唯一的入口。
 pub const QUESTION_PREFIX: char = '?';
@@ -76,14 +77,15 @@ impl ModeKeys {
         }
     }
 
-    pub fn is_expression(&self, input: &str, zhuyin: bool) -> bool {
+    /// `zhuyin` 是開著的注音排列：入口字母在那套排列裡是符號鍵時就不是入口。
+    pub fn is_expression(&self, input: &str, zhuyin: Option<ZhuyinLayout>) -> bool {
         input.starts_with(self.expression)
-            && (!zhuyin || crate::zhuyin::layout::map_key(self.expression).is_none())
+            && zhuyin.is_none_or(|layout| layout.map_key(self.expression).is_none())
     }
 
-    pub fn is_question(&self, input: &str, zhuyin: bool) -> bool {
+    pub fn is_question(&self, input: &str, zhuyin: Option<ZhuyinLayout>) -> bool {
         (input.starts_with(self.question)
-            && (!zhuyin || crate::zhuyin::layout::map_key(self.question).is_none()))
+            && zhuyin.is_none_or(|layout| layout.map_key(self.question).is_none()))
             || self.is_question_mark(input)
     }
 
@@ -93,7 +95,7 @@ impl ModeKeys {
     }
 
     /// 問字模式下字首之後的部分。不在問字模式時原樣返回。
-    pub fn question_body<'a>(&self, input: &'a str, zhuyin: bool) -> &'a str {
+    pub fn question_body<'a>(&self, input: &'a str, zhuyin: Option<ZhuyinLayout>) -> &'a str {
         if self.is_question_mark(input) {
             &input[QUESTION_PREFIX.len_utf8()..]
         } else if self.is_question(input, zhuyin) {
@@ -111,12 +113,12 @@ mod tests {
     #[test]
     fn defaults_are_v_and_u_and_question_mark_is_off() {
         let keys = ModeKeys::default();
-        assert!(keys.is_expression("v12", false));
-        assert!(keys.is_question("usangemu", false));
-        assert!(!keys.is_question("?sangemu", false));
-        assert_eq!(keys.question_body("usangemu", false), "sangemu");
-        assert_eq!(keys.question_body("?sangemu", false), "?sangemu");
-        assert!(!keys.is_question("nihao", false));
+        assert!(keys.is_expression("v12", None));
+        assert!(keys.is_question("usangemu", None));
+        assert!(!keys.is_question("?sangemu", None));
+        assert_eq!(keys.question_body("usangemu", None), "sangemu");
+        assert_eq!(keys.question_body("?sangemu", None), "?sangemu");
+        assert!(!keys.is_question("nihao", None));
     }
 
     #[test]
@@ -125,16 +127,16 @@ mod tests {
             question_mark: true,
             ..ModeKeys::default()
         };
-        assert!(keys.is_question("?sangemu", false));
-        assert_eq!(keys.question_body("?sangemu", false), "sangemu");
+        assert!(keys.is_question("?sangemu", None));
+        assert_eq!(keys.question_body("?sangemu", None), "sangemu");
         // 雙拼下字母鍵換成大寫，`?` 開關跟著走
         let shifted = keys.shifted();
-        assert!(!shifted.is_question("usangemu", false));
-        assert!(shifted.is_question("Usangemu", false));
-        assert!(shifted.is_expression("V1+2", false));
-        assert_eq!(shifted.question_body("Usangemu", false), "sangemu");
-        assert!(shifted.is_question("?sangemu", false));
-        assert!(!ModeKeys::default().shifted().is_question("?x", false));
+        assert!(!shifted.is_question("usangemu", None));
+        assert!(shifted.is_question("Usangemu", None));
+        assert!(shifted.is_expression("V1+2", None));
+        assert_eq!(shifted.question_body("Usangemu", None), "sangemu");
+        assert!(shifted.is_question("?sangemu", None));
+        assert!(!ModeKeys::default().shifted().is_question("?x", None));
     }
 
     #[test]
@@ -144,11 +146,11 @@ mod tests {
             ..ModeKeys::default()
         };
         let letterless = keys.letterless();
-        assert!(!letterless.is_expression("v1+2", false));
-        assert!(!letterless.is_question("usangemu", false));
-        assert!(letterless.is_question("?sangemu", false));
-        assert_eq!(letterless.question_body("?sangemu", false), "sangemu");
-        assert!(!ModeKeys::default().letterless().is_question("?x", false));
+        assert!(!letterless.is_expression("v1+2", None));
+        assert!(!letterless.is_question("usangemu", None));
+        assert!(letterless.is_question("?sangemu", None));
+        assert_eq!(letterless.question_body("?sangemu", None), "sangemu");
+        assert!(!ModeKeys::default().letterless().is_question("?x", None));
     }
 
     #[test]
@@ -178,7 +180,7 @@ mod tests {
             question_mark: false,
         };
         assert!(swapped.is_valid());
-        assert!(swapped.is_question("v4e00", false));
+        assert!(swapped.is_question("v4e00", None));
     }
 
     #[test]

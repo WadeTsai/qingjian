@@ -31,6 +31,8 @@ impl Host {
         self.apply_scheme(config.general.scheme(), config.general.wubi());
         self.engine
             .set_shuangpin_raw_preedit(config.general.shuangpin_raw_preedit);
+        self.engine
+            .set_zhuyin_layout(config.general.zhuyin_layout());
         self.engine.set_learning(config.general.learning);
         logging::set_level(config.general.log_level);
         self.translation_keys = config.shortcut.translation_keys();

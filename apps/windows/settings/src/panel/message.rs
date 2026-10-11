@@ -10,6 +10,8 @@ pub(crate) enum Message {
     LearningLanguage(Option<usize>),
     PageSize(Option<f64>),
     Scheme(Option<usize>),
+    /// 注音鍵盤排列（`[general] zhuyin_layout`）。
+    ZhuyinLayout(Option<usize>),
     ShuangpinRawPreedit(bool),
     Wubi(bool),
     Traditional(bool),

@@ -29,7 +29,7 @@ impl Engine {
     ) -> Vec<Candidate> {
         if keys.len() < MIN_GENERATED_LETTERS
             || self.shuangpin.is_some()
-            || self.zhuyin
+            || self.zhuyin.is_some()
             || !keys.bytes().all(|b| b.is_ascii_lowercase())
         {
             return Vec::new();

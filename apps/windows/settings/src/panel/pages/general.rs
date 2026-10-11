@@ -1,5 +1,6 @@
 //! 「通用」頁：學習語言、每頁候選數、輸入方案、英文模式候選。
 
+use qingjian_core::ZhuyinLayout;
 use qingjian_platform::{MAX_PAGE_SIZE, Scheme, ShiftLetter, SwitchKey};
 use windows_reactor::*;
 
@@ -28,6 +29,12 @@ pub(crate) const SCHEMES: [(&str, &str); Scheme::ALL.len()] = [
     (Scheme::ALL[7].label(), Scheme::ALL[7].key()),
     (Scheme::ALL[8].label(), Scheme::ALL[8].key()),
     (Scheme::ALL[9].label(), Scheme::ALL[9].key()),
+];
+
+/// 注音鍵盤排列：介面名 + 配置寫法，照 [`ZhuyinLayout::ALL`] 建。
+pub(crate) const ZHUYIN_LAYOUTS: [(&str, &str); ZhuyinLayout::ALL.len()] = [
+    (ZhuyinLayout::ALL[0].label(), ZhuyinLayout::ALL[0].key()),
+    (ZhuyinLayout::ALL[1].label(), ZhuyinLayout::ALL[1].key()),
 ];
 
 pub(crate) fn string_combo(
@@ -73,13 +80,23 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         ),
         field(
             "拼音方案",
-            "全拼、五套雙拼、大千注音，或關（只用下面的五筆）。\
+            "全拼、七套雙拼、注音，或關（只用下面的五筆）。\
              雙拼下 v、u、i 是音節鍵，表示式與問字模式改用 Shift+V、Shift+U 進（微軟、搜狗方案的 ; 鍵是 ing）；\
              注音下 v、u、i 也是按鍵，只能用 ? 開頭進。",
             string_combo(
                 &SCHEMES,
                 g.scheme().key(),
                 context.callback(Message::Scheme),
+            ),
+        ),
+        field(
+            "注音鍵盤排列",
+            "注音符號在哪些鍵上：標準（大千）或倚天，與微軟注音的「鍵盤配置」同名排列一致。\
+             拼音方案選了注音時按它解鍵；系統「中文(台灣)」語言下的「青簡注音」也按它。",
+            string_combo(
+                &ZHUYIN_LAYOUTS,
+                g.zhuyin_layout().key(),
+                context.callback(Message::ZhuyinLayout),
             ),
         ),
         field(
@@ -101,7 +118,7 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         ),
         field(
             "繁體輸出",
-            "打字時將候選詞轉換為繁體中文。關著時，在系統「中文(台灣)」語言下選用的「青簡」仍然輸出繁體，\
+            "打字時將候選詞轉換為繁體中文。關著時，在系統「中文(台灣)」語言下選用的「青簡」「青簡注音」仍然輸出繁體，\
              「中文(簡體)」下的「青簡」輸出簡體。",
             ToggleSwitch::new()
                 .is_on(g.traditional)

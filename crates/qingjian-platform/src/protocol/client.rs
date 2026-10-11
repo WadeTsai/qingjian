@@ -127,16 +127,22 @@ pub enum ClientMessage {
         session: SessionId,
     },
 
-    /// 這個會話所線上程用的是青簡的哪個語言 profile（v9 起）：Windows 上青簡在「中文(簡體)」與「中文(台灣)」下各登記一個，
-    /// 「中文(台灣)」下的那個不看 `[general] traditional` 就出繁體（配置開著時兩個都出繁體）。
-    /// 開會話後是繁體 profile 才報一次，之後同一執行緒在兩個 profile 間切換再報；沒有 profile 概念的平臺（Linux）不發，
-    /// Server 按簡體 profile 算。不等回話。
+    /// 這個會話所線上程用的是青簡的哪個語言 profile（v9 起）：Windows 上青簡在「中文(簡體)」下登記「青简」，
+    /// 「中文(台灣)」下登記「青簡」與「青簡注音」。「中文(台灣)」下的兩個不看 `[general] traditional` 就出繁體
+    ///（配置開著時全都出繁體）；「青簡注音」還不看 `[general] scheme`、按大千注音解鍵。
+    /// 開會話後不是預設 profile（簡體、按配置方案）才報一次，之後同一執行緒在 profile 間切換再報；
+    /// 沒有 profile 概念的平臺（Linux）不發，Server 按預設 profile 算。不等回話。
     Profile {
         /// 會話標識。
         session: SessionId,
 
-        /// 當前是繁體的那個 profile（「中文(台灣)」下的青簡）。
+        /// 當前是繁體的 profile（「中文(台灣)」下的青簡 / 青簡注音）。
         traditional: bool,
+
+        /// 當前是注音的 profile（「中文(台灣)」下的青簡注音）：拼音側按大千注音，不看配置的方案。
+        /// 老 DLL 不帶此欄位，讀成 `false`（同一版本週期內加的欄位，協議號不再升）。
+        #[serde(default)]
+        zhuyin: bool,
     },
 
     /// 工作列「中 / 英」圖示右鍵選單裡點了一項（v7 起）。不等回話。

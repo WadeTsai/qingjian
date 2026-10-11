@@ -23,7 +23,7 @@ TSV 解析、查詢與生成工具把 `lue` / `nue` 統一成 `lve` / `nve`。
 ## crates/qingjian-core
 
 模組：`composition`（緩衝區與游標；中文模式下 Shift+字母按小寫進 `buffer` 參與匹配、大寫記在 `shifted`，`typed_text` 還原後用於原樣上屏）/ `parser` / `correction`（拼寫糾錯：整段一處編輯的候選糾正 + `typo` 音節級敲錯變體表，後者進整句詞圖當帶代價的邊）/
-`candidate` / `ranking` / `shortcut` / `sentence` / `fuzzy` / `shuangpin`（雙拼：七套方案鍵位表、鍵 → 全拼解碼與消耗換算）/ `zhuyin`（大千注音：鍵 → 注音符號 → 拼音，`[general] zhuyin` 開關，聲調只判音節完整不進查詢）/ `emoji` /
+`candidate` / `ranking` / `shortcut` / `sentence` / `fuzzy` / `shuangpin`（雙拼：七套方案鍵位表、鍵 → 全拼解碼與消耗換算）/ `zhuyin`（注音：鍵 → 注音符號 → 拼音，`[general] scheme = "zhuyin"` 開、`zhuyin_layout` 選排列——大千 / 倚天的鍵位表在 `zhuyin/layout/keyboard.rs`，按注音符號固定順序寫成一串、與 libchewing 的 `keytab` 同寫法；倚天下 `'` 是 ㄘ 不再是隔音符；聲調只判音節完整不進查詢）/ `emoji` /
 `english`（英文模式候選）/ `engine`（`query::EnglishTail`：句末英文詞併入整句，`woxiangxuehaorust` → 我想學好rust，尾段也像拼音時按分數與拼音讀法比）。
 輔碼（`engine/aux_code.rs`）：`Engine.aux_code: Option<String>` 是碼段（`None` 拼音態，`Some("")` 剛觸發或刪空停在輔碼態——`Engine.aux_keep_empty`，配置 `[general] aux_code_keep_empty` 預設開），
 不進 `Composition`；`aux_trigger`（配的觸發鍵 + 游標在段尾 + 作用域能完整切分 + 雙拼韻母鍵優先）、`enter_aux`、
@@ -164,8 +164,11 @@ P2C 自由生成實驗：`--eval-text <集> --eval-generate data/models/hanzhang
 
 ## crates/qingjian-platform
 
-輸入方案是**兩條獨立的軸**：`Scheme`（拼音側：全拼 / 雙拼七套 / 大千注音 / 關，`[general] scheme`）
+輸入方案是**兩條獨立的軸**：`Scheme`（拼音側：全拼 / 雙拼七套 / 注音 / 關，`[general] scheme`）
 與 `[general] wubi`（形碼側：空為關 / `wubi86`）。兩邊都開就是**混輸**（`GeneralConfig::mixed`）。
+注音的鍵盤排列不在方案裡分開列，是另一項 `[general] zhuyin_layout`（`dachen` / `eten`，`GeneralConfig::zhuyin_layout()` 解成
+`qingjian_core::ZhuyinLayout`，認不出退大千）：方案選注音與 Windows 的「青簡注音」profile 都按它，各殼啟動 / 熱載入時 `Engine::set_zhuyin_layout`；
+殼判斷哪些數字 / 標點鍵要進注音緩衝區用 `Engine::is_zhuyin_key`，不再寫死大千那幾個鍵。
 `scheme_label(pinyin, wubi)` 是狀態條顯示的方案名（形碼在前），做成自由函式而不是存進 `RouterConfig`——
 存了會與那兩項冗餘、手搓配置的地方就漂移（狀態條那條測試正是這麼發現的）。
 
@@ -275,10 +278,14 @@ Server 側輔碼接線：`RouterConfig.aux_code_key` / `aux_code_show`（`apply_
 由 Server 經協議下發給 DLL（`InputSettings`，見下文「按鍵行為設定」），改完在下一拍（約 320 ms）生效；
 `ctrl+alt+space` 走 TSF 保留鍵登記（`com/key/preserved.rs` 的 `GUID_SWITCH_MODE`）。系統的 Ctrl + Space（「輸入法/非輸入法切換」）不進勾選項但適配它：
 它翻的「輸入法開 / 關」compartment（`com/mode/sink.rs`）關 = 英文、開 = 中文，我們切模式時把開關寫成一致；開關一變也作廢被截走 Space 的那次「單擊 Ctrl」。
-語言 profile 登記兩個（`tsf/src/com/profile/language.rs` 的 `PROFILES`）：「中文(簡體)」0x0804 的「青簡」與「中文(台灣)」0x0404 的「青簡」，同一個 CLSID、各自固定的 profile GUID，
-`DllRegisterServer` 一起登記、共用一張圖示；繁體那個不看 `[general] traditional` 就出繁體。DLL 連上 Server 後用 `ITfInputProcessorProfiles::GetActiveLanguageProfile` 查當前是哪個，
-是繁體才發 `ClientMessage::Profile`（協議 v9 起；開會話預設按簡體），同一執行緒在兩個 profile 間切換由 `ITfActiveLanguageProfileNotifySink` 收到再報；
-Server 按會話記（`SessionInfo.traditional`），聚焦時 `traditional_output()` = 配置開關 ∨ 會話 profile 設給 Engine，熱載入也走它，候選窗主題的 `mode.traditional` 同源。
+語言 profile 登記三個（`tsf/src/com/profile/language.rs` 的 `PROFILES`）：「中文(簡體)」0x0804 的「青简」、「中文(台灣)」0x0404 的「青簡」與「青簡注音」，同一個 CLSID、各自固定的 profile GUID，
+`DllRegisterServer` 一起登記、共用一張圖示；每個 profile 帶一組 `ProfileFlags { traditional, zhuyin }`（`profile/flags.rs`）：「中文(台灣)」下的兩個不看 `[general] traditional` 就出繁體，
+「青簡注音」還不看 `[general] scheme`、拼音側按大千注音（與微軟在同一語言下分「注音」「拼音」兩個輸入法一樣，注音使用者在列表裡直接選）。
+DLL 連上 Server 後用 `ITfInputProcessorProfiles::GetActiveLanguageProfile` 查當前是哪個，不是預設（簡體、按配置方案）才發 `ClientMessage::Profile { traditional, zhuyin }`
+（協議 v9 起；`zhuyin` 欄位是同一版本週期內補的、`serde(default)`，協議號不再升；開會話預設按簡體 + 配置方案），同一執行緒在 profile 間切換由 `ITfActiveLanguageProfileNotifySink` 收到再報；
+Server 按會話記（`SessionInfo.traditional` / `.zhuyin`），聚焦時 `traditional_output()` = 配置開關 ∨ 會話 profile 設給 Engine，`scheme()` = 會話是注音 profile ? 大千注音 : 配置方案，
+焦點換到注音與否不同的會話時走 `reload_code_table` 重新裝配（只在注音與否變了才裝，裝配會重讀形碼碼錶）；熱載入也走這兩個，候選窗主題的 `mode.traditional` / `mode.scheme` 與狀態條同源。
+Profile 報來時沒在組句就把焦點給那個會話（profile 是在前臺執行緒上切的），狀態條立刻顯示注音、不等第一個鍵。
 模式全域性一份、存在 Server（`Router.english`），DLL 啟用 / 得到焦點 / 輪詢時 `SyncMode` 取回，使用者切了 `ModeChanged` 報上去。會話號用執行緒 id（`com::session_id`）——TSF 的 client id
 各程序都是同樣那幾個值，拿它當會話號會在 Server 那邊撞號。四條切換入口都匯到
 `service/mode.rs::set_english_mode` 一處攔住；狀態條點選在 Server 側（`dispatch/status/mod.rs`）按同一項攔，

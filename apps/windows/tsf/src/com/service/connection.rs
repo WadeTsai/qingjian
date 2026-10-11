@@ -23,7 +23,7 @@ impl TextService_Impl {
                 log("已連上 Server");
                 // 按鍵行為設定隨 `OpenSession` 的回包一起下來（DLL 不讀配置檔案，AppContainer 裡讀不到）。
                 self.apply_input_settings(input);
-                // Server 開會話按簡體算；本執行緒用的是「中文(台灣)」的青簡就告訴它出繁體。
+                // Server 開會話按「中文(簡體)」的青簡算；本執行緒用的是「中文(台灣)」的青簡 / 青簡注音就告訴它。
                 self.report_profile();
             }
             Err(error) => {
@@ -66,7 +66,7 @@ impl TextService_Impl {
     pub(super) fn disconnect(&self) {
         *self.engine.borrow_mut() = None;
         self.last_connect_failure.set(None);
-        self.profile_traditional.set(None);
+        self.profile_flags.set(None);
         self.shared.end_composing();
     }
 }

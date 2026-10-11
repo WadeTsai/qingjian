@@ -47,3 +47,4 @@ pub use parser::{ParseError, Segmentation};
 pub use punctuation::Punctuation;
 pub use qingjian_dictionary as dictionary;
 pub use shuangpin::Scheme as ShuangpinScheme;
+pub use zhuyin::ZhuyinLayout;

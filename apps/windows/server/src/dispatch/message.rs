@@ -39,6 +39,7 @@ impl Router {
                         private: false,
                         protocol,
                         traditional: false,
+                        zhuyin: false,
                     },
                 );
                 // 按鍵行為設定回一次，讓 DLL 不必自己讀配置檔案。**只回給會讀這條回包的 DLL**：
@@ -107,9 +108,10 @@ impl Router {
             ClientMessage::Profile {
                 session,
                 traditional,
+                zhuyin,
             } => {
-                tracing::debug!(?session, traditional, "语言 profile");
-                self.set_profile(session, traditional);
+                tracing::debug!(?session, traditional, zhuyin, "语言 profile");
+                self.set_profile(session, traditional, zhuyin);
                 None
             }
             ClientMessage::Indicator { session, command } => {

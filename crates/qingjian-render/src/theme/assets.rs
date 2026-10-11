@@ -1,9 +1,9 @@
-//! 主题的图片与字体素材：加载主题时读进来，图片解码一次、渲染时按路径取；字体只核对路径，由渲染器加载。
-//! 用户主题从主题目录读；内置主题的图片编进程序（`include_bytes!`），按同样的路径查表，不带字体（只用系统字体）。
+//! 主題的圖片與字型素材：載入主題時讀進來，圖片解碼一次、渲染時按路徑取；字型只核對路徑，由渲染器載入。
+//! 使用者主題從主題目錄讀；內建主題的圖片編程序序（`include_bytes!`），按同樣的路徑查表，不帶字型（只用系統字型）。
 //!
-//! 路径相对 `theme.json`，不能是绝对路径、不能含 `..`（主题不能读主题目录以外的文件）；图片认 PNG（边长上限 [`MAX_SIDE`]）
-//! 与 SVG（`.svg` 结尾，文件上限 [`MAX_SVG_BYTES`]、原始尺寸不超过 [`MAX_SIDE`]）；
-//! 字体单个文件上限 [`MAX_FONT_BYTES`]。读不进来的记警告，用到图片的填充不画，用到字体的样式按回退链往后找。
+//! 路徑相對 `theme.json`，不能是絕對路徑、不能含 `..`（主題不能讀主題目錄以外的檔案）；圖片認 PNG（邊長上限 [`MAX_SIDE`]）
+//! 與 SVG（`.svg` 結尾，檔案上限 [`MAX_SVG_BYTES`]、原始尺寸不超過 [`MAX_SIDE`]）；
+//! 字型單個檔案上限 [`MAX_FONT_BYTES`]。讀不進來的記警告，用到圖片的填充不畫，用到字型的樣式按回退鏈往後找。
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -16,30 +16,30 @@ use super::SvgImage;
 use super::file::ThemeFile;
 use super::file::node::{FillSpec, NodeKind, NodeSpec};
 
-/// 图片边长上限（像素）。
+/// 圖片邊長上限（畫素）。
 const MAX_SIDE: u32 = 4096;
 
-/// 单个 SVG 文件上限（字节）。
+/// 單個 SVG 檔案上限（位元組）。
 const MAX_SVG_BYTES: u64 = 4 * 1024 * 1024;
 
-/// 随主题带的单个字体文件上限（字节）：裁过字的中文字体在 10 MB 以内，整个主题包上限 32 MB。
+/// 隨主題帶的單個字型檔案上限（位元組）：裁過字的中文字型在 10 MB 以內，整個主題包上限 32 MB。
 const MAX_FONT_BYTES: u64 = 32 * 1024 * 1024;
 
 #[derive(Debug, Default)]
 pub(crate) struct Assets {
-    /// 主题里写的路径 → 解码好的预乘位图。
+    /// 主題裡寫的路徑 → 解碼好的預乘點陣圖。
     images: HashMap<String, Arc<Pixmap>>,
 
-    /// 主题里写的路径 → 解析好的 SVG。
+    /// 主題裡寫的路徑 → 解析好的 SVG。
     svgs: HashMap<String, Arc<SvgImage>>,
 
-    /// 随主题带的字体文件。
+    /// 隨主題帶的字型檔案。
     fonts: Vec<PathBuf>,
 }
 
 impl Assets {
-    /// 读 `file` 里用到的全部图片与字体；`dir` 是主题目录。`inherited` 是所继承内置主题编进程序的图片：
-    /// 主题目录里没有的图片到那里找，`extends` 樱花这类带图的内置主题、只改颜色字号时不用把图拷一份。
+    /// 讀 `file` 裡用到的全部圖片與字型；`dir` 是主題目錄。`inherited` 是所繼承內建主題編程序序的圖片：
+    /// 主題目錄裡沒有的圖片到那裡找，`extends` 櫻花這類帶圖的內建主題、只改顏色字號時不用把圖拷一份。
     pub(crate) fn load(file: &ThemeFile, dir: &Path, inherited: &[(&str, &'static [u8])]) -> Self {
         let mut assets = Self::decode(file, |path, limit| match read_file(dir, path, limit) {
             Err(MISSING) => find_embedded(inherited, path),
@@ -61,12 +61,12 @@ impl Assets {
         assets
     }
 
-    /// 内置主题：图片从编进程序的文件表（路径 → 内容）里取。
+    /// 內建主題：圖片從編程序序的檔案表（路徑 → 內容）裡取。
     pub(crate) fn embedded(file: &ThemeFile, files: &[(&str, &'static [u8])]) -> Self {
         Self::decode(file, |path, _| find_embedded(files, path))
     }
 
-    /// 解码节点树里用到的全部图片；`read` 按路径给文件内容，第二个参数是这种图片的字节上限。
+    /// 解碼節點樹裡用到的全部圖片；`read` 按路徑給檔案內容，第二個引數是這種圖片的位元組上限。
     fn decode<'a>(
         file: &ThemeFile,
         read: impl Fn(&str, u64) -> Result<Cow<'a, [u8]>, &'static str>,
@@ -114,7 +114,7 @@ impl Assets {
     }
 }
 
-/// 主题里写的相对路径 → 主题目录里的路径；绝对路径与 `..` 拒掉。
+/// 主題裡寫的相對路徑 → 主題目錄裡的路徑；絕對路徑與 `..` 拒掉。
 fn inside(dir: &Path, path: &str) -> Result<PathBuf, &'static str> {
     let relative = Path::new(path);
     if !relative
@@ -141,7 +141,7 @@ fn is_svg(path: &str) -> bool {
         .is_some_and(|extension| extension.eq_ignore_ascii_case("svg"))
 }
 
-/// 文件不存在时的问题描述（目录里没有就去继承的内置主题里找）。
+/// 檔案不存在時的問題描述（目錄裡沒有就去繼承的內建主題裡找）。
 const MISSING: &str = "不存在";
 
 fn find_embedded(
@@ -155,7 +155,7 @@ fn find_embedded(
         .ok_or(MISSING)
 }
 
-/// 主题目录里的文件，超过 `limit` 字节的不读。
+/// 主題目錄裡的檔案，超過 `limit` 位元組的不讀。
 fn read_file(dir: &Path, path: &str, limit: u64) -> Result<Cow<'static, [u8]>, &'static str> {
     let path = inside(dir, path)?;
     if std::fs::metadata(&path).map_err(|_| MISSING)?.len() > limit {
@@ -181,7 +181,7 @@ fn decode_png(data: &[u8]) -> Result<Pixmap, &'static str> {
     Ok(image)
 }
 
-/// 主题里写到的全部图片路径（可能重复）。
+/// 主題裡寫到的全部圖片路徑（可能重複）。
 pub(super) fn image_paths(file: &ThemeFile) -> Vec<String> {
     let mut paths = Vec::new();
     for component in file.components.values() {
@@ -195,7 +195,7 @@ pub(super) fn image_paths(file: &ThemeFile) -> Vec<String> {
     paths
 }
 
-/// 收集节点树里的图片路径。
+/// 收集節點樹裡的圖片路徑。
 fn collect(node: &NodeSpec, out: &mut Vec<String>) {
     if let NodeKind::Frame { fill, children, .. } = &node.kind {
         if let Some(FillSpec::Image { image, .. }) = fill {

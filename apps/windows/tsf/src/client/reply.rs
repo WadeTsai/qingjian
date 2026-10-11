@@ -1,13 +1,13 @@
 use super::KeyResponse;
 
-/// 一次 [`super::EngineClient::key`] 的应答。
+/// 一次 [`super::EngineClient::key`] 的應答。
 pub enum KeyReply {
-    /// 常规处理结果。
+    /// 常規處理結果。
     Result(KeyResponse),
 
-    /// 收到「翻译选中文字」快捷键：Server 请 DLL 读当前选区。
+    /// 收到「翻譯選中文字」快捷鍵：Server 請 DLL 讀當前選區。
     NeedSelection {
-        /// 请求标识，随 [`qingjian_platform::protocol::ClientMessage::Selection`] 带回。
+        /// 請求標識，隨 [`qingjian_platform::protocol::ClientMessage::Selection`] 帶回。
         request: u64,
     },
 }

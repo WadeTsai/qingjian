@@ -1,19 +1,19 @@
-//! 英文模式（Caps Lock 亮着）的候选：敲的字母不当拼音，按英文词表给精确词、前缀补全和拼错一个字母的纠正。
+//! 英文模式（Caps Lock 亮著）的候選：敲的字母不當拼音，按英文詞表給精確詞、字首補全和拼錯一個字母的糾正。
 //!
-//! 空格与标点仍原样上屏敲的字母，候选只在按 Tab 或方向键选中时才用上，所以候选再多也不碍事。
+//! 空格與標點仍原樣上屏敲的字母，候選只在按 Tab 或方向鍵選中時才用上，所以候選再多也不礙事。
 
 mod edit;
 
 pub use edit::within_one_edit;
 use qingjian_dictionary::WordList;
 
-/// 拼错纠正至少要几个字母：三个字母以内一处编辑能变出太多词，只补全不纠正。
+/// 拼錯糾正至少要幾個字母：三個字母以內一處編輯能變出太多詞，只補全不糾正。
 pub const MIN_CORRECTION_LETTERS: usize = 4;
 
-/// 按敲的字母给英文候选：精确词（按词表里的大小写）第一，然后是前缀补全、再是差一处编辑的词，
-/// 后两组各自按用户选过的次数、词频排序。大小写跟着敲的走：`Compa` 出 Company，`COMPA` 出 COMPANY。
+/// 按敲的字母給英文候選：精確詞（按詞表裡的大小寫）第一，然後是字首補全、再是差一處編輯的詞，
+/// 後兩組各自按使用者選過的次數、詞頻排序。大小寫跟著敲的走：`Compa` 出 Company，`COMPA` 出 COMPANY。
 ///
-/// `lists` 是若干词表，前面的优先（用户自己打过的词在前、随包词表在后）：精确词取第一个有的，补全与纠正合在一起排。
+/// `lists` 是若干詞表，前面的優先（使用者自己打過的詞在前、隨包詞表在後）：精確詞取第一個有的，補全與糾正合在一起排。
 pub fn suggest(
     lists: &[&WordList],
     typed: &str,
@@ -51,7 +51,7 @@ pub fn suggest(
         .map(|(_, word, frequency)| (word, frequency))
         .collect();
     ranked(completions, &mut result);
-    // 带数字或符号的（`foo1`、`x_y`）是标识符不是拼错的词，不去猜
+    // 帶數字或符號的（`foo1`、`x_y`）是識別符號不是拼錯的詞，不去猜
     let letters_only = code.bytes().all(|b| b.is_ascii_lowercase());
     if letters_only && code.len() >= MIN_CORRECTION_LETTERS && result.len() < limit {
         let corrections: Vec<(&str, u32)> = entries()
@@ -67,7 +67,7 @@ pub fn suggest(
     result
 }
 
-/// 词表里的写法按敲的大小写调整：全大写就全大写，首字母大写就首字母大写，其余照词表（iPhone 仍是 iPhone）。
+/// 詞表裡的寫法按敲的大小寫調整：全大寫就全大寫，首字母大寫就首字母大寫，其餘照詞表（iPhone 仍是 iPhone）。
 fn adapt_case(word: &str, typed: &str) -> String {
     let mut chars = typed.chars();
     let first_upper = chars.next().is_some_and(|c| c.is_ascii_uppercase());
@@ -106,11 +106,11 @@ mod tests {
             suggest(&[&list], "comp", |_| 0, 9),
             ["company", "compare", "compass"]
         );
-        // 精确词第一，词表写法优先
+        // 精確詞第一，詞表寫法優先
         assert_eq!(suggest(&[&list], "iphone", |_| 0, 9), ["iPhone"]);
-        // 拼错一个字母：helo → hello / help（差一处），hollow 差两处不算
+        // 拼錯一個字母：helo → hello / help（差一處），hollow 差兩處不算
         assert_eq!(suggest(&[&list], "helo", |_| 0, 9), ["hello", "help"]);
-        // 三个字母以内不纠正；带数字的是标识符，也不纠正
+        // 三個字母以內不糾正；帶數字的是識別符號，也不糾正
         assert!(suggest(&[&list], "hlo", |_| 0, 9).is_empty());
         assert!(suggest(&[&list], "hel1", |_| 0, 9).is_empty());
         assert!(suggest(&[&list], "", |_| 0, 9).is_empty());
@@ -136,12 +136,12 @@ mod tests {
     fn earlier_lists_win_for_exact_words_and_pool_for_completions() {
         let user = WordList::parse("gist\tgist\t3\n").unwrap();
         let main = WordList::parse("gist\tgist\t0\ngiant\tgiant\t900\ngift\tgift\t500\n").unwrap();
-        // 用户表里的 gist 精确命中，补全从两张表合起来按词频排
+        // 使用者表裡的 gist 精確命中，補全從兩張表合起來按詞頻排
         assert_eq!(
             suggest(&[&user, &main], "gi", |_| 0, 9),
             ["giant", "gift", "gist"]
         );
-        // 精确词后面跟着差一处编辑的 gift
+        // 精確詞後面跟著差一處編輯的 gift
         assert_eq!(suggest(&[&user, &main], "gist", |_| 0, 9), ["gist", "gift"]);
         assert_eq!(suggest(&[&main], "gis", |_| 0, 9), ["gist"]);
     }

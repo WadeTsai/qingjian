@@ -1,4 +1,4 @@
-//! 一个盒子怎么画：填充、内侧边框、圆角（像素）。
+//! 一個盒子怎麼畫：填充、內側邊框、圓角（畫素）。
 
 use super::fill::Fill;
 use crate::color::Color;
@@ -7,7 +7,7 @@ use crate::color::Color;
 pub(crate) struct BoxPaint {
     pub(crate) fill: Option<Fill>,
 
-    /// 内侧边框：宽度（像素）与颜色。
+    /// 內側邊框：寬度（畫素）與顏色。
     pub(crate) border: Option<(f32, Color)>,
 
     pub(crate) radius: f32,

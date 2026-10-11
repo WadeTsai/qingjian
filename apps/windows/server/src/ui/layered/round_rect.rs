@@ -1,6 +1,6 @@
-//! 内容圆角矩形的几何：到边界的有符号距离、阴影的方向权重。
+//! 內容圓角矩形的幾何：到邊界的有符號距離、陰影的方向權重。
 
-/// 内容圆角矩形（位图坐标）。
+/// 內容圓角矩形（點陣圖座標）。
 pub(super) struct RoundRect {
     left: f64,
     top: f64,
@@ -22,7 +22,7 @@ impl RoundRect {
         }
     }
 
-    /// 像素中心到圆角矩形的有符号距离：内部为负、边界为 0、外部为正。
+    /// 畫素中心到圓角矩形的有符號距離：內部為負、邊界為 0、外部為正。
     pub(super) fn distance(&self, x: i32, y: i32) -> f64 {
         let px = x as f64 + 0.5;
         let py = y as f64 + 0.5;
@@ -37,7 +37,7 @@ impl RoundRect {
         inside + outside - self.radius
     }
 
-    /// 外部一点的「朝下程度」：正上方 0、两侧 0.5、正下 1。
+    /// 外部一點的「朝下程度」：正上方 0、兩側 0.5、正下 1。
     pub(super) fn down_weight(&self, x: i32, y: i32) -> f64 {
         let px = x as f64 + 0.5;
         let py = y as f64 + 0.5;

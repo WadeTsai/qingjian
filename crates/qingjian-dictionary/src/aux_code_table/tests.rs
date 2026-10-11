@@ -1,4 +1,4 @@
-//! 码表的解析、落盘与查询。
+//! 碼錶的解析、落盤與查詢。
 
 use std::path::{Path, PathBuf};
 
@@ -8,7 +8,7 @@ use super::parsed::ParsedTable;
 use super::{AuxCodeLookup, AuxCodeTable, aux_code_table_info, import_aux_code_table};
 use crate::error::DictionaryError;
 
-/// 一次测试一个目录，结束删掉。
+/// 一次測試一個目錄，結束刪掉。
 struct TempDir(PathBuf);
 
 impl TempDir {
@@ -142,8 +142,8 @@ fn inline_and_block_lists_both_parse() {
     assert_eq!(parsed.pairs, [("开发".to_owned(), "kf".to_owned())]);
 }
 
-/// 无 YAML 头的纯 TSV：首行 `#` 注释与空行不再把整份正文当头吞掉（曾经整份导入失败报 `NoCodeEntries`），
-/// 统计照常。
+/// 無 YAML 頭的純 TSV：首行 `#` 註釋與空行不再把整份正文當頭吞掉（曾經整份匯入失敗報 `NoCodeEntries`），
+/// 統計照常。
 #[test]
 fn headerless_tsv_tolerates_leading_comments_and_blank_lines() {
     let text = "# 一份社区码表\n\n开发\tkf\n开放\tkf\n";
@@ -156,7 +156,7 @@ fn headerless_tsv_tolerates_leading_comments_and_blank_lines() {
     assert_eq!(table.codes_of("开发").count(), 1);
 }
 
-/// 走一遍导入：写文件 → `import_aux_code_table` → 读回来。目录跟着结果一起返回，调用方拿着它别删。
+/// 走一遍匯入：寫檔案 → `import_aux_code_table` → 讀回來。目錄跟著結果一起返回，呼叫方拿著它別刪。
 fn parse_via_import(name: &str, text: &str) -> (TempDir, super::AuxCodeTableImport) {
     let dir = TempDir::new(name);
     let source = dir.path().join(format!("{name}.dict.yaml"));
@@ -214,7 +214,7 @@ fn skips_bad_codes_but_keeps_the_rest() {
     assert_eq!(imported.report.no_code, 1);
     assert_eq!(imported.report.skipped, 1);
     let table = AuxCodeTable::open(&imported.path).unwrap();
-    // `hn zz` 里空格分开的两个码：合法的收下，非法的丢掉
+    // `hn zz` 裡空格分開的兩個碼：合法的收下，非法的丟掉
     assert_eq!(table.code_with_prefix("开", "h"), Some("hn"));
 }
 
@@ -267,7 +267,7 @@ fn tsv_parse_reads_word_and_code() {
     assert!(AuxCodeTable::parse("开发\tkf\n鹤\tH1\n").is_err());
 }
 
-/// 同一入口吃两种文本：Rime `.dict.yaml`（与导入同一套解析）与 `词\t码` TSV。
+/// 同一入口吃兩種文本：Rime `.dict.yaml`（與匯入同一套解析）與 `詞\t碼` TSV。
 #[test]
 fn reads_rime_dict_yaml_and_tsv_from_the_same_entry_point() {
     let rime = "---\nname: 形码\ncolumns: [text, code, weight]\n...\n开发\tkf\t100\n开放\tkfang\n";
@@ -278,7 +278,7 @@ fn reads_rime_dict_yaml_and_tsv_from_the_same_entry_point() {
     let tsv = "# 注释\n开发\tkf\n";
     assert_eq!(AuxCodeTable::from_text(tsv).unwrap().len(), 1);
 
-    // 纯词表（没有码列）报错，不静默出一张空表
+    // 純詞表（沒有碼列）報錯，不靜默出一張空表
     assert!(matches!(
         AuxCodeTable::from_text("---\nname: 纯词表\ncolumns: [text, weight]\n...\n开发\t100\n"),
         Err(DictionaryError::NoCodeEntries)

@@ -1,4 +1,4 @@
-//! 「候选窗口」页：外观、主题、排布、渲染引擎、字体与字号、过渡动画、拼音显示位置、悬浮状态条。
+//! 「候選視窗」頁：外觀、主題、排布、渲染引擎、字型與字號、過渡動畫、拼音顯示位置、懸浮狀態條。
 
 use qingjian_platform::{Appearance, CandidateRenderer, FontSize, LayoutMode, PreeditMode};
 use qingjian_render::ThemeLibrary;
@@ -7,7 +7,7 @@ use windows_reactor::*;
 use crate::panel::controls::{field, page};
 use crate::panel::{Message, Settings};
 
-/// 枚举下拉：按 `label()` 列项，选中 `current`（找不到取 0）。
+/// 列舉下拉：按 `label()` 列項，選中 `current`（找不到取 0）。
 fn mode_combo<T: PartialEq + Copy>(
     all: &'static [T],
     current: T,
@@ -20,7 +20,7 @@ fn mode_combo<T: PartialEq + Copy>(
         .on_selection_changed(callback)
 }
 
-/// 字号框：不限范围；没设过显示主题的字号（用户知道从哪个数开始调）。
+/// 字號框：不限範圍；沒設過顯示主題的字號（使用者知道從哪個數開始調）。
 fn size_box(size: FontSize, theme: Option<f32>, callback: Callback<Option<f64>>) -> NumberBox {
     NumberBox::new()
         .value(size.get().or(theme).map_or(f64::NAN, f64::from))
@@ -40,12 +40,12 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         .filter(|family| family.to_lowercase().contains(&query))
         .cloned()
         .collect();
-    // 内置主题加用户主题目录里的，每次画这一页都重列（新放进去的主题回到这页就能看到）
+    // 內建主題加使用者主題目錄裡的，每次畫這一頁都重列（新放進去的主題回到這頁就能看到）
     let themes = ThemeLibrary::load(qingjian_platform::dirs::themes_dir().as_deref());
     let theme = themes.resolve(g.theme_id(), false);
     let rows = [
         field(
-            "外观",
+            "外觀",
             "",
             mode_combo(
                 &Appearance::ALL,
@@ -55,8 +55,8 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             ),
         ),
         field(
-            "主题",
-            "只对青简渲染器生效；樱花只有浅色，其余主题按上面的外观切换浅色与深色。",
+            "主題",
+            "只對青簡渲染器生效；櫻花只有淺色，其餘主題按上面的外觀切換淺色與深色。",
             ComboBox::new()
                 .items_source(themes.themes().iter().map(|theme| theme.name().to_owned()))
                 .selected_index(
@@ -70,7 +70,7 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         ),
         field(
             "排布",
-            "横排时只给高亮的候选显示译词。",
+            "橫排時只給高亮的候選顯示譯詞。",
             mode_combo(
                 &LayoutMode::ALL,
                 g.layout,
@@ -80,7 +80,7 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         ),
         field(
             "渲染引擎",
-            "青简渲染器让候选窗口在各平台一致。",
+            "青簡渲染器讓候選視窗在各平臺一致。",
             mode_combo(
                 &CandidateRenderer::ALL,
                 g.renderer,
@@ -89,19 +89,19 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             ),
         ),
         field(
-            "字体",
-            "只对青简渲染器生效；留空用系统字体，没装的字体自动回到系统字体。",
+            "字型",
+            "只對青簡渲染器生效；留空用系統字型，沒裝的字型自動回到系統字型。",
             AutoSuggestBox::new()
                 .width(260.0)
                 .text(font_text)
-                .placeholder_text("系统字体")
+                .placeholder_text("系統字型")
                 .items_source(suggestions)
                 .on_text_changed(context.callback(Message::FontQuery))
                 .on_suggestion_chosen(context.callback(Message::Font)),
         ),
         field(
-            "候选字号",
-            "单位是点，清空或填 0 回到主题的字号；行高跟着缩放。只对青简渲染器生效。",
+            "候選字號",
+            "單位是點，清空或填 0 回到主題的字號；行高跟著縮放。只對青簡渲染器生效。",
             size_box(
                 g.candidate_font_size,
                 theme.theme_size("candidate"),
@@ -109,8 +109,8 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             ),
         ),
         field(
-            "译文字号",
-            "单位是点，清空或填 0 回到主题的字号。只对青简渲染器生效。",
+            "譯文字號",
+            "單位是點，清空或填 0 回到主題的字號。只對青簡渲染器生效。",
             size_box(
                 g.annotation_font_size,
                 theme.theme_size("annotation"),
@@ -122,18 +122,18 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             "",
             Button::new()
                 .on_click(context.message(Message::ResetFontSizes))
-                .content("恢复主题字号"),
+                .content("恢復主題字號"),
         ),
         field(
-            "过渡动画",
-            "高亮换候选时滑过去、主题里的循环动画。关掉后直接跳到位；系统关了「动画效果」时也不播。",
+            "過渡動畫",
+            "高亮換候選時滑過去、主題裡的迴圈動畫。關掉後直接跳到位；系統關了「動畫效果」時也不播。",
             ToggleSwitch::new()
                 .is_on(g.animations)
                 .on_toggled(context.callback(Message::Animations)),
         ),
         field(
-            "拼音显示",
-            "「只在候选窗口」时正在敲的拼音不显示在应用里，终端或行内拼音不正常的应用可以选它。",
+            "拼音顯示",
+            "「只在候選視窗」時正在敲的拼音不顯示在應用裡，終端或行內拼音不正常的應用可以選它。",
             mode_combo(
                 &PreeditMode::ALL,
                 g.preedit,
@@ -142,12 +142,12 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             ),
         ),
         field(
-            "悬浮状态条",
-            "桌面上常驻、可拖动的小条：点「中 / 英」切换模式（开着双拼时还显示方案名），点「，。」切全角 / 半角标点，点齿轮打开设置。只在当前输入法是青简时显示，拖到哪下次还在哪。",
+            "懸浮狀態條",
+            "桌面上常駐、可拖動的小條：點「中 / 英」切換模式（開著雙拼時還顯示方案名），點「，。」切全形 / 半形標點，點齒輪開啟設定。只在當前輸入法是青簡時顯示，拖到哪下次還在哪。",
             ToggleSwitch::new()
                 .is_on(settings.config.status_bar.enabled)
                 .on_toggled(context.callback(Message::StatusBar)),
         ),
     ];
-    page("候选窗口", StackPanel::new().spacing(16.0).children(rows))
+    page("候選視窗", StackPanel::new().spacing(16.0).children(rows))
 }

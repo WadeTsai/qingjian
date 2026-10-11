@@ -1,7 +1,7 @@
-//! 问字模式答案的过滤：模型有时不答字，而是把拼音问题整句「翻译」回来（`?san'ge'zhi'shi'shen'me'zi` → 三个直是什么字）。
+//! 問字模式答案的過濾：模型有時不答字，而是把拼音問題整句「翻譯」回來（`?san'ge'zhi'shi'shen'me'zi` → 三個直是什麼字）。
 
-/// `answer` 是不是在复述问题而不是作答：与本地转出的问题一样、包含问题的大半，或者问题不短而答案跟它一样长。
-/// `guess` 为空（本地转不出问题）时只按「答案里带疑问词」判断。
+/// `answer` 是不是在複述問題而不是作答：與本地轉出的問題一樣、包含問題的大半，或者問題不短而答案跟它一樣長。
+/// `guess` 為空（本地轉不出問題）時只按「答案裡帶疑問詞」判斷。
 pub fn restates_question(answer: &str, guess: &str) -> bool {
     let answer = answer.trim();
     if answer.is_empty() {
@@ -15,7 +15,7 @@ pub fn restates_question(answer: &str, guess: &str) -> bool {
     if guess_len >= 4 && answer_len >= guess_len {
         return true;
     }
-    // 问题的后半截（… 是什么字 / 怎么读 / 什么意思）出现在答案里
+    // 問題的後半截（… 是什麼字 / 怎麼讀 / 什麼意思）出現在答案裡
     if guess_len >= 4 {
         let tail: String = guess.chars().skip(guess_len / 2).collect();
         if answer.contains(&tail) {

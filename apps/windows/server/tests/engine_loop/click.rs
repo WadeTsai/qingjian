@@ -1,4 +1,4 @@
-//! 鼠标点候选窗口：上屏的字挂到焦点会话上，下一拍轮询（或抢先来的键）带给 DLL；老协议的 DLL 不收点击。
+//! 滑鼠點候選視窗：上屏的字掛到焦點會話上，下一拍輪詢（或搶先來的鍵）帶給 DLL；老協議的 DLL 不收點選。
 
 use qingjian_render::HitTarget;
 
@@ -20,7 +20,7 @@ fn clicking_a_candidate_commits_it_on_the_next_poll() {
     let (after, commit) = poll(&mut router, SESSION);
     assert_eq!(commit.as_deref(), Some("你好"));
     assert!(after.is_empty());
-    // 交出去一次就没了
+    // 交出去一次就沒了
     assert_eq!(poll(&mut router, SESSION).1, None);
 }
 

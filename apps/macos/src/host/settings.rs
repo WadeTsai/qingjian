@@ -1,4 +1,4 @@
-//! 菜单与偏好设置窗口的动作：只改 config.toml（或触发一次性操作），改完由 apply_config 统一生效。
+//! 選單與偏好設定視窗的動作：只改 config.toml（或觸發一次性操作），改完由 apply_config 統一生效。
 
 use super::diagnostics::{copy_to_pasteboard, open_with_system};
 use super::*;
@@ -6,7 +6,7 @@ use crate::preferences::DEFAULT_FONT_LABEL;
 use qingjian_platform::{FontSize, ShiftLetter};
 
 impl Host {
-    /// 写短语前读取文件；外部规则有变化时同步列表并请用户重新确认。
+    /// 寫短語前讀取檔案；外部規則有變化時同步列表並請使用者重新確認。
     fn phrases_are_current(&mut self) -> bool {
         let Some(path) = self.settings.path() else {
             return false;
@@ -29,7 +29,7 @@ impl Host {
         }
     }
 
-    /// 表格中的启用开关只修改所选规则。
+    /// 表格中的啟用開關只修改所選規則。
     pub fn set_phrase_enabled(&mut self, index: usize, enabled: bool) {
         if !self.phrases_are_current() {
             return;
@@ -50,7 +50,7 @@ impl Host {
         }
     }
 
-    /// 菜单动作。开关类先落盘再热加载，菜单勾选状态永远来自文件里的值。
+    /// 選單動作。開關類先落盤再熱載入，選單勾選狀態永遠來自檔案裡的值。
     pub fn perform(&mut self, action: MenuAction) {
         tracing::info!(?action, "菜单");
         match action {
@@ -84,9 +84,9 @@ impl Host {
         }
     }
 
-    /// 设置窗口里改了一个控件：写配置、热加载；写不成（非法组合、空文本）也要把控件同步回真实值。
+    /// 設定窗口裡改了一個控制元件：寫配置、熱載入；寫不成（非法組合、空文本）也要把控制元件同步回真實值。
     pub fn change_setting(&mut self, setting: Setting, value: SettingValue) {
-        // 密钥值不进日志
+        // 金鑰值不進日誌
         tracing::info!(?setting, "设置");
         let config = self.settings.config().clone();
         match (setting, value) {
@@ -170,7 +170,7 @@ impl Host {
                 self.settings.set_bool("general", "punct_commits", on);
             }
             (Setting::LearningLanguage, SettingValue::Index(index)) => {
-                // 菜单最后一项是「不显示译文」
+                // 選單最後一項是「不顯示譯文」
                 let code = self
                     .languages
                     .get(index)
@@ -194,7 +194,7 @@ impl Host {
                 }
             }
             (Setting::Theme, SettingValue::Index(index)) => {
-                // 与偏好设置里的列表同源：都是主题库（内置在前、用户主题按 id 排）
+                // 與偏好設定裡的列表同源：都是主題庫（內建在前、使用者主題按 id 排）
                 self.themes.refresh();
                 if let Some(theme) = self.themes.themes().get(index) {
                     let id = theme.id().to_owned();
@@ -399,7 +399,7 @@ impl Host {
                 self.settings
                     .set_value("general", "shift_letter", mode.key());
             }
-            // 勾上写缺省白名单，去掉写 ["*"]（处处都给）；手改过的名单勾一下就回缺省
+            // 勾上寫預設白名單，去掉寫 ["*"]（處處都給）；手改過的名單勾一下就回預設
             (Setting::EnglishCandidatesOnlyInApps, SettingValue::Bool(on)) => {
                 let apps: toml_edit::Array = if on {
                     DEFAULT_ENGLISH_CANDIDATES_ON.iter().copied().collect()
@@ -409,8 +409,8 @@ impl Host {
                 self.settings
                     .set_value("apps", "english_candidates_on", apps);
             }
-            // 弹出菜单按 Scheme::ALL 的顺序。写的是 [general] scheme（旧键 shuangpin 已并入它）：
-            // 写旧键的话，配置里 scheme 的缺省值非空、解析时优先，用户选的方案会被静默忽略。
+            // 彈出選單按 Scheme::ALL 的順序。寫的是 [general] scheme（舊鍵 shuangpin 已併入它）：
+            // 寫舊鍵的話，配置裡 scheme 的預設值非空、解析時優先，使用者選的方案會被靜默忽略。
             (Setting::Scheme, SettingValue::Index(index)) => {
                 let key = Scheme::ALL
                     .get(index)
@@ -421,12 +421,12 @@ impl Host {
                 self.settings
                     .set_bool("general", "shuangpin_raw_preedit", on);
             }
-            // 五笔：勾上就是 86 版，取消就是关。与上面的拼音方案同时开着就是混输。
+            // 五筆：勾上就是 86 版，取消就是關。與上面的拼音方案同時開著就是混輸。
             (Setting::Wubi, SettingValue::Bool(on)) => {
                 self.settings
                     .set_value("general", "wubi", if on { "wubi86" } else { "" });
             }
-            // 文本框失焦也会发 action：值没变就不写，免得每次切窗口都重写一遍配置
+            // 文本框失焦也會發 action：值沒變就不寫，免得每次切視窗都重寫一遍配置
             (Setting::BaseUrl, SettingValue::Text(text)) => {
                 let text = text.trim();
                 if !text.is_empty() && text != config.predict.base_url {
@@ -441,7 +441,7 @@ impl Host {
             }
             (Setting::ApiKey, SettingValue::Text(text)) => {
                 let text = text.trim();
-                // 密码框看不见内容，粘贴多了（带上了终端提示符、命令）用户发现不了；这种值写进 .env 还会让整个文件解析失败
+                // 密碼框看不見內容，貼上多了（帶上了終端提示符、命令）使用者發現不了；這種值寫進 .env 還會讓整個檔案解析失敗
                 if text.chars().any(|c| !c.is_ascii_graphic()) {
                     self.preferences.set_status(
                         "密钥没有保存：里面有空格或非英文字符，多半是粘贴时多带了别的内容",
@@ -452,7 +452,7 @@ impl Host {
                     return;
                 }
                 if self.settings.set_env_var(&config.predict.api_key_env, text) {
-                    // 密钥换了必须重建 Predictor
+                    // 金鑰換了必須重建 Predictor
                     self.apply_config(true);
                     self.preferences.set_status("密钥已保存");
                 } else {
@@ -538,8 +538,8 @@ impl Host {
         self.apply_config(false);
     }
 
-    /// 字号文本框（`style` 是 `candidate` / `annotation`）：框里没设过时显示主题的字号，清空或填 0 回到主题的，不限范围；
-    /// 填的不是数就不写（随后的同步把框里改回原值）。
+    /// 字號文本框（`style` 是 `candidate` / `annotation`）：框裡沒設過時顯示主題的字號，清空或填 0 回到主題的，不限範圍；
+    /// 填的不是數就不寫（隨後的同步把框裡改回原值）。
     fn set_font_size(&mut self, style: &str, text: &str, current: FontSize) {
         let text = text.trim();
         let input = if text.is_empty() {

@@ -1,4 +1,4 @@
-//! 节点在根节点坐标里的矩形：状态条按各格的盒子分点击区域。
+//! 節點在根節點座標裡的矩形：狀態條按各格的盒子分點選區域。
 
 use taffy::NodeId;
 
@@ -6,7 +6,7 @@ use super::Scene;
 use crate::error::RenderError;
 
 impl Scene {
-    /// `node` 在 `root` 坐标里的矩形（左、上、宽、高，像素），布局之后调。
+    /// `node` 在 `root` 座標裡的矩形（左、上、寬、高，畫素），佈局之後調。
     pub(crate) fn rect_in(
         &self,
         node: NodeId,

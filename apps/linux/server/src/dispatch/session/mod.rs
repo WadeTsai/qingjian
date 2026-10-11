@@ -1,4 +1,4 @@
-//! 上下文挂起与恢复；其他会话的通知不会清空当前输入。
+//! 上下文掛起與恢復；其他會話的通知不會清空當前輸入。
 mod info;
 pub(super) use self::info::SessionInfo;
 use super::Router;
@@ -61,8 +61,8 @@ impl Router {
         info.composed = None;
         info.highlight = 0;
         info.navigated = false;
-        // 真正的隐私能力变化是输入边界。仅在切换上下文时恢复 private 不走这里，
-        // 因此普通与私密会话来回切换不会丢掉各自尚未上屏的组句。
+        // 真正的隱私能力變化是輸入邊界。僅在切換上下文時恢復 private 不走這裡，
+        // 因此普通與私密會話來回切換不會丟掉各自尚未上屏的組句。
         if self.focused == Some(session) {
             self.stop_rescoring();
             self.engine.discard_input();
@@ -91,7 +91,7 @@ impl Router {
             return;
         }
         let previous = self.focused.filter(|id| *id != session);
-        // 挂起会话也必须按自己的 private 状态结束：普通透传写日志，私密透传静默丢弃。
+        // 掛起會話也必須按自己的 private 狀態結束：普通透傳寫日誌，私密透傳靜默丟棄。
         self.ensure_focus(session);
         self.reset_composition();
         if let Some(info) = self.sessions.get_mut(&session) {

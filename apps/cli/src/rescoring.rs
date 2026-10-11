@@ -1,4 +1,4 @@
-//! 异步重打分在 CLI 里的等法：壳是停顿后请求、定时器轮询，这里没有停顿，查询完直接请求并阻塞等结果，再查一次。
+//! 非同步重打分在 CLI 裡的等法：殼是停頓後請求、定時器輪詢，這裡沒有停頓，查詢完直接請求並阻塞等結果，再查一次。
 
 use std::time::{Duration, Instant};
 
@@ -7,7 +7,7 @@ use qingjian_core::Engine;
 /// 最多等多久。
 const WAIT: Duration = Duration::from_secs(5);
 
-/// 有整句路径还没拿到神经分就请求并等到分回来；返回是否等到了（等到了调用方该重新查询）。
+/// 有整句路徑還沒拿到神經分就請求並等到分回來；返回是否等到了（等到了呼叫方該重新查詢）。
 pub fn settle(engine: &mut Engine) -> bool {
     if !engine.rescoring_pending() || !engine.request_rescoring() {
         return false;

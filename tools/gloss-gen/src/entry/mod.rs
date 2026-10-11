@@ -1,4 +1,4 @@
-//! 一个词的生成结果，JSONL 里一行一个。
+//! 一個詞的生成結果，JSONL 裡一行一個。
 
 mod english_gloss_entry;
 mod gloss_entry;

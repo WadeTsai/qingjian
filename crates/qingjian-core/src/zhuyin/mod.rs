@@ -1,4 +1,4 @@
-//! 注音（Bopomofo）解码与键盘布局映射。
+//! 注音（Bopomofo）解碼與鍵盤佈局對映。
 pub mod decoded;
 pub mod layout;
 pub mod syllable;
@@ -45,7 +45,7 @@ mod tests {
         assert!(d.is_complete());
 
         let d2 = decode("5"); // 只有聲母
-        assert_eq!(d2.pinyin(), "zh"); // 未完成時作為前綴
+        assert_eq!(d2.pinyin(), "zh"); // 未完成時作為字首
         assert!(!d2.is_complete());
     }
 }

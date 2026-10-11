@@ -1,4 +1,4 @@
-//! 真 Rust Server 与 Fcitx 默认面板的协议/中文输入闭环，避免 mock 隐藏版本漂移。
+//! 真 Rust Server 與 Fcitx 預設面板的協議/中文輸入閉環，避免 mock 隱藏版本漂移。
 #include "qingjian.h"
 #include "support/context.h"
 #include <fcitx/inputcontextmanager.h>
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     setenv("QINGJIAN_RESOURCES", directory, 1);
     setenv("QINGJIAN_DICT", dictionary.c_str(), 1);
     setenv("XDG_CONFIG_HOME", directory, 1);
-    // 测试程序报不出英文候选白名单里的应用名：处处都给，下面才测得到英文组词。
+    // 測試程式報不出英文候選白名單裡的應用名：處處都給，下面才測得到英文組詞。
     std::filesystem::create_directories(std::filesystem::path(directory) / "qingjian");
     std::ofstream(std::filesystem::path(directory) / "qingjian/config.toml") << "[apps]\nenglish_candidates_on = [\"*\"]\n";
     setenv("XDG_DATA_HOME", directory, 1);
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
         instance.initialize();
         fcitx::QingjianEngine engine(&instance.addonManager());
         Context context(instance.inputContextManager());
-        context.focusIn(); // 全空 capability 应正常输入。
+        context.focusIn(); // 全空 capability 應正常輸入。
         for (char c : std::string("nihao")) assert(engine.process(&context, fcitx::Key(static_cast<fcitx::KeySym>(c))));
         auto list = context.inputPanel().candidateList();
         assert(list && list->size() > 0 && list->candidate(0).text().toString() == "你好");
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
         assert(context.committed == "你好");
         list->candidate(0).select(&context);
         assert(context.committed == "你好");
-        // 同一上下文失焦 / 回焦保留 Server 的英文模式；框架 reset 只清输入。
+        // 同一上下文失焦 / 回焦保留 Server 的英文模式；框架 reset 只清輸入。
         engine.process(&context, fcitx::Key(FcitxKey_Shift_L));
         assert(engine.process(&context, fcitx::Key(FcitxKey_Shift_L), true));
         context.focusOut();

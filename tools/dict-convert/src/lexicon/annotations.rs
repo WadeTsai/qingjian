@@ -1,4 +1,4 @@
-//! `gloss-gen pinyin` 写出的 JSONL：每行 `{"word":"重庆","pinyin":["chong","qing"]}`。
+//! `gloss-gen pinyin` 寫出的 JSONL：每行 `{"word":"重慶","pinyin":["chong","qing"]}`。
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -15,7 +15,7 @@ struct Row {
     pinyin: Vec<String>,
 }
 
-/// 词 → 音节。同一个词以最后一条为准，坏行跳过。
+/// 詞 → 音節。同一個詞以最後一條為準，壞行跳過。
 pub fn load(path: &Path) -> Result<HashMap<String, Vec<String>>, ConvertError> {
     let source = std::fs::read_to_string(path)?;
     let mut out = HashMap::new();

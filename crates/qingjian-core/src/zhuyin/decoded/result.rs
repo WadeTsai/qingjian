@@ -1,4 +1,4 @@
-//! 注音解码结果表示。
+//! 注音解碼結果表示。
 use super::unit::Unit;
 use crate::parser::{Segmentation, Syllable as ParserSyllable};
 

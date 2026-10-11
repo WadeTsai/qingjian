@@ -1,4 +1,4 @@
-//! `variables` 里的一个颜色值：只能直接写，不能再引用别的变量。
+//! `variables` 裡的一個顏色值：只能直接寫，不能再引用別的變數。
 
 use serde::Deserialize;
 

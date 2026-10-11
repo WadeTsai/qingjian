@@ -1,5 +1,5 @@
-//! TSV → `.qj`：解析成内存结构后原样落盘，加上元数据；`model` 是三件套目录 → `.qjm`，
-//! `codes` 是唯一带计算的一种（笔画表 + 词库 → 码表，见 `codes` 模块）。
+//! TSV → `.qj`：解析成記憶體結構後原樣落盤，加上後設資料；`model` 是三件套目錄 → `.qjm`，
+//! `codes` 是唯一帶計算的一種（筆畫表 + 詞庫 → 碼錶，見 `codes` 模組）。
 
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -13,32 +13,32 @@ use qingjian_translate::Glossary;
 use crate::args::PackKind;
 use crate::error::ConvertError;
 
-/// 随包笔画码表的名称（`pack codes` 的元数据缺省值）。
+/// 隨包筆畫碼錶的名稱（`pack codes` 的後設資料預設值）。
 const CODES_NAME: &str = "笔画";
 
-/// 许可：CNS11643 筆順資料开放数据「政府資料開放授權條款第 1 版 / OFL-1.1」二选一，取 OFL-1.1。
+/// 許可：CNS11643 筆順資料開放資料「政府資料開放授權條款第 1 版 / OFL-1.1」二選一，取 OFL-1.1。
 const CODES_LICENSE: &str = "OFL-1.1";
 
-/// 署名：与 `assets/stroke/README.md` 的「随包时的许可合规」一致。
+/// 署名：與 `assets/stroke/README.md` 的「隨包時的許可合規」一致。
 const CODES_ATTRIBUTION: &str = "CNS11643 全字庫筆順資料（數位發展部）";
 
-/// 来源：全字庫开放数据的数据集页。
+/// 來源：全字型檔開放資料的資料集頁。
 const CODES_SOURCE: &str = "https://data.gov.tw/dataset/5961";
 
-/// `pack codes` 的三个路径（别的种类不给）。都不给时都从 `out_dir` 里找。
+/// `pack codes` 的三個路徑（別的種類不給）。都不給時都從 `out_dir` 裡找。
 #[derive(Debug, Default)]
 pub struct CodePaths<'a> {
-    /// 笔画表（`stroke` 子命令的产物）。
+    /// 筆畫表（`stroke` 子命令的產物）。
     pub stroke: Option<&'a Path>,
 
-    /// 取码用的词库。
+    /// 取碼用的詞庫。
     pub dict: Option<&'a Path>,
 
-    /// 码表产物。
+    /// 碼錶產物。
     pub output: Option<&'a Path>,
 }
 
-/// 打包一种数据。`inputs` 为空时从 `out_dir` 里找缺省的 TSV。
+/// 打包一種資料。`inputs` 為空時從 `out_dir` 裡找預設的 TSV。
 pub fn pack(
     kind: PackKind,
     inputs: &[PathBuf],
@@ -51,7 +51,7 @@ pub fn pack(
         generator: format!("qingjian-dict-convert {}", env!("CARGO_PKG_VERSION")),
         ..metadata
     };
-    // 只有 codes 自己带元数据缺省值（名称、许可、署名都是产品决定），别的种类仍然要显式给。
+    // 只有 codes 自己帶後設資料預設值（名稱、許可、署名都是產品決定），別的種類仍然要顯式給。
     if kind != PackKind::Codes && metadata.name.is_empty() {
         return Err(ConvertError::MissingName { kind: kind.name() });
     }
@@ -129,8 +129,8 @@ pub fn pack(
     Ok(())
 }
 
-/// `pack codes` 的元数据缺省值：名称、许可、署名、来源都是这份产品数据的决定
-/// （许可依据见 `docs/design/aux-code.md` 的「许可」一节），调用方不用重复给，给了的以给的为准。
+/// `pack codes` 的後設資料預設值：名稱、許可、署名、來源都是這份產品資料的決定
+/// （許可依據見 `docs/design/aux-code.md` 的「許可」一節），呼叫方不用重複給，給了的以給的為準。
 fn codes_metadata(mut metadata: Metadata, stroke: &Path) -> Metadata {
     if metadata.name.is_empty() {
         metadata.name = CODES_NAME.to_owned();
@@ -145,7 +145,7 @@ fn codes_metadata(mut metadata: Metadata, stroke: &Path) -> Metadata {
         metadata.source = CODES_SOURCE.to_owned();
     }
     if metadata.version.is_empty() {
-        // 上游没有版本号：取笔画表（CNS 筆順資料的快照）的日期当数据版本。
+        // 上游沒有版本號：取筆畫表（CNS 筆順資料的快照）的日期當資料版本。
         metadata.version = source_date(stroke)
             .map(|date| date.to_string())
             .unwrap_or_default();
@@ -153,7 +153,7 @@ fn codes_metadata(mut metadata: Metadata, stroke: &Path) -> Metadata {
     metadata
 }
 
-/// 文件的日期（本地时区）；拿不到时 `None`。
+/// 檔案的日期（本地時區）；拿不到時 `None`。
 fn source_date(path: &Path) -> Option<jiff::civil::Date> {
     let modified = std::fs::metadata(path).ok()?.modified().ok()?;
     let seconds = modified

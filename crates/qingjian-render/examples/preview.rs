@@ -1,7 +1,7 @@
-//! 离线预览：`cargo run --release -p qingjian-render --example preview -- --out target/render-preview`
-//! 把样例帧按浅 / 深色、竖 / 横排画成 PNG，与各平台原生候选窗截图并排比；`--measure` 只量几段文字的宽度与原生对数；
-//! 末尾列出验收行每个字形落到了哪家字体。不是日常工具，改渲染器时拿来核对。
-//! `--theme <主题目录>` 画用户主题；主题样式写的系统字族在 `--font-dir`（可写多个）里按字族名找文件，代替壳的系统字体登记。
+//! 離線預覽：`cargo run --release -p qingjian-render --example preview -- --out target/render-preview`
+//! 把樣例幀按淺 / 深色、豎 / 橫排畫成 PNG，與各平臺原生候選窗截圖並排比；`--measure` 只量幾段文字的寬度與原生對數；
+//! 末尾列出驗收行每個字形落到了哪家字型。不是日常工具，改渲染器時拿來核對。
+//! `--theme <主題目錄>` 畫使用者主題；主題樣式寫的系統字族在 `--font-dir`（可寫多個）裡按字族名找檔案，代替殼的系統字型登記。
 
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -14,11 +14,11 @@ mod scenes;
 
 #[derive(Parser)]
 struct Args {
-    /// PNG 输出目录。
+    /// PNG 輸出目錄。
     #[arg(long, default_value = "target/render-preview")]
     out: PathBuf,
 
-    /// 点 → 像素倍数（Retina 为 2）。
+    /// 點 → 畫素倍數（Retina 為 2）。
     #[arg(long, default_value_t = 2.0)]
     scale: f32,
 
@@ -26,20 +26,20 @@ struct Args {
     #[arg(long, default_value = "zh-CN")]
     locale: String,
 
-    /// 只量几段文字的宽度（点），不出图；与 AppKit 的 NSAttributedString.size() 对数。
+    /// 只量幾段文字的寬度（點），不出圖；與 AppKit 的 NSAttributedString.size() 對數。
     #[arg(long)]
     measure: bool,
 
-    /// 画这个主题目录（含 theme.json），不写画缺省内置主题。
+    /// 畫這個主題目錄（含 theme.json），不寫畫預設內建主題。
     #[arg(long)]
     theme: Option<PathBuf>,
 
-    /// 主题写的系统字族到这些目录里找字体文件。
+    /// 主題寫的系統字族到這些目錄裡找字型檔案。
     #[arg(long = "font-dir", default_values = default_font_dirs())]
     font_dirs: Vec<PathBuf>,
 }
 
-/// 各平台放系统字体的目录。
+/// 各平臺放系統字型的目錄。
 fn default_font_dirs() -> Vec<&'static str> {
     if cfg!(target_os = "macos") {
         vec![
@@ -54,7 +54,7 @@ fn default_font_dirs() -> Vec<&'static str> {
     }
 }
 
-/// 在字体目录里按字族名找文件（只看名字表，不加载）。
+/// 在字型目錄裡按字族名找檔案（只看名字表，不載入）。
 fn family_files(dirs: &[PathBuf], family: &str) -> Vec<PathBuf> {
     let mut db = cosmic_text::fontdb::Database::new();
     for dir in dirs {
@@ -138,7 +138,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (theme_name, theme) in &themes {
         for (scene, frame, layout) in &samples {
             let started = Instant::now();
-            // 每张样例独立：不和上一张配对播过渡
+            // 每張樣例獨立：不和上一張配對播過渡
             renderer.forget();
             let rendered = renderer.render(frame, *layout, theme, args.scale)?;
             let elapsed = started.elapsed();
@@ -156,7 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Windows 的悬浮状态条：三格
+    // Windows 的懸浮狀態條：三格
     let cells = scenes::status_cells();
     for (theme_name, theme) in &themes {
         let status = renderer.render_status(&cells, &Mode::default(), theme, args.scale)?;

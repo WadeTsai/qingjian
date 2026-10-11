@@ -1,10 +1,10 @@
-//! `--tune 名=值`：把引擎里几组「拍的」常数换成别的值，回放评测时扫参数用；名字见 [`KEYS`]。
+//! `--tune 名=值`：把引擎裡幾組「拍的」常數換成別的值，回放評測時掃引數用；名字見 [`KEYS`]。
 
 use qingjian_core::Engine;
 use qingjian_core::correction::TypoCosts;
 use qingjian_core::sentence::Interpolation;
 
-/// 可调的参数名。
+/// 可調的引數名。
 pub const KEYS: [&str; 11] = [
     "lambda",
     "k",
@@ -19,7 +19,7 @@ pub const KEYS: [&str; 11] = [
     "correction-transpose",
 ];
 
-/// 把一组 `名=值` 应用到引擎；没给的项保持缺省。
+/// 把一組 `名=值` 應用到引擎；沒給的項保持預設。
 pub fn apply(engine: &mut Engine, settings: &[String]) -> Result<(), TuneError> {
     if settings.is_empty() {
         return Ok(());

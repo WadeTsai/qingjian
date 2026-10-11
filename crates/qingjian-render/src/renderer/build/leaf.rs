@@ -1,4 +1,4 @@
-//! 叶子节点：文字、图标、拼音行、译文。绑定取不到数据时不产出节点。
+//! 葉子節點：文字、圖示、拼音行、譯文。繫結取不到資料時不產出節點。
 
 use taffy::{Dimension, NodeId, Style};
 
@@ -78,10 +78,10 @@ impl Builder<'_> {
                 let Some(segments) = ctx.annotation(bind) else {
                     return Ok(None);
                 };
-                // 挑完是空的也留着节点（与没有译文时一样）：主题写了高度就照样占住这一行，几列对得齐
+                // 挑完是空的也留著節點（與沒有譯文時一樣）：主題寫了高度就照樣佔住這一行，幾列對得齊
                 let segments = pick_segments(segments, tones.as_deref(), *senses);
                 let stroke = self.stroke(stroke.as_ref(), ctx);
-                // 点译文上屏的是哪个候选的译词：候选那一列的是它自己，横排底下那行是高亮的那个
+                // 點譯文上屏的是哪個候選的譯詞：候選那一列的是它自己，橫排底下那行是高亮的那個
                 let candidate = match bind.as_str() {
                     "annotation" => ctx.row.map(|row| row.index),
                     "highlighted.annotation" => ctx.frame.highlighted,
@@ -90,7 +90,7 @@ impl Builder<'_> {
                 let mut children = Vec::with_capacity(segments.len());
                 for ((segment, tone), sense) in segments {
                     let color = match tone {
-                        // 码是词本身的属性，与译文同一个淡色
+                        // 碼是詞本身的屬性，與譯文同一個淡色
                         Tone::Gloss | Tone::Code => gloss,
                         Tone::Fresh => fresh,
                         Tone::Faint => faint,
@@ -125,7 +125,7 @@ impl Builder<'_> {
         Ok(Some(node))
     }
 
-    /// 拼音各段 + 行尾留出光标宽度；光标绝对定位在光标前文字的宽度处，最后画、压在字形上。
+    /// 拼音各段 + 行尾留出游標寬度；游標絕對定位在游標前文字的寬度處，最後畫、壓在字形上。
     fn preedit(
         &mut self,
         spec: &NodeSpec,
@@ -153,7 +153,7 @@ impl Builder<'_> {
             let text_style = match segment.style {
                 PreeditStyle::Typed => typed_style,
                 PreeditStyle::Rest => self.text_style(font, self.color(rest, ctx)).stroked(stroke),
-                // 辅码码段：与剩余拼音同色，再压一道下划线区分
+                // 輔碼碼段：與剩餘拼音同色，再壓一道下劃線區分
                 PreeditStyle::AuxCode => self
                     .text_style(font, self.color(rest, ctx))
                     .stroked(stroke)
@@ -206,7 +206,7 @@ impl Builder<'_> {
     }
 }
 
-/// 按 `senses`（前几个义项，按分隔数）与 `tones`（只要哪几种片段）挑出要画的片段，各带它属于第几个义项（前面有几个分隔）。
+/// 按 `senses`（前幾個義項，按分隔數）與 `tones`（只要哪幾種片段）挑出要畫的片段，各帶它屬於第幾個義項（前面有幾個分隔）。
 fn pick_segments<'a>(
     segments: &'a [(String, Tone)],
     tones: Option<&[ToneFilter]>,

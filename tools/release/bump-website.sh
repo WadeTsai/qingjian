@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 让官网（qingjian-team/qingjian-web，Cloudflare Workers Builds 按仓库提交自动构建）重新构建：
-# 往它的 src/content/upstream.json 写一笔「本次发版的标签 / 文档提交」并推一个提交。
-# 官网构建时拉最新 Release 的 releases.json，文档按记下的提交号拉主仓库 docs/user；只在发版时调用，文档只随发版更新。
+# 讓官網（qingjian-team/qingjian-web，Cloudflare Workers Builds 按倉庫提交自動構建）重新構建：
+# 往它的 src/content/upstream.json 寫一筆「本次發版的標籤 / 文件提交」並推一個提交。
+# 官網構建時拉最新 Release 的 releases.json，文件按記下的提交號拉主倉庫 docs/user；只在發版時呼叫，文件只隨發版更新。
 #
-# 用法：tools/release/bump-website.sh（在 release.yml 里跑，读 GITHUB_REF_NAME 标签与 GITHUB_SHA）
-# 需要环境变量 QINGJIAN_WEB_TOKEN：对 qingjian-web 有 Contents: write 的 fine-grained PAT。
+# 用法：tools/release/bump-website.sh（在 release.yml 裡跑，讀 GITHUB_REF_NAME 標籤與 GITHUB_SHA）
+# 需要環境變數 QINGJIAN_WEB_TOKEN：對 qingjian-web 有 Contents: write 的 fine-grained PAT。
 set -euo pipefail
 
 token=${QINGJIAN_WEB_TOKEN:?缺 QINGJIAN_WEB_TOKEN}

@@ -1,4 +1,4 @@
-//! 组句中「修饰键 + 数字」的快捷键：上屏译词、删候选。与 macOS 壳对齐。
+//! 組句中「修飾鍵 + 數字」的快捷鍵：上屏譯詞、刪候選。與 macOS 殼對齊。
 
 use qingjian_core::{Candidate, CandidateList};
 use qingjian_platform::protocol::KeyModifiers;
@@ -7,7 +7,7 @@ use super::Effect;
 use crate::dispatch::Router;
 
 impl Router {
-    /// 配到哪组就上屏第一 / 第二个译词或删候选；哪组都不是返回 `None`，按普通键处理。
+    /// 配到哪組就上屏第一 / 第二個譯詞或刪候選；哪組都不是返回 `None`，按普通鍵處理。
     pub(super) fn apply_digit_shortcut(
         &mut self,
         digit: usize,
@@ -29,7 +29,7 @@ impl Router {
         Some(effect)
     }
 
-    /// 上屏第 `digit` 个候选的第 `sense` 条译文；没有那条译文就吞掉按键不动。
+    /// 上屏第 `digit` 個候選的第 `sense` 條譯文；沒有那條譯文就吞掉按鍵不動。
     fn commit_translation_on_page(&mut self, digit: usize, sense: usize) -> Effect {
         let Some(candidate) = self.annotated_candidate_on_page(digit) else {
             tracing::debug!(digit, "这一格没有候选");
@@ -44,7 +44,7 @@ impl Router {
         }
     }
 
-    /// 删第 `digit` 个候选（用户词整删、词库词清学习记录），提示随下一帧下发。
+    /// 刪第 `digit` 個候選（使用者詞整刪、詞庫詞清學習記錄），提示隨下一幀下發。
     fn forget_on_page(&mut self, digit: usize) -> Effect {
         let Some(candidate) = self.candidate_on_page(digit) else {
             tracing::debug!(digit, "这一格没有候选，没什么可删");
@@ -63,7 +63,7 @@ impl Router {
         Effect::Changed(None)
     }
 
-    /// 当前页第 `digit` 个候选（1 起）。
+    /// 當前頁第 `digit` 個候選（1 起）。
     fn candidate_on_page(&self, digit: usize) -> Option<Candidate> {
         let page_size = self.config.page_size;
         if digit == 0 || digit > page_size {
@@ -74,7 +74,7 @@ impl Router {
         self.layout_candidate(index)
     }
 
-    /// 同上，补上译文（布局里存的是查询原样，译文画页时才补）。
+    /// 同上，補上譯文（佈局裡存的是查詢原樣，譯文畫頁時才補）。
     fn annotated_candidate_on_page(&self, digit: usize) -> Option<Candidate> {
         let candidate = self.candidate_on_page(digit)?;
         let mut list = CandidateList {

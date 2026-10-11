@@ -1,4 +1,4 @@
-//! 错误鼠标身份不改变其他会话曝光，重开上下文不会复用旧帧。
+//! 錯誤滑鼠身份不改變其他會話曝光，重開上下文不會複用舊幀。
 use super::{compose, key, router};
 use qingjian_platform::protocol::{ClientMessage, PROTOCOL_VERSION, SessionId};
 use serde_json::json;

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# //! 仅删除本安装清单中的文件，保留配置、词库、学习数据。
+# //! 僅刪除本安裝清單中的檔案，保留配置、詞庫、學習資料。
 set -euo pipefail
 install_prefix="$HOME/.local"
 while (($#)); do

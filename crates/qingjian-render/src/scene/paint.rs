@@ -1,5 +1,5 @@
-//! 按树序画：先画节点自己（投影垫底、内阴影压在填充上；自己不画的容器取子节点当阴影形状），再画子节点；坐标是父节点位置加布局给的相对位置。
-//! 不透明度小于 1 的节点连同子树先画到离屏图层，再按不透明度合成；带循环动画姿态的节点连同子树画进一块缓存的小图，按姿态变换后贴上。
+//! 按樹序畫：先畫節點自己（投影墊底、內陰影壓在填充上；自己不畫的容器取子節點當陰影形狀），再畫子節點；座標是父節點位置加布局給的相對位置。
+//! 不透明度小於 1 的節點連同子樹先畫到離屏圖層，再按不透明度合成；帶迴圈動畫姿態的節點連同子樹畫進一塊快取的小圖，按姿態變換後貼上。
 
 use taffy::NodeId;
 
@@ -12,7 +12,7 @@ use crate::error::RenderError;
 use crate::text::TextPainter;
 
 impl Scene {
-    /// 把 `root` 画到画布上，`(x, y)` 是 `root` 父节点左上角在画布里的像素坐标（根节点就是它自己的左上角）。
+    /// 把 `root` 畫到畫布上，`(x, y)` 是 `root` 父節點左上角在畫布裡的畫素座標（根節點就是它自己的左上角）。
     pub(crate) fn paint(
         &self,
         root: NodeId,
@@ -31,7 +31,7 @@ impl Scene {
         }
     }
 
-    /// 带姿态的节点：整棵子树（原样）画进一块离屏小图并缓存，按姿态绕节点中心变换后贴上。
+    /// 帶姿態的節點：整棵子樹（原樣）畫進一塊離屏小圖並快取，按姿態繞節點中心變換後貼上。
     fn paint_posed(
         &self,
         node: NodeId,
@@ -48,7 +48,7 @@ impl Scene {
         self.draw_posed(node, canvas, text, place, pose, (0.0, 0.0))
     }
 
-    /// 带姿态的节点画到 `canvas` 上；`offset` 是 `canvas` 左上角在整张画布里的位置（局部重画时往一块小图上画）。
+    /// 帶姿態的節點畫到 `canvas` 上；`offset` 是 `canvas` 左上角在整張畫布裡的位置（區域性重畫時往一塊小圖上畫）。
     pub(crate) fn draw_posed(
         &self,
         node: NodeId,
@@ -74,7 +74,7 @@ impl Scene {
         Ok(())
     }
 
-    /// 带姿态的节点这一帧画出来占的整像素矩形（整张画布坐标，含抗锯齿一像素）：`(left, top, right, bottom)`。
+    /// 帶姿態的節點這一幀畫出來佔的整畫素矩形（整張畫布座標，含抗鋸齒一畫素）：`(left, top, right, bottom)`。
     pub(crate) fn posed_bounds(
         &self,
         node: NodeId,
@@ -129,7 +129,7 @@ impl Scene {
         Ok(CacheKey::with_size(node, Slot::Layer, rect, size))
     }
 
-    /// 确保节点整棵子树（原样）已画进缓存小图；返回小图左上角在整张画布里的位置。
+    /// 確保節點整棵子樹（原樣）已畫進快取小圖；返回小圖左上角在整張畫布裡的位置。
     fn posed_layer(
         &self,
         node: NodeId,
@@ -160,7 +160,7 @@ impl Scene {
         Ok(Some((left as i32, top as i32)))
     }
 
-    /// 原样画（不管姿态）：不透明度小于 1 时先画到离屏图层。
+    /// 原樣畫（不管姿態）：不透明度小於 1 時先畫到離屏圖層。
     fn paint_body(
         &self,
         root: NodeId,
@@ -197,7 +197,7 @@ impl Scene {
             .tree
             .get_node_context(root)
             .and_then(|node| node.placed);
-        // 动画中的节点按插值后的位置画，子树跟着走
+        // 動畫中的節點按插值後的位置畫，子樹跟著走
         let rect = match placed {
             Some(placed) => (placed.x, placed.y, placed.width, placed.height),
             None => (
@@ -227,7 +227,7 @@ impl Scene {
                     let mask = match cached {
                         Some(mask) => mask,
                         None => {
-                            // 自己不画东西的容器（译文、拼音行）拿子节点当形状
+                            // 自己不畫東西的容器（譯文、拼音行）拿子節點當形狀
                             let mut shape = |layer: &mut Canvas, (x, y, width, height), spread| {
                                 match visual {
                                     Visual::Group => self.unsplit(|| {
@@ -271,7 +271,7 @@ impl Scene {
         Ok(())
     }
 
-    /// 画节点自己的画面。图片填充的框先画进一块离屏图、按键缓存，动画帧里没动就直接贴回。
+    /// 畫節點自己的畫面。圖片填充的框先畫進一塊離屏圖、按鍵快取，動畫幀裡沒動就直接貼回。
     fn draw_own(
         &self,
         canvas: &mut Canvas,

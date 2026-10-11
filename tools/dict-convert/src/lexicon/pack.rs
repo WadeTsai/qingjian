@@ -1,51 +1,51 @@
-//! 读「输入法字词库_分类整理版」目录：`01_characters/standard_8105.tsv`、`02_common/modern_chinese_common_words.tsv`、`03_domains/*.tsv`。
-//! 三种 TSV 首行都是字段名：`词条\t拼音\t排序号\t文档频次\t字表级别\t来源`。
+//! 讀「輸入法字詞庫_分類整理版」目錄：`01_characters/standard_8105.tsv`、`02_common/modern_chinese_common_words.tsv`、`03_domains/*.tsv`。
+//! 三種 TSV 首行都是欄位名：`詞條\t拼音\t排序號\t文件頻次\t字表級別\t來源`。
 
 use std::path::Path;
 
 use super::tone::numeric_syllables;
 use crate::error::ConvertError;
 
-/// 规范字表的一行。
+/// 規範字表的一行。
 #[derive(Debug, Clone)]
 pub struct CharRow {
     /// 字。
     pub ch: char,
 
-    /// 字表级别 1–3。
+    /// 字表級別 1–3。
     pub level: u8,
 }
 
-/// 通用词表的一行。
+/// 通用詞表的一行。
 #[derive(Debug, Clone)]
 pub struct CommonRow {
-    /// 词。
+    /// 詞。
     pub text: String,
 
-    /// 音节（已规范化）。
+    /// 音節（已規範化）。
     pub syllables: Vec<String>,
 
-    /// 原词号，越小越常用。
+    /// 原詞號，越小越常用。
     pub rank: u32,
 }
 
-/// 领域词表的一行。
+/// 領域詞表的一行。
 #[derive(Debug, Clone)]
 pub struct DomainRow {
-    /// 词。
+    /// 詞。
     pub text: String,
 
-    /// 文档频次（THUOCL DF），缺失为 0。
+    /// 文件頻次（THUOCL DF），缺失為 0。
     pub df: u64,
 
-    /// 来自 `03_domains/` 的哪个文件（文件名主干，如 `law`）；语料挖出的额外词为 `None`，一律留在基础词库。
+    /// 來自 `03_domains/` 的哪個檔案（檔名主幹，如 `law`）；語料挖出的額外詞為 `None`，一律留在基礎詞庫。
     pub domain: Option<String>,
 
-    /// 给定的读音（短语层由成分词拼出）；`None` 按字推。
+    /// 給定的讀音（短語層由成分詞拼出）；`None` 按字推。
     pub syllables: Option<Vec<String>>,
 }
 
-/// 整个数据包。
+/// 整個資料包。
 #[derive(Debug, Default)]
 pub struct Pack {
     pub chars: Vec<CharRow>,
@@ -76,7 +76,7 @@ impl Pack {
             };
             let text = clean(text);
             let syllables = numeric_syllables(pinyin);
-            // 拼音与字数对不上的（阿Ｑ、带逗号的成语）不要
+            // 拼音與字數對不上的（阿Ｑ、帶逗號的成語）不要
             if text.is_empty()
                 || syllables.len() != text.chars().count()
                 || !text.chars().all(is_han)
@@ -132,7 +132,7 @@ impl Pack {
     }
 }
 
-/// 是不是一份可用的词库源 TSV：扩展名对、是文件，且不是点开头（隐藏 / 系统元数据）或波浪号开头（Office 等编辑器临时文件）。
+/// 是不是一份可用的詞庫源 TSV：副檔名對、是檔案，且不是點開頭（隱藏 / 系統後設資料）或波浪號開頭（Office 等編輯器臨時檔案）。
 pub(crate) fn is_source_tsv(path: &Path) -> bool {
     path.is_file()
         && path.extension().is_some_and(|e| e == "tsv")
@@ -142,7 +142,7 @@ pub(crate) fn is_source_tsv(path: &Path) -> bool {
             .is_some_and(|n| n.starts_with('.') || n.starts_with('~'))
 }
 
-/// 读一个带表头的 TSV，跳过首行、空行。
+/// 讀一個帶表頭的 TSV，跳過首行、空行。
 fn rows(path: &Path) -> Result<Vec<String>, ConvertError> {
     let source = std::fs::read_to_string(path)?;
     Ok(source
@@ -153,7 +153,7 @@ fn rows(path: &Path) -> Result<Vec<String>, ConvertError> {
         .collect())
 }
 
-/// 去掉 BOM 与首尾空白。
+/// 去掉 BOM 與首尾空白。
 fn clean(field: &str) -> String {
     field
         .trim()
@@ -162,7 +162,7 @@ fn clean(field: &str) -> String {
         .to_owned()
 }
 
-/// 汉字（基本区 + 扩展 A）。
+/// 漢字（基本區 + 擴充套件 A）。
 fn is_han(c: char) -> bool {
     matches!(c, '\u{4e00}'..='\u{9fff}' | '\u{3400}'..='\u{4dbf}')
 }
@@ -171,7 +171,7 @@ fn is_han(c: char) -> bool {
 mod tests {
     use super::*;
 
-    /// 建一个最小词库目录：01/02 表只有表头（读出来是空），03_domains 由测试自己放文件。
+    /// 建一個最小詞庫目錄：01/02 表只有表頭（讀出來是空），03_domains 由測試自己放檔案。
     fn scratch(name: &str) -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!("qingjian-dict-convert-lexicon-{name}"));
         let _ = std::fs::remove_dir_all(&dir);
@@ -199,14 +199,14 @@ mod tests {
             "词条\t拼音\t排序号\t文档频次\t字表级别\t来源\n法院\tfa yuan\t1\t100\t\t\n",
         )
         .unwrap();
-        // 点开头（隐藏 / 系统元数据）与波浪号开头（Office 等临时文件）的 TSV 不应被当成领域词库
+        // 點開頭（隱藏 / 系統後設資料）與波浪號開頭（Office 等臨時檔案）的 TSV 不應被當成領域詞庫
         std::fs::write(
             dir.join("03_domains/.hidden.tsv"),
             "词条\t拼音\t排序号\t文档频次\t字表级别\t来源\n坏词\thuai ci\t1\t100\t\t\n",
         )
         .unwrap();
         std::fs::write(dir.join("03_domains/~$law.tsv"), "不是表\n").unwrap();
-        // 同名目录也不该被当成文件读
+        // 同名目錄也不該被當成檔案讀
         std::fs::create_dir(dir.join("food.tsv")).unwrap();
 
         let pack = Pack::load(&dir).unwrap();

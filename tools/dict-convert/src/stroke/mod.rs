@@ -1,20 +1,20 @@
-//! 笔画码表：CNS11643 全字庫「筆順資料」+ 大陆序覆盖表 → `codes/stroke.tsv`（随包笔画表的源数据）。
+//! 筆畫碼錶：CNS11643 全字型檔「筆順資料」+ 大陸序覆蓋表 → `codes/stroke.tsv`（隨包筆畫表的源資料）。
 //!
-//! 产物每行 `字\t序列`：序列按大陆笔顺，1 横 / 2 竖 / 3 撇 / 5 折 / n 点与捺
-//! （CNS 的 4 同时涵盖点与捺，按「点捺合并为 n」写 n；提在 CNS 里多数已记 1，氵的第三笔记 4，由覆盖表改回 1）。
-//! 数据链：
+//! 產物每行 `字\t序列`：序列按大陸筆順，1 橫 / 2 豎 / 3 撇 / 5 折 / n 點與捺
+//! （CNS 的 4 同時涵蓋點與捺，按「點捺合併為 n」寫 n；提在 CNS 裡多數已記 1，氵的第三筆記 4，由覆蓋表改回 1）。
+//! 資料鏈：
 //!
-//! 1. `--cns-map`：官方 CNS→Unicode 对照表（`CNS2UNICODE_Unicode*.txt`，UTF-8、行内容纯 ASCII），建 CNS 字碼 → 字；
-//! 2. `--cns-seq`：官方筆順資料（`CNS_strokes_sequence.txt`），`CNS 字碼\t[1-5]{n}`，经上一步映射成 字 → 序列
-//!    （同一个字落到两条不同序列上直接报错：那说明对照表或笔顺表读错了）；
-//! 3. `--cns-count`：官方筆畫數（`CNS_stroke.txt`，可选），序列长度与它自洽（差不超过 `--max-diff`）的字才留——
-//!    CNS 的序列与筆畫數在罕用字上互相打架（t07 实测 |d| > 1 约 0.5%），**以序列为准、以筆畫數过滤**；
-//! 4. `--prc-rules`：大陆序覆盖表（`assets/stroke/prc-rules.tsv`），台湾序按部件重写成大陆序；
-//! 5. `--filter`：字表白名单（缺省通用规范字表 8,105 字），只出表里的字，按表序排列。
+//! 1. `--cns-map`：官方 CNS→Unicode 對照表（`CNS2UNICODE_Unicode*.txt`，UTF-8、行內容純 ASCII），建 CNS 字碼 → 字；
+//! 2. `--cns-seq`：官方筆順資料（`CNS_strokes_sequence.txt`），`CNS 字碼\t[1-5]{n}`，經上一步對映成 字 → 序列
+//!    （同一個字落到兩條不同序列上直接報錯：那說明對照表或筆順表讀錯了）；
+//! 3. `--cns-count`：官方筆畫數（`CNS_stroke.txt`，可選），序列長度與它自洽（差不超過 `--max-diff`）的字才留——
+//!    CNS 的序列與筆畫數在罕用字上互相打架（t07 實測 |d| > 1 約 0.5%），**以序列為準、以筆畫數過濾**；
+//! 4. `--prc-rules`：大陸序覆蓋表（`assets/stroke/prc-rules.tsv`），台灣序按部件重寫成大陸序；
+//! 5. `--filter`：字表白名單（預設通用規範字表 8,105 字），只出表裡的字，按表序排列。
 //!
-//! `--verify` 再对照大陆规范：笔画数按抽样比对、首笔按字表全量比对，不符的字必须都在白名单里，
-//! 否则退出码非 0（对照表由 `mmh-reference` 生成到 `data/mmh/`，找不到哪张就跳过哪张）。
-//! 数据来源、许可与验收记录见 `assets/stroke/README.md`；随包前由 `pack codes`（见 `codes` 模块）按取码规则把它与词库算成码表。
+//! `--verify` 再對照大陸規範：筆畫數按抽樣比對、首筆按字表全量比對，不符的字必須都在白名單裡，
+//! 否則退出碼非 0（對照表由 `mmh-reference` 生成到 `data/mmh/`，找不到哪張就跳過哪張）。
+//! 資料來源、許可與驗收記錄見 `assets/stroke/README.md`；隨包前由 `pack codes`（見 `codes` 模組）按取碼規則把它與詞庫算成碼錶。
 
 mod options;
 mod rules;
@@ -35,13 +35,13 @@ pub(crate) use crate::stroke::rules::{malformed, single_char};
 
 pub use crate::stroke::options::StrokeOptions;
 
-/// 对照表文件名的前缀（给目录用）。
+/// 對照表檔名的字首（給目錄用）。
 const CNS_MAP_PREFIX: &str = "CNS2UNICODE";
 
-/// CNS 序列里出现的笔画码。
+/// CNS 序列裡出現的筆畫碼。
 const STROKE_DIGITS: &str = "12345";
 
-/// 生成笔画表。
+/// 生成筆畫表。
 pub fn convert(options: &StrokeOptions, out_dir: &Path) -> Result<(), ConvertError> {
     let started = Instant::now();
     let rules = PrcRules::from_path(&options.prc_rules)?;
@@ -81,7 +81,7 @@ pub fn convert(options: &StrokeOptions, out_dir: &Path) -> Result<(), ConvertErr
     for ch in &table {
         let original = sequences.get(ch);
         if let (Some(sequence), Some(count)) = (original, stroke_counts.get(ch))
-            // 整字覆盖是人工裁定，优先于 CNS 序列与筆畫數的自洽性（诞 这类被自洽过滤丢掉的字靠它补录）
+            // 整字覆蓋是人工裁定，優先於 CNS 序列與筆畫數的自洽性（誕 這類被自洽過濾丟掉的字靠它補錄）
             && rules.override_sequence(*ch).is_none()
             && sequence.len().abs_diff(*count as usize) > options.max_diff
         {
@@ -123,7 +123,7 @@ pub fn convert(options: &StrokeOptions, out_dir: &Path) -> Result<(), ConvertErr
     Ok(())
 }
 
-/// 点与捺合并成 `n`：产物只用 1 2 3 5 n 五个符号，与大陆厂商的 h/s/p/n/z 键位对得上。
+/// 點與捺合併成 `n`：產物只用 1 2 3 5 n 五個符號，與大陸廠商的 h/s/p/n/z 鍵位對得上。
 fn normalize(sequence: &str) -> String {
     sequence
         .chars()
@@ -131,7 +131,7 @@ fn normalize(sequence: &str) -> String {
         .collect()
 }
 
-/// 读 CNS→Unicode 对照表：可以给文件，也可以给目录（目录取其中的对照表）。
+/// 讀 CNS→Unicode 對照表：可以給檔案，也可以給目錄（目錄取其中的對照表）。
 fn read_cns_map(paths: &[PathBuf]) -> Result<HashMap<String, char>, ConvertError> {
     let mut map = HashMap::new();
     for path in expand_map_paths(paths)? {
@@ -160,7 +160,7 @@ fn read_cns_map(paths: &[PathBuf]) -> Result<HashMap<String, char>, ConvertError
     Ok(map)
 }
 
-/// 把 `--cns-map` 给的路径展开成文件列表：目录取其中以 `CNS2UNICODE` 开头的 `.txt`，按名字排序。
+/// 把 `--cns-map` 給的路徑展開成檔案列表：目錄取其中以 `CNS2UNICODE` 開頭的 `.txt`，按名字排序。
 fn expand_map_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, ConvertError> {
     let mut files = Vec::new();
     for path in paths {
@@ -191,7 +191,7 @@ fn expand_map_paths(paths: &[PathBuf]) -> Result<Vec<PathBuf>, ConvertError> {
     Ok(files)
 }
 
-/// 读筆順資料，经对照表映射成 字 → 序列。
+/// 讀筆順資料，經對照表對映成 字 → 序列。
 fn read_sequences(
     path: &Path,
     chars: &HashMap<String, char>,
@@ -238,7 +238,7 @@ fn read_sequences(
     Ok(sequences)
 }
 
-/// 读筆畫數（第二个字段是 10 进制的笔画数）。
+/// 讀筆畫數（第二個欄位是 10 進位制的筆畫數）。
 fn read_stroke_counts(
     path: &Path,
     chars: &HashMap<String, char>,
@@ -268,7 +268,7 @@ fn read_stroke_counts(
     Ok(counts)
 }
 
-/// 读字表白名单：一行一个字（第一列），别的列忽略；表序即输出序。
+/// 讀字表白名單：一行一個字（第一列），別的列忽略；表序即輸出序。
 fn read_filter(path: &Path) -> Result<Vec<char>, ConvertError> {
     let mut chars = Vec::new();
     let mut seen = HashSet::new();
@@ -287,7 +287,7 @@ fn read_filter(path: &Path) -> Result<Vec<char>, ConvertError> {
     Ok(chars)
 }
 
-/// 按行读一个文件。
+/// 按行讀一個檔案。
 fn lines_of(path: &Path) -> Result<std::io::Lines<BufReader<File>>, ConvertError> {
     Ok(BufReader::new(File::open(path)?).lines())
 }

@@ -1,4 +1,4 @@
-//! 真 Server 响应绘制同步重入框架生命周期时，撤销旧提交并保留已消费按键。
+//! 真 Server 響應繪製同步重入框架生命週期時，撤銷舊提交併保留已消費按鍵。
 #include "qingjian.h"
 #include "support/context.h"
 #include <fcitx/inputcontextmanager.h>
@@ -57,12 +57,12 @@ int main(int argc, char **argv) {
                 engine.reset(entry, reset);
             } else if (scenario == "focus") {
                 context->focusOut();
-                context->focusIn(); // 最终 hasFocus 仍为 true，生命周期必须拒绝旧提交。
+                context->focusIn(); // 最終 hasFocus 仍為 true，生命週期必須拒絕舊提交。
             } else if (scenario == "display-failure") throw std::runtime_error("测试显示失败");
 
             else assert(false);
         });
-        // 从 frontend 回调结束处销毁；不能在 Fcitx 自己仍遍历事件时释放它的原始指针。
+        // 從 frontend 回撥結束處銷燬；不能在 Fcitx 自己仍遍歷事件時釋放它的原始指標。
         if (scenario == "destroy") context->onPreedit = [&] { armed = false; owned.reset(); };
         if (scenario == "click") list->candidate(0).select(context);
         else assert(engine.process(context, fcitx::Key(FcitxKey_space)));

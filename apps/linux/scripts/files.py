@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# //! 安装文件清单与校验；不管理桌面服务、系统文件或用户数据。
+# //! 安裝檔案清單與校驗；不管理桌面服務、系統檔案或使用者資料。
 import hashlib
 import json
 import os
@@ -85,7 +85,7 @@ def main():
         if not p2c_model.is_file() or verified.get(p2c_model.resolve()) != digest(p2c_model):
             raise SystemExit('含章·通变缺失或不在已校验的数据包中')
         files[resources / p2c_model.relative_to(root)] = p2c_model
-    # 安装前先检查所有目标，避免覆盖其他来源的同名文件。
+    # 安裝前先檢查所有目標，避免覆蓋其他來源的同名檔案。
     for target in files:
         if target.is_symlink() or (target.exists() and (str(target) not in old or digest(target) != old[str(target)])):
             raise SystemExit(f'目标已存在且不属于本次安装：{target}')

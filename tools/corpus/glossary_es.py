@@ -16,7 +16,7 @@ Azure Translator F0 免费层每月 200 万字符，跑完这 23 万词用掉约
 用法：
     AZURE_TRANSLATOR_KEY=… AZURE_TRANSLATOR_REGION=eastus \\
         uv run tools/corpus/glossary_es.py
-    uv run tools/corpus/glossary_es.py --limit 200                      # 小样本先看一眼
+    uv run tools/corpus/glossary_es.py --limit 200                      # 小樣本先看一眼
     uv run tools/corpus/glossary_es.py --verify assets/glossary/glossary-es.tsv
 
 翻译策略（2026-09-14 用真实 API 做的三组对照实验，样本 20~60 词）：
@@ -54,36 +54,36 @@ import sys
 import time
 from pathlib import Path
 
-# 释义表允许的词性（见 tools/gloss-gen 与 crates/qingjian-translate/src/glossary/mod.rs）
+# 釋義表允許的詞性（見 tools/gloss-gen 與 crates/qingjian-translate/src/glossary/mod.rs）
 ALLOWED_POS = {
     "n.", "v.", "adj.", "adv.", "pron.", "prep.", "conj.", "num.",
     "m.", "part.", "int.", "phr.",
 }
 
-# 词性 -> 中文提示词
+# 詞性 -> 中文提示詞
 POS_HINT = {
     "n.": "名词", "v.": "动词", "adj.": "形容词", "adv.": "副词",
     "pron.": "代词", "prep.": "介词", "conj.": "连词", "num.": "数词",
     "m.": "量词", "part.": "助词", "int.": "感叹词", "phr.": "短语",
 }
 
-# 哪些词性加中文词性提示。名词不加，理由见模块 docstring。
+# 哪些詞性加中文詞性提示。名詞不加，理由見模組 docstring。
 HINT_POS = {"adj.", "adv."}
 
-# 哪些词性改用英文源（`to {英文释义} (verb)` 走 en->es）。见模块 docstring。
+# 哪些詞性改用英文源（`to {英文釋義} (verb)` 走 en->es）。見模組 docstring。
 EN_PIVOT_POS = {"v."}
 
-# 翻译 API 明说「不知道」的返回值，直接丢
+# 翻譯 API 明說「不知道」的返回值，直接丟
 JUNK_GLOSSES = {
     "desconocido", "desconocida", "desconocidos", "desconocidas",
     "sin traducción", "sin traduccion", "no disponible", "no hay traducción",
 }
 
-MAX_GLOSS_CHARS = 40       # 单个译词长度上限，再长就是解释不是译词
-MAX_GLOSS_WORDS = 4        # 单词数上限
+MAX_GLOSS_CHARS = 40       # 單個譯詞長度上限，再長就是解釋不是譯詞
+MAX_GLOSS_WORDS = 4        # 單詞數上限
 MAX_ELEMENTS_PER_REQ = 1000
 MAX_CHARS_PER_REQ = 50000
-RATE_CHARS_PER_MIN = 25000  # F0 上限 2,000,000/小时；留余量按 1.5M/小时
+RATE_CHARS_PER_MIN = 25000  # F0 上限 2,000,000/小時；留餘量按 1.5M/小時
 
 ENDPOINT = "https://api.cognitive.microsofttranslator.com/translate"
 TARGET = "es"
@@ -91,7 +91,7 @@ SOURCE_ZH = "zh-Hans"
 SOURCE_EN = "en"
 
 PAREN = re.compile(r"[（(][^）)]*[）)]")
-# 只剥这三个前缀。不要加 el/la/los/las——那是冠词，剥掉只会把名词洗得更像名词。
+# 只剝這三個字首。不要加 el/la/los/las——那是冠詞，剝掉只會把名詞洗得更像名詞。
 LEAD_STOPWORD = re.compile(r"^(?:para|to|a)\s+", re.IGNORECASE)
 
 
@@ -117,7 +117,7 @@ def clean_gloss(raw: str, force_lower_first: bool = False) -> str | None:
     if not raw:
         return None
     s = raw.strip()
-    s = PAREN.sub("", s)  # 去掉括号注释：manzana (fruta) -> manzana
+    s = PAREN.sub("", s)  # 去掉括號註釋：manzana (fruta) -> manzana
     s = s.replace("|", "").replace("\t", " ").replace("\n", " ").replace("\r", " ")
     s = re.sub(r"\s+", " ", s).strip()
     s = s.strip(" .,;:·。，、")
@@ -127,7 +127,7 @@ def clean_gloss(raw: str, force_lower_first: bool = False) -> str | None:
         return None
     if len(s.split(" ")) > MAX_GLOSS_WORDS:
         return None
-    # 明显是句子 / 解释的丢掉
+    # 明顯是句子 / 解釋的丟掉
     if re.search(r"[.!?]\s+\S", s):
         return None
     if force_lower_first:
@@ -316,7 +316,7 @@ def parse_pos_set(spec: str) -> set[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--en-table", default="assets/glossary/glossary-en.tsv",
-                    help="词表与英文释义的来源（缺省上游那张英译表）")
+                    help="词表与英文释义的来源（預設上游那张英译表）")
     ap.add_argument("--out", default="assets/glossary/glossary-es.tsv")
     ap.add_argument("--progress", default="data/generated/gloss-es-progress.jsonl",
                     help="续跑用的 JSONL，中断了再跑会跳过已处理的词")
@@ -330,9 +330,9 @@ def main() -> int:
     ap.add_argument("--retry-failed", action="store_true",
                     help="续跑时连上次没得到合法译文的词一起重试（默认跳过，避免白烧额度）")
     ap.add_argument("--hint-pos", default=None,
-                    help="对这些词性附加中文词性提示；all=全部，none=不加（缺省 adj.,adv.）")
+                    help="对这些词性附加中文词性提示；all=全部，none=不加（預設 adj.,adv.）")
     ap.add_argument("--en-pivot-pos", default=None,
-                    help="对这些词性改用英文源 'to X (verb)'；none=不用英文源（缺省 v.）")
+                    help="对这些词性改用英文源 'to X (verb)'；none=不用英文源（預設 v.）")
     ap.add_argument("--verify", metavar="FILE", help="只校验已有释义表，不调 API")
     args = ap.parse_args()
 
@@ -386,14 +386,14 @@ def main() -> int:
                     done[zh] = rec["es"]
         print(f"断点续跑：进度文件已有 {len(seen):,} 条，其中有效 {len(done):,} 条")
 
-    # 默认把「已尝试过但没得到合法译文」的词也视为已完成：翻译是确定性的，
-    # 同样的输入必然得到同样的坏结果，重试只会白烧额度。要重试就加 --retry-failed。
+    # 預設把「已嘗試過但沒得到合法譯文」的詞也視為已完成：翻譯是確定性的，
+    # 同樣的輸入必然得到同樣的壞結果，重試只會白燒額度。要重試就加 --retry-failed。
     if args.retry_failed:
         todo = [(w, p, g) for w, p, g in rows if w not in done]
     else:
         todo = [(w, p, g) for w, p, g in rows if w not in seen]
 
-    # 按源语言分股：一次请求只能有一个 from 参数，混批会串味。
+    # 按源語言分股：一次請求只能有一個 from 引數，混批會串味。
     jobs: list[tuple[str, str, str, str, str]] = []
     for w, p, g in todo:
         src, text = build_request(w, p, g)
@@ -446,9 +446,9 @@ def main() -> int:
 
     prog_f.close()
 
-    # 写最终表：无 BOM、LF、按码点排序（与 glossary-en.tsv 一致）
+    # 寫最終表：無 BOM、LF、按碼點排序（與 glossary-en.tsv 一致）
     with out_path.open("w", encoding="utf-8", newline="\n") as f:
-        f.write("# 由 tools/corpus/glossary_es.py 生成（Azure Translator F0）。词	[词性. ]译词	[词性. ]译词\n")
+        f.write("# 由 tools/corpus/glossary_es.py 生成（Azure Translator F0）。詞	[詞性. ]譯詞	[詞性. ]譯詞\n")
         for w in sorted(done):
             f.write(f"{w}\t{done[w]}\n")
 

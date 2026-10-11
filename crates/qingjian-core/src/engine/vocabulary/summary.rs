@@ -1,23 +1,23 @@
 use super::LevelCount;
 
-/// 一种学习语言的词汇汇总。
+/// 一種學習語言的詞彙彙總。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct VocabularySummary {
-    /// 见过的不同译词数。
+    /// 見過的不同譯詞數。
     pub seen: u64,
 
-    /// 其中看熟了的（见过的轮次不少于 [`super::FRESH_UNTIL`]）。
+    /// 其中看熟了的（見過的輪次不少於 [`super::FRESH_UNTIL`]）。
     pub familiar: u64,
 
-    /// 上屏过带这条译词的候选的不同译词数。
+    /// 上屏過帶這條譯詞的候選的不同譯詞數。
     pub committed: u64,
 
-    /// 直接打出过的不同译词数。
+    /// 直接打出過的不同譯詞數。
     pub used: u64,
 
-    /// 最近 7 天（含今天）第一次见到的译词数。
+    /// 最近 7 天（含今天）第一次見到的譯詞數。
     pub new_this_week: u64,
 
-    /// 按等级（从易到难）分的数字；没有等级表时为空。
+    /// 按等級（從易到難）分的數字；沒有等級表時為空。
     pub levels: Vec<LevelCount>,
 }

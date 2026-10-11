@@ -1,25 +1,25 @@
 use super::*;
 
-/// 「拼音头 + 英文尾」的切法：`woxiangxuehaorust` 切成头 `woxiangxuehao` 与尾 rust。
-/// 见 [`Engine::split_english_tail`]。
+/// 「拼音頭 + 英文尾」的切法：`woxiangxuehaorust` 切成頭 `woxiangxuehao` 與尾 rust。
+/// 見 [`Engine::split_english_tail`]。
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EnglishTail {
-    /// 头段（拼音）占作用域开头多少字节。
+    /// 頭段（拼音）佔作用域開頭多少位元組。
     pub head_len: usize,
 
-    /// 尾段对应的英文词，按词表里的写法（`api` → API）。
+    /// 尾段對應的英文詞，按詞表裡的寫法（`api` → API）。
     pub word: String,
 
-    /// 整段字母也能读成拼音（`database` → da ta ba se，`woxiangxuehaorust` → … ru s… t… 简拼）：两种读法要比分，
-    /// 见 [`Engine::mixed_beats_plain`]；整段根本切不成拼音的（`wodeid` 的 i、`woyongvim` 的 v）直接按英文读。
+    /// 整段字母也能讀成拼音（`database` → da ta ba se，`woxiangxuehaorust` → … ru s… t… 簡拼）：兩種讀法要比分，
+    /// 見 [`Engine::mixed_beats_plain`]；整段根本切不成拼音的（`wodeid` 的 i、`woyongvim` 的 v）直接按英文讀。
     pub competes: bool,
 
-    /// 这个英文词的 log 概率（按词表词频估），比分用。
+    /// 這個英文詞的 log 機率（按詞表詞頻估），比分用。
     pub log_prob: f64,
 }
 
-/// wordfreq 的 Zipf 频率（词表里 ×1000 存）换成 log 概率：Zipf z 是每十亿词里 10^z 次，即 log P = (z − 9)·ln 10。
-/// 没有词频的（个人表里的词、`kubectl` 这类技术词）按 Zipf 3（百万分之一）算。
+/// wordfreq 的 Zipf 頻率（詞表裡 ×1000 存）換成 log 機率：Zipf z 是每十億詞裡 10^z 次，即 log P = (z − 9)·ln 10。
+/// 沒有詞頻的（個人表裡的詞、`kubectl` 這類技術詞）按 Zipf 3（百萬分之一）算。
 pub(crate) fn english_log_prob(frequency: Option<u32>) -> f64 {
     let zipf = frequency
         .map(|f| f64::from(f) / 1000.0)
@@ -30,15 +30,15 @@ pub(crate) fn english_log_prob(frequency: Option<u32>) -> f64 {
 }
 
 impl Engine {
-    /// 整段输入的末尾是不是一个英文词：`woxiangxuehaorust` → 我想学好 + rust。
+    /// 整段輸入的末尾是不是一個英文詞：`woxiangxuehaorust` → 我想學好 + rust。
     ///
-    /// 尾段要在英文词表里（个人表或随包表），头段要能切成每个音节都完整的拼音。
-    /// 尾段自己就是完整拼音的（`database`、`fan`）要至少 [`MIN_PINYIN_LIKE_TAIL_LETTERS`] 个字母；
-    /// 两个字母的尾段只认缩写词（ID / TV / OK）和个人表里的词：`to` / `it` 这类太容易撞上简拼。
-    /// 同时满足的取最长的尾段（`wodedatabase` 取 database 不取 base）。双拼、带 `'` 的输入不切；
-    /// 整段本身是英文词（`agent`）、拼音不像话时纠错能纠通（`shiide` → 是的）或有英文补全（`releas` → release）的也不切，
-    /// 那几条路本来就排第一。
-    /// 切出来只说明「可以这么读」，与拼音读法谁排前面看 `competes` 与比分。
+    /// 尾段要在英文詞表裡（個人表或隨包表），頭段要能切成每個音節都完整的拼音。
+    /// 尾段自己就是完整拼音的（`database`、`fan`）要至少 [`MIN_PINYIN_LIKE_TAIL_LETTERS`] 個字母；
+    /// 兩個字母的尾段只認縮寫詞（ID / TV / OK）和個人表裡的詞：`to` / `it` 這類太容易撞上簡拼。
+    /// 同時滿足的取最長的尾段（`wodedatabase` 取 database 不取 base）。雙拼、帶 `'` 的輸入不切；
+    /// 整段本身是英文詞（`agent`）、拼音不像話時糾錯能糾通（`shiide` → 是的）或有英文補全（`releas` → release）的也不切，
+    /// 那幾條路本來就排第一。
+    /// 切出來只說明「可以這麼讀」，與拼音讀法誰排前面看 `competes` 與比分。
     pub(crate) fn split_english_tail(&self, scope: &str) -> Option<EnglishTail> {
         if self.shuangpin.is_some()
             || scope.len() < MIN_ENGLISH_TAIL_HEAD_LETTERS + MIN_ENGLISH_TAIL_LETTERS
@@ -50,9 +50,9 @@ impl Engine {
         if lists.is_empty() {
             return None;
         }
-        // 整段是随包表里的英文词（`agent`）：那条路本来就排第一，不切。
-        // 个人表不算：打不出来时原样上屏会把整串失败的拼音（`woxiangxuexirust`）学成「英文词」，
-        // 再拿它把混输这条路堵掉就是死循环——越打不出来学得越多，越学越打不出来
+        // 整段是隨包表裡的英文詞（`agent`）：那條路本來就排第一，不切。
+        // 個人表不算：打不出來時原樣上屏會把整串失敗的拼音（`woxiangxuexirust`）學成「英文詞」，
+        // 再拿它把混輸這條路堵掉就是死迴圈——越打不出來學得越多，越學越打不出來
         if self
             .english
             .as_ref()
@@ -64,7 +64,7 @@ impl Engine {
         let unlikely = correction::unlikely_pinyin(full.as_ref().and_then(|s| s.first()), "")
             || correction::trailing_single_letter(full.as_ref().and_then(|s| s.first()));
         if full.is_none() || unlikely {
-            // 拼写纠错能把整段纠成通顺的拼音（`shiide` → 是的，`yingagi` → 应该）：那是敲错，不是英文
+            // 拼寫糾錯能把整段糾成通順的拼音（`shiide` → 是的，`yingagi` → 應該）：那是敲錯，不是英文
             if self.active_correction(scope).is_some() {
                 return None;
             }
@@ -98,9 +98,9 @@ impl Engine {
                 head_len,
                 word: word.to_owned(),
                 competes: full.is_some(),
-                // 词频只问随包表：个人表存的是使用次数，当 Zipf×1000 读会一律塌到兜底值
-                //（`English` 用过 2 次 → Zipf 0.002 → 兜底 3.0，真实 5.19，白丢 5 nat），
-                // 等于一个英文词用过一次就更难打出来。个人表里独有的词（`kubectl`）本来就走兜底
+                // 詞頻只問隨包表：個人表存的是使用次數，當 Zipf×1000 讀會一律塌到兜底值
+                //（`English` 用過 2 次 → Zipf 0.002 → 兜底 3.0，真實 5.19，白丟 5 nat），
+                // 等於一個英文詞用過一次就更難打出來。個人表裡獨有的詞（`kubectl`）本來就走兜底
                 log_prob: english_log_prob(
                     self.english
                         .as_ref()
@@ -110,15 +110,15 @@ impl Engine {
         })
     }
 
-    /// 整段也能读成拼音时两种读法比分：头段整句的得分加英文词的 log 概率、扣掉切到英文的代价，高过整段按拼音读的整句就按英文读。
-    /// 拼音读法末尾的单字母也读（`huoz` → 或者，不是 或 + 丢掉 z），两边覆盖同样多的字母才公平。
-    /// `wodedatabase`：我的 + database 赢过 我的大塔巴瑟；`womenqubeijing`：我们去北京 赢过 我们去 + Beijing；
-    /// `taida`：太大 赢过 他 + Ida；`huoz`：或者 赢过 和 + Oz。
+    /// 整段也能讀成拼音時兩種讀法比分：頭段整句的得分加英文詞的 log 機率、扣掉切到英文的代價，高過整段按拼音讀的整句就按英文讀。
+    /// 拼音讀法末尾的單字母也讀（`huoz` → 或者，不是 或 + 丟掉 z），兩邊覆蓋同樣多的字母才公平。
+    /// `wodedatabase`：我的 + database 贏過 我的大塔巴瑟；`womenqubeijing`：我們去北京 贏過 我們去 + Beijing；
+    /// `taida`：太大 贏過 他 + Ida；`huoz`：或者 贏過 和 + Oz。
     ///
-    /// 两边比的是 `static_score - penalty`（静态语言模型 + 敲错代价），**不含个人 n-gram 与用户加分**：
-    /// 头段只覆盖一部分音节，整段读法多出来的那几个音节会白拿一份按长度累积的个人加成。
-    /// `woxiangxuexirust` 上实测头段拿 +6.9、整段拿 +21.2，个人模型越肥差距越大——
-    /// 用户打得越多混输越打不出来。这是「哪种输入方式」的判断，本来也该由静态模型定，不归个人频次管。
+    /// 兩邊比的是 `static_score - penalty`（靜態語言模型 + 敲錯代價），**不含個人 n-gram 與使用者加分**：
+    /// 頭段只覆蓋一部分音節，整段讀法多出來的那幾個音節會白拿一份按長度累積的個人加成。
+    /// `woxiangxuexirust` 上實測頭段拿 +6.9、整段拿 +21.2，個人模型越肥差距越大——
+    /// 使用者打得越多混輸越打不出來。這是「哪種輸入方式」的判斷，本來也該由靜態模型定，不歸個人頻次管。
     pub(super) fn mixed_beats_plain(&self, scope: &str, tail: &EnglishTail) -> bool {
         let convert = |text: &str, whole: bool| {
             let segmentations = parser::segment(text).ok()?;
@@ -147,8 +147,8 @@ impl Engine {
         mixed > plain_score
     }
 
-    /// 头段拼音转成的汉字加上英文尾段：候选的音节是头段的全拼音节加上敲的尾段字母（上屏按它们消耗拼音）。
-    /// 头段有占位音节的不出。
+    /// 頭段拼音轉成的漢字加上英文尾段：候選的音節是頭段的全拼音節加上敲的尾段字母（上屏按它們消耗拼音）。
+    /// 頭段有佔位音節的不出。
     pub(super) fn mixed_sentence(
         &self,
         head: &Segmentation,

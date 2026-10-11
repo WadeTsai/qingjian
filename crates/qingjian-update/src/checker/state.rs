@@ -7,14 +7,14 @@ use qingjian_platform::UpdateChannel;
 
 use super::Available;
 
-/// 上次检查的结果，存在数据目录的 `update.json`；Windows 的设置程序直接读这个文件。
+/// 上次檢查的結果，存在資料目錄的 `update.json`；Windows 的設定程式直接讀這個檔案。
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct UpdateState {
-    /// 上次查成功的时间（Unix 秒）；0 = 还没查过。
+    /// 上次查成功的時間（Unix 秒）；0 = 還沒查過。
     pub checked_at: u64,
 
-    /// 那次查的是哪个渠道；换了渠道要立刻重查。
+    /// 那次查的是哪個渠道；換了渠道要立刻重查。
     pub channel: Option<UpdateChannel>,
 
     /// 那次查到的新版本。
@@ -22,7 +22,7 @@ pub struct UpdateState {
 }
 
 impl UpdateState {
-    /// 读不到或读不懂都当没查过。
+    /// 讀不到或讀不懂都當沒查過。
     pub fn load(path: &Path) -> Self {
         std::fs::read(path)
             .ok()
@@ -30,7 +30,7 @@ impl UpdateState {
             .unwrap_or_default()
     }
 
-    /// 先写临时文件再改名，读的一方不会看到半截。
+    /// 先寫臨時檔案再改名，讀的一方不會看到半截。
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;

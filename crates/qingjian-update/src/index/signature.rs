@@ -4,10 +4,10 @@ use ed25519_dalek::{Signature, VerifyingKey};
 
 use crate::UpdateError;
 
-/// 信任的发版公钥（base64 的 32 字节 ed25519 公钥）；换钥时新旧并列一段时间。私钥在 CI 密钥 `QINGJIAN_INDEX_SIGNING_KEY` 里。
+/// 信任的發版公鑰（base64 的 32 位元組 ed25519 公鑰）；換鑰時新舊並列一段時間。私鑰在 CI 金鑰 `QINGJIAN_INDEX_SIGNING_KEY` 裡。
 pub const PUBLIC_KEYS: &[&str] = &["2qNCMwKGMzaBOsHQLHUornqcopNzmrVBKAmICEl9rkk="];
 
-/// 验索引的分离签名：`signature` 是 `releases.json.sig` 的内容（base64 的 64 字节），任何一把信任的公钥验过就算数。
+/// 驗索引的分離簽名：`signature` 是 `releases.json.sig` 的內容（base64 的 64 位元組），任何一把信任的公鑰驗過就算數。
 pub fn verify(message: &[u8], signature: &str) -> Result<(), UpdateError> {
     verify_with(PUBLIC_KEYS, message, signature)
 }

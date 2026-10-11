@@ -1,4 +1,4 @@
-//! Windows 的字体文件清单：Segoe UI、微软雅黑、Yu Gothic、Segoe UI Emoji（COLRv0）。
+//! Windows 的字型檔案清單：Segoe UI、微軟雅黑、Yu Gothic、Segoe UI Emoji（COLRv0）。
 
 use std::path::PathBuf;
 
@@ -16,7 +16,7 @@ pub(super) fn ui_fonts() -> Vec<PathBuf> {
     ]
 }
 
-/// Segoe UI 的其余字重（主题里写 `weight` 时用）：细、半细、半粗、粗、特粗各一个文件。
+/// Segoe UI 的其餘字重（主題裡寫 `weight` 時用）：細、半細、半粗、粗、特粗各一個檔案。
 pub(super) fn ui_weight_fonts() -> Vec<PathBuf> {
     let dir = fonts_dir();
     [
@@ -31,7 +31,7 @@ pub(super) fn ui_weight_fonts() -> Vec<PathBuf> {
     .collect()
 }
 
-/// 汉字字体（常规、粗、细三个文件）加日文回退。
+/// 漢字字型（常規、粗、細三個檔案）加日文回退。
 pub(super) fn script_fonts(locale: &str) -> Vec<PathBuf> {
     let dir = fonts_dir();
     let mut fonts = Vec::new();

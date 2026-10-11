@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-platform"
-description = "平台相关但不依赖系统 API 的部分：配置文件读写"
+description = "平臺相關但不依賴系統 API 的部分：配置檔案讀寫"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

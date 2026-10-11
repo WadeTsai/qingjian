@@ -1,4 +1,4 @@
-//! 循环动画某一刻的姿态：平移（像素）、旋转（度）、缩放、不透明度，作用于节点整棵子树。
+//! 迴圈動畫某一刻的姿態：平移（畫素）、旋轉（度）、縮放、不透明度，作用於節點整棵子樹。
 
 use tiny_skia::Transform;
 
@@ -24,7 +24,7 @@ impl Pose {
         opacity: 1.0,
     };
 
-    /// 绕 `(cx, cy)` 的变换：先缩放、旋转，再平移。
+    /// 繞 `(cx, cy)` 的變換：先縮放、旋轉，再平移。
     pub(crate) fn transform(&self, cx: f32, cy: f32) -> Transform {
         Transform::from_translate(-cx, -cy)
             .post_scale(self.scale, self.scale)

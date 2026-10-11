@@ -1,5 +1,5 @@
-//! 任务栏中 / 英 / A 图标。SVG 预先栅格化成四档 DPI 的 8 位 alpha 蒙版（`assets/icon/windows/render-mode-icons.sh`），
-//! 这里按系统 DPI 挑一档、按任务栏深浅色填白或填黑拼成 HICON；系统取走后负责销毁。
+//! 工作列中 / 英 / A 圖示。SVG 預先柵格化成四檔 DPI 的 8 位 alpha 蒙版（`assets/icon/windows/render-mode-icons.sh`），
+//! 這裡按系統 DPI 挑一檔、按工作列深淺色填白或填黑拼成 HICON；系統取走後負責銷燬。
 
 use windows::Win32::Graphics::Gdi::{
     BI_RGB, BITMAPINFO, BITMAPINFOHEADER, CreateBitmap, CreateDIBSection, DIB_RGB_COLORS,
@@ -9,7 +9,7 @@ use windows::Win32::UI::HiDpi::GetDpiForSystem;
 use windows::Win32::UI::WindowsAndMessaging::{CreateIconIndirect, HICON, ICONINFO};
 use windows::core::Result;
 
-/// 三个图标。
+/// 三個圖示。
 #[derive(Clone, Copy)]
 pub(super) enum Glyph {
     Chinese,
@@ -17,7 +17,7 @@ pub(super) enum Glyph {
     CapsLock,
 }
 
-/// 四档边长（像素）：100% / 125% / 150% / 200% 缩放下的 16pt。
+/// 四檔邊長（畫素）：100% / 125% / 150% / 200% 縮放下的 16pt。
 const SIZES: [usize; 4] = [16, 20, 24, 32];
 
 macro_rules! masks {
@@ -67,14 +67,14 @@ pub(super) fn make(glyph: Glyph) -> Result<HICON> {
     let mut bits: *mut core::ffi::c_void = core::ptr::null_mut();
     unsafe {
         let color = CreateDIBSection(None, &bmi, DIB_RGB_COLORS, &mut bits, None, 0)?;
-        // 32 位色图按预乘 alpha 解释。
+        // 32 位色圖按預乘 alpha 解釋。
         let pixels = std::slice::from_raw_parts_mut(bits.cast::<u32>(), size * size);
         for (pixel, &alpha) in pixels.iter_mut().zip(mask) {
             let alpha = u32::from(alpha);
             let channel = ink * alpha / 255;
             *pixel = (alpha << 24) | (channel << 16) | (channel << 8) | channel;
         }
-        // 掩码全 0，透明靠色图的 alpha。
+        // 掩碼全 0，透明靠色圖的 alpha。
         let mono = CreateBitmap(side, side, 1, 1, None);
         let info = ICONINFO {
             fIcon: true.into(),
@@ -90,7 +90,7 @@ pub(super) fn make(glyph: Glyph) -> Result<HICON> {
     }
 }
 
-/// 16pt 换成当前 DPI 下的像素，取不小于它的最近一档。
+/// 16pt 換成當前 DPI 下的畫素，取不小於它的最近一檔。
 fn pick_size() -> usize {
     let dpi = unsafe { GetDpiForSystem() }.max(96) as usize;
     let px = 16 * dpi / 96;
@@ -100,7 +100,7 @@ fn pick_size() -> usize {
         .unwrap_or(SIZES.len() - 1)
 }
 
-/// 任务栏浅色（`SystemUsesLightTheme = 1`）画黑字，深色画白字；读不到按深色。
+/// 工作列淺色（`SystemUsesLightTheme = 1`）畫黑字，深色畫白字；讀不到按深色。
 fn taskbar_is_light() -> bool {
     windows_registry::CURRENT_USER
         .open(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")

@@ -1,4 +1,4 @@
-//! 传输层测试：帧编解码，以及在内存流上跑 serve 循环；不碰命名管道，跨平台可跑。
+//! 傳輸層測試：幀編解碼，以及在記憶體流上跑 serve 迴圈；不碰命名管道，跨平臺可跑。
 
 use std::io::{Cursor, Read, Write};
 use std::path::PathBuf;
@@ -80,7 +80,7 @@ fn serve_runs_the_open_type_loop_over_a_stream() {
     while let Some(message) = read_message::<_, ServerMessage>(&mut out).unwrap() {
         responses.push(message);
     }
-    // 开会话先回一条 `SessionOpened`（把按键行为设置带下来），之后五个按键各回一条 `KeyResult`。
+    // 開會話先回一條 `SessionOpened`（把按鍵行為設定帶下來），之後五個按鍵各回一條 `KeyResult`。
     assert_eq!(responses.len(), 6, "一条 SessionOpened 加五条 KeyResult");
     assert!(
         matches!(responses.first(), Some(ServerMessage::SessionOpened { .. })),
@@ -105,7 +105,7 @@ fn serve_runs_the_open_type_loop_over_a_stream() {
     );
 }
 
-/// 预置输入 + 输出缓冲拼成的流（先发后收够测）。
+/// 預置輸入 + 輸出緩衝拼成的流（先發後收夠測）。
 struct Duplex {
     inbound: Cursor<Vec<u8>>,
     outbound: Vec<u8>,

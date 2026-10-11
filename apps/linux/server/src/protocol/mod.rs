@@ -1,4 +1,4 @@
-//! Linux 独立的面板协议扩展；Windows ClientMessage/ServerMessage 和版本不变。
+//! Linux 獨立的面板協議擴充套件；Windows ClientMessage/ServerMessage 和版本不變。
 mod capabilities;
 mod display;
 mod event;

@@ -1,4 +1,4 @@
-//! Linux 事件决策；Fcitx 插件只报告事实并应用返回值。
+//! Linux 事件決策；Fcitx 外掛只報告事實並應用返回值。
 use super::{Router, key::Effect};
 use crate::protocol::{DisplayIdentity, LinuxEvent, LinuxRequest};
 use qingjian_platform::protocol::{KeyOutcome, ServerMessage, SessionId};
@@ -17,7 +17,7 @@ impl Router {
                 let disabled = caps.password || caps.disabled;
                 let private = disabled || caps.sensitive;
                 if self.sessions[&session].capabilities != Some(caps) {
-                    // 即使 Sensitive → Password 仍为 private，也必须丢弃全部旧输入。
+                    // 即使 Sensitive → Password 仍為 private，也必須丟棄全部舊輸入。
                     self.discard_session(session);
                     self.set_privacy(session, private);
                     let info = self.sessions.get_mut(&session)?;

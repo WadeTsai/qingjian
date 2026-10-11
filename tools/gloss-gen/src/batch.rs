@@ -1,5 +1,5 @@
-//! 分批并发请求的通用驱动：一批词 → 提示词 → 模型 → 解析 → 落盘；没拿到的词再问，最多几轮。
-//! 释义生成与拼音标注共用，差别只在提示词与解析函数。
+//! 分批併發請求的通用驅動：一批詞 → 提示詞 → 模型 → 解析 → 落盤；沒拿到的詞再問，最多幾輪。
+//! 釋義生成與拼音標註共用，差別只在提示詞與解析函式。
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -11,19 +11,19 @@ use tokio::task::JoinSet;
 use crate::client::LlmClient;
 use crate::store::{Keyed, Store};
 
-/// 一批词最多问几轮：第一轮整批，之后只问上一轮没答或答坏的词。
+/// 一批詞最多問幾輪：第一輪整批，之後只問上一輪沒答或答壞的詞。
 const MAX_ROUNDS: usize = 3;
 
-/// 一种任务：系统提示词、用户消息怎么拼、回复怎么解析。
+/// 一種任務：系統提示詞、使用者訊息怎麼拼、回覆怎麼解析。
 pub trait Task: Send + Sync + 'static {
-    /// 一行结果的类型。
+    /// 一行結果的型別。
     type Entry: Keyed + Send + Sync + 'static;
 
     fn system_prompt(&self) -> &str;
 
     fn user_prompt(&self, words: &[String]) -> String;
 
-    /// 只收请求过的词，坏的丢掉。
+    /// 只收請求過的詞，壞的丟掉。
     fn parse_reply(
         &self,
         content: &str,
@@ -31,7 +31,7 @@ pub trait Task: Send + Sync + 'static {
     ) -> Result<Vec<Self::Entry>, serde_json::Error>;
 }
 
-/// 并发跑完 `pending` 里的词。`batch` 每请求几个词，`concurrency` 同时几个请求。
+/// 併發跑完 `pending` 裡的詞。`batch` 每請求幾個詞，`concurrency` 同時幾個請求。
 pub async fn run<T: Task>(
     task: Arc<T>,
     client: Arc<LlmClient>,
@@ -68,7 +68,7 @@ pub async fn run<T: Task>(
     tracing::info!(done = done.load(Ordering::Relaxed), total, "结束");
 }
 
-/// 处理一批词：请求、解析、落盘；没拿到的词再问，最多几轮。返回拿到的条目数。
+/// 處理一批詞：請求、解析、落盤；沒拿到的詞再問，最多幾輪。返回拿到的條目數。
 async fn process_batch<T: Task>(
     task: &T,
     client: &LlmClient,

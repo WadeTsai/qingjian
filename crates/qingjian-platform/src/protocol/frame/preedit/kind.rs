@@ -2,20 +2,20 @@ use serde::{Deserialize, Serialize};
 
 use qingjian_core::MarkedKind;
 
-/// preedit 片段的种类，DLL 按它选样式。是 Core 的 [`MarkedKind`] 的可序列化镜像
-/// （协议不直接用 Core 的内部枚举，免得两者耦合）。
+/// preedit 片段的種類，DLL 按它選樣式。是 Core 的 [`MarkedKind`] 的可序列化映象
+/// （協議不直接用 Core 的內部列舉，免得兩者耦合）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PreeditKind {
-    /// 用户敲的、参与本次候选的拼音（已按音节用 `'` 切开）。
+    /// 使用者敲的、參與本次候選的拼音（已按音節用 `'` 切開）。
     Typed,
 
-    /// 光标停在中间时，作用域之后剩下的拼音：只显示不参与候选，画淡一点。
+    /// 游標停在中間時，作用域之後剩下的拼音：只顯示不參與候選，畫淡一點。
     Rest,
 
-    /// 拼写纠错里被改掉的原字母：画删除线。
+    /// 拼寫糾錯裡被改掉的原字母：畫刪除線。
     Corrected,
 
-    /// 辅码态的码段（触发键之后的字母序列）：画淡色 + 下划线。
+    /// 輔碼態的碼段（觸發鍵之後的字母序列）：畫淡色 + 下劃線。
     AuxCode,
 }
 

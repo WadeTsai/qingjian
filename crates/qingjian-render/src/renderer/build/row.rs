@@ -1,4 +1,4 @@
-//! `repeat` 展开时每一份绑定的那一项候选。
+//! `repeat` 展開時每一份繫結的那一項候選。
 
 use crate::frame::Row;
 
@@ -6,9 +6,9 @@ use crate::frame::Row;
 pub(super) struct RowContext<'a> {
     pub(super) row: &'a Row,
 
-    /// 在这一页里的位置，从 0 起。
+    /// 在這一頁裡的位置，從 0 起。
     pub(super) index: usize,
 
-    /// 这一页的候选数。
+    /// 這一頁的候選數。
     pub(super) count: usize,
 }

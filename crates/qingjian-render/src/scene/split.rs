@@ -1,8 +1,8 @@
-//! 分段画：动画节点把树序切成几段，每段不动的内容各画进一张图层缓存起来；循环动画的每一帧只在变了的那块区域里
-//! 按树序把「段 0、动画节点 1、段 1、……」叠一遍，只重画这一块。
+//! 分段畫：動畫節點把樹序切成幾段，每段不動的內容各畫進一張圖層快取起來；迴圈動畫的每一幀只在變了的那塊區域裡
+//! 按樹序把「段 0、動畫節點 1、段 1、……」疊一遍，只重畫這一塊。
 //!
-//! 节点按画的先后编号（进 `paint_subtree` 时取号），分段模式下只画号在范围里的节点；动画节点只占一个号、整棵子树跳过，
-//! 另记下它的号与父节点左上角。容器拿子节点当阴影形状时临时退出分段模式，免得打乱编号。
+//! 節點按畫的先後編號（進 `paint_subtree` 時取號），分段模式下只畫號在範圍裡的節點；動畫節點只佔一個號、整棵子樹跳過，
+//! 另記下它的號與父節點左上角。容器拿子節點當陰影形狀時臨時退出分段模式，免得打亂編號。
 
 use std::ops::Range;
 
@@ -13,7 +13,7 @@ use crate::canvas::Canvas;
 use crate::error::RenderError;
 use crate::text::TextPainter;
 
-/// 分段里跳过的一个动画节点：画的先后编号、父节点左上角（画布像素）。
+/// 分段裡跳過的一個動畫節點：畫的先後編號、父節點左上角（畫布畫素）。
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct SplitMark {
     pub(crate) node: NodeId,
@@ -24,7 +24,7 @@ pub(crate) struct SplitMark {
 }
 
 impl Scene {
-    /// 按分段模式画一遍 `root`：只画编号落在 `range` 里的节点，返回途中跳过的动画节点。
+    /// 按分段模式畫一遍 `root`：只畫編號落在 `range` 裡的節點，返回途中跳過的動畫節點。
     pub(crate) fn paint_range(
         &self,
         root: NodeId,
@@ -42,7 +42,7 @@ impl Scene {
         Ok(self.marks.borrow_mut().drain(..).collect())
     }
 
-    /// 分段模式下进一个节点：取号，返回这个节点自己要不要画。不在分段模式时总是画。
+    /// 分段模式下進一個節點：取號，返回這個節點自己要不要畫。不在分段模式時總是畫。
     pub(super) fn take_order(&self) -> bool {
         let range = self.split.borrow().clone();
         match range {
@@ -55,7 +55,7 @@ impl Scene {
         }
     }
 
-    /// 分段模式下遇到动画节点：占一个号、记下来，整棵子树跳过。返回是否跳过了。
+    /// 分段模式下遇到動畫節點：佔一個號、記下來，整棵子樹跳過。返回是否跳過了。
     pub(super) fn skip_animated(&self, node: NodeId, parent: (f32, f32)) -> bool {
         if self.split.borrow().is_none() {
             return false;
@@ -76,7 +76,7 @@ impl Scene {
         animated
     }
 
-    /// 暂时退出分段模式跑 `f`（拿子节点当阴影形状时用），跑完恢复。
+    /// 暫時退出分段模式跑 `f`（拿子節點當陰影形狀時用），跑完恢復。
     pub(super) fn unsplit<T>(&self, f: impl FnOnce() -> T) -> T {
         let saved = self.split.replace(None);
         let order = self.order.get();
@@ -86,8 +86,8 @@ impl Scene {
         result
     }
 
-    /// 动画节点能不能走局部重画：它的上级里没有动画节点、半透明容器、拿子节点当阴影形状的容器
-    /// （这些上级的画面随它变），自己也不在过渡中。
+    /// 動畫節點能不能走區域性重畫：它的上級裡沒有動畫節點、半透明容器、拿子節點當陰影形狀的容器
+    /// （這些上級的畫面隨它變），自己也不在過渡中。
     pub(crate) fn isolated(&self, node: NodeId) -> bool {
         let mut current = self.tree.parent(node);
         while let Some(parent) = current {

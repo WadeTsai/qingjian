@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 启用：git config core.hooksPath .githooks；跳过：git commit --no-verify
+# 啟用：git config core.hooksPath .githooks；跳過：git commit --no-verify
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# 装饰性分隔注释（`// ====` / `// ────`）不要：只做视觉分组、不带任何「为什么」，用空行加语义排序分组
+# 裝飾性分隔註釋（`// ====` / `// ────`）不要：只做視覺分組、不帶任何「為什麼」，用空行加語義排序分組
 staged_rs="$(git diff --cached --name-only --diff-filter=ACM -- '*.rs')"
 if [[ -n "$staged_rs" ]]; then
   matches="$(echo "$staged_rs" | xargs grep -nE '^\s*//[/!]?\s*[=─-]{3,}\s*$' 2>/dev/null || true)"
@@ -16,9 +16,9 @@ fi
 
 cargo fmt --all --check
 
-# clippy 要按平台排除编不了的壳，划分与 ci.yml 的三个 job 一致。
-# IMK 壳依赖 objc2，非 Apple 平台上是硬 compile_error!，排除不掉就只能整条命令失败；
-# 其余平台排除它之后，Windows 三件套在本机也编得过（已在 Windows 上验过）。
+# clippy 要按平臺排除編不了的殼，劃分與 ci.yml 的三個 job 一致。
+# IMK 殼依賴 objc2，非 Apple 平臺上是硬 compile_error!，排除不掉就只能整條命令失敗；
+# 其餘平臺排除它之後，Windows 三件套在本機也編得過（已在 Windows 上驗過）。
 case "$(uname -s)" in
   Darwin) clippy_scope=(--workspace) ;;
   *) clippy_scope=(--workspace --exclude qingjian-macos) ;;

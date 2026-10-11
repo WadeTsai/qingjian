@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-dictionary"
-description = "词库：TSV 解析与 .qj mmap 加载，按拼音音节位置二分查询"
+description = "詞庫：TSV 解析與 .qj mmap 載入，按拼音音節位置二分查詢"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

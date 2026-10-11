@@ -1,4 +1,4 @@
-//! Fcitx 上下文只保存会话身份与展示事实，输入状态保存在 Server。
+//! Fcitx 上下文只儲存會話身份與展示事實，輸入狀態儲存在 Server。
 #pragma once
 #include "ipc/shared.h"
 #include <fcitx/inputcontextproperty.h>
@@ -14,29 +14,29 @@ struct Session final : fcitx::InputContextProperty {
         }
     }
 
-    /// 插件生命周期内递增，永不复用。
+    /// 外掛生命週期內遞增，永不復用。
     uint64_t id;
 
-    /// 析构只撤销登记并排队关闭，不阻塞或访问已析构 Engine。
+    /// 析構只撤銷登記並排隊關閉，不阻塞或訪問已析構 Engine。
     std::weak_ptr<SharedConnection> owner;
 
     bool opened = false;
 
     bool focused = false;
 
-    /// 最近提交给客户端的预编辑；框架失焦提交事实依赖此字段。
+    /// 最近提交給客戶端的預編輯；框架失焦提交事實依賴此欄位。
     bool clientPreedit = false;
 
     uint64_t revision = 0;
 
     uint64_t generation = 0;
 
-    /// 框架边界代次；与纯显示失败分开，使重入后的旧提交可被撤销。
+    /// 框架邊界代次；與純顯示失敗分開，使重入後的舊提交可被撤銷。
     uint64_t lifecycle = 0;
 
     nlohmann::json displayIdentity;
 
-    /// 仅缓存 Server 已确认的能力；尚未成功发送不能视为同步。
+    /// 僅快取 Server 已確認的能力；尚未成功傳送不能視為同步。
     nlohmann::json capabilities;
 
     std::string preeditMode = "both";

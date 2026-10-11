@@ -1,4 +1,4 @@
-//! 「高级」页：打开配置文件 / 数据目录 / 日志目录、详细日志、学习开关、输入日志。
+//! 「進階」頁：開啟配置檔案 / 資料目錄 / 日誌目錄、詳細日誌、學習開關、輸入日誌。
 
 use qingjian_platform::LogLevel;
 use windows_reactor::*;
@@ -9,64 +9,64 @@ use crate::panel::{Message, Settings};
 pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> View {
     let g = &settings.config.general;
     let rows = [
-        note("设置改完会自动生效（Server 每秒看一次配置文件）。只有换学习语言要重启 Server。"),
+        note("設定改完會自動生效（Server 每秒看一次配置檔案）。只有換學習語言要重啟 Server。"),
         field(
-            "配置文件",
+            "配置檔案",
             "",
             Button::new()
                 .on_click(context.message(Message::OpenConfigFile))
-                .content("在记事本中打开"),
+                .content("在記事本中開啟"),
         ),
         field(
-            "数据目录",
+            "資料目錄",
             "",
             Button::new()
                 .on_click(context.message(Message::OpenDataDir))
-                .content("打开数据目录"),
+                .content("開啟資料目錄"),
         ),
         field(
-            "日志目录",
-            "输入法、引擎与设置程序的日志都在这一个目录，按天分文件，保留 7 天。",
+            "日誌目錄",
+            "輸入法、引擎與設定程式的日誌都在這一個目錄，按天分檔案，保留 7 天。",
             StackPanel::new()
                 .orientation(Orientation::Horizontal)
                 .spacing(8.0)
                 .children((
                     Button::new()
                         .on_click(context.message(Message::OpenLogDir))
-                        .content("打开日志目录"),
+                        .content("開啟日誌目錄"),
                     Button::new()
                         .on_click(context.message(Message::ExportLogs))
-                        .content("打包日志到桌面"),
+                        .content("打包日誌到桌面"),
                 )),
         ),
         field(
-            "详细日志",
-            "排查问题时临时打开，会记下敲的拼音与上屏文字。",
+            "詳細日誌",
+            "排查問題時臨時開啟，會記下敲的拼音與上屏文字。",
             ToggleSwitch::new()
                 .is_on(g.log_level == LogLevel::Debug)
                 .on_toggled(context.callback(Message::VerboseLog)),
         ),
         field(
-            "学习输入习惯",
-            "按你的选择调整候选顺序、记新词与敲错纠正。关掉后不再学，已学的仍参与排序；学习数据在数据目录里。",
+            "學習輸入習慣",
+            "按你的選擇調整候選順序、記新詞與敲錯糾正。關掉後不再學，已學的仍參與排序；學習資料在資料目錄裡。",
             ToggleSwitch::new()
                 .is_on(g.learning)
                 .on_toggled(context.callback(Message::Learning)),
         ),
         field(
-            "记录输入日志",
-            "每次上屏记一行，只写本机、不上传，用于离线评测与个人模型。",
+            "記錄輸入日誌",
+            "每次上屏記一行，只寫本機、不上傳，用於離線評測與個人模型。",
             ToggleSwitch::new()
                 .is_on(g.input_log)
                 .on_toggled(context.callback(Message::InputLog)),
         ),
         field(
-            "清空输入日志",
+            "清空輸入日誌",
             "",
             Button::new()
                 .on_click(context.message(Message::ClearInputLog))
-                .content("清空输入日志"),
+                .content("清空輸入日誌"),
         ),
     ];
-    page("高级", StackPanel::new().spacing(16.0).children(rows))
+    page("進階", StackPanel::new().spacing(16.0).children(rows))
 }

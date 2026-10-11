@@ -1,5 +1,5 @@
-//! Server 进程入口：读配置、装配 Engine、在命名管道上服务 TSF DLL。逻辑在库部分，这里只装配与启动。
-//! release 编成 GUI 子系统（登录自启静默跑，日志走文件）；debug 保留控制台看 stderr。
+//! Server 程序入口：讀配置、裝配 Engine、在命名管道上服務 TSF DLL。邏輯在庫部分，這裡只裝配與啟動。
+//! release 編成 GUI 子系統（登入自啟靜默跑，日誌走檔案）；debug 保留控制台看 stderr。
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 use std::path::{Path, PathBuf};
@@ -11,7 +11,7 @@ use qingjian_windows_server::{
     AssemblySpec, LanguageModelFiles, Router, RouterConfig, ServerError, assembly, dispatch,
 };
 
-/// 用户数据目录 `%APPDATA%\Qingjian`。非 Windows 拿不到。
+/// 使用者資料目錄 `%APPDATA%\Qingjian`。非 Windows 拿不到。
 fn user_dir() -> Option<PathBuf> {
     qingjian_platform::dirs::user_dir()
 }
@@ -20,13 +20,13 @@ fn config_path() -> Option<PathBuf> {
     qingjian_platform::dirs::config_path()
 }
 
-/// 首次启动把带说明的配置模板写到 `%APPDATA%\Qingjian\config.toml`（与 macOS 一致）；
-/// 这时日志还没装好，结果交给 `main` 记。已有文件返回 `Ok(false)`。
+/// 首次啟動把帶說明的配置模板寫到 `%APPDATA%\Qingjian\config.toml`（與 macOS 一致）；
+/// 這時日誌還沒裝好，結果交給 `main` 記。已有檔案返回 `Ok(false)`。
 fn write_config_template() -> Option<Result<bool, ConfigError>> {
     Some(Config::write_template_if_missing(&config_path()?))
 }
 
-/// 文件不存在按默认值；解析失败记错误退回默认。
+/// 檔案不存在按預設值；解析失敗記錯誤退回預設。
 fn load_config() -> Config {
     match config_path() {
         Some(path) => Config::load(&path).unwrap_or_else(|error| {
@@ -37,7 +37,7 @@ fn load_config() -> Config {
     }
 }
 
-/// 读密钥：工作目录 `.env`，再叠加 `%APPDATA%\Qingjian\.env`；不覆盖已有环境变量。
+/// 讀金鑰：工作目錄 `.env`，再疊加 `%APPDATA%\Qingjian\.env`；不覆蓋已有環境變數。
 fn load_env() {
     let _ = dotenvy::dotenv();
     if let Some(env_file) = user_dir().map(|dir| dir.join(".env")) {
@@ -45,12 +45,12 @@ fn load_env() {
     }
 }
 
-/// `<root>/data/generated/<name>`，不存在为 `None`。
+/// `<root>/data/generated/<name>`，不存在為 `None`。
 fn generated(root: &Path, name: &str) -> Option<PathBuf> {
     existing(root.join("data/generated").join(name))
 }
 
-/// `<root>/assets/<rel>`，不存在为 `None`。
+/// `<root>/assets/<rel>`，不存在為 `None`。
 fn asset(root: &Path, rel: &str) -> Option<PathBuf> {
     existing(root.join("assets").join(rel))
 }
@@ -59,7 +59,7 @@ fn existing(path: PathBuf) -> Option<PathBuf> {
     path.is_file().then_some(path)
 }
 
-/// 正式词库，没有就回落手写样例。
+/// 正式詞庫，沒有就回落手寫樣例。
 fn default_dict(root: &Path) -> PathBuf {
     generated(root, "dict.qj").unwrap_or_else(|| sample_dict(root))
 }
@@ -68,7 +68,7 @@ fn sample_dict(root: &Path) -> PathBuf {
     root.join("assets/sample/dict.tsv")
 }
 
-/// 正式词库装配失败回落样例词库，连样例都装不起来才报错。
+/// 正式詞庫裝配失敗回落樣例詞庫，連樣例都裝不起來才報錯。
 fn assemble_with_fallback(mut spec: AssemblySpec, root: &Path) -> Result<Engine, ServerError> {
     assembly::assemble(&spec).or_else(|error| {
         tracing::error!(%error, dict = %spec.dict.display(), "正式词库装配失败，回落样例词库");
@@ -77,15 +77,15 @@ fn assemble_with_fallback(mut spec: AssemblySpec, root: &Path) -> Result<Engine,
     })
 }
 
-/// 三个进程共用的日志目录 `%LOCALAPPDATA%\Qingjian\logs`（见 `qingjian_platform::dirs`），这里顺手建出来。
+/// 三個程序共用的日誌目錄 `%LOCALAPPDATA%\Qingjian\logs`（見 `qingjian_platform::dirs`），這裡順手建出來。
 fn log_dir() -> Option<PathBuf> {
     let dir = qingjian_platform::dirs::log_dir()?;
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir)
 }
 
-/// 级别按 `[general] log_level`（`RUST_LOG` 可覆盖），同时写 stderr 与按天滚动的文件（留 7 天）。
-/// 返回的 guard 要活到进程结束，否则缓冲的日志不落盘。
+/// 級別按 `[general] log_level`（`RUST_LOG` 可覆蓋），同時寫 stderr 與按天滾動的檔案（留 7 天）。
+/// 返回的 guard 要活到程序結束，否則緩衝的日誌不落盤。
 fn init_logging(config: &Config) -> Option<tracing_appender::non_blocking::WorkerGuard> {
     use tracing_subscriber::fmt::writer::MakeWriterExt;
     let level = if config.general.log_level == LogLevel::Debug {
@@ -121,7 +121,7 @@ fn init_logging(config: &Config) -> Option<tracing_appender::non_blocking::Worke
     }
 }
 
-/// 主题投稿用：把主题目录画成预览图写进它的 preview/，不起服务（主题仓库的 tools/preview.py 调它）。
+/// 主題投稿用：把主題目錄畫成預覽圖寫進它的 preview/，不起服務（主題倉庫的 tools/preview.py 調它）。
 fn theme_preview(dir: Option<String>) -> i32 {
     attach_parent_console();
     let Some(dir) = dir else {
@@ -138,14 +138,14 @@ fn theme_preview(dir: Option<String>) -> i32 {
     qingjian_render::preview::run(Path::new(&dir), family_files)
 }
 
-/// release 是 GUI 子系统，从 cmd / PowerShell 直接运行时没有标准输出：挂到父进程的控制台上。
-/// 被管道调用（tools/preview.py）时已经有输出句柄，不动。
+/// release 是 GUI 子系統，從 cmd / PowerShell 直接執行時沒有標準輸出：掛到父程序的控制台上。
+/// 被管道呼叫（tools/preview.py）時已經有輸出控制代碼，不動。
 #[cfg(windows)]
 fn attach_parent_console() {
     use windows::Win32::System::Console::{
         ATTACH_PARENT_PROCESS, AttachConsole, GetStdHandle, STD_OUTPUT_HANDLE,
     };
-    // SAFETY: 只查询与挂接本进程的控制台，不涉及内存
+    // SAFETY: 只查詢與掛接本程序的控制台，不涉及記憶體
     unsafe {
         let has_stdout = GetStdHandle(STD_OUTPUT_HANDLE).is_ok_and(|handle| !handle.is_invalid());
         if !has_stdout {
@@ -164,7 +164,7 @@ fn main() {
     }
     load_env();
 
-    // 日志级别取自配置，所以先写模板、读配置，再装日志。
+    // 日誌級別取自配置，所以先寫模板、讀配置，再裝日誌。
     let template = write_config_template();
     let config = load_config();
     let _log_guard = init_logging(&config);
@@ -174,7 +174,7 @@ fn main() {
         _ => {}
     }
     let language = learning_language(&config);
-    // 装机布局与 exe 同级，开发布局是仓库 `ime/`；都找不到回落工作目录。
+    // 裝機佈局與 exe 同級，開發佈局是倉庫 `ime/`；都找不到回落工作目錄。
     let root = resources::bundled_root().unwrap_or_else(|| PathBuf::from("."));
     let dict = std::env::var_os("QINGJIAN_DICT")
         .map(PathBuf::from)
@@ -214,11 +214,11 @@ fn main() {
         }
     };
     engine.set_fuzzy(config.fuzzy);
-    // Windows 端此前漏装 custom_phrases（macOS 端 apply_config 有）；失败只记日志不阻塞启动
+    // Windows 端此前漏裝 custom_phrases（macOS 端 apply_config 有）；失敗只記日誌不阻塞啟動
     if let Err(error) = engine.set_custom_phrases(config.custom_phrases.clone()) {
         tracing::warn!(%error, "自定义短语配置未应用");
     }
-    // 拼音侧与形码侧在 `configure_code_table` 里一起装配（双拼 / 注音 / 混输都在那）
+    // 拼音側與形碼側在 `configure_code_table` 裡一起裝配（雙拼 / 注音 / 混輸都在那）
     engine.set_traditional_mode(config.general.traditional);
     engine.set_learning(config.general.learning);
     engine.set_mode_keys(config.shortcut.mode);
@@ -273,8 +273,8 @@ fn main() {
     serve(router);
 }
 
-/// 日志目录 `%LOCALAPPDATA%\Qingjian\logs` 给 AppContainer 应用（任务栏搜索 / 设置）写权限：
-/// 那些进程里的 DLL 默认写不了用户目录，出了问题连日志都没有。失败只记警告。
+/// 日誌目錄 `%LOCALAPPDATA%\Qingjian\logs` 給 AppContainer 應用（工作列搜尋 / 設定）寫許可權：
+/// 那些程序裡的 DLL 預設寫不了使用者目錄，出了問題連日誌都沒有。失敗只記警告。
 #[cfg(windows)]
 fn grant_appcontainer_log_access() {
     use std::os::windows::process::CommandExt;
@@ -296,13 +296,13 @@ fn grant_appcontainer_log_access() {
     }
 }
 
-/// 起 UI 线程作为候选窗口 / 状态条的输出端（失败退化为不画），再在命名管道上服务到进程结束。
+/// 起 UI 執行緒作為候選視窗 / 狀態條的輸出端（失敗退化為不畫），再在命名管道上服務到程序結束。
 #[cfg(windows)]
 fn serve(mut router: Router) {
     use qingjian_windows_server::ipc::{Work, pipe};
     use qingjian_windows_server::ui::UiHandle;
     grant_appcontainer_log_access();
-    // 工人循环的活：各连接的消息 + 状态条上的操作（UI 线程投进来）。
+    // 工人迴圈的活：各連線的訊息 + 狀態條上的操作（UI 執行緒投進來）。
     let (work_tx, work_rx) = std::sync::mpsc::channel::<Work>();
     let status_events = work_tx.clone();
     let on_status = Box::new(move |event| {

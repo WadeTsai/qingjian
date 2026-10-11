@@ -1,4 +1,4 @@
-//! 「云服务」页：本地整句模型开关，云联想开关、云端词格数、接口地址 / 模型 / 密钥、测试连接。
+//! 「雲服務」頁：本地整句模型開關，雲聯想開關、雲端詞格數、介面地址 / 模型 / 金鑰、測試連線。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -14,29 +14,29 @@ use crate::preferences::layout::{Layout, PAGE_PADDING, ROW_HEIGHT};
 use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
-/// 云端词槽位弹出菜单的上限（配置文件里可以填更大，菜单只列到这）。
+/// 雲端詞槽位彈出選單的上限（配置檔案裡可以填更大，菜單隻列到這）。
 const MAX_CLOUD_SLOTS: usize = 4;
 
 pub struct CloudPage {
-    /// 本地整句模型开关。
+    /// 本地整句模型開關。
     local_model: Retained<NSButton>,
 
-    /// 云联想开关。
+    /// 雲聯想開關。
     enabled: Retained<NSButton>,
 
-    /// 云端词槽位数（0–4）。
+    /// 雲端詞槽位數（0–4）。
     slots: Retained<NSPopUpButton>,
 
-    /// 接口地址。
+    /// 介面地址。
     base_url: Retained<NSTextField>,
 
     /// 模型名。
     model: Retained<NSTextField>,
 
-    /// 密钥输入框，永远不回显已有值。
+    /// 金鑰輸入框，永遠不回顯已有值。
     api_key: Retained<NSSecureTextField>,
 
-    /// 「测试连接」按钮。
+    /// 「測試連線」按鈕。
     test: Retained<NSButton>,
 }
 
@@ -105,8 +105,8 @@ impl CloudPage {
         }
     }
 
-    /// `key_present` 是密钥已经有了（环境或配置里）；密钥框永远不回显值，只换占位文字。
-    /// `model_present` 是包里或用户目录里有模型文件，没有就把本地模型的勾选灰掉；云联想关着时它下面的项全灰。
+    /// `key_present` 是金鑰已經有了（環境或配置裡）；金鑰框永遠不回顯值，只換佔位文字。
+    /// `model_present` 是包裡或使用者目錄裡有模型檔案，沒有就把本地模型的勾選灰掉；雲聯想關著時它下面的項全灰。
     pub fn sync(&self, config: &Config, key_present: bool, model_present: bool) {
         set_checked(&self.local_model, config.model.enabled && model_present);
         self.local_model.setEnabled(model_present);

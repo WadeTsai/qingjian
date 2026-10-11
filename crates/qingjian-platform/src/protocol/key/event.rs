@@ -2,16 +2,16 @@ use serde::{Deserialize, Serialize};
 
 use super::modifiers::KeyModifiers;
 
-/// DLL 从 TSF `OnKeyDown` / `OnTestKeyDown` 抓到的一次按键，发给 Server 判定。
+/// DLL 從 TSF `OnKeyDown` / `OnTestKeyDown` 抓到的一次按鍵，發給 Server 判定。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct KeyEvent {
-    /// Windows 虚拟键码（`VK_*`）。翻页、方向键、退格、回车等靠它区分。
+    /// Windows 虛擬鍵碼（`VK_*`）。翻頁、方向鍵、退格、回車等靠它區分。
     pub virtual_key: u32,
 
-    /// 这次按键产生的字符（`ToUnicode` 的结果）；功能键没有字符时为 `None`。
+    /// 這次按鍵產生的字元（`ToUnicode` 的結果）；功能鍵沒有字元時為 `None`。
     pub character: Option<char>,
 
-    /// 按下时的修饰键状态。
+    /// 按下時的修飾鍵狀態。
     pub modifiers: KeyModifiers,
 }
 

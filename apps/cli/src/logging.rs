@@ -1,4 +1,4 @@
-//! 日志初始化：终端走 stderr；设置了 QINGJIAN_LOG_DIR 时再按天滚动写文件。
+//! 日誌初始化：終端走 stderr；設定了 QINGJIAN_LOG_DIR 時再按天滾動寫檔案。
 
 use std::io;
 
@@ -7,7 +7,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Layer};
 
-/// 返回的 guard 要活到进程结束，否则文件日志会丢尾巴。
+/// 返回的 guard 要活到程序結束，否則檔案日誌會丟尾巴。
 pub fn init() -> Result<Option<WorkerGuard>, io::Error> {
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     let stderr = tracing_subscriber::fmt::layer()

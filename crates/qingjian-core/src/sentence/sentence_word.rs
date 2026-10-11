@@ -1,12 +1,12 @@
-/// 整句路径上的一个词。
+/// 整句路徑上的一個詞。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SentenceWord {
-    /// 词。
+    /// 詞。
     pub text: String,
 
-    /// 词的全拼音节。
+    /// 詞的全拼音節。
     pub syllables: Vec<String>,
 
-    /// 是占位音节（词库里连单字都没有，用拼音本身顶着），不是词库里的词。
+    /// 是佔位音節（詞庫裡連單字都沒有，用拼音本身頂著），不是詞庫裡的詞。
     pub placeholder: bool,
 }

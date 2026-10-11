@@ -1,4 +1,4 @@
-//! 学习与统计的挂钩：释义兜底回填、词汇曝光、输入统计、输入日志、删候选、定时落盘。
+//! 學習與統計的掛鉤：釋義兜底回填、詞彙曝光、輸入統計、輸入日誌、刪候選、定時落盤。
 
 use super::Engine;
 use super::input_log::{CommitEntry, InputLogEntry, InputLogger, InputSource, LOGGED_CANDIDATES};
@@ -16,8 +16,8 @@ pub use learner::{Learner, NoLearner};
 pub(super) use muted::MutedLearner;
 
 impl Engine {
-    /// 取回释义兜底写好的释义，记进译者（个人释义表）；返回学了几条。壳定时调，不阻塞。
-    /// 结果的语言与当前学习语言对不上（中途切过语言）就丢。
+    /// 取回釋義兜底寫好的釋義，記進譯者（個人釋義表）；返回學了幾條。殼定時調，不阻塞。
+    /// 結果的語言與當前學習語言對不上（中途切過語言）就丟。
     pub fn poll_glosses(&mut self) -> usize {
         let filled = self.gloss_filler.poll();
         let mut learned = 0;
@@ -31,13 +31,13 @@ impl Engine {
         learned
     }
 
-    /// 当前学习语言的词汇汇总（偏好设置「统计」页）。
+    /// 當前學習語言的詞彙彙總（偏好設定「統計」頁）。
     pub fn vocabulary_summary(&self) -> VocabularySummary {
         self.vocabulary.summary(self.translator.language())
     }
 
-    /// 壳画完候选窗口后告知当前页上的候选：页上的译词在用户上屏那一刻记成「看到过」（[`super::vocabulary::VocabularyTracker`]）。
-    /// 每次重画都换掉上一页，逐键刷新时一闪而过的候选不算；窗口收起时传空。
+    /// 殼畫完候選視窗後告知當前頁上的候選：頁上的譯詞在使用者上屏那一刻記成「看到過」（[`super::vocabulary::VocabularyTracker`]）。
+    /// 每次重畫都換掉上一頁，逐鍵重新整理時一閃而過的候選不算；視窗收起時傳空。
     pub fn note_displayed<'a>(&mut self, candidates: impl IntoIterator<Item = &'a Candidate>) {
         self.displayed.clear();
         for candidate in candidates {
@@ -56,10 +56,10 @@ impl Engine {
         }
     }
 
-    /// 上屏了：当前页上的译词都算看到过一轮。
+    /// 上屏了：當前頁上的譯詞都算看到過一輪。
     pub(super) fn record_exposures(&mut self) {
         if self.private {
-            // 私密输入中的候选页不能污染词汇记录；同时丢掉暂存页，避免之后恢复普通输入时补记。
+            // 私密輸入中的候選頁不能汙染詞彙記錄；同時丟掉暫存頁，避免之後恢復普通輸入時補記。
             self.displayed.clear();
             return;
         }
@@ -68,7 +68,7 @@ impl Engine {
         }
     }
 
-    /// 按词汇记录给译词标生词：看到的轮次不到 [`FRESH_UNTIL`] 的算。
+    /// 按詞彙記錄給譯詞標生詞：看到的輪次不到 [`FRESH_UNTIL`] 的算。
     pub(super) fn mark_fresh(&self, translation: &mut Translation) {
         let language = translation.language;
         for sense in translation.senses_mut() {
@@ -76,8 +76,8 @@ impl Engine {
         }
     }
 
-    /// 往输入统计记一次上屏：汉字与英文词按文字数，中文词数按来源定（选一个词算一个，整句按语言模型切出来的词数，
-    /// 切不了就按字数）。`english_word` 是原样上屏的字母串算不算一个英文词（拼音回车不算）。
+    /// 往輸入統計記一次上屏：漢字與英文詞按文字數，中文詞數按來源定（選一個詞算一個，整句按語言模型切出來的詞數，
+    /// 切不了就按字數）。`english_word` 是原樣上屏的字母串算不算一個英文詞（拼音回車不算）。
     pub(super) fn meter_commit(&mut self, text: &str, source: InputSource, english_word: bool) {
         let mut usage = Usage::of_text(text);
         usage.words = match source {
@@ -100,8 +100,8 @@ impl Engine {
         self.meter.record(usage);
     }
 
-    /// 往输入日志记一次上屏。`keys` 是这次消耗掉的原始键，`index` 从上一次查询的候选里找。
-    /// 攒着的直通字符先写出去（顺序要对）；这段组句里退格过且最终键串变了，紧跟着记一条 `retype`。
+    /// 往輸入日誌記一次上屏。`keys` 是這次消耗掉的原始鍵，`index` 從上一次查詢的候選裡找。
+    /// 攢著的直通字元先寫出去（順序要對）；這段組句裡退格過且最終鍵串變了，緊跟著記一條 `retype`。
     pub(super) fn log_commit(&mut self, keys: &str, text: &str, source: InputSource) -> u64 {
         self.record_exposures();
         self.flush_passthrough();
@@ -147,8 +147,8 @@ impl Engine {
         self.log_sequence
     }
 
-    /// 用户要求删掉一个候选（修饰键 + 数字）：中文词与云端词交给 Learner 删用户词、清学习；英文词删个人英文词；
-    /// 整句、快捷候选、emoji 没什么可删。删完缓存作废，它也不再当下一个词的上文。
+    /// 使用者要求刪掉一個候選（修飾鍵 + 數字）：中文詞與雲端詞交給 Learner 刪使用者詞、清學習；英文詞刪個人英文詞；
+    /// 整句、快捷候選、emoji 沒什麼可刪。刪完快取作廢，它也不再當下一個詞的上文。
     pub fn forget(&mut self, candidate: &Candidate) -> Forgotten {
         let mut candidate_owned = candidate.clone();
         if self.traditional
@@ -183,8 +183,8 @@ impl Engine {
         forgotten
     }
 
-    /// 把学习数据与输入日志落盘。壳在停用输入法时调，激活期间也可以定时调（进程被杀时少丢）：
-    /// 落盘不改学习状态，所以不像 [`Self::learner_mut`] 那样作废格子缓存。
+    /// 把學習資料與輸入日誌落盤。殼在停用輸入法時調，啟用期間也可以定時調（程序被殺時少丟）：
+    /// 落盤不改學習狀態，所以不像 [`Self::learner_mut`] 那樣作廢格子快取。
     pub fn flush_learning(&mut self) {
         self.learner.flush();
         self.logger.flush();
@@ -193,7 +193,7 @@ impl Engine {
         self.translator.flush();
     }
 
-    /// 词库 / 用户词 / 学习数据变了，整句格子候选全部作废。
+    /// 詞庫 / 使用者詞 / 學習資料變了，整句格子候選全部作廢。
     pub(super) fn forget_span_cache(&self) {
         self.span_cache.borrow_mut().clear();
     }

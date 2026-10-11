@@ -2,24 +2,24 @@ use std::ops::{Add, AddAssign};
 
 use crate::sentence::is_han;
 
-/// 一次上屏折成的用量；加起来就是一段时间的用量。
+/// 一次上屏折成的用量；加起來就是一段時間的用量。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Usage {
-    /// 汉字数：上屏文字里的汉字，标点、字母、emoji 不算。
+    /// 漢字數：上屏文字裡的漢字，標點、字母、emoji 不算。
     pub hanzi: u64,
 
-    /// 中文词数：选一个词算一个，整句按切出来的词数算，译词 / 英文 / 快捷候选不算。
+    /// 中文詞數：選一個詞算一個，整句按切出來的詞數算，譯詞 / 英文 / 快捷候選不算。
     pub words: u64,
 
-    /// 英文词数：英文候选、原样上屏的英文词、英文译词按空格分开数。
+    /// 英文詞數：英文候選、原樣上屏的英文詞、英文譯詞按空格分開數。
     pub english_words: u64,
 
-    /// 上屏次数。
+    /// 上屏次數。
     pub commits: u64,
 }
 
 impl Usage {
-    /// 按上屏的文字本身数汉字与英文词，算一次上屏；中文词数由调用方按来源定（见 `Engine`）。
+    /// 按上屏的文字本身數漢字與英文詞，算一次上屏；中文詞數由呼叫方按來源定（見 `Engine`）。
     pub fn of_text(text: &str) -> Self {
         Self {
             hanzi: text.chars().filter(|c| is_han(*c)).count() as u64,
@@ -29,7 +29,7 @@ impl Usage {
         }
     }
 
-    /// 一次都没记过。
+    /// 一次都沒記過。
     pub fn is_empty(&self) -> bool {
         *self == Self::default()
     }
@@ -53,7 +53,7 @@ impl Add for Usage {
     }
 }
 
-/// 拉丁字母组成的词有几个：`don't`、`open-source` 各算一个，纯数字不算。
+/// 拉丁字母組成的詞有幾個：`don't`、`open-source` 各算一個，純數字不算。
 fn count_english_words(text: &str) -> u64 {
     text.split(|c: char| !(c.is_ascii_alphabetic() || c == '\'' || c == '-'))
         .filter(|token| token.chars().any(|c| c.is_ascii_alphabetic()))

@@ -1,14 +1,14 @@
-//! 拼写纠错：用户敲的拼音「不像话」时（切不干净，或非末尾有简拼 / 残缺音节），
-//! 试一处编辑（相邻换位、换一个字母、多一个、少一个）能不能变成每个音节都完整的拼音。
-//! 相邻换位另放宽到「末尾音节还没敲完」（`mignt` → `ming t…`、`migntia` → `ming tia…`）：
-//! 敲反两个键的人多半还在往下敲，等整个词敲完再纠就晚了一拍。
+//! 拼寫糾錯：使用者敲的拼音「不像話」時（切不乾淨，或非末尾有簡拼 / 殘缺音節），
+//! 試一處編輯（相鄰換位、換一個字母、多一個、少一個）能不能變成每個音節都完整的拼音。
+//! 相鄰換位另放寬到「末尾音節還沒敲完」（`mignt` → `ming t…`、`migntia` → `ming tia…`）：
+//! 敲反兩個鍵的人多半還在往下敲，等整個詞敲完再糾就晚了一拍。
 //!
-//! 这里只产生**候选纠正**（变体 + 完整切分），挑哪一个由 Engine 用词库和语言模型定：
-//! 纠正后至少要能凑出一个两音节以上的词，否则宁可不纠。学习方面：接受过的纠正按原输入串记选择，
-//! 回车原样上屏过的串记成「不纠」，都在 Learner 里。
+//! 這裡只產生**候選糾正**（變體 + 完整切分），挑哪一個由 Engine 用詞庫和語言模型定：
+//! 糾正後至少要能湊出一個兩音節以上的詞，否則寧可不糾。學習方面：接受過的糾正按原輸入串記選擇，
+//! 回車原樣上屏過的串記成「不糾」，都在 Learner 裡。
 //!
-//! 另一路是音节级的敲错变体（[`typo`]）：每个完整音节一处编辑后仍合法的写法进词图当带代价的边，
-//! 由整句转换与词级排序按噪声信道挑；用户接受过的 (敲的, 要的) 音节对记进个人敲错表（Learner），以后那条边更便宜。各项代价与折扣上限收在 [`TypoCosts`] 里。
+//! 另一路是音節級的敲錯變體（[`typo`]）：每個完整音節一處編輯後仍合法的寫法進詞圖當帶代價的邊，
+//! 由整句轉換與詞級排序按噪聲通道挑；使用者接受過的 (敲的, 要的) 音節對記進個人敲錯表（Learner），以後那條邊更便宜。各項代價與折扣上限收在 [`TypoCosts`] 裡。
 
 mod costs;
 mod edit;
@@ -22,20 +22,20 @@ pub use typo::TypoKind;
 
 use crate::parser::{self, Segmentation};
 
-/// 少于这么多字母不纠：短串的一处编辑几乎总能凑出别的合法拼音，误纠比不纠更烦。
+/// 少於這麼多字母不糾：短串的一處編輯幾乎總能湊出別的合法拼音，誤糾比不糾更煩。
 pub const MIN_LETTERS: usize = 4;
 
-/// 多于这么多字母不纠：变体数量随长度线性涨，而且这么长多半是整句简拼。
+/// 多於這麼多字母不糾：變體數量隨長度線性漲，而且這麼長多半是整句簡拼。
 pub const MAX_LETTERS: usize = 24;
 
-/// 这段输入是否值得试纠错：纯小写字母、长度在范围内。
+/// 這段輸入是否值得試糾錯：純小寫字母、長度在範圍內。
 pub fn eligible(input: &str) -> bool {
     (MIN_LETTERS..=MAX_LETTERS).contains(&input.len())
         && input.bytes().all(|b| b.is_ascii_lowercase())
 }
 
-/// 切出来的拼音「不像话」：有切不动的尾巴，或非末尾的音节里有简拼 / 残缺。
-/// 英文补全与拼写纠错都用这个判断。
+/// 切出來的拼音「不像話」：有切不動的尾巴，或非末尾的音節裡有簡拼 / 殘缺。
+/// 英文補全與拼寫糾錯都用這個判斷。
 pub fn unlikely_pinyin(best: Option<&Segmentation>, tail: &str) -> bool {
     !tail.is_empty()
         || best.is_some_and(|best| {
@@ -47,7 +47,7 @@ pub fn unlikely_pinyin(best: Option<&Segmentation>, tail: &str) -> bool {
         })
 }
 
-/// `text` 能否切成每个音节都完整的拼音；能就返回音节最少的那种切分。
+/// `text` 能否切成每個音節都完整的拼音；能就返回音節最少的那種切分。
 pub fn complete_segmentation(text: &str) -> Option<Segmentation> {
     parser::segment(text)
         .ok()?
@@ -55,9 +55,9 @@ pub fn complete_segmentation(text: &str) -> Option<Segmentation> {
         .find(|s| s.incomplete_count() == 0)
 }
 
-/// `text` 能否切成「每个音节都完整，或只有末尾一个没敲完」的拼音，按解析器的偏好取第一种：
-/// `mingt` → `ming t…`，`mingtia` → `ming tia…`（不是 `ming ti a`，正常敲到这里也是这么切的）。
-/// 末尾没敲完时至少要有一个完整音节在前，整段都是残缺的不算。
+/// `text` 能否切成「每個音節都完整，或只有末尾一個沒敲完」的拼音，按解析器的偏好取第一種：
+/// `mingt` → `ming t…`，`mingtia` → `ming tia…`（不是 `ming ti a`，正常敲到這裡也是這麼切的）。
+/// 末尾沒敲完時至少要有一個完整音節在前，整段都是殘缺的不算。
 pub fn loose_segmentation(text: &str) -> Option<Segmentation> {
     parser::segment(text).ok()?.into_iter().find(|s| {
         s.incomplete_count() == 0
@@ -65,19 +65,19 @@ pub fn loose_segmentation(text: &str) -> Option<Segmentation> {
     })
 }
 
-/// 切出来的拼音末尾是个单字母（`mingtai'n`）：可能是合法简拼，也可能是相邻两键敲反了（`mingtain` → `mingtian`）。
+/// 切出來的拼音末尾是個單字母（`mingtai'n`）：可能是合法簡拼，也可能是相鄰兩鍵敲反了（`mingtain` → `mingtian`）。
 pub fn trailing_single_letter(best: Option<&Segmentation>) -> bool {
     best.is_some_and(|best| {
         best.syllables.len() >= 2 && best.syllables.last().is_some_and(|s| s.text.len() == 1)
     })
 }
 
-/// `input` 的全部候选纠正：一处编辑之后能完整切分的变体，顺序同 [`variants`]（换位最先）。
+/// `input` 的全部候選糾正：一處編輯之後能完整切分的變體，順序同 [`variants`]（換位最先）。
 pub fn candidates(input: &str) -> Vec<Correction> {
     candidates_from(input, variants(input))
 }
 
-/// 只试相邻换位的候选纠正（末尾单字母那种「像话但可疑」的输入用，变体只有 n−1 个，每键都试得起）。
+/// 只試相鄰換位的候選糾正（末尾單字母那種「像話但可疑」的輸入用，變體只有 n−1 個，每鍵都試得起）。
 pub fn transposition_candidates(input: &str) -> Vec<Correction> {
     let transpositions = variants(input)
         .into_iter()
@@ -93,7 +93,7 @@ fn candidates_from(input: &str, variants: Vec<(Edit, String)>) -> Vec<Correction
     let found: Vec<Correction> = variants
         .into_iter()
         .filter_map(|(edit, corrected)| {
-            // 相邻换位的变体允许末尾音节没敲完；其余先用无分配的「能否完整切分」挡掉绝大多数
+            // 相鄰換位的變體允許末尾音節沒敲完；其餘先用無分配的「能否完整切分」擋掉絕大多數
             let segmentation = if matches!(edit, Edit::Transpose { .. }) {
                 loose_segmentation(&corrected)?
             } else if parser::is_fully_segmentable(&corrected) {
@@ -109,12 +109,12 @@ fn candidates_from(input: &str, variants: Vec<(Edit, String)>) -> Vec<Correction
             })
         })
         .collect();
-    // 凑得出「每个音节都完整」的变体时只在这些里挑，末尾没敲完的不参与：残尾按前缀能匹配到高频词，
-    // 得分往往压过整段完整的纠正（`keyyi` 删一个 y 是 可以，`ke yi y…` 却出 可以有；`weti` 的 `wei t…` 会抢出 委托）。
-    // 末尾是落单单字母的完整变体不算数（`migntia` 换一个字母能凑出 `mian ti a`，那正是「可能敲反了」的可疑切法），
-    // 只有一个音节的也不算数（`zehg` 把 h 换成 n 是完整的 `zeng`，但四个字母以上只拼出一个音节多半是还没敲完），
-    // 改在刚敲的最后一个键上的也不算数（`zehg` 把 g 换成 a 是完整的 `ze ha`，可 g 是刚敲下去的，
-    // 和「删掉刚敲的最后一个字母不算纠正」一个道理）；这些情况下末尾没敲完的 `zhe g…` 仍参与。
+    // 湊得出「每個音節都完整」的變體時只在這些裡挑，末尾沒敲完的不參與：殘尾按字首能匹配到高頻詞，
+    // 得分往往壓過整段完整的糾正（`keyyi` 刪一個 y 是 可以，`ke yi y…` 卻出 可以有；`weti` 的 `wei t…` 會搶出 委託）。
+    // 末尾是落單單字母的完整變體不算數（`migntia` 換一個字母能湊出 `mian ti a`，那正是「可能敲反了」的可疑切法），
+    // 只有一個音節的也不算數（`zehg` 把 h 換成 n 是完整的 `zeng`，但四個字母以上只拼出一個音節多半是還沒敲完），
+    // 改在剛敲的最後一個鍵上的也不算數（`zehg` 把 g 換成 a 是完整的 `ze ha`，可 g 是剛敲下去的，
+    // 和「刪掉剛敲的最後一個字母不算糾正」一個道理）；這些情況下末尾沒敲完的 `zhe g…` 仍參與。
     let settled = found.iter().any(|c| {
         c.segmentation.incomplete_count() == 0
             && c.segmentation.syllables.len() >= 2
@@ -150,7 +150,7 @@ mod tests {
         assert!(unlikely_pinyin(segs.first(), "v"));
         let segs = parser::segment("nihooma").unwrap();
         assert!(unlikely_pinyin(segs.first(), ""));
-        // 末尾没打完不算
+        // 末尾沒打完不算
         let segs = parser::segment("nihaom").unwrap();
         assert!(!unlikely_pinyin(segs.first(), ""));
     }
@@ -170,7 +170,7 @@ mod tests {
         assert!(corrected.contains(&"nihaoma"));
         assert!(corrected.contains(&"nihouma"));
         assert!(found.iter().all(|c| c.segmentation.incomplete_count() == 0));
-        // 换位也在其中（哪个胜出由 Engine 按词库与语言模型定）
+        // 換位也在其中（哪個勝出由 Engine 按詞庫與語言模型定）
         let found = candidates("nihoama");
         assert!(found.iter().any(
             |c| c.corrected == "nihaoma" && matches!(c.edit, Edit::Transpose { index: 3, .. })
@@ -194,25 +194,25 @@ mod tests {
             .find(|c| c.corrected == "mingtia")
             .expect("mingtia");
         assert_eq!(unfinished.segmentation.joined("'"), "ming'tia");
-        // 替换 / 多敲 / 少敲仍要求每个音节都完整：migna 的替换变体 mingn… 这类不收
+        // 替換 / 多敲 / 少敲仍要求每個音節都完整：migna 的替換變體 mingn… 這類不收
         assert!(
             candidates("mignt")
                 .iter()
                 .filter(|c| !matches!(c.edit, Edit::Transpose { .. }))
                 .all(|c| c.segmentation.incomplete_count() == 0)
         );
-        // 整段都残缺的不算
+        // 整段都殘缺的不算
         assert!(loose_segmentation("zh").is_none());
         assert!(loose_segmentation("mingt").is_some());
     }
 
     #[test]
     fn unfinished_variants_yield_to_fully_segmentable_ones() {
-        // keyyi 删一个 y 就是完整的 ke yi：换位出来的 ke yi y… 不参与
+        // keyyi 刪一個 y 就是完整的 ke yi：換位出來的 ke yi y… 不參與
         let found = candidates("keyyi");
         assert!(found.iter().any(|c| c.corrected == "keyi"));
         assert!(found.iter().all(|c| c.segmentation.incomplete_count() == 0));
-        // weti 补一个 n 是 wen ti；yiwne 换位是 yi wen：同样没有残尾变体
+        // weti 補一個 n 是 wen ti；yiwne 換位是 yi wen：同樣沒有殘尾變體
         for input in ["weti", "yiwne"] {
             assert!(
                 candidates(input)
@@ -221,13 +221,13 @@ mod tests {
                 "{input}"
             );
         }
-        // zehg 换掉 h 是单音节的 zeng、换掉刚敲的 g 是 ze ha：都不算数，zhe g… 仍在
+        // zehg 換掉 h 是單音節的 zeng、換掉剛敲的 g 是 ze ha：都不算數，zhe g… 仍在
         assert!(
             candidates("zehg")
                 .iter()
                 .any(|c| c.corrected == "zheg" && c.segmentation.last_is_partial())
         );
-        // migntia 换一个字母能凑出 mian ti a，但末尾落单的 a 不算「完整」：ming tia… 仍在
+        // migntia 換一個字母能湊出 mian ti a，但末尾落單的 a 不算「完整」：ming tia… 仍在
         assert!(
             candidates("migntia")
                 .iter()

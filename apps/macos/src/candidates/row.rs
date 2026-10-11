@@ -1,45 +1,45 @@
-//! 候选窗口的一行：序号、候选词、annotation 片段。只是 Core 输出的展示形态，不含任何排序或查词。
+//! 候選視窗的一行：序號、候選詞、annotation 片段。只是 Core 輸出的展示形態，不含任何排序或查詞。
 
 use qingjian_core::Candidate;
 
-/// annotation 片段的种类，决定颜色；青简渲染器的主题还按它挑着画。
+/// annotation 片段的種類，決定顏色；青簡渲染器的主題還按它挑著畫。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tone {
-    /// 译文。
+    /// 譯文。
     Gloss,
 
-    /// 生词的译文（用户还没在候选里见过几轮，`Sense::fresh`），用强调色。
+    /// 生詞的譯文（使用者還沒在候選裡見過幾輪，`Sense::fresh`），用強調色。
     Fresh,
 
-    /// 其余的淡色片段（假名注音），最浅。
+    /// 其餘的淡色片段（假名注音），最淺。
     Faint,
 
-    /// 词性，与 `Faint` 同色。
+    /// 詞性，與 `Faint` 同色。
     Pos,
 
-    /// 义项之间的分隔，与 `Faint` 同色。
+    /// 義項之間的分隔，與 `Faint` 同色。
     Separator,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
-    /// 显示用序号文本，如 `1`。
+    /// 顯示用序號文本，如 `1`。
     pub index: String,
 
-    /// 候选词。
+    /// 候選詞。
     pub text: String,
 
-    /// 右侧 annotation，按顺序绘制；没有译文时为空。
+    /// 右側 annotation，按順序繪製；沒有譯文時為空。
     pub annotation: Vec<(String, Tone)>,
 
-    /// 来自云联想：词前画一个小云朵，与本地候选区分。
+    /// 來自雲聯想：詞前畫一個小云朵，與本地候選區分。
     pub cloud: bool,
 }
 
 impl Row {
     pub fn from_candidate(position: usize, candidate: &Candidate) -> Self {
         let mut annotation = Vec::new();
-        // 读音（问字模式答案的带声调拼音）放在最前
+        // 讀音（問字模式答案的帶聲調拼音）放在最前
         if let Some(reading) = &candidate.reading {
             annotation.push((reading.clone(), Tone::Gloss));
         }
@@ -51,7 +51,7 @@ impl Row {
                 if let Some(pos) = sense.part_of_speech {
                     annotation.push((format!("{pos} "), Tone::Pos));
                 }
-                // 日文译词按汉字段注平假名（開発(かいはつ)する），假名淡色
+                // 日文譯詞按漢欄位注平假名（開発(かいはつ)する），假名淡色
                 let tone = if sense.fresh {
                     Tone::Fresh
                 } else {

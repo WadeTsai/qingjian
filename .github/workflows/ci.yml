@@ -1,6 +1,6 @@
-# 三个 job：Linux 跑 fmt / clippy / 全 workspace 测试（排除 IMK 外壳）；macOS 与 Windows runner 各编各的壳并跑平台测试，
-# 平台特有的编译错（Objective-C 调用、TSF 导出、WinUI）在 PR 里就暴露，不等发版。仓库公开，Actions 不计费。
-# actions 一律钉到 commit（注释里是对应的标签），Dependabot 每周提 PR 更新；cargo 全加 --locked，Cargo.lock 没提交就报错。
+# 三個 job：Linux 跑 fmt / clippy / 全 workspace 測試（排除 IMK 外殼）；macOS 與 Windows runner 各編各的殼並跑平臺測試，
+# 平臺特有的編譯錯（Objective-C 呼叫、TSF 匯出、WinUI）在 PR 裡就暴露，不等發版。倉庫公開，Actions 不計費。
+# actions 一律釘到 commit（註釋裡是對應的標籤），Dependabot 每週提 PR 更新；cargo 全加 --locked，Cargo.lock 沒提交就報錯。
 name: ci
 
 on:
@@ -57,9 +57,9 @@ jobs:
       - name: Build Fcitx5 default panel
         run: cmake --build target/fcitx5-stage1 --parallel 2
 
-      # 日志用 tee 落盘，失败时由下面的 Upload Linux diagnostics 打包上传，便于排障。
-      # 必须显式 shell: bash：默认的 bash -e 不带 pipefail，`| tee` 会返回 tee 的退出码、把测试失败吞掉，
-      # if: failure() 的诊断上传也不会触发
+      # 日誌用 tee 落盤，失敗時由下面的 Upload Linux diagnostics 打包上傳，便於排障。
+      # 必須顯式 shell: bash：預設的 bash -e 不帶 pipefail，`| tee` 會返回 tee 的退出碼、把測試失敗吞掉，
+      # if: failure() 的診斷上傳也不會觸發
       - name: Test Fcitx5 default panel
         shell: bash
         run: |
@@ -112,7 +112,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     env:
-      # Server 的 build.rs 嵌 uiAccess manifest，没签名的 exe（含测试二进制）起不来（os error 740）；与 release.yml 一样关掉
+      # Server 的 build.rs 嵌 uiAccess manifest，沒簽名的 exe（含測試二進位制）起不來（os error 740）；與 release.yml 一樣關掉
       QINGJIAN_UIACCESS: '0'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -133,6 +133,6 @@ jobs:
       - name: Test (Server, TSF DLL, Settings)
         run: cargo test -p qingjian-windows-server -p qingjian-windows-tsf -p qingjian-windows-settings --locked
 
-      # 安装包另带一份 32 位 DLL（企业微信 / WPS 这类 32 位应用只能加载它）
+      # 安裝包另帶一份 32 位 DLL（企業微信 / WPS 這類 32 位應用只能載入它）
       - name: Check (TSF DLL, 32-bit)
         run: cargo check -p qingjian-windows-tsf --target i686-pc-windows-msvc --locked

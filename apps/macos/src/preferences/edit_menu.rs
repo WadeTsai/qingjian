@@ -3,11 +3,11 @@ use objc2::{MainThreadMarker, sel};
 use objc2_app_kit::{NSApplication, NSMenu, NSMenuItem};
 use objc2_foundation::NSString;
 
-/// 给进程装一份只有「编辑」的主菜单。
+/// 給程序裝一份只有「編輯」的主選單。
 ///
-/// 输入法是 `LSBackgroundOnly`，从不显示菜单栏，也就没有主菜单；而 AppKit 文本框里的 ⌘X / ⌘C / ⌘V / ⌘A / ⌘Z
-/// 是主菜单里对应条目的快捷键，菜单不存在这些键就没人响应——偏好设置里的密钥框粘不进去就是这个原因。
-/// 菜单栏本身永远不会画出来（激活策略最多到 Accessory），只是让快捷键有地方落。重复调用只装一次。
+/// 輸入法是 `LSBackgroundOnly`，從不顯示選單欄，也就沒有主選單；而 AppKit 文本框裡的 ⌘X / ⌘C / ⌘V / ⌘A / ⌘Z
+/// 是主選單裡對應條目的快捷鍵，選單不存在這些鍵就沒人響應——偏好設定裡的金鑰框粘不進去就是這個原因。
+/// 選單欄本身永遠不會畫出來（啟用策略最多到 Accessory），只是讓快捷鍵有地方落。重複呼叫只裝一次。
 pub fn install(mtm: MainThreadMarker) {
     let app = NSApplication::sharedApplication(mtm);
     if app.mainMenu().is_some() {
@@ -22,7 +22,7 @@ pub fn install(mtm: MainThreadMarker) {
         ("粘贴", sel!(paste:), "v"),
         ("全选", sel!(selectAll:), "a"),
     ] {
-        // SAFETY: 这些都是 NSResponder 的标准编辑选择器，target 为空时沿响应链送到当前编辑的文本框
+        // SAFETY: 這些都是 NSResponder 的標準編輯選擇器，target 為空時沿響應鏈送到當前編輯的文本框
         let item = unsafe {
             NSMenuItem::initWithTitle_action_keyEquivalent(
                 mtm.alloc(),

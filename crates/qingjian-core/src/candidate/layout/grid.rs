@@ -1,38 +1,38 @@
-//! 横排展开成矩阵时的视口与高亮移动：一行就是一页候选，固定显示几行，高亮移出视口时按行滚动。
-//! 与分页一样是展示规则，各平台壳共用，所以放在 Core；壳只转发方向键。
+//! 橫排展開成矩陣時的視口與高亮移動：一行就是一頁候選，固定顯示幾行，高亮移出視口時按行滾動。
+//! 與分頁一樣是展示規則，各平臺殼共用，所以放在 Core；殼只轉發方向鍵。
 
 use std::ops::Range;
 
 use super::CandidateLayout;
 
-/// 矩阵视口显示几行。
+/// 矩陣視口顯示幾行。
 pub const GRID_ROWS: usize = 6;
 
-/// 一格最多按几个字宽留：四字词能完整显示，再长的候选在格子里截断。
+/// 一格最多按幾個字寬留：四字詞能完整顯示，再長的候選在格子裡截斷。
 pub const MAX_CELL_EMS: f32 = 4.0;
 
-/// 估宽时非宽字符（拉丁字母、数字、半角标点）按几个字宽算。
+/// 估寬時非寬字元（拉丁字母、數字、半形標點）按幾個字寬算。
 const NARROW_EMS: f32 = 0.62;
 
-/// 云端词前面的云朵图标按几个字宽算。
+/// 雲端詞前面的雲朵圖示按幾個字寬算。
 const CLOUD_EMS: f32 = 1.1;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Grid {
-    /// 视口第一行的行号（页号）。
+    /// 視口第一行的行號（頁號）。
     top: usize,
 }
 
 impl Grid {
-    /// 从第 `row` 行展开：它当视口第一行；后面不够一屏时视口往上补齐，窗口高度才不会因为在末几页展开而变矮。
+    /// 從第 `row` 行展開：它當視口第一行；後面不夠一屏時視口往上補齊，視窗高度才不會因為在末幾頁展開而變矮。
     pub fn at(layout: &CandidateLayout, row: usize) -> Self {
         Self {
             top: row.min(layout.pages().saturating_sub(GRID_ROWS)),
         }
     }
 
-    /// 各列要留几个字宽：按**整份**候选估（不只是视口里那几行），同一轮查询里滚动、移动高亮时列宽不变，窗口不跳。
-    /// 按字符数估而不实测——汉字一个字宽、拉丁字母不到一个——几百条候选每帧实测太慢；上限 [`MAX_CELL_EMS`]。
+    /// 各列要留幾個字寬：按**整份**候選估（不只是視口裡那幾行），同一輪查詢裡滾動、移動高亮時列寬不變，視窗不跳。
+    /// 按字元數估而不實測——漢字一個字寬、拉丁字母不到一個——幾百條候選每幀實測太慢；上限 [`MAX_CELL_EMS`]。
     pub fn column_ems(layout: &CandidateLayout) -> Vec<f32> {
         let columns = layout.page_size();
         let mut widths = vec![0.0_f32; columns];
@@ -58,14 +58,14 @@ impl Grid {
         self.top
     }
 
-    /// 视口里的行号，不超过排布的总行数。
+    /// 視口裡的行號，不超過排布的總行數。
     pub fn rows(&self, layout: &CandidateLayout) -> Range<usize> {
         let end = (self.top + GRID_ROWS).min(layout.pages().max(1));
         self.top.min(end)..end
     }
 
-    /// 高亮竖着移 `delta` 行、列不变；目标格没有候选（行尾不满、固定位置留的空位）就取那一行里离它最近的候选，
-    /// 整行都没有就顺着方向再找下一行。返回新的高亮下标，动不了返回 `None`。视口跟着滚。
+    /// 高亮豎著移 `delta` 行、列不變；目標格沒有候選（行尾不滿、固定位置留的空位）就取那一行裡離它最近的候選，
+    /// 整行都沒有就順著方向再找下一行。返回新的高亮下標，動不了返回 `None`。視口跟著滾。
     pub fn move_rows(
         &mut self,
         layout: &CandidateLayout,
@@ -93,7 +93,7 @@ impl Grid {
         None
     }
 
-    /// 高亮按阅读顺序移一格（越过行尾到下一行开头），跳过空位。返回新的高亮下标，到头了返回 `None`。
+    /// 高亮按閱讀順序移一格（越過行尾到下一行開頭），跳過空位。返回新的高亮下標，到頭了返回 `None`。
     pub fn move_cells(
         &mut self,
         layout: &CandidateLayout,
@@ -115,7 +115,7 @@ impl Grid {
         None
     }
 
-    /// 滚动视口让第 `row` 行可见：往上露出就让它当第一行，往下露出就让它当最后一行。
+    /// 滾動視口讓第 `row` 行可見：往上露出就讓它當第一行，往下露出就讓它當最後一行。
     fn reveal(&mut self, row: usize) {
         if row < self.top {
             self.top = row;
@@ -125,7 +125,7 @@ impl Grid {
     }
 }
 
-/// 第 `row` 行里离第 `column` 列最近的候选下标（同距离取左边的）。
+/// 第 `row` 行裡離第 `column` 列最近的候選下標（同距離取左邊的）。
 fn nearest_in_row(layout: &CandidateLayout, row: usize, column: usize) -> Option<usize> {
     let columns = layout.page_size();
     let start = row * columns;
@@ -160,9 +160,9 @@ mod tests {
         let mut grid = Grid::at(&layout, 0);
         // 第 0 行第 3 列 → 第 1 行第 3 列
         assert_eq!(grid.move_rows(&layout, 3, 1), Some(8));
-        // 最后一行只有 3 个：第 3 列没有，落到最近的第 2 列
+        // 最後一行只有 3 個：第 3 列沒有，落到最近的第 2 列
         assert_eq!(grid.move_rows(&layout, 8, 1), Some(12));
-        // 到底了再往下不动；往上回到同一列
+        // 到底了再往下不動；往上回到同一列
         assert_eq!(grid.move_rows(&layout, 12, 1), None);
         assert_eq!(grid.move_rows(&layout, 12, -1), Some(7));
         assert_eq!(grid.move_rows(&layout, 2, -1), None);
@@ -178,15 +178,15 @@ mod tests {
         }
         assert_eq!((highlighted / 5, grid.top()), (5, 0));
         assert_eq!(grid.rows(&layout), 0..6);
-        // 再往下一行：视口滚一行
+        // 再往下一行：視口滾一行
         highlighted = grid.move_rows(&layout, highlighted, 1).unwrap();
         assert_eq!((highlighted / 5, grid.top()), (6, 1));
-        // 往上回到视口顶再往上：视口跟着往上滚
+        // 往上回到視口頂再往上：視口跟著往上滾
         for _ in 0..6 {
             highlighted = grid.move_rows(&layout, highlighted, -1).unwrap();
         }
         assert_eq!((highlighted / 5, grid.top()), (0, 0));
-        // 整屏翻（翻页键）：一次 6 行，末尾夹住
+        // 整屏翻（翻頁鍵）：一次 6 行，末尾夾住
         highlighted = grid
             .move_rows(&layout, highlighted, GRID_ROWS as isize)
             .unwrap();
@@ -200,7 +200,7 @@ mod tests {
         let layout = layout(100, 5);
         assert_eq!(Grid::at(&layout, 3).rows(&layout), 3..9);
         assert_eq!(Grid::at(&layout, 19).rows(&layout), 14..20);
-        // 总共不到一屏：从头显示
+        // 總共不到一屏：從頭顯示
         let short = super::super::CandidateLayout::new(Vec::new(), 5, 0);
         assert_eq!(Grid::at(&short, 0).top(), 0);
     }
@@ -218,7 +218,7 @@ mod tests {
                 aux_code: None,
             })
             .collect();
-        // 第二行第一列有个三字词：哪怕不在视口里，第一列也按它留宽
+        // 第二行第一列有個三字詞：哪怕不在視口裡，第一列也按它留寬
         candidates.push(Candidate {
             text: "事实上".into(),
             ..candidates[0].clone()

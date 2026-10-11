@@ -1,11 +1,11 @@
-//! 形码码表：Rime `.dict.yaml`（极点 86 五笔等）→ `词\t编码\t词频`。
+//! 形碼碼錶：Rime `.dict.yaml`（極點 86 五筆等）→ `詞\t編碼\t詞頻`。
 //!
-//! 码表自带的第二列（Rime 里是权重）**不用**：那是码表顺序，不是语料词频，直接拿来排序会让同一个词
-//! 在形码下和在拼音下排得不一样。词频从青简词库（`词\t拼音\t词频`）按**词面**交叉回填：
-//! 词库里有的用语料词频（与拼音方案同一把尺子，释义兜底与生词识别也对得上），
-//! 没有的给 [`UNKNOWN_FREQUENCY`]——语料里一次都没出现过，本来就该排在同编码的已知词后面。
+//! 碼錶自帶的第二列（Rime 裡是權重）**不用**：那是碼錶順序，不是語料詞頻，直接拿來排序會讓同一個詞
+//! 在形碼下和在拼音下排得不一樣。詞頻從青簡詞庫（`詞\t拼音\t詞頻`）按**詞面**交叉回填：
+//! 詞庫裡有的用語料詞頻（與拼音方案同一把尺子，釋義兜底與生詞識別也對得上），
+//! 沒有的給 [`UNKNOWN_FREQUENCY`]——語料裡一次都沒出現過，本來就該排在同編碼的已知詞後面。
 //!
-//! 词组编码（二字词 2+2、三字词 1+1+1）由上游码表给全，这里不做取码推导，见 `docs/plan/wubi.md`。
+//! 片語編碼（二字詞 2+2、三字詞 1+1+1）由上游碼錶給全，這裡不做取碼推導，見 `docs/plan/wubi.md`。
 
 use std::collections::HashMap;
 use std::io::{BufWriter, Write};
@@ -16,23 +16,23 @@ use qingjian_dictionary::import::{looks_like_rime, to_tsv};
 
 use crate::error::ConvertError;
 
-/// 词库里查不到的词给的词频。
+/// 詞庫裡查不到的詞給的詞頻。
 pub const UNKNOWN_FREQUENCY: u32 = 1;
 
-/// 转换结果，打日志用。
+/// 轉換結果，打日誌用。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Converted {
-    /// 写出的词条数。
+    /// 寫出的詞條數。
     pub entries: usize,
 
-    /// 其中词频来自语料的条数。
+    /// 其中詞頻來自語料的條數。
     pub with_frequency: usize,
 
-    /// 词库里查不到、拿了 [`UNKNOWN_FREQUENCY`] 的条数。占比高说明码表与词库的词面写法对不上，要查。
+    /// 詞庫裡查不到、拿了 [`UNKNOWN_FREQUENCY`] 的條數。佔比高說明碼錶與詞庫的詞面寫法對不上，要查。
     pub unknown: usize,
 }
 
-/// 读 Rime 码表写出青简形码 TSV，词频从 `frequencies`（青简词库 TSV，可给多本）交叉回填。
+/// 讀 Rime 碼錶寫出青簡形碼 TSV，詞頻從 `frequencies`（青簡詞庫 TSV，可給多本）交叉回填。
 pub fn convert(
     input: &Path,
     frequencies: &[PathBuf],
@@ -46,7 +46,7 @@ pub fn convert(
             reason: "expected a Rime .dict.yaml (a `---` header or a `name:` line)".to_owned(),
         });
     }
-    // 基础词库加随包的领域词库：词的语料词频与它收在哪一本里无关，同一个词取最大的那份
+    // 基礎詞庫加隨包的領域詞庫：詞的語料詞頻與它收在哪一本里無關，同一個詞取最大的那份
     let dictionaries: Vec<Dictionary> = frequencies
         .iter()
         .map(Dictionary::from_path)
@@ -62,8 +62,8 @@ pub fn convert(
     let tsv = to_tsv(&source).tsv;
     let mut entries: Vec<(String, String, u32)> = Vec::new();
     for (index, raw) in tsv.lines().enumerate() {
-        // 只去尾部空白：词字段可能是空的（源表里 全角空格 那条以制表符开头），
-        // 整行 trim 会把开头的制表符吃掉、后面的列整体左移，编码被当成词
+        // 只去尾部空白：詞欄位可能是空的（源表裡 全形空格 那條以製表符開頭），
+        // 整行 trim 會把開頭的製表符吃掉、後面的列整體左移，編碼被當成詞
         let line = raw.trim_end();
         if line.is_empty() || line.starts_with('#') {
             continue;
@@ -83,8 +83,8 @@ pub fn convert(
         let weight = table.get(word).copied().unwrap_or(UNKNOWN_FREQUENCY);
         entries.push((word.to_owned(), code, weight));
     }
-    // 按 (编码, 词频降序, 词) 排：与 `CodeTable` 在内存里的顺序一致，文件本身也一眼看得出排序；
-    // 同一个 (词, 编码) 出现两次（合并多份码表）留第一次
+    // 按 (編碼, 詞頻降序, 詞) 排：與 `CodeTable` 在記憶體裡的順序一致，檔案本身也一眼看得出排序；
+    // 同一個 (詞, 編碼) 出現兩次（合併多份碼錶）留第一次
     entries.sort_by(|a, b| {
         a.1.cmp(&b.1)
             .then_with(|| b.2.cmp(&a.2))
@@ -126,10 +126,10 @@ name: wubi86
 不给	gqt	60
 "#;
 
-    /// 词库里有 的 / 开 / 开发 / 一，码表里的 不给 不在其中，用来验证按词面回填与兜底。
+    /// 詞庫裡有 的 / 開 / 開發 / 一，碼錶裡的 不給 不在其中，用來驗證按詞面回填與兜底。
     const DICT: &str = "的\tde\t5000\n开\tkai\t800\n开发\tkai fa\t900\n一\tyi\t4000\n";
 
-    /// 每个用例一个自己的目录：`cargo test` 并行跑，共用目录会互相覆盖。
+    /// 每個用例一個自己的目錄：`cargo test` 並行跑，共用目錄會互相覆蓋。
     fn scratch(name: &str) -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!("qingjian-wubi-{name}"));
         std::fs::create_dir_all(&dir).unwrap();
@@ -195,8 +195,8 @@ name: wubi86
 
     #[test]
     fn skips_rows_whose_word_field_is_empty() {
-        // 极点码表里 全角空格 那条就是这个形状：词字段是空的全角空格，行以制表符开头。
-        // 整行 trim 会把制表符吃掉，变成「编码 cokg 的词频 10」这种垃圾条目。
+        // 極點碼錶裡 全形空格 那條就是這個形狀：詞欄位是空的全形空格，行以製表符開頭。
+        // 整行 trim 會把製表符吃掉，變成「編碼 cokg 的詞頻 10」這種垃圾條目。
         let (lines, converted) = convert_to_strings(
             "empty-word",
             "---\nname: t\n...\n\tcokg\t10\t全角空格\n开\tga\t80\n",
@@ -225,7 +225,7 @@ name: wubi86
 
     #[test]
     fn takes_the_highest_frequency_across_dictionaries() {
-        // 基础词库没有 葡萄牙，领域词库有：两本都传进去就该命中，取大的那份
+        // 基礎詞庫沒有 葡萄牙，領域詞庫有：兩本都傳進去就該命中，取大的那份
         let dir = scratch("multi");
         let table_path = dir.join("table.dict.yaml");
         let base_path = dir.join("dict.tsv");

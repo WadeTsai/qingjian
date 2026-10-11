@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-windows-settings"
-description = "Windows 输入法的设置界面：左侧导航栏 + 各分节表单，读写 %APPDATA%\\Qingjian\\config.toml，对齐 macOS 偏好设置"
+description = "Windows 輸入法的設定介面：左側導航欄 + 各分節表單，讀寫 %APPDATA%\\Qingjian\\config.toml，對齊 macOS 偏好設定"
 version = "0.2.1-dev"
 edition.workspace = true
 license.workspace = true
@@ -15,7 +15,7 @@ qingjian-platform.workspace = true
 qingjian-predict.workspace = true
 toml_edit.workspace = true
 
-# UI 本体只在 Windows 编
+# UI 本體只在 Windows 編
 [target."cfg(windows)".dependencies]
 windows-reactor = "0.100"
 windows = { version = "0.62.2", features = [
@@ -36,7 +36,7 @@ rfd = "0.17"
 
 [target."cfg(windows)".build-dependencies]
 winresource = "0.1.31"
-# 自包含部署 Windows App Runtime（Windows 10 上框架依赖的引导用不了，见 build.rs 与 docs\notes\windows-win10.md）
+# 自包含部署 Windows App Runtime（Windows 10 上框架依賴的引導用不了，見 build.rs 與 docs\notes\windows-win10.md）
 windows-reactor-setup = "0.100"
 
 [lints]

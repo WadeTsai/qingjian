@@ -33,7 +33,7 @@ fn emoji_follow_their_word_and_consume_its_syllables() {
     assert_eq!(items[kaifa + 1].kind, CandidateKind::Emoji);
     assert_eq!(items[kaifa + 1].reading.as_deref(), Some("开发"));
     assert_eq!(items[kaifa + 2].text, "🛠️");
-    // 每个词最多两个，一次最多三个
+    // 每個詞最多兩個，一次最多三個
     assert_eq!(
         items
             .iter()

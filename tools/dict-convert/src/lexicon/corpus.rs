@@ -1,4 +1,4 @@
-//! 语料统计的一元词频（`bigram` 子命令写的 lm-unigram.tsv：`词\t次数`）。
+//! 語料統計的一元詞頻（`bigram` 子命令寫的 lm-unigram.tsv：`詞\t次數`）。
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -11,7 +11,7 @@ pub fn load(path: &Path) -> Result<HashMap<String, u64>, ConvertError> {
     Ok(rows(path)?.into_iter().collect())
 }
 
-/// 同上，保持文件顺序、允许重复。
+/// 同上，保持檔案順序、允許重複。
 pub fn rows(path: &Path) -> Result<Vec<(String, u64)>, ConvertError> {
     let source = std::fs::read_to_string(path)?;
     Ok(source
@@ -24,19 +24,19 @@ pub fn rows(path: &Path) -> Result<Vec<(String, u64)>, ConvertError> {
         .collect())
 }
 
-/// `--extra-words` 文件的一行：`词\t次数[\t拼音]`，拼音是空格分隔的音节（短语层由成分词拼出，给了就不再按字猜）。
+/// `--extra-words` 檔案的一行：`詞\t次數[\t拼音]`，拼音是空格分隔的音節（短語層由成分詞拼出，給了就不再按字猜）。
 pub struct ExtraWord {
-    /// 词。
+    /// 詞。
     pub text: String,
 
-    /// 语料次数，当词频。
+    /// 語料次數，當詞頻。
     pub count: u64,
 
-    /// 读音；没给为 `None`。
+    /// 讀音；沒給為 `None`。
     pub syllables: Option<Vec<String>>,
 }
 
-/// 读额外词文件，保持顺序。
+/// 讀額外詞檔案，保持順序。
 pub fn extra_words(path: &Path) -> Result<Vec<ExtraWord>, ConvertError> {
     let source = std::fs::read_to_string(path)?;
     Ok(source

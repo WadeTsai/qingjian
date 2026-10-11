@@ -6,18 +6,18 @@ use qingjian_core::MarkedSegment;
 use segment::PreeditSegment;
 pub use style::PreeditStyle;
 
-/// 候选窗口顶部的拼音行：若干段 + 我们自己画的光标。光标位置是各段拼接后的字符下标。
+/// 候選視窗頂部的拼音行：若干段 + 我們自己畫的游標。游標位置是各段拼接後的字元下標。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Preedit {
-    /// 按顺序画的片段。
+    /// 按順序畫的片段。
     pub segments: Vec<PreeditSegment>,
 
-    /// 光标在拼接文本里的字符位置。
+    /// 游標在拼接文本里的字元位置。
     pub cursor: usize,
 }
 
 impl Preedit {
-    /// 由 Core 的分段与光标位置构造；没有任何文字时返回 `None`。
+    /// 由 Core 的分段與游標位置構造；沒有任何文字時返回 `None`。
     pub fn from_marked(segments: &[MarkedSegment], cursor: usize) -> Option<Self> {
         let segments: Vec<PreeditSegment> = segments
             .iter()
@@ -27,7 +27,7 @@ impl Preedit {
         (!segments.is_empty()).then_some(Self { segments, cursor })
     }
 
-    /// 单段普通文本（查询失败时退回显示原始字母）。
+    /// 單段普通文本（查詢失敗時退回顯示原始字母）。
     pub fn plain(text: &str, cursor: usize) -> Option<Self> {
         (!text.is_empty()).then(|| Self {
             segments: vec![PreeditSegment {
@@ -38,12 +38,12 @@ impl Preedit {
         })
     }
 
-    /// 拼接后的全文。
+    /// 拼接後的全文。
     pub fn text(&self) -> String {
         self.segments.iter().map(|s| s.text.as_str()).collect()
     }
 
-    /// 光标前的文字（用来量光标的 x）。
+    /// 游標前的文字（用來量游標的 x）。
     pub fn before_cursor(&self) -> String {
         self.text().chars().take(self.cursor).collect()
     }

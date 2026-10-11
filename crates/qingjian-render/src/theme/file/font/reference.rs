@@ -1,6 +1,6 @@
-//! 节点里的 `font`：`text.styles` 里的样式名，或在某个样式上改几项：
-//! `{ "base": "candidate", "size": 18, "weight": "semibold", "style": "italic" }`。只改字号不写行高时，行高按字号等比缩放。
-//! 字族不能在这里改：换字族要定义一个命名样式。
+//! 節點裡的 `font`：`text.styles` 裡的樣式名，或在某個樣式上改幾項：
+//! `{ "base": "candidate", "size": 18, "weight": "semibold", "style": "italic" }`。只改字號不寫行高時，行高按字號等比縮放。
+//! 字族不能在這裡改：換字族要定義一個命名樣式。
 
 use serde::Deserialize;
 
@@ -13,7 +13,7 @@ pub(crate) enum FontRef {
     Named(String),
 
     Inline {
-        /// 在哪个样式上改；不写从缺省样式改。
+        /// 在哪個樣式上改；不寫從預設樣式改。
         base: Option<String>,
 
         size: Option<f32>,
@@ -27,7 +27,7 @@ pub(crate) enum FontRef {
 }
 
 impl FontRef {
-    /// 引用的样式名。
+    /// 引用的樣式名。
     pub(crate) fn base(&self) -> Option<&str> {
         match self {
             Self::Named(name) => Some(name),
@@ -35,7 +35,7 @@ impl FontRef {
         }
     }
 
-    /// 在基础样式上套用这里的改动。
+    /// 在基礎樣式上套用這裡的改動。
     pub(crate) fn apply(&self, base: FontSpec) -> FontSpec {
         let Self::Inline {
             size,

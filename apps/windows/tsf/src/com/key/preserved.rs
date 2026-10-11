@@ -1,8 +1,8 @@
-//! 「翻译选中文字」与「Ctrl + Alt + Space 切换中英」两个快捷键登记成 TSF **保留键**（preserved key）。
-//! 带 Alt 的组合是系统键，不经击键 sink（真机：Ctrl+Alt+T 在 `OnTestKeyDown` 里从没出现过）；
-//! 保留键由 TSF 在应用之前匹配、回调 `OnPreservedKey`，UWP 里也一样。翻译组合来自
-//! `[shortcut] translate_selection`，激活时读一次配置（AppContainer 读不到用户目录时用缺省 Ctrl+Alt+T）；
-//! 切换键来自 `[shortcut] switch_mode`，那个值由 Server 经协议下发（DLL 不读配置文件），变了就地重登记。
+//! 「翻譯選中文字」與「Ctrl + Alt + Space 切換中英」兩個快捷鍵登記成 TSF **保留鍵**（preserved key）。
+//! 帶 Alt 的組合是系統鍵，不經擊鍵 sink（真機：Ctrl+Alt+T 在 `OnTestKeyDown` 裡從沒出現過）；
+//! 保留鍵由 TSF 在應用之前匹配、回撥 `OnPreservedKey`，UWP 裡也一樣。翻譯組合來自
+//! `[shortcut] translate_selection`，啟用時讀一次配置（AppContainer 讀不到使用者目錄時用預設 Ctrl+Alt+T）；
+//! 切換鍵來自 `[shortcut] switch_mode`，那個值由 Server 經協議下發（DLL 不讀配置檔案），變了就地重登記。
 
 use windows::Win32::UI::Input::KeyboardAndMouse::VK_SPACE;
 use windows::Win32::UI::TextServices::{
@@ -15,16 +15,16 @@ use qingjian_platform::{Config, KeyCombo};
 
 use crate::com::log::log;
 
-/// 本保留键的标识，`OnPreservedKey` 按它认。
+/// 本保留鍵的標識，`OnPreservedKey` 按它認。
 pub(crate) const GUID_TRANSLATE: GUID = GUID::from_u128(0x5c0a7b12_3d4e_4f60_8a91_2b3c4d5e6f70);
 
-/// Ctrl + Alt + Space 中英切换键的保留键标识。
+/// Ctrl + Alt + Space 中英切換鍵的保留鍵標識。
 pub(crate) const GUID_SWITCH_MODE: GUID = GUID::from_u128(0x2f6b8c51_9a34_4e7d_b2c8_5d1e0f3a7b64);
 
-/// msctf.h 的 `TF_MOD_LWIN`（windows crate 没导出）。
+/// msctf.h 的 `TF_MOD_LWIN`（windows crate 沒匯出）。
 const TF_MOD_LWIN: u32 = 0x08;
 
-/// 读 `%APPDATA%\Qingjian\config.toml` 里的组合；读不到 / 解析失败用缺省。
+/// 讀 `%APPDATA%\Qingjian\config.toml` 裡的組合；讀不到 / 解析失敗用預設。
 pub(crate) fn load_combo() -> KeyCombo {
     let Some(path) = qingjian_platform::dirs::config_path() else {
         return KeyCombo::TRANSLATE_DEFAULT;
@@ -32,14 +32,14 @@ pub(crate) fn load_combo() -> KeyCombo {
     match Config::load(&path) {
         Ok(config) => config.shortcut.translate_selection,
         Err(error) => {
-            log(&format!("读配置取翻译快捷键失败，用缺省: {error}"));
+            log(&format!("讀配置取翻譯快捷鍵失敗，用預設: {error}"));
             KeyCombo::TRANSLATE_DEFAULT
         }
     }
 }
 
-/// Ctrl + Alt + Space 的 `TF_PRESERVEDKEY`。不用 Ctrl + Space：中文 Windows 把它绑成系统的
-/// 「输入法/非输入法切换」，系统先截走，保留键收不到。
+/// Ctrl + Alt + Space 的 `TF_PRESERVEDKEY`。不用 Ctrl + Space：中文 Windows 把它綁成系統的
+/// 「輸入法/非輸入法切換」，系統先截走，保留鍵收不到。
 fn switch_mode_key() -> TF_PRESERVEDKEY {
     TF_PRESERVEDKEY {
         uVKey: VK_SPACE.0 as u32,
@@ -47,9 +47,9 @@ fn switch_mode_key() -> TF_PRESERVEDKEY {
     }
 }
 
-/// 登记 Ctrl + Alt + Space 为中英切换保留键（`switch_mode` 勾了它时）。
+/// 登記 Ctrl + Alt + Space 為中英切換保留鍵（`switch_mode` 勾了它時）。
 pub(crate) fn register_switch_mode(keystroke: &ITfKeystrokeMgr, tid: u32) -> Result<()> {
-    let description: Vec<u16> = "切换中英文（青简）".encode_utf16().collect();
+    let description: Vec<u16> = "切換中英文（青簡）".encode_utf16().collect();
     unsafe { keystroke.PreserveKey(tid, &GUID_SWITCH_MODE, &switch_mode_key(), &description) }
 }
 
@@ -80,7 +80,7 @@ fn preserved_key(combo: KeyCombo) -> TF_PRESERVEDKEY {
 
 pub(crate) fn register(keystroke: &ITfKeystrokeMgr, tid: u32, combo: KeyCombo) -> Result<()> {
     let key = preserved_key(combo);
-    let description: Vec<u16> = "翻译选中文字".encode_utf16().collect();
+    let description: Vec<u16> = "翻譯選中文字".encode_utf16().collect();
     unsafe { keystroke.PreserveKey(tid, &GUID_TRANSLATE, &key, &description) }
 }
 
@@ -89,7 +89,7 @@ pub(crate) fn unregister(keystroke: &ITfKeystrokeMgr, combo: KeyCombo) {
     let _ = unsafe { keystroke.UnpreserveKey(&GUID_TRANSLATE, &key) };
 }
 
-/// 保留键命中时喂给 Server 的按键：Router 按字符 + 物理修饰键与配置比对。
+/// 保留鍵命中時餵給 Server 的按鍵：Router 按字元 + 物理修飾鍵與配置比對。
 pub(crate) fn key_event(combo: KeyCombo, english_mode: bool) -> KeyEvent {
     let m = combo.modifiers;
     KeyEvent::new(

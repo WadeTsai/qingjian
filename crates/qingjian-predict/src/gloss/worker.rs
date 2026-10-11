@@ -8,27 +8,27 @@ use super::prompt;
 use crate::chat_client::ChatClient;
 use crate::error::PredictError;
 
-/// 收到第一个词后最多等这么久再发，攒同一批。
+/// 收到第一個詞後最多等這麼久再發，攢同一批。
 pub const BATCH_WAIT: Duration = Duration::from_millis(1500);
 
-/// 一批最多几个词。
+/// 一批最多幾個詞。
 pub const BATCH_SIZE: usize = 8;
 
-/// 回复的 token 上限：8 个词各两条短译词绰绰有余。
+/// 回覆的 token 上限：8 個詞各兩條短譯詞綽綽有餘。
 const MAX_TOKENS: u32 = 600;
 
-/// 后台线程：攒词、发请求、回释义。
+/// 後臺執行緒：攢詞、發請求、回釋義。
 pub struct GlossWorker {
-    /// 请求入口。主线程 drop 掉发送端后线程自然退出。
+    /// 請求入口。主執行緒 drop 掉髮送端後執行緒自然退出。
     requests: Receiver<(Language, String)>,
 
-    /// 结果出口。
+    /// 結果出口。
     responses: Sender<FilledGloss>,
 
-    /// 网络客户端。
+    /// 網路客戶端。
     client: ChatClient,
 
-    /// 本进程内问过的 (语言, 词)，不再问。
+    /// 本程序內問過的 (語言, 詞)，不再問。
     asked: HashSet<(Language, String)>,
 }
 
@@ -46,7 +46,7 @@ impl GlossWorker {
         }
     }
 
-    /// 阻塞运行直到发送端全部关闭。
+    /// 阻塞執行直到傳送端全部關閉。
     pub fn run(mut self) -> Result<(), PredictError> {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -55,7 +55,7 @@ impl GlossWorker {
             let Some(batch) = self.collect(first) else {
                 return Ok(());
             };
-            // 一批里可能混着两种语言（中途切了学习语言）：按语言各发一次
+            // 一批裡可能混著兩種語言（中途切了學習語言）：按語言各發一次
             let mut languages: Vec<Language> = Vec::new();
             for (language, _) in &batch {
                 if !languages.contains(language) {
@@ -74,7 +74,7 @@ impl GlossWorker {
         Ok(())
     }
 
-    /// 从第一个词起攒一批：等到 [`BATCH_WAIT`] 或攒够 [`BATCH_SIZE`]；问过的跳过。发送端关闭返回 `None`。
+    /// 從第一個詞起攢一批：等到 [`BATCH_WAIT`] 或攢夠 [`BATCH_SIZE`]；問過的跳過。傳送端關閉返回 `None`。
     fn collect(&mut self, first: (Language, String)) -> Option<Vec<(Language, String)>> {
         let deadline = Instant::now() + BATCH_WAIT;
         let mut batch = Vec::with_capacity(BATCH_SIZE);
@@ -114,7 +114,7 @@ impl GlossWorker {
                     "释义兜底完成"
                 );
                 for gloss in filled {
-                    // 接收端没了说明 Filler 已经被 drop，线程随后也会退出
+                    // 接收端沒了說明 Filler 已經被 drop，執行緒隨後也會退出
                     if self.responses.send(gloss).is_err() {
                         return;
                     }

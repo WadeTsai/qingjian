@@ -9,28 +9,28 @@ pub const ROW_HEIGHT: f64 = 24.0;
 /// 行距。
 pub const ROW_GAP: f64 = 8.0;
 
-/// 页内左右留白。
+/// 頁內左右留白。
 pub const PAGE_PADDING: f64 = 20.0;
 
-/// 标题列的宽度（标题右对齐贴着控件）。
+/// 標題列的寬度（標題右對齊貼著控制元件）。
 pub const LABEL_WIDTH: f64 = 110.0;
 
-/// 控件列的 x：标题列 + 间隔。
+/// 控制元件列的 x：標題列 + 間隔。
 pub const CONTROL_X: f64 = PAGE_PADDING + LABEL_WIDTH + 10.0;
 
-/// 每个标签页的内容宽度。
+/// 每個標籤頁的內容寬度。
 pub const PAGE_WIDTH: f64 = 600.0;
 
-/// 在一页里自上而下摆控件的简易布局：AppKit 坐标原点在左下，先按「离顶部多远」记下来，
-/// 最后知道页高了再一次性换算成 frame。
+/// 在一頁裡自上而下襬控制元件的簡易佈局：AppKit 座標原點在左下，先按「離頂部多遠」記下來，
+/// 最後知道頁高了再一次性換算成 frame。
 pub struct Layout {
-    /// 这一页的宽度。
+    /// 這一頁的寬度。
     width: f64,
 
-    /// 已摆的控件及其（x, 顶部距离, 宽, 高, 是否撑到页底）。
+    /// 已擺的控制元件及其（x, 頂部距離, 寬, 高, 是否撐到頁底）。
     placed: Vec<(Retained<NSView>, f64, f64, f64, f64, bool)>,
 
-    /// 当前行的顶部距离。
+    /// 當前行的頂部距離。
     top: f64,
 }
 
@@ -43,44 +43,44 @@ impl Layout {
         }
     }
 
-    /// 控件列从 [`CONTROL_X`] 到右边留白之间的宽度。
+    /// 控制元件列從 [`CONTROL_X`] 到右邊留白之間的寬度。
     pub fn control_width(&self) -> f64 {
         self.width - CONTROL_X - PAGE_PADDING
     }
 
-    /// 从左留白到右留白的整行宽度。
+    /// 從左留白到右留白的整行寬度。
     pub fn inner_width(&self) -> f64 {
         self.width - 2.0 * PAGE_PADDING
     }
 
-    /// 在当前行放一个控件。
+    /// 在當前行放一個控制元件。
     pub fn place(&mut self, view: &NSView, x: f64, width: f64, height: f64) {
         self.placed
             .push((view.retain(), x, self.top, width, height, false));
     }
 
-    /// 在当前行放一个控件，页高定下来后撑到页底（至少 `min_height`）；窗口比这一页高时不留空。
+    /// 在當前行放一個控制元件，頁高定下來後撐到頁底（至少 `min_height`）；視窗比這一頁高時不留空。
     pub fn place_fill(&mut self, view: &NSView, x: f64, width: f64, min_height: f64) {
         self.placed
             .push((view.retain(), x, self.top, width, min_height, true));
     }
 
-    /// 换到下一行。
+    /// 換到下一行。
     pub fn next_row(&mut self, height: f64) {
         self.top += height + ROW_GAP;
     }
 
-    /// 额外留白（分组之间）。
+    /// 額外留白（分組之間）。
     pub fn space(&mut self, height: f64) {
         self.top += height;
     }
 
-    /// 到目前为止用掉的高度（含顶部留白）。
+    /// 到目前為止用掉的高度（含頂部留白）。
     pub fn height(&self) -> f64 {
         self.top
     }
 
-    /// 把所有控件加进容器并按容器高度设好 frame（顶部对齐）。
+    /// 把所有控制元件加進容器並按容器高度設好 frame（頂部對齊）。
     pub fn finish(self, container: &NSView, total_height: f64) {
         for (view, x, top, width, height, fill) in self.placed {
             let height = if fill {

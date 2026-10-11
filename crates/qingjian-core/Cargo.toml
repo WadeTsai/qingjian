@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-core"
-description = "拼音输入法核心引擎：拼音解析、候选生成、整句转换、排序与学习接口，平台无关"
+description = "拼音輸入法核心引擎：拼音解析、候選生成、整句轉換、排序與學習介面，平臺無關"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

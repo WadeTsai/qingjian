@@ -1,7 +1,7 @@
-//! 候选窗口的内容视图：自绘顶部拼音行与若干候选，竖排一行一个、横排排成一行，一项高亮。
+//! 候選視窗的內容檢視：自繪頂部拼音行與若干候選，豎排一行一個、橫排排成一行，一項高亮。
 //!
-//! 有两条画法：缺省交给 `qingjian-render` 出位图再贴（[`BitmapPainter`]），配置 `[general] renderer = "system"`
-//! 走下面用 AppKit 逐项绘制的旧路径（过渡期的退路，渲染器稳定一个版本后删）。
+//! 有兩條畫法：預設交給 `qingjian-render` 出點陣圖再貼（[`BitmapPainter`]），配置 `[general] renderer = "system"`
+//! 走下面用 AppKit 逐項繪製的舊路徑（過渡期的退路，渲染器穩定一個版本後刪）。
 
 mod click;
 mod matrix;
@@ -33,61 +33,61 @@ use super::theme::Theme;
 
 pub use click::ClickHandler;
 
-/// 视图状态。
+/// 檢視狀態。
 pub struct Ivars {
-    /// 当前显示的一帧。
+    /// 當前顯示的一幀。
     frame: RefCell<Frame>,
 
-    /// 竖排 / 横排。
+    /// 豎排 / 橫排。
     layout: Cell<LayoutMode>,
 
-    /// 云联想的小云朵。
+    /// 雲聯想的小云朵。
     cloud: CloudIcon,
 
-    /// 主题。
+    /// 主題。
     theme: Theme,
 
-    /// 位图渲染器；`None` 走 AppKit 逐项绘制。按配置建或丢。
+    /// 點陣圖渲染器；`None` 走 AppKit 逐項繪製。按配置建或丟。
     bitmap: RefCell<Option<BitmapPainter>>,
 
-    /// 用户选的字族名（空为系统字体），换了要重建渲染器。
+    /// 使用者選的字族名（空為系統字型），換了要重建渲染器。
     font: RefCell<String>,
 
-    /// 渲染器用的主题（浅色那一份），重建渲染器时要带上。
+    /// 渲染器用的主題（淺色那一份），重建渲染器時要帶上。
     render_theme: RefCell<qingjian_render::Theme>,
 
-    /// 动画定时器：位图渲染器说有动画在播时跳。
+    /// 動畫定時器：點陣圖渲染器說有動畫在播時跳。
     animation: RefCell<AnimationTimer>,
 
-    /// 点中候选或译词时交给谁（host 注册）。
+    /// 點中候選或譯詞時交給誰（host 註冊）。
     on_click: RefCell<Option<ClickHandler>>,
 }
 
-/// preedit 光标的宽度。
+/// preedit 游標的寬度。
 const CARET_WIDTH: f64 = 1.5;
 
-/// 云朵图标边长。
+/// 雲朵圖示邊長。
 const CLOUD_SIZE: f64 = 13.0;
 
-/// 云朵与后面文字的间距。
+/// 雲朵與後面文字的間距。
 const CLOUD_GAP: f64 = 4.0;
 
-/// 拿不到 SF Symbol 时的文字云朵。
+/// 拿不到 SF Symbol 時的文字雲朵。
 const CLOUD_FALLBACK: &str = "☁︎";
 
-/// preedit 与右侧整句补全之间的间距。
+/// preedit 與右側整句補全之間的間距。
 const SENTENCE_GAP: f64 = 16.0;
 
-/// 横排时序号与候选词之间的间距。
+/// 橫排時序號與候選詞之間的間距。
 const INDEX_GAP: f64 = 3.0;
 
-/// 横排时高亮底色在候选两侧多出的宽度。
+/// 橫排時高亮底色在候選兩側多出的寬度。
 const HIGHLIGHT_INSET: f64 = 5.0;
 
-/// `NSUnderlineStyleSingle`：删除线用单线。
+/// `NSUnderlineStyleSingle`：刪除線用單線。
 const STRIKE_SINGLE: isize = 1;
 
-/// 竖排的列宽与行高。
+/// 豎排的列寬與行高。
 struct Columns {
     index_width: f64,
     text_width: f64,
@@ -95,27 +95,27 @@ struct Columns {
     row_height: f64,
 }
 
-/// 横排时每一项的尺寸。
+/// 橫排時每一項的尺寸。
 struct Item {
     index_width: f64,
     text_width: f64,
 }
 
 define_class!(
-    // SAFETY: NSView 允许子类化；没有实现 Drop。
+    // SAFETY: NSView 允許子類化；沒有實現 Drop。
     #[unsafe(super(NSView))]
     #[thread_kind = MainThreadOnly]
     #[ivars = Ivars]
     pub struct CandidateView;
 
     impl CandidateView {
-        /// 用左上角为原点的坐标系，行从上往下画。
+        /// 用左上角為原點的座標系，行從上往下畫。
         #[unsafe(method(isFlipped))]
         fn is_flipped(&self) -> bool {
             true
         }
 
-        /// 面板不激活，第一下点击就要算数（否则先被当成「激活窗口」吃掉）。
+        /// 面板不啟用，第一下點選就要算數（否則先被當成「啟用視窗」吃掉）。
         #[unsafe(method(acceptsFirstMouse:))]
         fn accepts_first_mouse(&self, _event: Option<&NSEvent>) -> bool {
             true
@@ -154,7 +154,7 @@ impl CandidateView {
         unsafe { msg_send![super(this), initWithFrame: NSRect::ZERO] }
     }
 
-    /// 候选窗字体（字族名，空为系统字体）。渲染器在用就当场重建。
+    /// 候選窗字型（字族名，空為系統字型）。渲染器在用就當場重建。
     pub fn set_font(&self, font: &str) {
         if *self.ivars().font.borrow() == font {
             return;
@@ -168,7 +168,7 @@ impl CandidateView {
         }
     }
 
-    /// 渲染器主题，只对青简渲染器生效。配置或主题文件变了才会调，每次都当场重画。
+    /// 渲染器主題，只對青簡渲染器生效。配置或主題檔案變了才會調，每次都當場重畫。
     pub fn set_render_theme(&self, theme: qingjian_render::Theme) {
         *self.ivars().render_theme.borrow_mut() = theme.clone();
         if let Some(bitmap) = &mut *self.ivars().bitmap.borrow_mut() {
@@ -178,14 +178,14 @@ impl CandidateView {
         self.sync_animation();
     }
 
-    /// 新建位图渲染器并带上当前主题。
+    /// 新建點陣圖渲染器並帶上當前主題。
     fn new_bitmap(&self) -> Option<BitmapPainter> {
         let mut bitmap = BitmapPainter::new(&self.ivars().font.borrow())?;
         bitmap.set_theme(self.ivars().render_theme.borrow().clone());
         Some(bitmap)
     }
 
-    /// 青简渲染器 / 系统绘制。渲染器字体库加载失败就留在系统绘制。
+    /// 青簡渲染器 / 系統繪製。渲染器字型庫載入失敗就留在系統繪製。
     pub fn set_renderer(&self, renderer: CandidateRenderer) {
         let mut bitmap = self.ivars().bitmap.borrow_mut();
         match renderer {
@@ -202,9 +202,9 @@ impl CandidateView {
         self.setNeedsDisplay(true);
     }
 
-    /// 当前生效的外观是不是深色。
+    /// 當前生效的外觀是不是深色。
     fn is_dark(&self) -> bool {
-        // SAFETY: 只读 AppKit 导出的常量名
+        // SAFETY: 只讀 AppKit 匯出的常量名
         let names =
             unsafe { NSArray::from_slice(&[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]) };
         let matched = self
@@ -214,7 +214,7 @@ impl CandidateView {
         matched.is_some_and(|name| unsafe { name.isEqualToString(NSAppearanceNameDarkAqua) })
     }
 
-    /// 所在屏幕的倍数；还没进窗口时按 Retina 算。
+    /// 所在螢幕的倍數；還沒進視窗時按 Retina 算。
     fn backing_scale(&self) -> f32 {
         self.window()
             .map_or(2.0, |window| window.backingScaleFactor() as f32)
@@ -228,7 +228,7 @@ impl CandidateView {
         self.ivars().layout.set(layout);
     }
 
-    /// 更新内容并返回视图该有的尺寸与内容区。
+    /// 更新內容並返回檢視該有的尺寸與內容區。
     pub fn set_frame(&self, frame: &Frame) -> ViewBounds {
         *self.ivars().frame.borrow_mut() = frame.clone();
         self.setNeedsDisplay(true);
@@ -249,7 +249,7 @@ impl CandidateView {
         }
     }
 
-    /// 位图渲染器说有动画在播就起定时器。
+    /// 點陣圖渲染器說有動畫在播就起定時器。
     fn sync_animation(&self) {
         let next_frame = self
             .ivars()
@@ -265,7 +265,7 @@ impl CandidateView {
         }
     }
 
-    /// 定时器每跳：要动画的下一帧并重画；播完就停。
+    /// 定時器每跳：要動畫的下一幀並重畫；播完就停。
     pub fn animation_frame(&self) {
         let next_frame = self
             .ivars()
@@ -275,7 +275,7 @@ impl CandidateView {
             .and_then(BitmapPainter::tick);
         self.setNeedsDisplay(true);
         match (next_frame, MainThreadMarker::new()) {
-            // 过渡播完只剩循环动画时，间隔从 16 ms 换成 33 ms
+            // 過渡播完只剩迴圈動畫時，間隔從 16 ms 換成 33 ms
             (Some(interval), Some(mtm)) => self
                 .ivars()
                 .animation
@@ -285,7 +285,7 @@ impl CandidateView {
         }
     }
 
-    /// 窗口收起：停动画、忘掉上一帧。
+    /// 視窗收起：停動畫、忘掉上一幀。
     pub fn stop_animation(&self) {
         self.ivars().animation.borrow_mut().stop();
         if let Some(bitmap) = &mut *self.ivars().bitmap.borrow_mut() {
@@ -293,7 +293,7 @@ impl CandidateView {
         }
     }
 
-    /// 在用青简渲染器（阴影画在位图里）；否则是 AppKit 逐项绘制，要系统阴影。
+    /// 在用青簡渲染器（陰影畫在位圖裡）；否則是 AppKit 逐項繪製，要系統陰影。
     pub fn uses_bitmap(&self) -> bool {
         self.ivars().bitmap.borrow().is_some()
     }
@@ -314,7 +314,7 @@ impl CandidateView {
         )
     }
 
-    /// 顶部拼音行（含右侧整句补全）需要的宽高；没有这一行时都是 0。
+    /// 頂部拼音行（含右側整句補全）需要的寬高；沒有這一行時都是 0。
     fn top_line_size(&self, frame: &Frame) -> (f64, f64) {
         if !frame.has_top_line() {
             return (0.0, 0.0);
@@ -377,7 +377,7 @@ impl CandidateView {
         (width, height)
     }
 
-    /// 横排时高亮候选的译文行尺寸；高亮候选没有译文时为 `None`。
+    /// 橫排時高亮候選的譯文行尺寸；高亮候選沒有譯文時為 `None`。
     fn highlighted_annotation_size(&self, frame: &Frame) -> Option<(f64, f64)> {
         let theme = self.theme();
         let row = frame.rows.get(frame.highlighted)?;
@@ -393,7 +393,7 @@ impl CandidateView {
         Some((width, height))
     }
 
-    /// 云朵图标占的宽度（含后面的间距）。
+    /// 雲朵圖標占的寬度（含後面的間距）。
     fn cloud_width(&self) -> f64 {
         let cloud = &self.ivars().cloud;
         let width = if cloud.is_symbol() {
@@ -405,7 +405,7 @@ impl CandidateView {
         width + CLOUD_GAP
     }
 
-    /// 画云朵，返回占用宽度（含间距）。`top` 是所在行文字的顶边，`line_height` 用来垂直居中。
+    /// 畫雲朵，返回佔用寬度（含間距）。`top` 是所在行文字的頂邊，`line_height` 用來垂直居中。
     fn draw_cloud(&self, x: f64, top: f64, line_height: f64) -> f64 {
         let cloud = &self.ivars().cloud;
         if cloud.is_symbol() {
@@ -453,7 +453,7 @@ impl CandidateView {
         columns
     }
 
-    /// 横排各项的尺寸与统一行高。
+    /// 橫排各項的尺寸與統一行高。
     fn items(&self, rows: &[Row]) -> (Vec<Item>, f64) {
         let theme = self.theme();
         let mut row_height: f64 = 0.0;
@@ -498,7 +498,7 @@ impl CandidateView {
         }
     }
 
-    /// 顶部拼音行：各段按样式画、我们自己画光标（不依赖应用画插入点）、右侧整句补全。返回占用高度。
+    /// 頂部拼音行：各段按樣式畫、我們自己畫游標（不依賴應用畫插入點）、右側整句補全。返回佔用高度。
     fn draw_top_line(&self, frame: &Frame, y: f64) -> f64 {
         if !frame.has_top_line() {
             return 0.0;
@@ -513,7 +513,7 @@ impl CandidateView {
                 x += SENTENCE_GAP;
             }
         }
-        // 整句补全：云朵 + 句子，颜色与本地候选区分；临时状态灰字、不带云朵
+        // 整句補全：雲朵 + 句子，顏色與本地候選區分；臨時狀態灰字、不帶雲朵
         if let Some((text, cloud)) = frame.trailing() {
             let color = if cloud {
                 x += self.draw_cloud(x, top, line_height);
@@ -526,7 +526,7 @@ impl CandidateView {
         line_height + theme.row_padding * 2.0
     }
 
-    /// 画拼音行的各段与光标，返回占用宽度（含光标）。
+    /// 畫拼音行的各段與游標，返回佔用寬度（含游標）。
     fn draw_preedit(&self, preedit: &Preedit, x: f64, top: f64, line_height: f64) -> f64 {
         let theme = self.theme();
         let mut cursor_x = x;
@@ -564,7 +564,7 @@ impl CandidateView {
                 );
                 self.fill_highlight(rect);
             }
-            // 各列底部对齐到候选词基线附近：小字往下挪一点
+            // 各列底部對齊到候選詞基線附近：小字往下挪一點
             let text_size = self.measure(&row.text, &theme.text_font);
             let baseline = y + theme.row_padding;
             let small_offset = self.small_offset(text_size.height);
@@ -600,7 +600,7 @@ impl CandidateView {
         }
     }
 
-    /// 横排：候选排成一行，高亮那个下面单独一行译文，页码在行尾。
+    /// 橫排：候選排成一行，高亮那個下面單獨一行譯文，頁碼在行尾。
     fn draw_horizontal(&self, frame: &Frame, y: f64, bounds: NSRect) {
         if frame.rows.is_empty() {
             return;
@@ -645,7 +645,7 @@ impl CandidateView {
                 bounds.size.width - theme.padding - size.width,
             );
         }
-        // 高亮候选的译文
+        // 高亮候選的譯文
         if let Some(row) = frame.rows.get(frame.highlighted) {
             let mut x = theme.padding + HIGHLIGHT_INSET;
             let top = y + row_height + theme.row_padding / 2.0;
@@ -661,7 +661,7 @@ impl CandidateView {
         }
     }
 
-    /// 候选词本体：云端词前带云朵、换颜色。
+    /// 候選詞本體：雲端詞前帶雲朵、換顏色。
     fn draw_word(&self, row: &Row, x: f64, baseline: f64, text_height: f64) {
         let theme = self.theme();
         let mut word_x = x;
@@ -687,7 +687,7 @@ impl CandidateView {
         .fill();
     }
 
-    /// 小字相对候选词往下挪多少，让两者底部对齐。
+    /// 小字相對候選詞往下挪多少，讓兩者底部對齊。
     fn small_offset(&self, text_height: f64) -> f64 {
         (text_height - self.measure("x", &self.theme().annotation_font).height).max(0.0)
     }
@@ -700,7 +700,7 @@ impl CandidateView {
         }
     }
 
-    /// 画一段文字，返回它的宽度。参数顺序是 (顶边 y, 左边 x)，与画图时「先定行再定列」的习惯一致。
+    /// 畫一段文字，返回它的寬度。引數順序是 (頂邊 y, 左邊 x)，與畫圖時「先定行再定列」的習慣一致。
     fn draw_text(&self, text: &str, font: &NSFont, color: &NSColor, y: f64, x: f64) -> f64 {
         let string = self.attributed(text, font, color, false);
         string.drawAtPoint(NSPoint::new(x, y));
@@ -720,7 +720,7 @@ impl CandidateView {
         strike: bool,
     ) -> Retained<NSAttributedString> {
         let strike_style = NSNumber::new_isize(STRIKE_SINGLE);
-        // SAFETY: 只读 AppKit 导出的属性名常量
+        // SAFETY: 只讀 AppKit 匯出的屬性名常量
         let (keys, objects): (Vec<&NSString>, Vec<&AnyObject>) = unsafe {
             if strike {
                 (

@@ -1,15 +1,15 @@
-//! Info.plist 与 Text Input Sources 的契约测试。
+//! Info.plist 與 Text Input Sources 的契約測試。
 //!
-//! 缺输入模式声明（`ComponentInputModeDict`）时：标准文本视图（备忘录等）按 script / 模式过滤输入源，
-//! 会话被立即拆除、表现为「切换不过去」（#31）；系统设置「添加输入法」列表也不显示青简，
-//! 安装器自动启用失败后用户没有兜底路径（macOS 26 实测）。打包脚本把这个文件原样拷进 `.app`，
-//! 所以在这里守住声明结构与身份键的对应关系，改坏的人 `cargo test -p qingjian-macos` 立刻能看见。
+//! 缺輸入模式宣告（`ComponentInputModeDict`）時：標準文本檢視（備忘錄等）按 script / 模式過濾輸入源，
+//! 會話被立即拆除、表現為「切換不過去」（#31）；系統設定「新增輸入法」列表也不顯示青簡，
+//! 安裝器自動啟用失敗後用戶沒有兜底路徑（macOS 26 實測）。打包指令碼把這個檔案原樣拷進 `.app`，
+//! 所以在這裡守住宣告結構與身份鍵的對應關係，改壞的人 `cargo test -p qingjian-macos` 立刻能看見。
 
 use std::path::PathBuf;
 
 use plist::{Dictionary, Value};
 
-/// 读仓库里的 `apps/macos/Info.plist`。
+/// 讀倉庫裡的 `apps/macos/Info.plist`。
 fn info_plist() -> Dictionary {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Info.plist");
     Value::from_file(&path)
@@ -18,14 +18,14 @@ fn info_plist() -> Dictionary {
         .expect("Info.plist 顶层必须是 dict")
 }
 
-/// 取字符串键，缺了或类型不对就地报键名。
+/// 取字串鍵，缺了或型別不對就地報鍵名。
 fn string<'a>(dict: &'a Dictionary, key: &str) -> &'a str {
     dict.get(key)
         .and_then(|value| value.as_string())
         .unwrap_or_else(|| panic!("Info.plist 缺字符串键 {key}"))
 }
 
-/// 取字符串数组键，缺了或类型不对就地报键名。
+/// 取字串陣列鍵，缺了或型別不對就地報鍵名。
 fn string_list<'a>(dict: &'a Dictionary, key: &str) -> Vec<&'a str> {
     dict.get(key)
         .and_then(|value| value.as_array())
@@ -39,7 +39,7 @@ fn string_list<'a>(dict: &'a Dictionary, key: &str) -> Vec<&'a str> {
         .collect()
 }
 
-/// TIS 登记输入源用的顶层身份键：连接名按 IMK 10.7 起的约定必须是 `<bundle id>_Connection`。
+/// TIS 登記輸入源用的頂層身份鍵：連線名按 IMK 10.7 起的約定必須是 `<bundle id>_Connection`。
 #[test]
 fn tis_registration_keys_are_present() {
     let plist = info_plist();
@@ -66,8 +66,8 @@ fn tis_registration_keys_are_present() {
     );
 }
 
-/// 输入模式声明：每个模式的 ID、语言、repertoire、script 与图标都要与顶层声明对得上，可见模式顺序表要列全，
-/// 显示名要在两份 InfoPlist.strings 里按模式 ID 给。声明里具体几个模式不限定（将来加繁体模式也过）。
+/// 輸入模式宣告：每個模式的 ID、語言、repertoire、script 與圖示都要與頂層宣告對得上，可見模式順序表要列全，
+/// 顯示名要在兩份 InfoPlist.strings 裡按模式 ID 給。聲明裡具體幾個模式不限定（將來加繁體模式也過）。
 #[test]
 fn declares_input_modes_for_standard_text_views() {
     let plist = info_plist();
@@ -161,7 +161,7 @@ fn declares_input_modes_for_standard_text_views() {
     }
 }
 
-/// 读 `resources/<locale>.lproj/InfoPlist.strings` 原文。
+/// 讀 `resources/<locale>.lproj/InfoPlist.strings` 原文。
 fn localized_strings(locale: &str) -> (String, String) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("resources")

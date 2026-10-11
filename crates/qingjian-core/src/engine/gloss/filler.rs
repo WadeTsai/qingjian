@@ -1,17 +1,17 @@
 use super::FilledGloss;
 use crate::candidate::Language;
 
-/// 释义兜底的提供方。实现可以联网，接口非阻塞：`request` 只入队，`poll` 只取已到的。
+/// 釋義兜底的提供方。實現可以聯網，介面非阻塞：`request` 只入隊，`poll` 只取已到的。
 pub trait GlossFiller: Send {
-    /// 是否真的会去问；`false` 时 Engine 不入队。
+    /// 是否真的會去問；`false` 時 Engine 不入隊。
     fn is_enabled(&self) -> bool {
         true
     }
 
-    /// 请给 `word` 写一条 `language` 的释义。实现自行去重、攒批，问过的不再问。
+    /// 請給 `word` 寫一條 `language` 的釋義。實現自行去重、攢批，問過的不再問。
     fn request(&mut self, language: Language, word: &str);
 
-    /// 取已到达的释义，没有返回空。
+    /// 取已到達的釋義，沒有返回空。
     fn poll(&mut self) -> Vec<FilledGloss>;
 }
 

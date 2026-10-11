@@ -1,9 +1,9 @@
-//! 提示词与回复解析。模型只输出约定的 JSON，其余一概不信；拼音校验在 Core 里再做一遍。
+//! 提示詞與回覆解析。模型只輸出約定的 JSON，其餘一概不信；拼音校驗在 Core 裡再做一遍。
 
 use qingjian_core::{CloudWord, PredictionKind, PredictionRequest};
 use serde::{Deserialize, Serialize};
 
-/// 系统提示。语言跟随上下文，不限定中文。
+/// 系統提示。語言跟隨上下文，不限定中文。
 pub const SYSTEM_PROMPT: &str = "\
 你是一个拼音输入法的云端联想引擎。用户正在打拼音，还没选词。你会收到一段 JSON：\
 letters（用户实际敲的字母，**可能有错字、漏字、多字、音节切错**）、pinyin（输入法按 letters 做的切分，' 分隔音节，单个字母是声母缩写，切分可能是错的）、\
@@ -29,7 +29,7 @@ sentence：want_sentence 为 true 时给一条以这个词开头的完整短句�
 
 不解释、不加引号、不加序号。";
 
-/// 问字模式的系统提示：用户用拼音问一个字（或一个短答案）。
+/// 問字模式的系統提示：使用者用拼音問一個字（或一個短答案）。
 pub const QUESTION_SYSTEM_PROMPT: &str = "\
 你是一个拼音输入法的问字助手。用户以 ? 开头用**拼音**敲了一个问题，你会收到 JSON：\
 letters（实际敲的字母，可能有错字、漏字、多字）、pinyin（输入法的切分，' 分隔，可能切错）、\
@@ -45,7 +45,7 @@ question（输入法本地把拼音转成的汉字，可能有错字，只是帮
 answers：1 到 max_items 个，按可能性排序。text 是能直接上屏的字、词或短答案，不要解释；\
 pinyin 是 text 的带声调拼音（如 sēn），非中文答案给空字符串。不确定就少给，实在不懂就给空数组。";
 
-/// 翻译的系统提示：中文选区译成学习语言，外文选区译回中文，只要译文。方向由 Core 按文字判断，模型兜底。
+/// 翻譯的系統提示：中文選區譯成學習語言，外文選區譯回中文，只要譯文。方向由 Core 按文字判斷，模型兜底。
 pub const TRANSLATE_SYSTEM_PROMPT: &str = "\
 你是一个输入法的翻译助手。用户在应用里选中了一段文字并按了翻译快捷键，你会收到 JSON：\
 text（选中的原文）、target_language（目标语言代码：zh 中文、en 英语、ja 日语）。\
@@ -62,7 +62,7 @@ pub fn system_prompt(request: &PredictionRequest) -> &'static str {
     }
 }
 
-/// 发给模型的用户消息：把请求原样序列化，模型看到的和我们记日志的完全一致。
+/// 發給模型的使用者訊息：把請求原樣序列化，模型看到的和我們記日誌的完全一致。
 #[derive(Serialize)]
 struct UserMessage<'a> {
     letters: &'a str,
@@ -84,7 +84,7 @@ struct UserMessage<'a> {
     want_sentence: bool,
 }
 
-/// 问字模式发给模型的用户消息。
+/// 問字模式發給模型的使用者訊息。
 #[derive(Serialize)]
 struct QuestionMessage<'a> {
     letters: &'a str,
@@ -96,7 +96,7 @@ struct QuestionMessage<'a> {
     max_items: usize,
 }
 
-/// 翻译发给模型的用户消息。
+/// 翻譯發給模型的使用者訊息。
 #[derive(Serialize)]
 struct TranslateMessage<'a> {
     text: &'a str,
@@ -135,24 +135,24 @@ pub fn user_prompt(request: &PredictionRequest) -> String {
     .unwrap_or_default()
 }
 
-/// 解析后的回复。
+/// 解析後的回覆。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Reply {
-    /// 云端词（组句联想）或答案（问字模式，音节为空、带读音）。
+    /// 雲端詞（組句聯想）或答案（問字模式，音節為空、帶讀音）。
     pub words: Vec<CloudWord>,
 
-    /// 整句补全。
+    /// 整句補全。
     pub sentence: Option<String>,
 }
 
 impl Reply {
-    /// 什么都没给：没有词也没有整句。
+    /// 什麼都沒給：沒有詞也沒有整句。
     pub fn is_empty(&self) -> bool {
         self.words.is_empty() && self.sentence.is_none()
     }
 }
 
-/// 模型回复的原始形状，缺的字段当空。
+/// 模型回覆的原始形狀，缺的欄位當空。
 #[derive(Deserialize, Default)]
 #[serde(default)]
 struct RawReply {
@@ -160,7 +160,7 @@ struct RawReply {
 
     sentence: Option<String>,
 
-    /// 问字模式的答案。
+    /// 問字模式的答案。
     answers: Vec<RawWord>,
 }
 
@@ -172,7 +172,7 @@ struct RawWord {
     pinyin: String,
 }
 
-/// 解析模型回复：去空、去重、去换行，截到 `max_items`。不要与本地首选相同的词，也不要没给拼音的词。
+/// 解析模型回覆：去空、去重、去換行，截到 `max_items`。不要與本地首選相同的詞，也不要沒給拼音的詞。
 pub fn parse_reply(content: &str, request: &PredictionRequest) -> Reply {
     let raw: RawReply = match serde_json::from_str(content.trim()) {
         Ok(raw) => raw,
@@ -182,7 +182,7 @@ pub fn parse_reply(content: &str, request: &PredictionRequest) -> Reply {
         return parse_answers(raw.answers, request.max_items);
     }
     if request.kind == PredictionKind::Translate {
-        // 译文保留换行（原文可能是多段），只去首尾空白
+        // 譯文保留換行（原文可能是多段），只去首尾空白
         return Reply {
             words: Vec::new(),
             sentence: raw
@@ -228,7 +228,7 @@ pub fn parse_reply(content: &str, request: &PredictionRequest) -> Reply {
     reply
 }
 
-/// 问字模式的答案：去空、去重，拼音只是显示用的读音，不校验。
+/// 問字模式的答案：去空、去重，拼音只是顯示用的讀音，不校驗。
 fn parse_answers(answers: Vec<RawWord>, max_items: usize) -> Reply {
     let mut reply = Reply::default();
     for answer in answers {
@@ -249,11 +249,11 @@ fn parse_answers(answers: Vec<RawWord>, max_items: usize) -> Reply {
     reply
 }
 
-/// 模型爱把 before 也抄进整句里；整句只替换拼音，所以把与 before 尾部重叠的开头去掉。
+/// 模型愛把 before 也抄進整句裡；整句只替換拼音，所以把與 before 尾部重疊的開頭去掉。
 fn strip_before(sentence: &str, before: &str) -> String {
     let before: Vec<char> = before.chars().collect();
     let chars: Vec<char> = sentence.chars().collect();
-    // 从最长的重叠开始试：before 的后 k 个字符 == sentence 的前 k 个字符
+    // 從最長的重疊開始試：before 的後 k 個字元 == sentence 的前 k 個字元
     for k in (1..=before.len().min(chars.len())).rev() {
         if before[before.len() - k..] == chars[..k] {
             return chars[k..]
@@ -328,12 +328,12 @@ mod tests {
             ]
         );
         assert_eq!(parsed.sentence.as_deref(), Some("账套已经建好了"));
-        // 没要整句就不收
+        // 沒要整句就不收
         assert_eq!(
             parse_reply(reply, &request("zhang'tao", false)).sentence,
             None
         );
-        // 整句里抄了 before 的，去掉重叠部分
+        // 整句裡抄了 before 的，去掉重疊部分
         let echoed = r#"{"words": [], "sentence": "我们今天账套已经建好了"}"#;
         assert_eq!(
             parse_reply(echoed, &request("zhang'tao", true))

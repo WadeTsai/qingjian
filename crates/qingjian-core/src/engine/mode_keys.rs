@@ -1,27 +1,27 @@
-//! 前缀模式键：表达式 / 问字模式的入口字母，以及 `?` 是否也当问字入口。
+//! 字首模式鍵：表示式 / 問字模式的入口字母，以及 `?` 是否也當問字入口。
 
 use serde::{Deserialize, Serialize};
 
 use crate::shortcut::EXPRESSION_PREFIX;
 
-/// 问字模式的标点入口：[`ModeKeys::question_mark`] 打开时任何配置下 `?` 开头都进问字模式，也是英文模式下唯一的入口。
+/// 問字模式的標點入口：[`ModeKeys::question_mark`] 開啟時任何配置下 `?` 開頭都進問字模式，也是英文模式下唯一的入口。
 pub const QUESTION_PREFIX: char = '?';
 
-/// 前缀模式键，配置文件 `[shortcut]` 分节。
+/// 字首模式鍵，配置檔案 `[shortcut]` 分節。
 ///
-/// 搜狗 / 微软那一家的做法：用不能开头拼任何音节的字母（`v` `u` `i`）一键进模式，
-/// 不要修饰键，中文模式下零冲突。缺省 `v` 表达式、`u` 问字（含 Unicode 码点）。
+/// 搜狗 / 微軟那一家的做法：用不能開頭拼任何音節的字母（`v` `u` `i`）一鍵進模式，
+/// 不要修飾鍵，中文模式下零衝突。預設 `v` 表示式、`u` 問字（含 Unicode 碼點）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ModeKeys {
-    /// 表达式模式前缀：`v1+2`、`v123`。
+    /// 表示式模式字首：`v1+2`、`v123`。
     pub expression: char,
 
-    /// 问字模式前缀：`usangemu`（三个木）、`u4e00`（码点）。
+    /// 問字模式字首：`usangemu`（三個木）、`u4e00`（碼點）。
     pub question: char,
 
-    /// `?` 开头是否也进问字模式。缺省关：没在组句时敲的问号就是问号；
-    /// 开着时缓冲区为空敲 `?` 先进问字，后面跟字母才是问题，跟别的键还原成问号。
+    /// `?` 開頭是否也進問字模式。預設關：沒在組句時敲的問號就是問號；
+    /// 開著時緩衝區為空敲 `?` 先進問字，後面跟字母才是問題，跟別的鍵還原成問號。
     pub question_mark: bool,
 }
 
@@ -36,10 +36,10 @@ impl Default for ModeKeys {
 }
 
 impl ModeKeys {
-    /// 能当模式键的字母：不是任何拼音音节的开头。
+    /// 能當模式鍵的字母：不是任何拼音音節的開頭。
     pub const CANDIDATES: [char; 3] = ['v', 'u', 'i'];
 
-    /// 双拼下 v / u / i 都是音节键，模式键换成对应的大写字母（Shift+V / Shift+U，搜狗 / 微软的做法）。
+    /// 雙拼下 v / u / i 都是音節鍵，模式鍵換成對應的大寫字母（Shift+V / Shift+U，搜狗 / 微軟的做法）。
     pub fn shifted(self) -> Self {
         Self {
             expression: self.expression.to_ascii_uppercase(),
@@ -48,7 +48,7 @@ impl ModeKeys {
         }
     }
 
-    /// 去掉字母模式键：形码下每个字母都是字根键，大写也让位，只剩 `?`（开着的话）进问字。
+    /// 去掉字母模式鍵：形碼下每個字母都是字根鍵，大寫也讓位，只剩 `?`（開著的話）進問字。
     pub fn letterless(self) -> Self {
         Self {
             expression: '\0',
@@ -57,14 +57,14 @@ impl ModeKeys {
         }
     }
 
-    /// 两个键都合法且互不相同。不合法的配置整个退回缺省，不做一半。
+    /// 兩個鍵都合法且互不相同。不合法的配置整個退回預設，不做一半。
     pub fn is_valid(&self) -> bool {
         self.expression != self.question
             && Self::CANDIDATES.contains(&self.expression)
             && Self::CANDIDATES.contains(&self.question)
     }
 
-    /// 非法配置退回缺省（`?` 开关照旧保留）。
+    /// 非法配置退回預設（`?` 開關照舊保留）。
     pub fn sanitized(self) -> Self {
         if self.is_valid() {
             self
@@ -87,12 +87,12 @@ impl ModeKeys {
             || self.is_question_mark(input)
     }
 
-    /// 是否以 `?` 进的问字模式：开关关着时 `?` 不是入口。
+    /// 是否以 `?` 進的問字模式：開關關著時 `?` 不是入口。
     fn is_question_mark(&self, input: &str) -> bool {
         self.question_mark && input.starts_with(QUESTION_PREFIX)
     }
 
-    /// 问字模式下前缀之后的部分。不在问字模式时原样返回。
+    /// 問字模式下字首之後的部分。不在問字模式時原樣返回。
     pub fn question_body<'a>(&self, input: &'a str, zhuyin: bool) -> &'a str {
         if self.is_question_mark(input) {
             &input[QUESTION_PREFIX.len_utf8()..]
@@ -127,7 +127,7 @@ mod tests {
         };
         assert!(keys.is_question("?sangemu", false));
         assert_eq!(keys.question_body("?sangemu", false), "sangemu");
-        // 双拼下字母键换成大写，`?` 开关跟着走
+        // 雙拼下字母鍵換成大寫，`?` 開關跟著走
         let shifted = keys.shifted();
         assert!(!shifted.is_question("usangemu", false));
         assert!(shifted.is_question("Usangemu", false));

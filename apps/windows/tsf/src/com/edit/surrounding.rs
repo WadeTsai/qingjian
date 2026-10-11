@@ -1,6 +1,6 @@
-//! 组句起始时读应用光标前的文字，给本地整句模型当前文（对应 macOS 壳的 `surrounding_text`），
-//! 顺手按输入范围判这个输入框私密不私密（[`private_input`]）。在起组句的那次读写会话里做（此时选区还是原来的插入点，
-//! 拼音还没插进去），不另开会话。
+//! 組句起始時讀應用游標前的文字，給本地整句模型當前文（對應 macOS 殼的 `surrounding_text`），
+//! 順手按輸入範圍判這個輸入框私密不私密（[`private_input`]）。在起組句的那次讀寫會話裡做（此時選區還是原來的插入點，
+//! 拼音還沒插進去），不另開會話。
 
 use std::mem::ManuallyDrop;
 
@@ -13,19 +13,19 @@ use windows::Win32::UI::TextServices::{
 };
 use windows::core::Interface;
 
-/// 往前读多少字（与 macOS 壳的 `RESCORE_LOOKBACK` 一致）。
+/// 往前讀多少字（與 macOS 殼的 `RESCORE_LOOKBACK` 一致）。
 const LOOKBACK: i32 = 64;
 
-/// 起组句时对输入框的判断：私密不私密，以及不私密时光标前的文字。
+/// 起組句時對輸入框的判斷：私密不私密，以及不私密時游標前的文字。
 pub(crate) struct InputContext {
-    /// 输入范围声明了私密 / 密码 / PIN（[`SECRET_SCOPES`]）：不读前文，Server 侧不学不记不发云端。
+    /// 輸入範圍聲明瞭私密 / 密碼 / PIN（[`SECRET_SCOPES`]）：不讀前文，Server 側不學不記不發雲端。
     pub(crate) private: bool,
 
-    /// 当前选区起点之前最多 [`LOOKBACK`] 个 UTF-16 单元的文本。私密、没有选区、读不到时为 `None`。
+    /// 當前選區起點之前最多 [`LOOKBACK`] 個 UTF-16 單元的文本。私密、沒有選區、讀不到時為 `None`。
     pub(crate) before: Option<String>,
 }
 
-/// 起组句时读一次：先判私密，不私密再读前文。
+/// 起組句時讀一次：先判私密，不私密再讀前文。
 pub(crate) fn input_context(context: &ITfContext, ec: u32) -> InputContext {
     let Some(range) = selection_start(context, ec) else {
         return InputContext {
@@ -34,7 +34,7 @@ pub(crate) fn input_context(context: &ITfContext, ec: u32) -> InputContext {
         };
     };
     if private_input(context, ec, &range) {
-        crate::com::log::log("私密输入框，不读光标前文");
+        crate::com::log::log("私密輸入框，不讀游標前文");
         return InputContext {
             private: true,
             before: None,
@@ -46,7 +46,7 @@ pub(crate) fn input_context(context: &ITfContext, ec: u32) -> InputContext {
     }
 }
 
-/// `range`（已折成插入点）之前最多 [`LOOKBACK`] 个 UTF-16 单元的文本；读不到 / 为空是 `None`。
+/// `range`（已折成插入點）之前最多 [`LOOKBACK`] 個 UTF-16 單元的文本；讀不到 / 為空是 `None`。
 fn text_before_caret(context: &ITfContext, ec: u32, range: ITfRange) -> Option<String> {
     let _ = context;
     let mut shifted = 0i32;
@@ -61,7 +61,7 @@ fn text_before_caret(context: &ITfContext, ec: u32, range: ITfRange) -> Option<S
     (!text.is_empty()).then_some(text)
 }
 
-/// 选区折成起点（插入点）。
+/// 選區折成起點（插入點）。
 fn selection_start(context: &ITfContext, ec: u32) -> Option<ITfRange> {
     let mut selection = [TF_SELECTION::default()];
     let mut fetched = 0u32;
@@ -73,15 +73,15 @@ fn selection_start(context: &ITfContext, ec: u32) -> Option<ITfRange> {
     if fetched == 0 {
         return None;
     }
-    // GetSelection 移交 range 的所有权（ManuallyDrop），取出后由这里释放。
+    // GetSelection 移交 range 的所有權（ManuallyDrop），取出後由這裡釋放。
     let range = unsafe { ManuallyDrop::take(&mut selection[0].range) }?;
     unsafe { range.Collapse(ec, TF_ANCHOR_START) }.ok()?;
     Some(range)
 }
 
-/// 算作私密的输入范围：密码 / PIN 之外还有 `IS_PRIVATE`——Chromium（Edge / Chrome）给密码框与无痕窗口里所有输入框报的
-/// 都是它（含义是「别学」），不是 `IS_PASSWORD`。真正的密码框另有 `KEYBOARD_DISABLED` compartment 让整键放行
-/// （见 [`crate::com::context`]），到不了这里；这里兜的是没禁键盘但声明了私密的输入框：照常组句，但不读前文、不学、不记、不发云端。
+/// 算作私密的輸入範圍：密碼 / PIN 之外還有 `IS_PRIVATE`——Chromium（Edge / Chrome）給密碼框與無痕窗口裡所有輸入框報的
+/// 都是它（含義是「別學」），不是 `IS_PASSWORD`。真正的密碼框另有 `KEYBOARD_DISABLED` compartment 讓整鍵放行
+/// （見 [`crate::com::context`]），到不了這裡；這裡兜的是沒禁鍵盤但聲明瞭私密的輸入框：照常組句，但不讀前文、不學、不記、不發雲端。
 const SECRET_SCOPES: [InputScope; 5] = [
     IS_PASSWORD,
     IS_PRIVATE,
@@ -90,19 +90,19 @@ const SECRET_SCOPES: [InputScope; 5] = [
     IS_ALPHANUMERIC_PIN,
 ];
 
-/// 输入框声明了私密类输入范围（`GUID_PROP_INPUTSCOPE` 里含 [`SECRET_SCOPES`] 之一）。拿不到属性按不私密。
+/// 輸入框聲明瞭私密類輸入範圍（`GUID_PROP_INPUTSCOPE` 裡含 [`SECRET_SCOPES`] 之一）。拿不到屬性按不私密。
 fn private_input(context: &ITfContext, ec: u32, range: &ITfRange) -> bool {
     match input_scopes(context, ec, range) {
         Ok(scopes) => {
-            crate::com::log::log(&format!("输入范围: {scopes:?}"));
+            crate::com::log::log(&format!("輸入範圍: {scopes:?}"));
             scopes.iter().any(|scope| SECRET_SCOPES.contains(scope))
         }
-        // 不支持输入范围属性的应用（如记事本）GetValue 会失败，按不私密，不记日志
+        // 不支援輸入範圍屬性的應用（如記事本）GetValue 會失敗，按不私密，不記日誌
         Err(_) => false,
     }
 }
 
-/// 应用给 `range` 声明的全部输入范围；哪一步拿不到就说哪一步。
+/// 應用給 `range` 宣告的全部輸入範圍；哪一步拿不到就說哪一步。
 fn input_scopes(
     context: &ITfContext,
     ec: u32,
@@ -112,7 +112,7 @@ fn input_scopes(
         .map_err(|error| format!("GetAppProperty {error}"))?;
     let value =
         unsafe { property.GetValue(ec, range) }.map_err(|error| format!("GetValue {error}"))?;
-    // SAFETY: 只在 vt 是 VT_UNKNOWN 时读 punkVal 那个联合体成员。
+    // SAFETY: 只在 vt 是 VT_UNKNOWN 時讀 punkVal 那個聯合體成員。
     let scope: ITfInputScope = unsafe {
         let inner = &value.Anonymous.Anonymous;
         if inner.vt != VT_UNKNOWN {
@@ -131,9 +131,9 @@ fn input_scopes(
     unsafe { scope.GetInputScopes(&mut scopes, &mut count) }
         .map_err(|error| format!("GetInputScopes {error}"))?;
     if scopes.is_null() {
-        return Err("GetInputScopes 返回空数组".to_owned());
+        return Err("GetInputScopes 返回空陣列".to_owned());
     }
-    // SAFETY: GetInputScopes 返回 count 个元素的 CoTaskMem 数组，由调用方释放。
+    // SAFETY: GetInputScopes 返回 count 個元素的 CoTaskMem 陣列，由呼叫方釋放。
     unsafe {
         let list = std::slice::from_raw_parts(scopes, count as usize).to_vec();
         CoTaskMemFree(Some(scopes.cast()));

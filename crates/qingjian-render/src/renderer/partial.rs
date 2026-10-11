@@ -1,7 +1,7 @@
-//! 循环动画的局部重画：不动的内容按画序切成几段各缓存一张图层，每帧只在动画节点上一帧与这一帧占的区域里
-//! 按原来的先后把「段 0、动画节点 1、段 1、……」叠一遍，写回上一帧的整张位图。开销只跟动的那一小块有多大有关。
+//! 迴圈動畫的區域性重畫：不動的內容按畫序切成幾段各快取一張圖層，每幀只在動畫節點上一幀與這一幀佔的區域裡
+//! 按原來的先後把「段 0、動畫節點 1、段 1、……」疊一遍，寫回上一幀的整張點陣圖。開銷只跟動的那一小塊有多大有關。
 //!
-//! 只在没有过渡在播、所有动画节点都「独立」（见 `Scene::isolated`）时走这条路，否则整张重画。
+//! 只在沒有過渡在播、所有動畫節點都「獨立」（見 `Scene::isolated`）時走這條路，否則整張重畫。
 
 use std::time::{Duration, Instant};
 
@@ -14,23 +14,23 @@ use crate::canvas::Canvas;
 use crate::error::RenderError;
 use crate::scene::{LayerPlace, SplitMark};
 
-/// 局部重画要的缓存。
+/// 區域性重畫要的快取。
 pub(super) struct Partial {
-    /// 不动内容的各段（整张画布大小），比动画节点多一段。
+    /// 不動內容的各段（整張畫布大小），比動畫節點多一段。
     segments: Vec<Pixmap>,
 
-    /// 动画节点（按画序），与段交替叠放。
+    /// 動畫節點（按畫序），與段交替疊放。
     marks: Vec<SplitMark>,
 
-    /// 上一帧的整张位图。
+    /// 上一幀的整張點陣圖。
     frame: Pixmap,
 
-    /// 各动画节点上一帧占的整像素矩形（`left, top, right, bottom`）。
+    /// 各動畫節點上一幀佔的整畫素矩形（`left, top, right, bottom`）。
     bounds: Vec<Option<(i32, i32, i32, i32)>>,
 }
 
 impl Renderer {
-    /// 按局部重画出 `now` 这一帧；这一帧不适合局部重画（有过渡、动画节点不独立）时返回 `None`，调用方整张重画。
+    /// 按區域性重畫出 `now` 這一幀；這一幀不適合區域性重畫（有過渡、動畫節點不獨立）時返回 `None`，呼叫方整張重畫。
     pub(super) fn paint_partial(
         &mut self,
         retained: &mut Retained,
@@ -128,7 +128,7 @@ impl Renderer {
         }))
     }
 
-    /// 切段：先按分段模式走一遍记下动画节点的画序，再把每段画进一张图层。
+    /// 切段：先按分段模式走一遍記下動畫節點的畫序，再把每段畫進一張圖層。
     fn build_partial(&mut self, retained: &Retained) -> Result<Partial, RenderError> {
         let size = retained.size;
         let mut probe = Canvas::new(1, 1)?;
@@ -157,7 +157,7 @@ impl Renderer {
             )?;
             segments.push(canvas.into_pixmap());
         }
-        // 第一帧局部重画把整张画布当作变了的区域，按段整张叠一遍
+        // 第一幀區域性重畫把整張畫布當作變了的區域，按段整張疊一遍
         let whole = Some((0, 0, size.0 as i32, size.1 as i32));
         let partial = Partial {
             bounds: vec![whole; marks.len()],

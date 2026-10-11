@@ -1,4 +1,4 @@
-//! Unihan 里每个字的普通话读音：kHanyuPinlu（带频次）、kXHC1983（《现代汉语词典》1983 全部读音）、kMandarin（首选读音）。
+//! Unihan 裡每個字的普通話讀音：kHanyuPinlu（帶頻次）、kXHC1983（《現代漢語詞典》1983 全部讀音）、kMandarin（首選讀音）。
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -6,28 +6,28 @@ use std::path::Path;
 use super::tone::strip_tone;
 use crate::error::ConvertError;
 
-/// 一个字的读音资料。
+/// 一個字的讀音資料。
 #[derive(Debug, Default, Clone)]
 struct Entry {
-    /// kMandarin 的首选读音。
+    /// kMandarin 的首選讀音。
     mandarin: Option<String>,
 
-    /// kHanyuPinlu：读音 → 频次。
+    /// kHanyuPinlu：讀音 → 頻次。
     pinlu: Vec<(String, u32)>,
 
-    /// kXHC1983 的全部读音，按词典出现顺序。
+    /// kXHC1983 的全部讀音，按詞典出現順序。
     xhc: Vec<String>,
 }
 
-/// 字 → 读音。
+/// 字 → 讀音。
 #[derive(Debug, Default)]
 pub struct CharReadings {
-    /// 每个字的资料。
+    /// 每個字的資料。
     entries: HashMap<char, Entry>,
 }
 
 impl CharReadings {
-    /// 读 `Unihan_Readings.txt`，只取三个字段。
+    /// 讀 `Unihan_Readings.txt`，只取三個欄位。
     pub fn load(path: &Path) -> Result<Self, ConvertError> {
         let source = std::fs::read_to_string(path)?;
         let mut entries: HashMap<char, Entry> = HashMap::new();
@@ -53,7 +53,7 @@ impl CharReadings {
             };
             let entry = entries.entry(ch).or_default();
             match field {
-                // 两个值时第一个是大陆读音
+                // 兩個值時第一個是大陸讀音
                 "kMandarin" => entry.mandarin = value.split_whitespace().next().map(strip_tone),
                 // `xíng(2943) háng(218)`
                 "kHanyuPinlu" => {
@@ -83,7 +83,7 @@ impl CharReadings {
         self.entries.len()
     }
 
-    /// 这个字的全部读音，按可信度排：kHanyuPinlu 频次高的在前，然后 kMandarin，然后 kXHC1983 其余的。去重。
+    /// 這個字的全部讀音，按可信度排：kHanyuPinlu 頻次高的在前，然後 kMandarin，然後 kXHC1983 其餘的。去重。
     pub fn all(&self, ch: char) -> Vec<String> {
         let Some(entry) = self.entries.get(&ch) else {
             return Vec::new();
@@ -109,8 +109,8 @@ impl CharReadings {
         out
     }
 
-    /// 单字词条用的读音与权重：有 kHanyuPinlu 就按频次，没有的读音按主读音的 `minor_share`；
-    /// 没有 kHanyuPinlu 时首选读音 1.0、其余 `minor_share`。
+    /// 單字詞條用的讀音與權重：有 kHanyuPinlu 就按頻次，沒有的讀音按主讀音的 `minor_share`；
+    /// 沒有 kHanyuPinlu 時首選讀音 1.0、其餘 `minor_share`。
     pub fn weighted(&self, ch: char, minor_share: f64) -> Vec<(String, f64)> {
         let all = self.all(ch);
         let Some(entry) = self.entries.get(&ch) else {
@@ -137,7 +137,7 @@ impl CharReadings {
             .collect()
     }
 
-    /// 一个词的标注是否每个字都落在该字的已知读音里（LLM 标注的校验）。
+    /// 一個詞的標註是否每個字都落在該字的已知讀音裡（LLM 標註的校驗）。
     pub fn accepts_word(&self, text: &str, syllables: &[String]) -> bool {
         let chars: Vec<char> = text.chars().collect();
         chars.len() == syllables.len()
@@ -182,7 +182,7 @@ U+884C\tkXHC1983\t0442.080:háng 0443.050:hàng 0460.010:héng 1290.030:xíng\nU
         let weighted = readings.weighted('行', 0.05);
         assert_eq!(weighted[0].0, "xing");
         assert!(weighted[0].1 > weighted[1].1);
-        // 长 没加载进来，整词校验不过
+        // 長 沒載入進來，整詞校驗不過
         assert!(!readings.accepts_word("行长", &["hang".to_owned(), "zhang".to_owned()]));
         assert!(readings.accepts_word("女", &["nv".to_owned()]));
     }

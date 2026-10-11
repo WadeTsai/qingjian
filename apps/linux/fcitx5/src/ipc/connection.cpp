@@ -1,4 +1,4 @@
-//! 长度前缀显式使用小端；非阻塞 fd 内部同步 poll，共享 200ms 截止时间，耗时需与 UI 分开。
+//! 長度字首顯式使用小端；非阻塞 fd 內部同步 poll，共享 200ms 截止時間，耗時需與 UI 分開。
 #include "connection.h"
 #include <array>
 #include <chrono>

@@ -1,10 +1,10 @@
-//! 快照测试：样例帧（`scenes/`）按浅 / 深色画成位图，与仓库里的基准 PNG 逐像素比，重构渲染器时防回退。
+//! 快照測試：樣例幀（`scenes/`）按淺 / 深色畫成點陣圖，與倉庫裡的基準 PNG 逐畫素比，重構渲染器時防回退。
 //!
-//! 基准按平台放在 `tests/snapshots/<os>/`，旁边的 `fingerprint.txt` 记下出图时的字体环境（locale、字体文件与大小）。
-//! 没有系统字体（CI 容器）、这个平台没有基准、字体环境与基准不一致（别的系统版本）时跳过，不算失败。
+//! 基準按平臺放在 `tests/snapshots/<os>/`，旁邊的 `fingerprint.txt` 記下出圖時的字型環境（locale、字型檔案與大小）。
+//! 沒有系統字型（CI 容器）、這個平臺沒有基準、字型環境與基準不一致（別的系統版本）時跳過，不算失敗。
 //!
-//! 更新基准：`QINGJIAN_UPDATE_SNAPSHOTS=1 cargo test -p qingjian-render --test snapshots`，变了的 PNG 人工看过再提交。
-//! 失败时实际图、基准图与差异图（不同的像素标红）写到 `target/tmp/render-snapshots/`。
+//! 更新基準：`QINGJIAN_UPDATE_SNAPSHOTS=1 cargo test -p qingjian-render --test snapshots`，變了的 PNG 人工看過再提交。
+//! 失敗時實際圖、基準圖與差異圖（不同的畫素標紅）寫到 `target/tmp/render-snapshots/`。
 
 mod scenes;
 
@@ -20,7 +20,7 @@ const UPDATE_ENV: &str = "QINGJIAN_UPDATE_SNAPSHOTS";
 
 const LOCALE: &str = "zh-CN";
 
-/// 一张快照：名字、位图、写进 `metrics.txt` 的一行（位图尺寸、内容区、状态条格边界）。
+/// 一張快照：名字、點陣圖、寫進 `metrics.txt` 的一行（點陣圖尺寸、內容區、狀態條格邊界）。
 struct Shot {
     name: String,
     pixmap: Pixmap,
@@ -91,7 +91,7 @@ fn renderer_matches_snapshots() {
     );
 }
 
-/// 全部样例：候选窗浅 / 深色 × 各帧（2 倍），其余内置主题各几张，1 倍屏一张，状态条浅 / 深色。
+/// 全部樣例：候選窗淺 / 深色 × 各幀（2 倍），其餘內建主題各幾張，1 倍屏一張，狀態條淺 / 深色。
 fn render_all(mut renderer: Renderer) -> Vec<Shot> {
     let mut shots = Vec::new();
     for (theme_name, theme) in [("light", Theme::light()), ("dark", Theme::dark())] {
@@ -108,7 +108,7 @@ fn render_all(mut renderer: Renderer) -> Vec<Shot> {
             Some(&status.cell_edges),
         ));
     }
-    // 其余内置主题：竖排与横排云端各一张，看高亮换色
+    // 其餘內建主題：豎排與橫排雲端各一張，看高亮換色
     for id in ["system-blue", "wechat"] {
         for (theme_name, dark) in [("light", false), ("dark", true)] {
             let theme = Theme::builtin(id, dark).unwrap();
@@ -121,7 +121,7 @@ fn render_all(mut renderer: Renderer) -> Vec<Shot> {
             }
         }
     }
-    // 能力展示主题（tests/themes/showcase）：九宫格图片、渐变、边框、半透明装饰
+    // 能力展示主題（tests/themes/showcase）：九宮格圖片、漸變、邊框、半透明裝飾
     let showcase = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/themes/showcase");
     for (theme_name, dark) in [("light", false), ("dark", true)] {
         let theme = Theme::from_dir(&showcase, dark).unwrap();
@@ -147,7 +147,7 @@ fn render_all(mut renderer: Renderer) -> Vec<Shot> {
         1.0,
     );
     shots.push(shot("nihao-vertical-light-1x".to_owned(), rendered, None));
-    // 设置里放大字号：行高跟着撑开，候选与译文不叠在一起
+    // 設定裡放大字號：行高跟著撐開，候選與譯文不疊在一起
     let large = Theme::light().with_text_sizes(TextSizes::new(24.0, 16.0));
     for (scene, frame, layout) in [
         ("nihao-vertical", scenes::nihao(), Layout::Vertical),
@@ -156,7 +156,7 @@ fn render_all(mut renderer: Renderer) -> Vec<Shot> {
         let rendered = still(&mut renderer, &frame, layout, &large, 2.0);
         shots.push(shot(format!("large-text-{scene}-light"), rendered, None));
     }
-    // 候选与译文按不同比例改字号：一行里各格按基线对齐
+    // 候選與譯文按不同比例改字號：一行裡各格按基線對齊
     for (name, sizes) in [
         ("large-candidate", TextSizes::new(32.0, 0.0)),
         ("large-annotation", TextSizes::new(0.0, 22.0)),
@@ -171,7 +171,7 @@ fn render_all(mut renderer: Renderer) -> Vec<Shot> {
         );
         shots.push(shot(format!("{name}-nihao-vertical-light"), rendered, None));
     }
-    // 状态条整条跟候选字号缩放：字、齿轮、边距一起变
+    // 狀態條整條跟候選字號縮放：字、齒輪、邊距一起變
     let status = renderer
         .render_status(&scenes::status_cells(), &Mode::default(), &large, 2.0)
         .unwrap();
@@ -183,7 +183,7 @@ fn render_all(mut renderer: Renderer) -> Vec<Shot> {
     shots
 }
 
-/// 静止的一帧：先忘掉上一张，主题里的过渡不和上一张样例配对。
+/// 靜止的一幀：先忘掉上一張，主題裡的過渡不和上一張樣例配對。
 fn still(
     renderer: &mut Renderer,
     frame: &Frame,
@@ -195,14 +195,14 @@ fn still(
     renderer.render(frame, layout, theme, scale).unwrap()
 }
 
-/// 过渡（青简绿的高亮条）：高亮从第 1 项移到第 4 项，取 60 ms 处的一帧当快照；播完的最后一帧要与直接画第 4 项高亮逐像素一致。
+/// 過渡（青簡綠的高亮條）：高亮從第 1 項移到第 4 項，取 60 ms 處的一幀當快照；播完的最後一幀要與直接畫第 4 項高亮逐畫素一致。
 fn transition_mid(renderer: &mut Renderer) -> Shot {
     let theme = Theme::light();
     let from = scenes::nihao();
     let mut to = scenes::nihao();
     to.highlighted = Some(3);
     let start = Instant::now();
-    // 设置里关了动画：换行直接画终点，不要后续帧
+    // 設定裡關了動畫：換行直接畫終點，不要後續幀
     let off = theme.with_animations(false);
     renderer.forget();
     renderer
@@ -240,7 +240,7 @@ fn transition_mid(renderer: &mut Renderer) -> Shot {
     shot("transition-mid".to_owned(), mid, None)
 }
 
-/// 循环动画（展示主题的两片花瓣）：取 600 ms 处的一帧当快照；减少动态效果时停在开头、不再要帧。
+/// 迴圈動畫（展示主題的兩片花瓣）：取 600 ms 處的一幀當快照；減少動態效果時停在開頭、不再要幀。
 fn loop_frame(renderer: &mut Renderer, showcase: &Path) -> Shot {
     let theme = Theme::from_dir(showcase, false).unwrap();
     let frame = scenes::nihao();
@@ -255,7 +255,7 @@ fn loop_frame(renderer: &mut Renderer, showcase: &Path) -> Shot {
         .unwrap()
         .expect("循环动画的一帧");
     assert!(later.next_frame.is_some(), "循环动画一直播");
-    // 循环帧走局部重画（各段图层叠放），与同一时刻整张重画只能差在半透明叠加的取整上（实测最多 3 / 255）
+    // 迴圈幀走區域性重畫（各段圖層疊放），與同一時刻整張重畫只能差在半透明疊加的取整上（實測最多 3 / 255）
     let full = renderer
         .render_at(
             &frame,
@@ -304,13 +304,13 @@ fn shot(name: String, rendered: Rendered, cell_edges: Option<&[f32]>) -> Shot {
     }
 }
 
-/// 与基准比；不同就把实际图、基准图、差异图写到 `out`，返回原因。
+/// 與基準比；不同就把實際圖、基準圖、差異圖寫到 `out`，返回原因。
 fn compare(shot: &Shot, dir: &Path, out: &Path) -> Option<String> {
     let file = format!("{}.png", shot.name);
     let Ok(expected) = Pixmap::load_png(dir.join(&file)) else {
         return Some("没有基准图".to_owned());
     };
-    // 存 PNG 要去预乘，半透明像素会有取整；实际图也过一遍 PNG 再比，两边取整一致
+    // 存 PNG 要去預乘，半透明畫素會有取整；實際圖也過一遍 PNG 再比，兩邊取整一致
     let actual = Pixmap::decode_png(&shot.pixmap.encode_png().unwrap()).unwrap();
     let reason = if (actual.width(), actual.height()) != (expected.width(), expected.height()) {
         format!(
@@ -341,7 +341,7 @@ fn compare(shot: &Shot, dir: &Path, out: &Path) -> Option<String> {
     Some(reason)
 }
 
-/// 两张同大位图逐像素各通道差的最大值。
+/// 兩張同大點陣圖逐畫素各通道差的最大值。
 fn max_channel_difference(a: &Pixmap, b: &Pixmap) -> u8 {
     assert_eq!((a.width(), a.height()), (b.width(), b.height()));
     a.data()
@@ -352,7 +352,7 @@ fn max_channel_difference(a: &Pixmap, b: &Pixmap) -> u8 {
         .unwrap_or(0)
 }
 
-/// 差异图：不同的像素标红，其余画成实际图的淡灰剪影；尺寸不同时不出。
+/// 差異圖：不同的畫素標紅，其餘畫成實際圖的淡灰剪影；尺寸不同時不出。
 fn diff_image(actual: &Pixmap, expected: &Pixmap) -> Option<Pixmap> {
     if (actual.width(), actual.height()) != (expected.width(), expected.height()) {
         return None;
@@ -375,7 +375,7 @@ fn diff_image(actual: &Pixmap, expected: &Pixmap) -> Option<Pixmap> {
     Some(diff)
 }
 
-/// 字体环境：locale 与加载到的字体文件（路径 + 大小）。系统升级换了字体文件，大小一般会变。
+/// 字型環境：locale 與載入到的字型檔案（路徑 + 大小）。系統升級換了字型檔案，大小一般會變。
 fn fingerprint(library: &FontLibrary) -> String {
     let mut text = format!("locale {LOCALE}\n");
     for path in library.font_files() {

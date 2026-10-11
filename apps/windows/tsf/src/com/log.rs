@@ -1,8 +1,8 @@
-//! DLL 自己的文件日志：按天一个文件 `%LOCALAPPDATA%\Qingjian\logs\tsf.<YYYY-MM-DD>.log`，与 Server / 设置程序同目录，
-//! 只留最近 [`KEEP_DAYS`] 天（命名与清理规则在 `qingjian_platform::logs::daily`）。
-//! 不走 tracing 全局订阅器（宿主进程可能已装了自己的）；任何失败都吞掉，日志不能拖垮宿主。
-//! 每次都开文件追加一行：DLL 被加载进每个应用进程，多进程同时追加同一天的文件，这样最省事也最稳。
-//! 日期用 `GetLocalTime` 而不是时区库：这份代码跑在每一个有文本框的进程里，越轻越好。
+//! DLL 自己的檔案日誌：按天一個檔案 `%LOCALAPPDATA%\Qingjian\logs\tsf.<YYYY-MM-DD>.log`，與 Server / 設定程式同目錄，
+//! 只留最近 [`KEEP_DAYS`] 天（命名與清理規則在 `qingjian_platform::logs::daily`）。
+//! 不走 tracing 全域性訂閱器（宿主程序可能已裝了自己的）；任何失敗都吞掉，日誌不能拖垮宿主。
+//! 每次都開檔案追加一行：DLL 被載入進每個應用程序，多程序同時追加同一天的檔案，這樣最省事也最穩。
+//! 日期用 `GetLocalTime` 而不是時區庫：這份程式碼跑在每一個有文本框的程序裡，越輕越好。
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -14,7 +14,7 @@ use windows::Win32::System::SystemInformation::GetLocalTime;
 
 const PREFIX: &str = "tsf";
 
-/// 本进程上次写日志的日子（自 1970 起的天数）；换了天才清一次旧文件。
+/// 本程序上次寫日誌的日子（自 1970 起的天數）；換了天才清一次舊檔案。
 static LAST_DAY: AtomicU32 = AtomicU32::new(0);
 
 pub(crate) fn log(message: &str) {
@@ -55,7 +55,7 @@ fn dir() -> Option<PathBuf> {
     qingjian_platform::dirs::log_dir()
 }
 
-/// 自 1970-01-01 起的天数，日期比较用。
+/// 自 1970-01-01 起的天數，日期比較用。
 fn day_number(t: &SYSTEMTIME) -> u32 {
     daily::days_from_civil(i64::from(t.wYear), u32::from(t.wMonth), u32::from(t.wDay))
 }

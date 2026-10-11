@@ -3,43 +3,43 @@ use std::time::Duration;
 
 use super::coverage::Coverage;
 
-/// 整句评测报告。
+/// 整句評測報告。
 #[derive(Debug, Default)]
 pub struct Report {
-    /// 抽出来的句子数（去重后）。
+    /// 抽出來的句子數（去重後）。
     pub extracted: usize,
 
-    /// 有字查不到读音、没法转拼音的句子数。
+    /// 有字查不到讀音、沒法轉拼音的句子數。
     pub untranscribable: usize,
 
-    /// 评了的句子数。
+    /// 評了的句子數。
     pub total: usize,
 
-    /// 拼音现在切不动的句子数。
+    /// 拼音現在切不動的句子數。
     pub unparsable: usize,
 
-    /// 首选就是原句。
+    /// 首選就是原句。
     pub top1: usize,
 
-    /// 原句出现在前三 / 前五个候选里（多给几条整句候选值不值，看这两个差多少）。
+    /// 原句出現在前三 / 前五個候選裡（多給幾條整句候選值不值，看這兩個差多少）。
     pub top3: usize,
     pub top5: usize,
 
-    /// 整句候选（第一个盖住全部拼音的候选）就是原句。
+    /// 整句候選（第一個蓋住全部拼音的候選）就是原句。
     pub sentence_hit: usize,
 
-    /// 整句候选与原句逐字比对：对上的字数 / 总字数。
+    /// 整句候選與原句逐字比對：對上的字數 / 總字數。
     pub chars_correct: usize,
     pub chars_total: usize,
 
-    /// 查询耗时之和与最大值。
+    /// 查詢耗時之和與最大值。
     pub query_time: Duration,
     pub slowest_query: Duration,
 
-    /// 码表覆盖率；没装码表时为 `None`。
+    /// 碼錶覆蓋率；沒裝碼錶時為 `None`。
     pub coverage: Option<Coverage>,
 
-    /// 没命中首选的例子。
+    /// 沒命中首選的例子。
     pub misses: Vec<String>,
 }
 

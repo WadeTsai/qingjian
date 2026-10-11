@@ -1,27 +1,27 @@
-name: 报告问题
-description: 功能不正常、崩溃、行为与文档不符
+name: 報告問題
+description: 功能不正常、崩潰、行為與文件不符
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        标题请用一句话写清现象，例如「Windows 记事本里敲 v 进不了表达式模式」。
+        標題請用一句話寫清現象，例如「Windows 記事本里敲 v 進不了表示式模式」。
 
-        感谢反馈。请尽量填全，尤其是复现步骤和版本号，能省去来回追问的时间。
-        提交后维护者会补上平台（`os: *`）与模块（`area: *`）标签，不必自己操心。
+        感謝反饋。請儘量填全，尤其是復現步驟和版本號，能省去來回追問的時間。
+        提交後維護者會補上平臺（`os: *`）與模組（`area: *`）標籤，不必自己操心。
   - type: checkboxes
     id: checked
     attributes:
-      label: 提交前确认
+      label: 提交前確認
       options:
-        - label: 已搜索过现有 issue（包括已关闭的），没有重复
+        - label: 已搜尋過現有 issue（包括已關閉的），沒有重複
           required: true
-        - label: 已查过[使用说明](https://qingjian.app/docs)，里面没有答案
+        - label: 已查過[使用說明](https://qingjian.app/docs)，裡面沒有答案
           required: true
   - type: dropdown
     id: platform
     attributes:
-      label: 平台
+      label: 平臺
       options:
         - macOS
         - Windows
@@ -31,7 +31,7 @@ body:
   - type: input
     id: os_version
     attributes:
-      label: 系统版本
+      label: 系統版本
       description: 例如 macOS 26.1、Windows 11 24H2、Windows 10 22H2
       placeholder: Windows 11 24H2
     validations:
@@ -39,56 +39,56 @@ body:
   - type: input
     id: qingjian_version
     attributes:
-      label: 青简版本
-      description: 「设置 → 关于」页里的版本号，或下载的安装包文件名
+      label: 青簡版本
+      description: 「設定 → 關於」頁裡的版本號，或下載的安裝包檔名
       placeholder: 0.1.3
     validations:
       required: true
   - type: input
     id: app
     attributes:
-      label: 出问题时所在的应用
-      description: 如果只在某些应用里出现，写出应用名和版本；所有应用都出现就写「全部」
-      placeholder: 企业微信 4.1.x / Visual Studio Code / 全部
+      label: 出問題時所在的應用
+      description: 如果只在某些應用裡出現，寫出應用名和版本；所有應用都出現就寫「全部」
+      placeholder: 企業微信 4.1.x / Visual Studio Code / 全部
   - type: dropdown
     id: schema
     attributes:
-      label: 输入方案
+      label: 輸入方案
       options:
         - 全拼
-        - 双拼
-        - 不确定
+        - 雙拼
+        - 不確定
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: 复现步骤
-      description: 一步一步写，包括敲了哪些键。能稳定复现请注明；偶发的也请写大致频率。
+      label: 復現步驟
+      description: 一步一步寫，包括敲了哪些鍵。能穩定復現請註明；偶發的也請寫大致頻率。
       placeholder: |
-        1. 切到青简，在记事本里输入 v1+2
-        2. 预期出现 3，实际……
+        1. 切到青簡，在記事本里輸入 v1+2
+        2. 預期出現 3，實際……
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: 预期行为
+      label: 預期行為
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: 实际行为
-      description: 可以贴截图或录屏。
+      label: 實際行為
+      description: 可以貼截圖或錄屏。
     validations:
       required: true
   - type: textarea
     id: logs
     attributes:
-      label: 运行日志
+      label: 執行日誌
       description: |
-        先贴「设置 → 关于 → 复制诊断信息」的内容（版本、系统、配置，密钥会被抹去）。
-        日志文件：macOS 在「关于 → 打开日志目录」里取当天的；Windows 点「关于 → 打包日志到桌面」，把 zip 拖进来作为附件。
-        目录位置见 https://qingjian.app/docs/help/data-and-logs 。缺省级别不含输入内容。
+        先貼「設定 → 關於 → 複製診斷資訊」的內容（版本、系統、配置，金鑰會被抹去）。
+        日誌檔案：macOS 在「關於 → 開啟日誌目錄」裡取當天的；Windows 點「關於 → 打包日誌到桌面」，把 zip 拖進來作為附件。
+        目錄位置見 https://qingjian.app/docs/help/data-and-logs 。預設級別不含輸入內容。
       render: text

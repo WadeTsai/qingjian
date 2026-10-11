@@ -1,4 +1,4 @@
-//! preedit 的一段文字及其画法。
+//! preedit 的一段文字及其畫法。
 
 use super::style::PreeditStyle;
 
@@ -7,6 +7,6 @@ pub struct PreeditSegment {
     /// 文本。
     pub text: String,
 
-    /// 画法。
+    /// 畫法。
     pub style: PreeditStyle,
 }

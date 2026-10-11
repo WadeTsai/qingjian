@@ -2,40 +2,40 @@ use foldhash::{HashMap, HashMapExt};
 
 use super::{Context, Interpolation, MAX_USER_TRANSITIONS, SENTENCE_START};
 
-/// 个人 n-gram：用户上屏过的词序列计数（二元 + 三元），随上屏在线更新，进整句转换与词级排序的打分。
+/// 個人 n-gram：使用者上屏過的詞序列計數（二元 + 三元），隨上屏線上更新，進整句轉換與詞級排序的打分。
 ///
-/// 二元只存 (前词, 后词) 计数：每个上屏的词都带着前词（句首用 [`SENTENCE_START`]），
-/// 所以一个词的出现次数就是以它为后词的计数之和，无须另存一元表。
-/// 三元存 (前二词, 前词, 后词) 计数，句首词不记三元（与二元重复）。
-/// 持久化格式是 TSV：三列 `前词\t后词\t次数` 是二元，四列 `前二词\t前词\t后词\t次数` 是三元；文件读写在 learning crate，这里只做解析与序列化。
+/// 二元只存 (前詞, 後詞) 計數：每個上屏的詞都帶著前詞（句首用 [`SENTENCE_START`]），
+/// 所以一個詞的出現次數就是以它為後詞的計數之和，無須另存一元表。
+/// 三元存 (前二詞, 前詞, 後詞) 計數，句首詞不記三元（與二元重複）。
+/// 持久化格式是 TSV：三列 `前詞\t後詞\t次數` 是二元，四列 `前二詞\t前詞\t後詞\t次數` 是三元；檔案讀寫在 learning crate，這裡只做解析與序列化。
 #[derive(Debug, Default, Clone)]
 pub struct UserNgram {
-    /// 前词 → (后词 → 次数)。
+    /// 前詞 → (後詞 → 次數)。
     pairs: HashMap<String, HashMap<String, u32>>,
 
-    /// 前词 → 以它为前词的总次数（`pairs[v]` 的和），算二元条件概率的分母。
+    /// 前詞 → 以它為前詞的總次數（`pairs[v]` 的和），算二元條件機率的分母。
     context_totals: HashMap<String, u32>,
 
-    /// 词 → 出现次数（以它为后词的计数之和）。
+    /// 詞 → 出現次數（以它為後詞的計數之和）。
     word_counts: HashMap<String, u32>,
 
-    /// 所有二元计数之和（不含句首标记作为后词的情况，它不会出现在后词位置）。
+    /// 所有二元計數之和（不含句首標記作為後詞的情況，它不會出現在後詞位置）。
     total: u64,
 
-    /// 前二词 → (前词 → (后词 → 次数))。
+    /// 前二詞 → (前詞 → (後詞 → 次數))。
     triples: HashMap<String, HashMap<String, HashMap<String, u32>>>,
 
-    /// 前二词 → (前词 → 这对上文的总次数)，算三元条件概率的分母。
+    /// 前二詞 → (前詞 → 這對上文的總次數)，算三元條件機率的分母。
     triple_totals: HashMap<String, HashMap<String, u32>>,
 }
 
 impl UserNgram {
-    /// 记一次转移。超过上限时把所有计数减半，忘掉久远的偏好。
+    /// 記一次轉移。超過上限時把所有計數減半，忘掉久遠的偏好。
     pub fn record(&mut self, context: Context<'_>, word: &str) {
         self.record_times(context, word, 1);
     }
 
-    /// 一次记 `times` 份：用户自己点选的转移比整句路径里顺带的更可信，Engine 给它记双份。
+    /// 一次記 `times` 份：使用者自己點選的轉移比整句路徑裡順帶的更可信，Engine 給它記雙份。
     pub fn record_times(&mut self, context: Context<'_>, word: &str, times: u32) {
         if word.is_empty() || times == 0 {
             return;
@@ -72,7 +72,7 @@ impl UserNgram {
         }
     }
 
-    /// 退回 `times` 份转移（用户撤销了刚才的上屏）：减到零就删掉，没记过的不动。
+    /// 退回 `times` 份轉移（使用者撤銷了剛才的上屏）：減到零就刪掉，沒記過的不動。
     pub fn unrecord(&mut self, context: Context<'_>, word: &str, times: u32) {
         let previous = context.previous.unwrap_or(SENTENCE_START);
         if let Some(next) = self.pairs.get_mut(previous) {
@@ -109,7 +109,7 @@ impl UserNgram {
         }
     }
 
-    /// 忘掉一个词：删掉它在任何位置出现的全部转移，重算各项合计。返回删掉的二元计数总和。
+    /// 忘掉一個詞：刪掉它在任何位置出現的全部轉移，重算各項合計。返回刪掉的二元計數總和。
     pub fn forget_word(&mut self, word: &str) -> u32 {
         let mut removed = 0u32;
         if let Some(next) = self.pairs.remove(word) {
@@ -138,7 +138,7 @@ impl UserNgram {
         removed
     }
 
-    /// 三元表里删掉 `word` 作为前二词、前词、后词的全部条目。
+    /// 三元表裡刪掉 `word` 作為前二詞、前詞、後詞的全部條目。
     fn forget_word_in_triples(&mut self, word: &str) {
         self.triples.remove(word);
         self.triple_totals.remove(word);
@@ -169,12 +169,12 @@ impl UserNgram {
         }
     }
 
-    /// 词的出现次数。
+    /// 詞的出現次數。
     pub fn count(&self, word: &str) -> u32 {
         self.word_counts.get(word).copied().unwrap_or(0)
     }
 
-    /// `word` 紧跟在 `previous` 之后的次数。
+    /// `word` 緊跟在 `previous` 之後的次數。
     pub fn pair(&self, previous: Option<&str>, word: &str) -> u32 {
         self.pairs
             .get(previous.unwrap_or(SENTENCE_START))
@@ -183,7 +183,7 @@ impl UserNgram {
             .unwrap_or(0)
     }
 
-    /// `word` 跟在 `earlier previous` 之后的次数（`earlier` 为 `None` 是句首标记）。
+    /// `word` 跟在 `earlier previous` 之後的次數（`earlier` 為 `None` 是句首標記）。
     pub fn triple(&self, earlier: Option<&str>, previous: &str, word: &str) -> u32 {
         self.triples
             .get(earlier.unwrap_or(SENTENCE_START))
@@ -193,12 +193,12 @@ impl UserNgram {
             .unwrap_or(0)
     }
 
-    /// 不同的 (前词, 后词) 对数。
+    /// 不同的 (前詞, 後詞) 對數。
     pub fn pair_count(&self) -> usize {
         self.pairs.values().map(HashMap::len).sum()
     }
 
-    /// 不同的 (前二词, 前词, 后词) 条数。
+    /// 不同的 (前二詞, 前詞, 後詞) 條數。
     pub fn triple_count(&self) -> usize {
         self.triples
             .values()
@@ -207,7 +207,7 @@ impl UserNgram {
             .sum()
     }
 
-    /// 二元与三元条目总数，决定什么时候减半。
+    /// 二元與三元條目總數，決定什麼時候減半。
     pub fn transition_count(&self) -> usize {
         self.pair_count() + self.triple_count()
     }
@@ -216,12 +216,12 @@ impl UserNgram {
         self.total == 0
     }
 
-    /// 把静态模型给出的 `log P(word | previous)` 与个人概率插值后返回。
+    /// 把靜態模型給出的 `log P(word | previous)` 與個人機率插值後返回。
     ///
-    /// 个人二元 P₂ = λ·c(v,w)/c(v) + (1-λ)·c(w)/N；这对上文 (u,v) 见过时再套一层绝对折扣的三元：
-    /// P₃ = max(c(u,v,w) − D, 0)/c(u,v) + D·N₁₊(u,v,·)/c(u,v)·P₂，没见过的接续只拿回退的份额。
-    /// 插值权重 μ = c(v)/(c(v)+K)，封顶 `max_confidence`：见过这个前词越多越信个人数据，但永远压不死静态模型。
-    /// λ、K、封顶、三元折扣 D 都来自 `interpolation`（缺省是本模块的常数）。前词从没见过时（句首用句首标记）原样返回。
+    /// 個人二元 P₂ = λ·c(v,w)/c(v) + (1-λ)·c(w)/N；這對上文 (u,v) 見過時再套一層絕對摺扣的三元：
+    /// P₃ = max(c(u,v,w) − D, 0)/c(u,v) + D·N₁₊(u,v,·)/c(u,v)·P₂，沒見過的接續只拿回退的份額。
+    /// 插值權重 μ = c(v)/(c(v)+K)，封頂 `max_confidence`：見過這個前詞越多越信個人資料，但永遠壓不死靜態模型。
+    /// λ、K、封頂、三元折扣 D 都來自 `interpolation`（預設是本模組的常數）。前詞從沒見過時（句首用句首標記）原樣返回。
     pub fn blend(
         &self,
         context: Context<'_>,
@@ -261,7 +261,7 @@ impl UserNgram {
         blended.max(f64::MIN_POSITIVE).ln()
     }
 
-    /// 上文 (earlier, previous) 下的后词表与总次数；没见过这对上文返回 `None`。
+    /// 上文 (earlier, previous) 下的後詞表與總次數；沒見過這對上文返回 `None`。
     fn triple_row(
         &self,
         earlier: Option<&str>,
@@ -273,7 +273,7 @@ impl UserNgram {
         Some((next, total))
     }
 
-    /// 所有计数减半，去掉减到零的。
+    /// 所有計數減半，去掉減到零的。
     fn decay(&mut self) {
         let mut pairs: HashMap<String, HashMap<String, u32>> = HashMap::new();
         for (previous, next) in &self.pairs {
@@ -322,7 +322,7 @@ impl UserNgram {
         model
     }
 
-    /// 从 TSV 解析；空行与 `#` 开头的行跳过，三列是二元、四列是三元，格式不对的行返回行号。
+    /// 從 TSV 解析；空行與 `#` 開頭的行跳過，三列是二元、四列是三元，格式不對的行返回行號。
     pub fn parse(source: &str) -> Result<Self, usize> {
         let (model, skipped) = Self::parse_lenient(source);
         match skipped.first() {
@@ -331,8 +331,8 @@ impl UserNgram {
         }
     }
 
-    /// 同 [`Self::parse`]，但坏行跳过而不是整份报错，返回 (模型, 跳过的行号)。
-    /// 学习数据文件可能被崩溃写坏一两行，不能因此丢掉整个个人模型。
+    /// 同 [`Self::parse`]，但壞行跳過而不是整份報錯，返回 (模型, 跳過的行號)。
+    /// 學習資料檔案可能被崩潰寫壞一兩行，不能因此丟掉整個個人模型。
     pub fn parse_lenient(source: &str) -> (Self, Vec<usize>) {
         let mut pairs: HashMap<String, HashMap<String, u32>> = HashMap::new();
         let mut triples: HashMap<String, HashMap<String, HashMap<String, u32>>> = HashMap::new();
@@ -372,7 +372,7 @@ impl UserNgram {
         (Self::from_counts(pairs, triples), skipped)
     }
 
-    /// 序列化成 TSV 行（不含表头），二元在前三元在后，各自排好序，便于人看和 diff。
+    /// 序列化成 TSV 行（不含表頭），二元在前三元在後，各自排好序，便於人看和 diff。
     pub fn to_tsv(&self) -> String {
         let mut rows: Vec<(&str, &str, u32)> = self
             .pairs
@@ -418,7 +418,7 @@ impl UserNgram {
     }
 }
 
-/// 计数表里某一项减 `by`，减到零就删掉。
+/// 計數表裡某一項減 `by`，減到零就刪掉。
 fn decrement(table: &mut HashMap<String, u32>, key: &str, by: u32) {
     if let Some(count) = table.get_mut(key) {
         *count = count.saturating_sub(by);
@@ -428,7 +428,7 @@ fn decrement(table: &mut HashMap<String, u32>, key: &str, by: u32) {
     }
 }
 
-/// 从后词表里退回 `word` 最多 `times` 份，返回实际退回的份数；减到零就删掉。
+/// 從後詞表裡退回 `word` 最多 `times` 份，返回實際退回的份數；減到零就刪掉。
 fn remove_times(next: &mut HashMap<String, u32>, word: &str, times: u32) -> u32 {
     let Some(count) = next.get_mut(word) else {
         return 0;
@@ -441,7 +441,7 @@ fn remove_times(next: &mut HashMap<String, u32>, word: &str, times: u32) -> u32 
     removed
 }
 
-/// 计数减半，去掉减到零的。
+/// 計數減半，去掉減到零的。
 fn halve(next: &HashMap<String, u32>) -> HashMap<String, u32> {
     next.iter()
         .filter(|(_, count)| **count >= 2)
@@ -467,7 +467,7 @@ mod tests {
         assert_eq!(model.pair(Some("我"), "想"), 2);
         assert_eq!(model.pair(Some("我"), "去"), 0);
         assert_eq!(model.pair_count(), 3);
-        // 句首词不记三元；第二个词的前二词是句首标记
+        // 句首詞不記三元；第二個詞的前二詞是句首標記
         assert_eq!(model.triple(None, "我", "想"), 2);
         assert_eq!(model.triple(Some("我"), "想", "去"), 1);
         assert_eq!(model.triple_count(), 2);
@@ -485,14 +485,14 @@ mod tests {
         assert_eq!(restored.to_tsv(), tsv);
         assert_eq!(UserNgram::parse("我\t想\n").unwrap_err(), 1);
         assert_eq!(UserNgram::parse("<s>\t我\t想\t去\t1\n").unwrap_err(), 1);
-        // 宽松解析：坏行跳过，好行照读
+        // 寬鬆解析：壞行跳過，好行照讀
         let (model, skipped) = UserNgram::parse_lenient("<s>\t我\t3\n坏行\n我\t想\tx\n我\t想\t2\n");
         assert_eq!(skipped, [2, 3]);
         assert_eq!(model.pair(None, "我"), 3);
         assert_eq!(model.pair(Some("我"), "想"), 2);
     }
 
-    /// 旧版只有二元的文件照读，三元表为空。
+    /// 舊版只有二元的檔案照讀，三元表為空。
     #[test]
     fn parses_bigram_only_files() {
         let model = UserNgram::parse("<s>\t我\t3\n我\t想\t2\n").unwrap();
@@ -513,7 +513,7 @@ mod tests {
     fn blend_favors_seen_continuations_but_never_kills_unseen_ones() {
         let mut model = UserNgram::default();
         let base_ba = (-9.0_f64).exp().ln();
-        // 前词没见过：原样返回
+        // 前詞沒見過：原樣返回
         assert_eq!(
             model.blend(
                 Context::after("吃饭"),
@@ -523,7 +523,7 @@ mod tests {
             ),
             base_ba
         );
-        // 选过两次 吃饭 → 把：个人证据抬上来
+        // 選過兩次 吃飯 → 把：個人證據抬上來
         model.record(Context::after("吃饭"), "把");
         model.record(Context::after("吃饭"), "把");
         let lifted = model.blend(
@@ -533,7 +533,7 @@ mod tests {
             &Interpolation::DEFAULT,
         );
         assert!(lifted > -2.5, "{lifted}");
-        // 没跟在 吃饭 后面出现过的 吧 只是打折，不会被压死
+        // 沒跟在 吃飯 後面出現過的 吧 只是打折，不會被壓死
         let base_ba_particle = -2.0;
         let discounted = model.blend(
             Context::after("吃饭"),
@@ -548,7 +548,7 @@ mod tests {
         );
     }
 
-    /// 三元分辨二元分不开的接续：「想 → 去」在「我想」后面和「不想」后面偏好不同。
+    /// 三元分辨二元分不開的接續：「想 → 去」在「我想」後面和「不想」後面偏好不同。
     #[test]
     fn trigram_separates_continuations_the_bigram_mixes() {
         let mut model = UserNgram::default();
@@ -572,7 +572,7 @@ mod tests {
         let bigram_only = model.blend(Context::after("想"), "去", base, &Interpolation::DEFAULT);
         assert!(after_wo > bigram_only, "{after_wo} vs {bigram_only}");
         assert!(bigram_only > after_bu, "{bigram_only} vs {after_bu}");
-        // 三元上文没见过的（「很想」）退回二元
+        // 三元上文沒見過的（「很想」）退回二元
         assert_eq!(
             model.blend(
                 Context::after_two("很", "想"),
@@ -582,7 +582,7 @@ mod tests {
             ),
             bigram_only
         );
-        // 没见过的接续在见过的三元上文里仍拿到回退份额，不会被压死
+        // 沒見過的接續在見過的三元上文裡仍拿到回退份額，不會被壓死
         let unseen = model.blend(
             Context::after_two("我", "想"),
             "要",
@@ -612,7 +612,7 @@ mod tests {
         assert_eq!(model.triple(None, "我", "去"), 1);
         assert_eq!(model.triple_count(), 1);
         assert_eq!(model.forget_word("没有"), 0);
-        // 作为前二词删掉
+        // 作為前二詞刪掉
         assert_eq!(model.forget_word("我"), 2);
         assert_eq!(model.triple_count(), 0);
         assert!(model.is_empty());
@@ -621,14 +621,14 @@ mod tests {
     #[test]
     fn decays_when_too_many_transitions() {
         let mut model = UserNgram::default();
-        // 每条记录一个二元加一个三元
+        // 每條記錄一個二元加一個三元
         for i in 0..MAX_USER_TRANSITIONS / 2 {
             model.record(Context::after("甲"), &format!("乙{i}"));
         }
         for _ in 0..3 {
             model.record(Context::after("甲"), "丙");
         }
-        // 超上限后减半：单次的都被忘掉，选过三次的还留着
+        // 超上限後減半：單次的都被忘掉，選過三次的還留著
         model.record(Context::after("甲"), "丁");
         assert!(model.transition_count() <= 4);
         assert!(model.pair(Some("甲"), "丙") >= 1);

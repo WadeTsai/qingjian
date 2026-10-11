@@ -1,4 +1,4 @@
-//! 私密输入：不学、不记、不发云端；离开后恢复。
+//! 私密輸入：不學、不記、不發雲端；離開後恢復。
 
 use super::{
     CountingLearner, EchoPredictor, FixedTranslator, LearningTranslator, MemoryFiller,
@@ -42,11 +42,11 @@ fn private_input_learns_nothing_and_logs_nothing() {
 
     engine.set_private(true);
     assert!(engine.is_private());
-    // 读照常：已学的仍参与排序，私密前后候选顺序一样
+    // 讀照常：已學的仍參與排序，私密前後候選順序一樣
     assert_eq!(order(&mut engine), ranked);
     pick(&mut engine, "kaifa", "开发");
     pick(&mut engine, "xian", "先");
-    // 删掉重选也不撤销：私密期间没记过
+    // 刪掉重選也不撤銷：私密期間沒記過
     engine.note_backspace();
     pick(&mut engine, "kaifa", "开放");
     assert_eq!(engine.learner().weight("开发"), 0);
@@ -81,7 +81,7 @@ fn private_input_sends_nothing_to_the_cloud() {
         None
     );
     assert_eq!(engine.request_translation("开放"), None);
-    // 释义表里没有 开放：平时会问释义兜底，私密中不问
+    // 釋義表裡沒有 開放：平時會問釋義兜底，私密中不問
     pick(&mut engine, "kaifa", "开放");
     assert!(submitted.borrow().is_empty());
     assert!(requested.lock().unwrap().is_empty());

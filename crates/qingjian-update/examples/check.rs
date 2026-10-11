@@ -1,5 +1,5 @@
-//! 手动走一遍检查更新：`cargo run -p qingjian-update --example check -- <当前版本> [stable|beta]`。
-//! `QINGJIAN_UPDATE_INDEX` 可以指向本地起的静态服务（签名照验）。
+//! 手動走一遍檢查更新：`cargo run -p qingjian-update --example check -- <當前版本> [stable|beta]`。
+//! `QINGJIAN_UPDATE_INDEX` 可以指向本地起的靜態服務（簽名照驗）。
 
 use std::time::Duration;
 

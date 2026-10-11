@@ -1,4 +1,4 @@
-//! 动画：缓动曲线、过渡的起止与插值。渲染器留住上一帧，按节点 `id` 配对算过渡，壳按 [`crate::Rendered::next_frame`] 定时要下一帧。
+//! 動畫：緩動曲線、過渡的起止與插值。渲染器留住上一幀，按節點 `id` 配對算過渡，殼按 [`crate::Rendered::next_frame`] 定時要下一幀。
 
 mod easing;
 mod keyframes;
@@ -14,8 +14,8 @@ pub(crate) use transition::Transition;
 
 use std::time::Duration;
 
-/// 过渡在播时两帧的间隔（约 60 帧）。
+/// 過渡在播時兩幀的間隔（約 60 幀）。
 pub(crate) const FRAME_INTERVAL: Duration = Duration::from_millis(16);
 
-/// 只有循环动画在播时两帧的间隔（上限 30 帧，省电）。
+/// 只有迴圈動畫在播時兩幀的間隔（上限 30 幀，省電）。
 pub(crate) const LOOP_INTERVAL: Duration = Duration::from_millis(33);

@@ -1,5 +1,5 @@
-//! 按键处理：键码 / 字符解析在 [`codes`]，分流在 [`input`]，「修饰键 + 数字」快捷键在 [`shortcut`]，
-//! 一次按键的结果是 [`Effect`]。
+//! 按鍵處理：鍵碼 / 字元解析在 [`codes`]，分流在 [`input`]，「修飾鍵 + 數字」快捷鍵在 [`shortcut`]，
+//! 一次按鍵的結果是 [`Effect`]。
 
 mod codes;
 mod effect;
@@ -8,7 +8,7 @@ mod shortcut;
 
 pub(super) use self::effect::Effect;
 
-/// 先行上屏的文本与原本透传的字符合并交付，保证应用接收顺序与空格数量。
+/// 先行上屏的文本與原本透傳的字符合並交付，保證應用接收順序與空格數量。
 fn with_prefix(prefix: Option<String>, effect: Effect, c: char) -> Effect {
     let Some(mut prefix) = prefix else {
         return effect;

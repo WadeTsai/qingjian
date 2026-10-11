@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-windows-server"
-description = "Windows 输入法的 Server 进程：持有 Engine，跑在应用进程外，与 TSF DLL（../tsf）走 IPC 协议通信"
+description = "Windows 輸入法的 Server 程序：持有 Engine，跑在應用程序外，與 TSF DLL（../tsf）走 IPC 協議通訊"
 version = "0.2.1-dev"
 edition.workspace = true
 license.workspace = true
@@ -10,7 +10,7 @@ repository.workspace = true
 name = "qingjian-server"
 path = "src/main.rs"
 
-# 嵌 uiAccess manifest（见 build.rs）
+# 嵌 uiAccess manifest（見 build.rs）
 [build-dependencies]
 embed-manifest.workspace = true
 

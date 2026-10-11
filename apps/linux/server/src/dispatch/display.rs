@@ -1,4 +1,4 @@
-//! Linux 版本化显示初始化与实际呈现确认，Windows 协议保持不变。
+//! Linux 版本化顯示初始化與實際呈現確認，Windows 協議保持不變。
 use super::Router;
 use crate::protocol::{
     DisplayAcknowledged, DisplayIdentity, LINUX_UI_PROTOCOL, LinuxEvent, LinuxRequest,
@@ -37,7 +37,7 @@ impl Router {
                 &request.event
                 && !self.valid_panel_event(request.session, identity)
             {
-                // 旧鼠标事件不能改变其他会话的焦点、显示身份或学习回报。
+                // 舊滑鼠事件不能改變其他會話的焦點、顯示身份或學習回報。
                 return Some(json!({"Ignored": {"session": request.session}}));
             }
             self.linux_event(request)?
@@ -52,7 +52,7 @@ impl Router {
                 let polled = matches!(response, ServerMessage::Update { .. });
                 let info = self.sessions.get_mut(session)?;
                 if let Some(identity) = &mut info.display_identity {
-                    // 插件组句期间定时 Poll：帧没变就不是新的展示，身份沿用，已回报的曝光照算
+                    // 外掛組句期間定時 Poll：幀沒變就不是新的展示，身份沿用，已回報的曝光照算
                     if polled && info.last_frame.as_ref() == Some(frame) {
                         value.as_object_mut()?.values_mut().next()?["identity"] = json!(identity);
                         return Some(value);
@@ -95,7 +95,7 @@ impl Router {
         let Some(frame) = &info.display_frame else {
             return;
         };
-        // 所有索引先校验，坏回报不能产生半份记录。
+        // 所有索引先校驗，壞回報不能產生半份記錄。
         if ack.senses.iter().any(|(row, sense)| {
             frame
                 .candidates

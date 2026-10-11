@@ -1,62 +1,62 @@
-//! 候选窗口主题：字体、颜色、间距。所有可视参数集中在这里，方便以后从配置文件读。
+//! 候選視窗主題：字型、顏色、間距。所有可視引數集中在這裡，方便以後從配置檔案讀。
 //!
-//! 视觉层级（产品决定）：候选词最深，译文稍浅，词性最浅，序号弱化。
+//! 視覺層級（產品決定）：候選詞最深，譯文稍淺，詞性最淺，序號弱化。
 
 use objc2::rc::Retained;
 use objc2_app_kit::{NSColor, NSFont};
 
 pub struct Theme {
-    /// 候选词字体。
+    /// 候選詞字型。
     pub text_font: Retained<NSFont>,
 
-    /// 译文与词性字体。
+    /// 譯文與詞性字型。
     pub annotation_font: Retained<NSFont>,
 
-    /// 序号字体。
+    /// 序號字型。
     pub index_font: Retained<NSFont>,
 
-    /// 候选词颜色。
+    /// 候選詞顏色。
     pub text_color: Retained<NSColor>,
 
-    /// 译文颜色。
+    /// 譯文顏色。
     pub gloss_color: Retained<NSColor>,
 
-    /// 词性颜色，比译文更浅。
+    /// 詞性顏色，比譯文更淺。
     pub pos_color: Retained<NSColor>,
 
-    /// 生词译文的颜色：比普通译文醒目，提醒「这个词你还没见过几次」，看熟了就回到译文色。
+    /// 生詞譯文的顏色：比普通譯文醒目，提醒「這個詞你還沒見過幾次」，看熟了就回到譯文色。
     pub fresh_color: Retained<NSColor>,
 
-    /// 序号颜色。
+    /// 序號顏色。
     pub index_color: Retained<NSColor>,
 
-    /// 云联想的云朵与文字颜色：比译文醒目一点，但仍不抢候选词。
+    /// 雲聯想的雲朵與文字顏色：比譯文醒目一點，但仍不搶候選詞。
     pub cloud_color: Retained<NSColor>,
 
-    /// 窗口背景。
+    /// 視窗背景。
     pub background: Retained<NSColor>,
 
-    /// 当前候选的高亮底色。
+    /// 當前候選的高亮底色。
     pub highlight: Retained<NSColor>,
 
-    /// 窗口内边距。
+    /// 視窗內邊距。
     pub padding: f64,
 
-    /// 行内上下留白。
+    /// 行內上下留白。
     pub row_padding: f64,
 
-    /// 序号与候选词、候选词与译文之间的间距。
+    /// 序號與候選詞、候選詞與譯文之間的間距。
     pub column_gap: f64,
 
-    /// 窗口与高亮条的圆角。
+    /// 視窗與高亮條的圓角。
     pub corner_radius: f64,
 
-    /// 最多显示几行。
+    /// 最多顯示幾行。
     pub max_rows: usize,
 }
 
 impl Theme {
-    /// 系统默认外观。只能在主线程调用（NSFont / NSColor 不跨线程）。
+    /// 系統預設外觀。只能在主執行緒呼叫（NSFont / NSColor 不跨執行緒）。
     pub fn system_default() -> Self {
         Self {
             text_font: NSFont::systemFontOfSize(16.0),

@@ -1,6 +1,6 @@
-//! 实例化：主题模板 + 一帧数据 → 场景树。节点按 `when` 取舍、按 `bind` 填数据，`use` 展开组件、`repeat` 按列表展开。
+//! 例項化：主題模板 + 一幀資料 → 場景樹。節點按 `when` 取捨、按 `bind` 填資料，`use` 展開元件、`repeat` 按列表展開。
 //!
-//! 一个模板节点可能产出零个（条件不成立、绑定为空）或多个（`repeat`）场景节点，所以都往 `out` 里推。
+//! 一個模板節點可能產出零個（條件不成立、繫結為空）或多個（`repeat`）場景節點，所以都往 `out` 裡推。
 
 mod cell;
 mod context;
@@ -29,24 +29,24 @@ pub(super) struct Builder<'a> {
 
     pub(super) theme: &'a Theme,
 
-    /// 点 → 像素。
+    /// 點 → 畫素。
     pub(super) scale: f32,
 
-    /// 量光标位置用。
+    /// 量游標位置用。
     pub(super) text: &'a mut TextPainter,
 
-    /// 状态条各格的盒子，按格的顺序；条件不成立没画出来的格为 `None`。
+    /// 狀態條各格的盒子，按格的順序；條件不成立沒畫出來的格為 `None`。
     pub(super) cell_nodes: Vec<Option<NodeId>>,
 
-    /// 候选窗口里各候选产出的节点（第几个候选，节点）：点击区域取它们的外接矩形。
+    /// 候選窗口裡各候選產出的節點（第幾個候選，節點）：點選區域取它們的外接矩形。
     pub(super) candidate_nodes: Vec<(usize, NodeId)>,
 
-    /// 各候选译文里每条译词的片段节点（第几个候选，第几条，节点）。
+    /// 各候選譯文裡每條譯詞的片段節點（第幾個候選，第幾條，節點）。
     pub(super) sense_nodes: Vec<(usize, usize, NodeId)>,
 }
 
 impl Builder<'_> {
-    /// 候选窗口的根节点。
+    /// 候選視窗的根節點。
     pub(super) fn window(&mut self, frame: &Frame, layout: Layout) -> Result<NodeId, RenderError> {
         let windows = &self.theme.file().windows;
         let spec = match layout {
@@ -56,7 +56,7 @@ impl Builder<'_> {
         self.root(spec, Context::new(frame))
     }
 
-    /// 状态条的根节点（主题写了 `status.root`）：格子按 `cells` 展开，各格的盒子记在 [`Self::cell_nodes`]。
+    /// 狀態條的根節點（主題寫了 `status.root`）：格子按 `cells` 展開，各格的盒子記在 [`Self::cell_nodes`]。
     pub(super) fn status(
         &mut self,
         spec: &NodeSpec,
@@ -66,7 +66,7 @@ impl Builder<'_> {
         self.root(spec, Context::status(frame, cells))
     }
 
-    /// 实例化根模板；什么都没产出（条件不成立）时给一个空节点。
+    /// 例項化根模板；什麼都沒產出（條件不成立）時給一個空節點。
     fn root(&mut self, spec: &NodeSpec, ctx: Context) -> Result<NodeId, RenderError> {
         let mut out = Vec::with_capacity(1);
         self.node(spec, ctx, &BoxSpec::default(), &mut out)?;
@@ -79,7 +79,7 @@ impl Builder<'_> {
         Ok(root)
     }
 
-    /// 实例化一个模板节点；`over` 是外层 `use` 写的盒子属性，盖过这个节点自己的。
+    /// 例項化一個模板節點；`over` 是外層 `use` 寫的盒子屬性，蓋過這個節點自己的。
     fn node(
         &mut self,
         spec: &NodeSpec,
@@ -110,7 +110,7 @@ impl Builder<'_> {
                 for (i, cell) in cells.iter().enumerate() {
                     let before = out.len();
                     self.node(component, ctx.with_cell(cell, i, cells.len()), &layout, out)?;
-                    // 每格第一个产出的节点就是这一格的盒子，点击按它的右边界分格
+                    // 每格第一個產出的節點就是這一格的盒子，點選按它的右邊界分格
                     self.cell_nodes.push(out.get(before).copied());
                 }
                 Ok(())
@@ -140,7 +140,7 @@ impl Builder<'_> {
         }
     }
 
-    /// 节点写了 `id` 与 `transition`：登记到刚产出的场景节点上（`out` 的最后一个）；写了 `animation` 同样登记。
+    /// 節點寫了 `id` 與 `transition`：登記到剛產出的場景節點上（`out` 的最後一個）；寫了 `animation` 同樣登記。
     fn mark_transition(&mut self, spec: &NodeSpec, out: &[NodeId]) {
         if let (Some(animation), Some(&node)) = (&spec.animation, out.last()) {
             self.scene
@@ -155,7 +155,7 @@ impl Builder<'_> {
         }
     }
 
-    /// 盒子属性里的不透明度（作用于整棵子树）与效果设到节点上。
+    /// 盒子屬性裡的不透明度（作用於整棵子樹）與效果設到節點上。
     fn apply_layer(&mut self, node: NodeId, layout: &BoxSpec, ctx: Context) {
         if let Some(opacity) = layout.opacity
             && opacity < 1.0
@@ -168,12 +168,12 @@ impl Builder<'_> {
         }
     }
 
-    /// 效果换成像素、颜色按当前数据与外观取值。
+    /// 效果換成畫素、顏色按當前資料與外觀取值。
     fn effect(&self, spec: &EffectSpec, ctx: Context) -> Effect {
         Effect::from_spec(spec, self.scale, self.color(&spec.shadow().color, ctx))
     }
 
-    /// 节点颜色：条件写法按当前数据取分支，再按外观取值。
+    /// 節點顏色：條件寫法按當前資料取分支，再按外觀取值。
     fn color(&self, spec: &ColorSpec, ctx: Context) -> crate::color::Color {
         let color = match spec {
             ColorSpec::Fixed(color) => color,
@@ -192,8 +192,8 @@ impl Builder<'_> {
         self.theme.color(color)
     }
 
-    /// 命名文字样式按倍数换成像素、配上颜色与当前外观的 gamma。
-    /// 文字的描边：宽度换成像素、颜色按当前数据与外观取值。
+    /// 命名文字樣式按倍數換成畫素、配上顏色與當前外觀的 gamma。
+    /// 文字的描邊：寬度換成畫素、顏色按當前資料與外觀取值。
     fn stroke(
         &self,
         stroke: Option<&BorderSpec>,

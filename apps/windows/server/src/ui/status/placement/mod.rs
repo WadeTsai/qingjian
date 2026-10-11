@@ -1,4 +1,4 @@
-//! 状态条的摆放状态与点击分发：窗口过程按 HWND 查到它，拖动结束记位置、点击按格分发动作（[`StatusAction`]）。
+//! 狀態條的擺放狀態與點選分發：視窗過程按 HWND 查到它，拖動結束記位置、點選按格分發動作（[`StatusAction`]）。
 
 mod action;
 
@@ -11,24 +11,24 @@ pub(super) use self::action::StatusAction;
 use crate::dispatch::StatusEvent;
 use crate::ui::StatusEvents;
 
-/// 窗口过程也要读写的摆放状态，经 `PLACEMENTS` 按 HWND 查到。
+/// 視窗過程也要讀寫的擺放狀態，經 `PLACEMENTS` 按 HWND 查到。
 pub(super) struct Placement {
-    /// 状态条窗口。
+    /// 狀態條視窗。
     pub(super) hwnd: HWND,
 
-    /// 上次合成用的阴影留白，拖动结束时从窗口矩形反推内容左上角用；点击时把客户区坐标换成内容坐标。
+    /// 上次合成用的陰影留白，拖動結束時從視窗矩形反推內容左上角用；點選時把客戶區座標換成內容座標。
     pub(super) margin: Cell<i32>,
 
-    /// 内容左上角的屏幕坐标（物理像素）；`None` 表示还没摆放过。
+    /// 內容左上角的螢幕座標（物理畫素）；`None` 表示還沒擺放過。
     pub(super) pos: Cell<Option<(i32, i32)>>,
 
-    /// 上次画出的各格右边界（内容坐标）与动作，从左到右；点击按 x 落进哪格。
+    /// 上次畫出的各格右邊界（內容座標）與動作，從左到右；點選按 x 落進哪格。
     pub(super) cells: RefCell<Vec<(i32, StatusAction)>>,
 
-    /// 前台全屏、暂时收起了（见 [`super::fullscreen`]）。
+    /// 前臺全屏、暫時收起了（見 [`super::fullscreen`]）。
     pub(super) fullscreen_hidden: Cell<bool>,
 
-    /// 点格 / 拖动结束回给 Router。
+    /// 點格 / 拖動結束回給 Router。
     events: StatusEvents,
 }
 
@@ -44,7 +44,7 @@ impl Placement {
         }
     }
 
-    /// 拖动结束：从窗口矩形反推内容左上角，记下并交给 Router 写回配置。
+    /// 拖動結束：從視窗矩形反推內容左上角，記下並交給 Router 寫回配置。
     pub(super) fn on_moved(&self) {
         let mut rect = RECT::default();
         if unsafe { GetWindowRect(self.hwnd, &mut rect) }.is_ok() {
@@ -56,7 +56,7 @@ impl Placement {
         }
     }
 
-    /// 单击：`client_x` 是客户区横坐标。
+    /// 單擊：`client_x` 是客戶區橫座標。
     pub(super) fn on_click(&self, client_x: i32) {
         let x = client_x - self.margin.get();
         let action = self

@@ -1,5 +1,5 @@
 [advisories]
 ignore = [
-    # paste 停止维护。链路 candle-core → gemm 0.19 → paste，见 issue #38。
+    # paste 停止維護。鏈路 candle-core → gemm 0.19 → paste，見 issue #38。
     "RUSTSEC-2024-0436",
 ]

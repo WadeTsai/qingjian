@@ -1,17 +1,17 @@
-//! 本地输入历史：本次会话里经我们上屏的文本，按时间顺序拼成一段。
+//! 本地輸入歷史：本次會話裡經我們上屏的文本，按時間順序拼成一段。
 //!
-//! 只用于两件事：应用不提供光标附近文本时给联想当上下文；以后给个人模型当训练数据。
-//! 全部在内存里，落盘由壳决定；容量有上限，超过就丢最旧的。
+//! 只用於兩件事：應用不提供游標附近文本時給聯想當上下文；以後給個人模型當訓練資料。
+//! 全部在記憶體裡，落盤由殼決定；容量有上限，超過就丟最舊的。
 
-/// 内存里最多保留多少个字符。够联想的观察窗口用，也不会无限增长。
+/// 記憶體裡最多保留多少個字元。夠聯想的觀察視窗用，也不會無限增長。
 const DEFAULT_CAPACITY: usize = 4096;
 
 #[derive(Debug, Clone)]
 pub struct InputHistory {
-    /// 已上屏文本，按时间顺序首尾相接。
+    /// 已上屏文本，按時間順序首尾相接。
     text: String,
 
-    /// 字符数上限。
+    /// 字元數上限。
     capacity: usize,
 }
 
@@ -29,7 +29,7 @@ impl InputHistory {
         }
     }
 
-    /// 追加一段上屏文本，超出容量时从头丢弃。
+    /// 追加一段上屏文本，超出容量時從頭丟棄。
     pub fn record(&mut self, text: &str) {
         if text.is_empty() {
             return;
@@ -47,7 +47,7 @@ impl InputHistory {
         }
     }
 
-    /// 最近 `chars` 个字符。
+    /// 最近 `chars` 個字元。
     pub fn recent(&self, chars: usize) -> &str {
         if chars == 0 {
             return "";
@@ -72,7 +72,7 @@ impl InputHistory {
         self.text.is_empty()
     }
 
-    /// 一键清除。
+    /// 一鍵清除。
     pub fn clear(&mut self) {
         self.text.clear();
     }

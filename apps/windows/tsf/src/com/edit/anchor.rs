@@ -1,4 +1,4 @@
-//! 候选窗口的定位锚点：组句范围 / 选区在屏幕上的矩形，拿不到时退到鼠标位置。
+//! 候選視窗的定位錨點：組句範圍 / 選區在螢幕上的矩形，拿不到時退到滑鼠位置。
 
 use std::mem::ManuallyDrop;
 
@@ -9,13 +9,13 @@ use windows::core::BOOL;
 
 use qingjian_platform::protocol::ScreenRect;
 
-/// `range` 的屏幕矩形，拿不到（有些应用给全零 / 空矩形）退到鼠标处。
+/// `range` 的螢幕矩形，拿不到（有些應用給全零 / 空矩形）退到滑鼠處。
 pub(crate) fn anchor_rect(context: &ITfContext, ec: u32, range: &ITfRange) -> ScreenRect {
     to_screen(range_rect(context, ec, range).unwrap_or_else(mouse_anchor))
 }
 
-/// 插入点（没有选区时是光标，有选区时是选区）的屏幕矩形。「只在候选窗口」模式应用里不放 marked text，
-/// 没有组句范围可量，就用它给候选窗口定位。
+/// 插入點（沒有選區時是游標，有選區時是選區）的螢幕矩形。「只在候選視窗」模式應用裡不放 marked text，
+/// 沒有組句範圍可量，就用它給候選視窗定位。
 pub(crate) fn caret_rect(context: &ITfContext, ec: u32) -> ScreenRect {
     match selection_range(context, ec) {
         Some(range) => anchor_rect(context, ec, &range),
@@ -23,7 +23,7 @@ pub(crate) fn caret_rect(context: &ITfContext, ec: u32) -> ScreenRect {
     }
 }
 
-/// 当前选区的范围；`GetSelection` 移交所有权，由调用方释放。
+/// 當前選區的範圍；`GetSelection` 移交所有權，由呼叫方釋放。
 pub(crate) fn selection_range(context: &ITfContext, ec: u32) -> Option<ITfRange> {
     let mut selection = [TF_SELECTION::default()];
     let mut fetched = 0u32;
@@ -38,7 +38,7 @@ pub(crate) fn selection_range(context: &ITfContext, ec: u32) -> Option<ITfRange>
     unsafe { ManuallyDrop::take(&mut selection[0].range) }
 }
 
-/// 没有可量的范围时的锚点：鼠标处一个零宽、约一行高的矩形。
+/// 沒有可量的範圍時的錨點：滑鼠處一個零寬、約一行高的矩形。
 pub(crate) fn mouse_screen_rect() -> ScreenRect {
     to_screen(mouse_anchor())
 }

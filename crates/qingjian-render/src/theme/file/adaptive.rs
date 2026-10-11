@@ -1,14 +1,14 @@
-//! 随外观变的值：写一个值两种外观共用，或写 `{ "light": …, "dark": … }` 各给一个。
+//! 隨外觀變的值：寫一個值兩種外觀共用，或寫 `{ "light": …, "dark": … }` 各給一個。
 
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub(crate) enum Adaptive<T> {
-    /// 浅色与深色各一个。
+    /// 淺色與深色各一個。
     Pair { light: T, dark: T },
 
-    /// 两种外观共用。
+    /// 兩種外觀共用。
     Same(T),
 }
 

@@ -1,6 +1,6 @@
-//! 阴影用的模糊：三遍盒式模糊近似高斯，作用在一张 alpha 遮罩上。
+//! 陰影用的模糊：三遍盒式模糊近似高斯，作用在一張 alpha 遮罩上。
 
-/// 模糊 `mask`（`width × height` 的 alpha），`blur` 是像素，与主题里的 `blur` 同义；边界外当 0。
+/// 模糊 `mask`（`width × height` 的 alpha），`blur` 是畫素，與主題裡的 `blur` 同義；邊界外當 0。
 pub(crate) fn blur(mask: &mut [u8], width: usize, height: usize, blur: f32) {
     let radius = (blur / 2.0).round().max(1.0) as usize;
     for _ in 0..3 {
@@ -9,7 +9,7 @@ pub(crate) fn blur(mask: &mut [u8], width: usize, height: usize, blur: f32) {
     }
 }
 
-/// 模糊在形状四周能铺开多远（像素）。
+/// 模糊在形狀四周能鋪開多遠（畫素）。
 pub(crate) fn reach(blur: f32) -> f32 {
     blur * 2.0
 }
@@ -37,7 +37,7 @@ fn box_blur_vertical(data: &mut [u8], width: usize, height: usize, radius: usize
     }
 }
 
-/// 一维盒式模糊，窗口 `2r + 1`，边界外当 0；滑动窗口 O(n)。
+/// 一維盒式模糊，視窗 `2r + 1`，邊界外當 0；滑動視窗 O(n)。
 fn box_blur_line(src: &[u8], dst: &mut [u8], radius: usize) {
     let n = src.len();
     let window = (2 * radius + 1) as u32;

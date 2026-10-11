@@ -1,4 +1,4 @@
-//! Linux 事件：释放、焦点、能力与候选回调不改 Windows 消息格式。
+//! Linux 事件：釋放、焦點、能力與候選回撥不改 Windows 訊息格式。
 use super::{Capabilities, DisplayIdentity};
 use qingjian_platform::protocol::KeyEvent;
 use serde::{Deserialize, Serialize};

@@ -1,5 +1,5 @@
-//! 节点的循环动画：`"animation": { "duration": 2400, "loop": true, "easing": "ease-in-out", "keyframes": [...] }`。
-//! 关键帧写 `at`（0–1）与要动的属性（`x` / `y` 平移点数、`rotate` 度、`scale`、`opacity`），变换作用于整棵子树、不影响布局。
+//! 節點的迴圈動畫：`"animation": { "duration": 2400, "loop": true, "easing": "ease-in-out", "keyframes": [...] }`。
+//! 關鍵幀寫 `at`（0–1）與要動的屬性（`x` / `y` 平移點數、`rotate` 度、`scale`、`opacity`），變換作用於整棵子樹、不影響佈局。
 
 use serde::Deserialize;
 
@@ -7,14 +7,14 @@ use crate::animation::Easing;
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub(crate) struct AnimationSpec {
-    /// 一轮的时长（毫秒）。
+    /// 一輪的時長（毫秒）。
     pub(crate) duration: f32,
 
-    /// 循环播放；`false` 时播一轮停在最后一帧。
+    /// 迴圈播放；`false` 時播一輪停在最後一幀。
     #[serde(default = "default_loop", rename = "loop")]
     pub(crate) repeat: bool,
 
-    /// 相邻两个关键帧之间的缓动。
+    /// 相鄰兩個關鍵幀之間的緩動。
     #[serde(default)]
     pub(crate) easing: Easing,
 
@@ -27,17 +27,17 @@ fn default_loop() -> bool {
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub(crate) struct KeyframeSpec {
-    /// 在一轮里的位置（0–1）。
+    /// 在一輪裡的位置（0–1）。
     pub(crate) at: f32,
 
     pub(crate) x: Option<f32>,
 
     pub(crate) y: Option<f32>,
 
-    /// 旋转（度，顺时针，绕节点中心）。
+    /// 旋轉（度，順時針，繞節點中心）。
     pub(crate) rotate: Option<f32>,
 
-    /// 缩放（绕节点中心）。
+    /// 縮放（繞節點中心）。
     pub(crate) scale: Option<f32>,
 
     pub(crate) opacity: Option<f32>,

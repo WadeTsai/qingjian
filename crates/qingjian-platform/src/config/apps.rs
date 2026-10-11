@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-/// 缺省给英文候选的应用（macOS，按 bundle identifier）：浏览器、聊天、办公与笔记这类写成段文字的地方。
-/// 白名单而不是黑名单：设计、3D、CAD、视频剪辑、游戏都靠单键快捷键（Photoshop 的 W / H / V），
-/// 英文候选会把字母收进组句，这类应用列不完。`*` 结尾是前缀匹配。
+/// 預設給英文候選的應用（macOS，按 bundle identifier）：瀏覽器、聊天、辦公與筆記這類寫成段文字的地方。
+/// 白名單而不是黑名單：設計、3D、CAD、影片剪輯、遊戲都靠單鍵快捷鍵（Photoshop 的 W / H / V），
+/// 英文候選會把字母收進組句，這類應用列不完。`*` 結尾是字首匹配。
 pub const DEFAULT_ENGLISH_CANDIDATES_ON_MACOS: &[&str] = &[
     "com.apple.Safari",
     "com.google.Chrome*",
@@ -26,7 +26,7 @@ pub const DEFAULT_ENGLISH_CANDIDATES_ON_MACOS: &[&str] = &[
     "com.tencent.qq",
     "com.tencent.WeWorkMac",
     "com.alibaba.DingTalkMac",
-    "com.electron.lark", // 飞书
+    "com.electron.lark", // 飛書
     "ru.keepcoder.Telegram",
     "com.tdesktop.Telegram",
     "com.hnc.Discord",
@@ -36,7 +36,7 @@ pub const DEFAULT_ENGLISH_CANDIDATES_ON_MACOS: &[&str] = &[
     "abnerworks.Typora",
 ];
 
-/// 缺省给英文候选的应用（Windows，按宿主进程的 exe 文件名）。理由同 [`DEFAULT_ENGLISH_CANDIDATES_ON_MACOS`]。
+/// 預設給英文候選的應用（Windows，按宿主程序的 exe 檔名）。理由同 [`DEFAULT_ENGLISH_CANDIDATES_ON_MACOS`]。
 pub const DEFAULT_ENGLISH_CANDIDATES_ON_WINDOWS: &[&str] = &[
     "chrome.exe",
     "msedge.exe",
@@ -55,7 +55,7 @@ pub const DEFAULT_ENGLISH_CANDIDATES_ON_WINDOWS: &[&str] = &[
     "Weixin.exe", // 微信 4.x
     "WeChat.exe",
     "QQ.exe",
-    "WXWork.exe", // 企业微信
+    "WXWork.exe", // 企業微信
     "DingTalk.exe",
     "Feishu.exe",
     "Lark.exe",
@@ -68,8 +68,8 @@ pub const DEFAULT_ENGLISH_CANDIDATES_ON_WINDOWS: &[&str] = &[
     "Typora.exe",
 ];
 
-/// 缺省给英文候选的应用（Linux，按 fcitx5 的 program 名：X11 是 WM_CLASS，Wayland 是 app_id）。
-/// 理由同 [`DEFAULT_ENGLISH_CANDIDATES_ON_MACOS`]；匹配大小写不敏感，所以大小写变体不用重复列。
+/// 預設給英文候選的應用（Linux，按 fcitx5 的 program 名：X11 是 WM_CLASS，Wayland 是 app_id）。
+/// 理由同 [`DEFAULT_ENGLISH_CANDIDATES_ON_MACOS`]；匹配大小寫不敏感，所以大小寫變體不用重複列。
 pub const DEFAULT_ENGLISH_CANDIDATES_ON_LINUX: &[&str] = &[
     "firefox",
     "org.mozilla.firefox",
@@ -100,30 +100,30 @@ pub const DEFAULT_ENGLISH_CANDIDATES_ON_LINUX: &[&str] = &[
     "typora",
 ];
 
-/// 本平台的缺省白名单：macOS 上是 bundle identifier，Windows 上是 exe 文件名，Linux 上是 fcitx5 的 program 名。
+/// 本平臺的預設白名單：macOS 上是 bundle identifier，Windows 上是 exe 檔名，Linux 上是 fcitx5 的 program 名。
 #[cfg(windows)]
 pub const DEFAULT_ENGLISH_CANDIDATES_ON: &[&str] = DEFAULT_ENGLISH_CANDIDATES_ON_WINDOWS;
 
-/// 本平台的缺省白名单：macOS 上是 bundle identifier，Windows 上是 exe 文件名，Linux 上是 fcitx5 的 program 名。
+/// 本平臺的預設白名單：macOS 上是 bundle identifier，Windows 上是 exe 檔名，Linux 上是 fcitx5 的 program 名。
 #[cfg(target_os = "macos")]
 pub const DEFAULT_ENGLISH_CANDIDATES_ON: &[&str] = DEFAULT_ENGLISH_CANDIDATES_ON_MACOS;
 
-/// 本平台的缺省白名单：macOS 上是 bundle identifier，Windows 上是 exe 文件名，Linux 上是 fcitx5 的 program 名。
+/// 本平臺的預設白名單：macOS 上是 bundle identifier，Windows 上是 exe 檔名，Linux 上是 fcitx5 的 program 名。
 #[cfg(not(any(windows, target_os = "macos")))]
 pub const DEFAULT_ENGLISH_CANDIDATES_ON: &[&str] = DEFAULT_ENGLISH_CANDIDATES_ON_LINUX;
 
-/// 配置文件 `[apps]` 分节：按应用改行为。应用的标识 macOS 上是 bundle identifier，Windows 上是宿主进程的 exe 文件名，
-/// Linux 上是 fcitx5 认到的应用名。
+/// 配置檔案 `[apps]` 分節：按應用改行為。應用的標識 macOS 上是 bundle identifier，Windows 上是宿主程序的 exe 檔名，
+/// Linux 上是 fcitx5 認到的應用名。
 ///
-/// 现在只管英文模式给不给候选：先看白名单 `english_candidates_on`，再用 `english_candidates_off` 排除。
-/// 全局开关 `[general] english_candidates` 关着时两份名单都不起作用。以后按应用定 preedit 模式等也放这里。
+/// 現在只管英文模式給不給候選：先看白名單 `english_candidates_on`，再用 `english_candidates_off` 排除。
+/// 全域性開關 `[general] english_candidates` 關著時兩份名單都不起作用。以後按應用定 preedit 模式等也放這裡。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppsConfig {
-    /// 英文模式下给候选的应用，`*` 结尾按前缀匹配，单写 `"*"` 就是处处都给。
+    /// 英文模式下給候選的應用，`*` 結尾按字首匹配，單寫 `"*"` 就是處處都給。
     pub english_candidates_on: Vec<String>,
 
-    /// 从白名单里排除的应用（配合 `"*"` 用：处处都给、只有这几个不给）。缺省空。
+    /// 從白名單裡排除的應用（配合 `"*"` 用：處處都給、只有這幾個不給）。預設空。
     pub english_candidates_off: Vec<String>,
 }
 
@@ -134,7 +134,7 @@ impl Default for AppsConfig {
 }
 
 impl AppsConfig {
-    /// 用给定白名单构造（缺省名单分平台，测试里要指定哪一份）。
+    /// 用給定白名單構造（預設名單分平臺，測試裡要指定哪一份）。
     pub fn with_english_candidates_on(apps: &[&str]) -> Self {
         Self {
             english_candidates_on: apps.iter().map(|s| (*s).to_owned()).collect(),
@@ -142,7 +142,7 @@ impl AppsConfig {
         }
     }
 
-    /// 这个应用里英文模式给不给候选。`app` 不认识（应用没报）时只有 `"*"` 给：认不出来的地方宁可原样交给应用。
+    /// 這個應用裡英文模式給不給候選。`app` 不認識（應用沒報）時只有 `"*"` 給：認不出來的地方寧可原樣交給應用。
     pub fn english_candidates_on(&self, app: Option<&str>) -> bool {
         let Some(app) = app else {
             return self.english_candidates_everywhere();
@@ -156,7 +156,7 @@ impl AppsConfig {
                 .any(|pattern| matches_app(pattern, app))
     }
 
-    /// 白名单是不是「处处都给」（`"*"`）：偏好设置里「只在常用写字应用里给候选」的勾选框据此显示。
+    /// 白名單是不是「處處都給」（`"*"`）：偏好設定裡「只在常用寫字應用裡給候選」的勾選框據此顯示。
     pub fn english_candidates_everywhere(&self) -> bool {
         self.english_candidates_on
             .iter()
@@ -164,13 +164,13 @@ impl AppsConfig {
     }
 }
 
-/// `pattern` 是完整的应用标识，或 `*` 结尾的前缀。不区分大小写（bundle identifier 与 Windows 文件名本身都不区分）。
+/// `pattern` 是完整的應用標識，或 `*` 結尾的字首。不區分大小寫（bundle identifier 與 Windows 檔名本身都不區分）。
 fn matches_app(pattern: &str, app: &str) -> bool {
     let pattern = pattern.trim();
     match pattern.strip_suffix('*') {
         Some(prefix) => {
-            // 应用名不保证是 ASCII（Windows 的 exe 文件名、Linux 的 app_id / WM_CLASS 都可以带非 ASCII 字符）：
-            // 按字节切片会切在字符中间 panic，`get` 切不到就是不匹配。
+            // 應用名不保證是 ASCII（Windows 的 exe 檔名、Linux 的 app_id / WM_CLASS 都可以帶非 ASCII 字元）：
+            // 按位元組切片會切在字元中間 panic，`get` 切不到就是不匹配。
             app.get(..prefix.len())
                 .is_some_and(|head| head.eq_ignore_ascii_case(prefix))
         }
@@ -227,17 +227,17 @@ mod tests {
         assert_eq!(
             apps.english_candidates_on(Some("chrome.exe")),
             cfg!(windows),
-            "Windows 缺省名单按 exe 名"
+            "Windows 預設名单按 exe 名"
         );
         assert_eq!(
             apps.english_candidates_on(Some("com.apple.Safari")),
             cfg!(target_os = "macos"),
-            "macOS 缺省名单按 bundle identifier"
+            "macOS 預設名单按 bundle identifier"
         );
         assert_eq!(
             apps.english_candidates_on(Some("kate")),
             cfg!(not(any(windows, target_os = "macos"))),
-            "Linux 缺省名单按 fcitx5 的 program 名"
+            "Linux 預設名单按 fcitx5 的 program 名"
         );
         assert!(!apps.english_candidates_everywhere());
     }
@@ -270,8 +270,8 @@ english_candidates_off = ["Photoshop.exe"]"#,
 
     #[test]
     fn prefix_patterns_survive_multibyte_app_names() {
-        // 名单里有 `*` 前缀项时，多字节应用名的第 prefix.len() 字节可能落在字符中间：
-        // 必须判为不匹配，不许 panic。
+        // 名單裡有 `*` 字首項時，多位元組應用名的第 prefix.len() 位元組可能落在字元中間：
+        // 必須判為不匹配，不許 panic。
         let apps = AppsConfig::with_english_candidates_on(&["jetbrains-*", "code"]);
         assert!(!apps.english_candidates_on(Some("日本語入力テスト")));
         assert!(!apps.english_candidates_on(Some("abc日本語")));

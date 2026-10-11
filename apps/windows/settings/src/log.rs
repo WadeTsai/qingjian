@@ -1,6 +1,6 @@
-//! 设置程序自己的文件日志：`%LOCALAPPDATA%\Qingjian\logs\settings.<YYYY-MM-DD>.log`，与 Server / DLL 同目录。
-//! exe 是 GUI 子系统没有控制台，`eprintln!` 的字全丢；启动失败、保存配置失败这些得有地方看。
-//! 与 DLL 一样开文件追加一行、失败吞掉，只留最近 7 天（命名与清理在 `qingjian_platform::logs::daily`）。
+//! 設定程式自己的檔案日誌：`%LOCALAPPDATA%\Qingjian\logs\settings.<YYYY-MM-DD>.log`，與 Server / DLL 同目錄。
+//! exe 是 GUI 子系統沒有控制台，`eprintln!` 的字全丟；啟動失敗、儲存配置失敗這些得有地方看。
+//! 與 DLL 一樣開檔案追加一行、失敗吞掉，只留最近 7 天（命名與清理在 `qingjian_platform::logs::daily`）。
 
 use std::fmt::Display;
 use std::io::Write;
@@ -10,7 +10,7 @@ use qingjian_platform::logs::daily::{self, KEEP_DAYS};
 
 const PREFIX: &str = "settings";
 
-/// 上次写日志的日子（自 1970 起的天数）；换了天才清一次旧文件。
+/// 上次寫日誌的日子（自 1970 起的天數）；換了天才清一次舊檔案。
 static LAST_DAY: AtomicU32 = AtomicU32::new(0);
 
 pub(crate) fn warn(message: impl Display) {

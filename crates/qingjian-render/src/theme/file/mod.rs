@@ -1,4 +1,4 @@
-//! 主题文件 `theme.json` 的结构，见 `docs/design/theme.md`。只管反序列化，解析引用、实例化在别处。
+//! 主題檔案 `theme.json` 的結構，見 `docs/design/theme.md`。只管反序列化，解析引用、例項化在別處。
 
 mod adaptive;
 mod color;
@@ -23,27 +23,27 @@ pub(crate) use windows::Windows;
 
 use node::NodeSpec;
 
-/// 当前认得的最高格式版本。
+/// 當前認得的最高格式版本。
 pub(crate) const SCHEMA: u32 = 1;
 
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct ThemeFile {
-    /// 格式版本，只在不兼容改动时加一。
+    /// 格式版本，只在不相容改動時加一。
     pub(crate) schema: u32,
 
     pub(crate) meta: Meta,
 
-    /// 命名颜色，节点里用 `@名字` 引用。
+    /// 命名顏色，節點裡用 `@名字` 引用。
     #[serde(default)]
     pub(crate) variables: HashMap<String, Adaptive<ColorValue>>,
 
     pub(crate) text: TextSettings,
 
-    /// 随主题带的字体文件。
+    /// 隨主題帶的字型檔案。
     #[serde(default)]
     pub(crate) fonts: Vec<BundledFont>,
 
-    /// 可复用的节点（组件），`use` / `repeat` 按名字引用。
+    /// 可複用的節點（元件），`use` / `repeat` 按名字引用。
     #[serde(default)]
     pub(crate) components: HashMap<String, NodeSpec>,
 

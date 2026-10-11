@@ -15,34 +15,34 @@ use crate::config::PredictConfig;
 use crate::error::PredictError;
 use crate::prompt::{self, Reply};
 
-/// 联想回复的 token 上限：几条短句足够，防止模型长篇大论。
+/// 聯想回復的 token 上限：幾條短句足夠，防止模型長篇大論。
 const MAX_TOKENS: u32 = 200;
 
-/// 采样温度：联想要稳，不要花。
+/// 取樣溫度：聯想要穩，不要花。
 const TEMPERATURE: f32 = 0.3;
 
-/// OpenCode Zen / Go 自 2026-09-06 起要求每个请求带这个头，值是同一会话内稳定的 ID，
-/// 他们靠它把同一会话路由到同一上游复用 prompt 缓存，缺了直接 400。
+/// OpenCode Zen / Go 自 2026-09-06 起要求每個請求帶這個頭，值是同一會話內穩定的 ID，
+/// 他們靠它把同一會話路由到同一上游複用 prompt 快取，缺了直接 400。
 const OPENCODE_SESSION_HEADER: &str = "x-opencode-session";
 
-/// 本进程的会话 ID：输入法没有「会话」概念，一个进程算一个，进程内所有客户端共用。
+/// 本程序的會話 ID：輸入法沒有「會話」概念，一個程序算一個，程序內所有客戶端共用。
 static SESSION_ID: LazyLock<String> = LazyLock::new(|| uuid::Uuid::new_v4().to_string());
 
-/// OpenAI 兼容聊天接口的封装：一个请求进、若干联想条目出。
+/// OpenAI 相容聊天介面的封裝：一個請求進、若干聯想條目出。
 pub struct ChatClient {
-    /// 底层客户端。
+    /// 底層客戶端。
     client: Client<OpenAIConfig>,
 
     /// 模型名。
     model: String,
 
-    /// 超时。
+    /// 超時。
     timeout: Duration,
 
-    /// 推理强度；`None` 表示不发这个参数。
+    /// 推理強度；`None` 表示不發這個引數。
     reasoning_effort: Option<ReasoningEffort>,
 
-    /// 接口关思考用的是哪种参数（按接口地址定）。
+    /// 介面關思考用的是哪種引數（按介面地址定）。
     thinking_switch: ThinkingSwitch,
 }
 
@@ -69,7 +69,7 @@ impl ChatClient {
         Ok(prompt::parse_reply(&content, request))
     }
 
-    /// 一问一答：系统提示 + 用户消息，要 JSON 对象，返回正文。联想与释义兜底共用。
+    /// 一問一答：系統提示 + 使用者訊息，要 JSON 物件，返回正文。聯想與釋義兜底共用。
     pub async fn chat(
         &self,
         system: &str,
@@ -110,7 +110,7 @@ impl ChatClient {
             )
             .find_map(|choice| choice.message.content.filter(|c| !c.trim().is_empty()))
             .ok_or_else(|| {
-                // 正文为空时原因五花八门（思考占满额度、模型名不对、接口字段不标准），留下原始响应才查得了
+                // 正文為空時原因五花八門（思考佔滿額度、模型名不對、介面欄位不標準），留下原始響應才查得了
                 tracing::warn!(model = %self.model, response = %truncated(&raw), "接口回复里没有正文");
                 if cut_off {
                     PredictError::BudgetExhausted
@@ -123,7 +123,7 @@ impl ChatClient {
     }
 }
 
-/// 日志里的原始响应最多留这么多字符。
+/// 日誌裡的原始響應最多留這麼多字元。
 const LOGGED_RESPONSE_CHARS: usize = 2000;
 
 fn truncated(response: &serde_json::Value) -> String {
@@ -134,13 +134,13 @@ fn truncated(response: &serde_json::Value) -> String {
     }
 }
 
-/// 各家关思考的参数不一样，严格的接口遇到不认识的参数会报 400，所以按接口地址只发对的那个。
+/// 各家關思考的引數不一樣，嚴格的介面遇到不認識的引數會報 400，所以按介面地址只發對的那個。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ThinkingSwitch {
-    /// OpenAI 一系：`reasoning_effort: "none"`，请求里已经带了。
+    /// OpenAI 一系：`reasoning_effort: "none"`，請求裡已經帶了。
     ReasoningEffort,
 
-    /// 智谱（`bigmodel.cn` / `z.ai`）：`thinking: {"type": "disabled"}`，不认 `reasoning_effort`。
+    /// 智譜（`bigmodel.cn` / `z.ai`）：`thinking: {"type": "disabled"}`，不認 `reasoning_effort`。
     ThinkingType,
 }
 
@@ -157,7 +157,7 @@ impl ThinkingSwitch {
         }
     }
 
-    /// 把请求体改成这家接口关思考的写法。
+    /// 把請求體改成這家介面關思考的寫法。
     fn disable(self, body: &mut serde_json::Value) {
         let (Self::ThinkingType, Some(fields)) = (self, body.as_object_mut()) else {
             return;
@@ -176,8 +176,8 @@ fn host_of(base_url: &str) -> Option<String> {
         .and_then(|url| url.host_str().map(str::to_ascii_lowercase))
 }
 
-/// 按接口地址决定 HTTP 客户端：OpenCode 带上它要求的会话头，其他服务用默认客户端。
-/// 头装不上（理论上不会）就退回默认客户端，请求照发，让服务端的报错说明问题。
+/// 按介面地址決定 HTTP 客戶端：OpenCode 帶上它要求的會話頭，其他服務用預設客戶端。
+/// 頭裝不上（理論上不會）就退回預設客戶端，請求照發，讓服務端的報錯說明問題。
 fn http_client(base_url: &str) -> reqwest::Client {
     if !is_opencode(base_url) {
         return reqwest::Client::new();
@@ -193,12 +193,12 @@ fn http_client(base_url: &str) -> reqwest::Client {
         .unwrap_or_default()
 }
 
-/// 接口地址是否指向 OpenCode（`opencode.ai` 及其子域）。
+/// 介面地址是否指向 OpenCode（`opencode.ai` 及其子域）。
 fn is_opencode(base_url: &str) -> bool {
     host_of(base_url).is_some_and(|host| host == "opencode.ai" || host.ends_with(".opencode.ai"))
 }
 
-/// 配置里的推理强度字符串转成接口枚举；留空不发，认不得的值当留空并记一条警告。
+/// 配置裡的推理強度字串轉成介面列舉；留空不發，認不得的值當留空並記一條警告。
 fn parse_reasoning_effort(value: &str) -> Option<ReasoningEffort> {
     match value.trim().to_ascii_lowercase().as_str() {
         "" => None,
@@ -270,7 +270,7 @@ mod tests {
         assert_eq!(SESSION_ID.len(), 36);
     }
 
-    /// 真发一个请求到本地端口，看 OpenCode 客户端带了会话头、默认客户端没带。
+    /// 真發一個請求到本地埠，看 OpenCode 客戶端帶了會話頭、預設客戶端沒帶。
     #[test]
     fn opencode_client_sends_the_session_header() {
         assert_eq!(
@@ -283,7 +283,7 @@ mod tests {
         );
     }
 
-    /// 起一个只答一次的 HTTP 服务，返回请求里 `x-opencode-session` 的值。
+    /// 起一個只答一次的 HTTP 服務，返回請求裡 `x-opencode-session` 的值。
     fn header_seen_by_server(client: reqwest::Client) -> Option<String> {
         use std::io::{BufRead, BufReader, Write};
         use std::net::TcpListener;

@@ -6,7 +6,7 @@ use windows::core::{BOOL, GUID, IUnknown, Interface, Ref, Result, implement};
 
 use super::service::TextService;
 
-/// 造 [`TextService`] 的无状态类厂。
+/// 造 [`TextService`] 的無狀態類廠。
 #[implement(IClassFactory)]
 pub struct ClassFactory;
 

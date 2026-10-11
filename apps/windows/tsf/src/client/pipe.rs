@@ -1,4 +1,4 @@
-//! `cfg(windows)`：打开 Server 的命名管道，得到一条双工流交给 [`EngineClient`](super::EngineClient)。
+//! `cfg(windows)`：開啟 Server 的命名管道，得到一條雙工流交給 [`EngineClient`](super::EngineClient)。
 
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -10,10 +10,10 @@ use windows::core::HSTRING;
 
 use qingjian_platform::protocol::DEFAULT_PIPE_NAME;
 
-/// 连好的命名管道。对端关闭时读到 EOF；`flush` 是空操作（管道上 `FlushFileBuffers` 会阻塞到对端读完）。
+/// 連好的命名管道。對端關閉時讀到 EOF；`flush` 是空操作（管道上 `FlushFileBuffers` 會阻塞到對端讀完）。
 pub type PipeStream = File;
 
-/// 实例都被占着时等一个可用实例的超时（毫秒）与重试次数。要短：这里在应用 UI 线程上，等久了 TSF 看门狗会切走输入法。
+/// 例項都被佔著時等一個可用例項的超時（毫秒）與重試次數。要短：這裡在應用 UI 執行緒上，等久了 TSF 看門狗會切走輸入法。
 const BUSY_WAIT_MS: u32 = 300;
 const BUSY_RETRIES: u32 = 1;
 

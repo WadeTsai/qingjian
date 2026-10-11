@@ -3,14 +3,14 @@ use std::time::Duration;
 use super::{Index, signature};
 use crate::UpdateError;
 
-/// 官网上的版本索引与它的分离签名；`QINGJIAN_UPDATE_INDEX` 可以换成别的地址（测试用，签名照验）。
+/// 官網上的版本索引與它的分離簽名；`QINGJIAN_UPDATE_INDEX` 可以換成別的地址（測試用，簽名照驗）。
 const INDEX_URL: &str = "https://qingjian.app/releases.json";
 
 const MAX_INDEX_BYTES: usize = 2 * 1024 * 1024;
 
 const TIMEOUT: Duration = Duration::from_secs(20);
 
-/// 下载索引与签名，验过签名再解析。请求只带 `青简/<版本>` 的 User-Agent，没有任何标识。
+/// 下載索引與簽名，驗過簽名再解析。請求只帶 `青簡/<版本>` 的 User-Agent，沒有任何標識。
 pub(crate) fn fetch_index(current_version: &str) -> Result<Index, UpdateError> {
     let url = std::env::var("QINGJIAN_UPDATE_INDEX").unwrap_or_else(|_| INDEX_URL.to_owned());
     let runtime = tokio::runtime::Builder::new_current_thread()

@@ -1,5 +1,5 @@
-//! DLL 的「引擎层」：不跑 Engine，而是连独立 Server 进程，把按键 / 上屏编排成协议消息。
-//! [`EngineClient`] 泛型在任意双工字节流上，可脱离 Windows 端到端测；`cfg(windows)` 的 [`pipe`] 负责连管道。
+//! DLL 的「引擎層」：不跑 Engine，而是連獨立 Server 程序，把按鍵 / 上屏編排成協議訊息。
+//! [`EngineClient`] 泛型在任意雙工位元組流上，可脫離 Windows 端到端測；`cfg(windows)` 的 [`pipe`] 負責連管道。
 
 mod engine;
 mod reply;

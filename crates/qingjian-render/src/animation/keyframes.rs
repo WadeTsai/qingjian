@@ -1,4 +1,4 @@
-//! 关键帧动画（像素已换算）：按时间求姿态。每个属性只在写了它的关键帧之间插值，没写过的取缺省值（不动）。
+//! 關鍵幀動畫（畫素已換算）：按時間求姿態。每個屬性只在寫了它的關鍵幀之間插值，沒寫過的取預設值（不動）。
 
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ pub(crate) struct Keyframes {
 
     easing: Easing,
 
-    /// 按 `at` 排好，平移已乘倍数。
+    /// 按 `at` 排好，平移已乘倍數。
     frames: Vec<KeyframeSpec>,
 }
 
@@ -38,7 +38,7 @@ impl Keyframes {
         }
     }
 
-    /// 动画开始后 `elapsed` 时刻的姿态。
+    /// 動畫開始後 `elapsed` 時刻的姿態。
     pub(crate) fn pose(&self, elapsed: Duration) -> Pose {
         let turns = elapsed.as_secs_f32() / self.duration.as_secs_f32();
         let t = if self.repeat {
@@ -55,12 +55,12 @@ impl Keyframes {
         }
     }
 
-    /// 播完了（不循环且过了一轮），之后不用再要帧。
+    /// 播完了（不迴圈且過了一輪），之後不用再要幀。
     pub(crate) fn finished(&self, elapsed: Duration) -> bool {
         !self.repeat && elapsed >= self.duration
     }
 
-    /// 一轮里任意时刻平移的最大绝对值、缩放的最大值：算画出范围用。
+    /// 一輪裡任意時刻平移的最大絕對值、縮放的最大值：算畫出範圍用。
     pub(crate) fn reach(&self) -> (f32, f32, f32) {
         let mut reach = (0.0_f32, 0.0_f32, 1.0_f32);
         for frame in &self.frames {
@@ -71,14 +71,14 @@ impl Keyframes {
         reach
     }
 
-    /// 有旋转。
+    /// 有旋轉。
     pub(crate) fn rotates(&self) -> bool {
         self.frames
             .iter()
             .any(|frame| frame.rotate.is_some_and(|r| r != 0.0))
     }
 
-    /// 属性在 `t` 处的值：找前后两个写了它的关键帧插值。开头、结尾没写它时按缺省值补（同 CSS 缺 0% / 100% 关键帧）。
+    /// 屬性在 `t` 處的值：找前後兩個寫了它的關鍵幀插值。開頭、結尾沒寫它時按預設值補（同 CSS 缺 0% / 100% 關鍵幀）。
     fn value(&self, t: f32, get: impl Fn(&KeyframeSpec) -> Option<f32>, rest: f32) -> f32 {
         let mut defined: Vec<(f32, f32)> = self
             .frames
@@ -142,10 +142,10 @@ mod tests {
         );
         assert!(
             (pose.opacity - 0.75).abs() < 1e-4,
-            "只在中间写的属性两头按缺省值补"
+            "只在中间写的属性两头按預設值补"
         );
         assert_eq!(pose.x, 0.0);
-        // 循环：1.25 轮与 0.25 轮一样
+        // 迴圈：1.25 輪與 0.25 輪一樣
         assert_eq!(frames.pose(Duration::from_millis(1250)), pose);
     }
 

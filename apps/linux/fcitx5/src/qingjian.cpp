@@ -1,4 +1,4 @@
-//! 默认候选面板；连接失效时清除预编辑、放行输入，不重放提交。
+//! 預設候選面板；連線失效時清除預編輯、放行輸入，不重放提交。
 #include "qingjian.h"
 #include "candidate/list.h"
 #include "candidate/word.h"
@@ -16,9 +16,9 @@
 
 namespace fcitx {
 namespace {
-/// 组句期间多久问一次 Server：与 Windows DLL 的轮询间隔相同，本地整句模型的结果晚一拍到。
+/// 組句期間多久問一次 Server：與 Windows DLL 的輪詢間隔相同，本地整句模型的結果晚一拍到。
 constexpr uint64_t POLL_INTERVAL_US = 80000;
-/// 定时器精度：sd-event 把 0 当缺省的 250 ms，允许晚到四分之一秒，轮询就没了节拍。
+/// 定時器精度：sd-event 把 0 當預設的 250 ms，允許晚到四分之一秒，輪詢就沒了節拍。
 constexpr uint64_t POLL_ACCURACY_US = 1000;
 std::string contextIdentity(const InputContext *context) {
     std::ostringstream out;
@@ -102,7 +102,7 @@ void QingjianEngine::disconnectAll() {
     stopPolling();
     shared_->retired.clear();
     const auto contexts = shared_->contexts;
-    // 先让全部会话失效，再调用可重入的 UI；清理期间禁止重新连接。
+    // 先讓全部會話失效，再呼叫可重入的 UI；清理期間禁止重新連線。
     for (const auto &[id, watched] : contexts) {
         (void)id;
         if (auto *context = watched.get()) {
@@ -180,9 +180,9 @@ bool QingjianEngine::syncPrivacy(InputContext *context) {
     if (session->capabilities != facts) {
         const auto watched = context->watch();
         const auto generation = session->generation;
-        // 能力先由 Server 确认，再触发可能同步重入的 UI 清理。
-        // clear 中的 Reset / Focus / 按键已处于新隐私状态；更新能力由内层覆盖，
-        // 外层清理返回后不再写缓存，避免把更近的能力覆盖回旧值。
+        // 能力先由 Server 確認，再觸發可能同步重入的 UI 清理。
+        // clear 中的 Reset / Focus / 按鍵已處於新隱私狀態；更新能力由內層覆蓋，
+        // 外層清理返回後不再寫快取，避免把更近的能力覆蓋回舊值。
         exchange(context, {{"Capabilities", facts}}, false);
         if (!watched.get() || !session->opened || session->generation != generation) return false;
         session->capabilities = facts;
@@ -190,7 +190,7 @@ bool QingjianEngine::syncPrivacy(InputContext *context) {
         clear(context);
         if (!watched.get() || !session->opened) return false;
     }
-    // 能力清理可重入；以回调后的最新能力决定是否关闭此会话。
+    // 能力清理可重入；以回撥後的最新能力決定是否關閉此會話。
     const auto currentCaps = context->capabilityFlags();
     if (currentCaps.test(CapabilityFlag::Password) || currentCaps.test(CapabilityFlag::Disable)) {
         disconnect(context);
@@ -222,8 +222,8 @@ bool QingjianEngine::exchange(InputContext *context, const nlohmann::json &event
             throw std::runtime_error("response identity");
         consumed = outcome == "Consumed";
         session->displayIdentity = identity;
-        // 显示 API 可同步重入能力 / 焦点 / Reset 事件。提交前再核对生命周期，
-        // 撤销旧上下文结果时仍保留 Consumed，防止选词键再次透传。
+        // 顯示 API 可同步重入能力 / 焦點 / Reset 事件。提交前再核對生命週期，
+        // 撤銷舊上下文結果時仍保留 Consumed，防止選詞鍵再次透傳。
         bool validDisplayFailure = false;
         if (display) {
             try { render(context, result.at("frame")); }
@@ -256,7 +256,7 @@ void QingjianEngine::deactivate(const InputMethodEntry &, InputContextEvent &eve
     const auto watched = context->watch();
     ++session->lifecycle;
     auto *switched = dynamic_cast<InputContextSwitchInputMethodEvent *>(&event);
-    // 转发框架提前发出的切换原因；能力此刻可能仍是旧值。
+    // 轉發框架提前發出的切換原因；能力此刻可能仍是舊值。
     if (session->opened) {
         bool clientPreedit = session->clientPreedit;
         syncPrivacy(context);
@@ -362,7 +362,7 @@ void QingjianEngine::watch(InputContext *context, bool composing) {
         poller_ = instance_->eventLoop().addTimeEvent(CLOCK_MONOTONIC, now(CLOCK_MONOTONIC) + POLL_INTERVAL_US, POLL_ACCURACY_US,
             [this](EventSourceTime *source, uint64_t) {
                 poll();
-                // 还在组句就续下一拍；停了就留着禁用，下次组句再启。
+                // 還在組句就續下一拍；停了就留著停用，下次組句再啟。
                 if (polled_.isValid()) { source->setNextInterval(POLL_INTERVAL_US); source->setOneShot(); }
                 else source->setEnabled(false);
                 return true;
@@ -391,7 +391,7 @@ void QingjianEngine::poll() {
         const auto revision = identity.at("revision").get<uint64_t>();
         const uint64_t shown = session->displayIdentity.is_null() ? 0 : session->displayIdentity.at("revision").get<uint64_t>();
         if (revision < shown) throw std::runtime_error("poll identity");
-        // 版本号没动：帧内容没变，不重画也不重复回报。
+        // 版本號沒動：幀內容沒變，不重畫也不重複回報。
         if (revision == shown) return;
         session->displayIdentity = identity;
         render(context, update.at("frame"));

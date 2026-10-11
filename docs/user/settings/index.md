@@ -1,4 +1,4 @@
 ---
-title: 设置
+title: 設定
 order: 5
 ---

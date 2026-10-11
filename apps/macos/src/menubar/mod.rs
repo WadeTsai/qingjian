@@ -1,13 +1,13 @@
-//! 菜单栏：「中 / 英」状态项与输入法菜单。
+//! 選單欄：「中 / 英」狀態項與輸入法選單。
 //!
-//! 输入法菜单是一份 NSMenu 同时挂在「中 / 英」状态项（点击弹出）和系统输入源菜单（IMK `menu` 回调）上。
+//! 輸入法選單是一份 NSMenu 同時掛在「中 / 英」狀態項（點選彈出）和系統輸入源選單（IMK `menu` 回撥）上。
 //!
-//! 菜单只是配置文件的运行时前端：每个开关点下去先改 `config.toml` 再热加载，不另存一套状态；
-//! 手改配置文件与点菜单走的是同一条 [`crate::host::Host::apply_config`] 通路。
+//! 菜單只是配置檔案的執行時前端：每個開關點下去先改 `config.toml` 再熱載入，不另存一套狀態；
+//! 手改配置檔案與點選單走的是同一條 [`crate::host::Host::apply_config`] 通路。
 //!
-//! 两处的 action 派发形态不同：状态项菜单的 sender 是 NSMenuItem 本身；输入源菜单由 IMK 转发到
-//! 控制器，sender 是带 `IMKCommandMenuItem` 键的字典。[`action_from_sender`] 两种都认，
-//! 动作本身编码在菜单项的 tag 里，所以两边只需要一个 `menuAction:` 选择器。
+//! 兩處的 action 派發形態不同：狀態項選單的 sender 是 NSMenuItem 本身；輸入源選單由 IMK 轉發到
+//! 控制器，sender 是帶 `IMKCommandMenuItem` 鍵的字典。[`action_from_sender`] 兩種都認，
+//! 動作本身編碼在選單項的 tag 裡，所以兩邊只需要一個 `menuAction:` 選擇器。
 
 mod action;
 mod indicator;
@@ -23,14 +23,14 @@ pub use action::MenuAction;
 pub use indicator::ModeIndicator;
 pub use menu::InputMenu;
 
-/// 从 `menuAction:` 的 sender 里认出被点的是哪一项。
+/// 從 `menuAction:` 的 sender 裡認出被點的是哪一項。
 pub fn action_from_sender(sender: Option<&AnyObject>) -> Option<MenuAction> {
     let sender = sender?;
     let tag = if let Some(item) = sender.downcast_ref::<NSMenuItem>() {
         item.tag()
     } else {
         let info = sender.downcast_ref::<NSDictionary<AnyObject, AnyObject>>()?;
-        // SAFETY: 只读 IMK 导出的常量字符串
+        // SAFETY: 只讀 IMK 匯出的常量字串
         let key: &AnyObject = unsafe { kIMKCommandMenuItemName };
         info.objectForKey(key)?.downcast::<NSMenuItem>().ok()?.tag()
     };

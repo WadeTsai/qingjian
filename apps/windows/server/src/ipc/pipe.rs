@@ -1,8 +1,8 @@
-//! 命名管道传输：在 `\\.\pipe\qingjian` 上服务 DLL 客户端，字节模式，帧由协议 codec 切。
+//! 命名管道傳輸：在 `\\.\pipe\qingjian` 上服務 DLL 客戶端，位元組模式，幀由協議 codec 切。
 //!
-//! 每个应用进程各开一条连接且失焦后连接仍在，所以不能串行服务（新聚焦的应用连不上会阻塞 UI 线程、
-//! 触发 TSF 看门狗）：后台接受循环每来一个客户端就新建实例、起一条线程；[`Router`] 不跨线程，
-//! 留在调用线程跑工人循环，各连接经通道把消息转给它串行处理。
+//! 每個應用程序各開一條連線且失焦後連線仍在，所以不能序列服務（新聚焦的應用連不上會阻塞 UI 執行緒、
+//! 觸發 TSF 看門狗）：後臺接受迴圈每來一個客戶端就新建例項、起一條執行緒；[`Router`] 不跨執行緒，
+//! 留在呼叫執行緒跑工人迴圈，各連線經通道把訊息轉給它序列處理。
 
 use std::fs::File;
 use std::io;
@@ -33,13 +33,13 @@ pub use qingjian_platform::protocol::DEFAULT_PIPE_NAME;
 const BUFFER_SIZE: u32 = 64 * 1024;
 
 /// 管道的 SDDL：放行 Everyone / ALL APPLICATION PACKAGES / ALL RESTRICTED APPLICATION PACKAGES，
-/// 完整性标 Low。任务栏搜索、设置这类 AppContainer 进程在默认 DACL 下连不上。
+/// 完整性標 Low。工作列搜尋、設定這類 AppContainer 程序在預設 DACL 下連不上。
 const PIPE_SDDL: &str = "D:(A;;GA;;;WD)(A;;GA;;;AC)(A;;GA;;;S-1-15-2-2)S:(ML;;NW;;;LW)";
 
-/// 在命名管道上服务多个客户端。当前线程独占 [`Router`] 跑工人循环，正常不返回。
-/// `work` 通道由调用方建（UI 线程也往里投状态条事件），这里拿一份发送端给各连接。
-/// 第一个实例带 `FILE_FLAG_FIRST_PIPE_INSTANCE`：已有一个 Server 在跑就建不出来，直接报错退出（两个 Server
-/// 会各画一条状态条、各持一份状态）。
+/// 在命名管道上服務多個客戶端。當前執行緒獨佔 [`Router`] 跑工人迴圈，正常不返回。
+/// `work` 通道由呼叫方建（UI 執行緒也往裡投狀態條事件），這裡拿一份傳送端給各連線。
+/// 第一個例項帶 `FILE_FLAG_FIRST_PIPE_INSTANCE`：已有一個 Server 在跑就建不出來，直接報錯退出（兩個 Server
+/// 會各畫一條狀態條、各持一份狀態）。
 pub fn serve_pipe(
     name: &str,
     router: &mut Router,
@@ -58,9 +58,9 @@ pub fn serve_pipe(
     };
     thread::spawn(move || accept_loop(&pipe, first, sender));
     tracing::info!(pipe = name, "命名管道监听中");
-    // 按 Router 的节拍来 tick：在等本地整句模型就几十毫秒一次，否则一秒看一次配置文件。
-    // 到点时间是绝对的，不随消息重新计时——前台进程里的 DLL 隔几百毫秒就问一次切模式（SyncMode），
-    // 若每收一条消息就重等一秒，tick 永远到不了，热加载与模型接入都会停摆。
+    // 按 Router 的節拍來 tick：在等本地整句模型就幾十毫秒一次，否則一秒看一次配置檔案。
+    // 到點時間是絕對的，不隨訊息重新計時——前臺程序裡的 DLL 隔幾百毫秒就問一次切模式（SyncMode），
+    // 若每收一條訊息就重等一秒，tick 永遠到不了，熱載入與模型接入都會停擺。
     let mut due = Instant::now() + router.next_tick();
     loop {
         let now = Instant::now();
@@ -78,13 +78,13 @@ pub fn serve_pipe(
             Err(RecvTimeoutError::Timeout) => continue,
             Err(RecvTimeoutError::Disconnected) => break,
         }
-        // 处理完消息节拍可能变短了（按键起了防抖）：到点时间只提前不推后
+        // 處理完訊息節拍可能變短了（按鍵起了防抖）：到點時間只提前不推後
         due = due.min(Instant::now() + router.next_tick());
     }
     Ok(())
 }
 
-/// 先在建好的第一个实例上等客户端，之后每建一个实例、等一个客户端连上，就起一条线程服务它。建实例出错才停。
+/// 先在建好的第一個例項上等客戶端，之後每建一個例項、等一個客戶端連上，就起一條執行緒服務它。建例項出錯才停。
 fn accept_loop(name: &HSTRING, first: File, sender: Sender<Work>) {
     let descriptor = pipe_security_descriptor();
     let mut instance = Ok(first);
@@ -102,7 +102,7 @@ fn accept_loop(name: &HSTRING, first: File, sender: Sender<Work>) {
     }
 }
 
-/// 转换失败返回 null，退回默认 DACL。描述符建一次、随进程存活。
+/// 轉換失敗返回 null，退回預設 DACL。描述符建一次、隨程序存活。
 fn pipe_security_descriptor() -> PSECURITY_DESCRIPTOR {
     let mut descriptor = PSECURITY_DESCRIPTOR::default();
     let converted = unsafe {
@@ -120,7 +120,7 @@ fn pipe_security_descriptor() -> PSECURITY_DESCRIPTOR {
     descriptor
 }
 
-/// 建一个实例。句柄交给 `File` 管：对端关闭时 std 把 `ERROR_BROKEN_PIPE` 当 EOF。
+/// 建一個例項。控制代碼交給 `File` 管：對端關閉時 std 把 `ERROR_BROKEN_PIPE` 當 EOF。
 fn create_instance(
     name: &HSTRING,
     descriptor: PSECURITY_DESCRIPTOR,
@@ -154,10 +154,10 @@ fn create_instance(
     Ok(unsafe { File::from_raw_handle(handle.0) })
 }
 
-/// 阻塞等一个客户端连上这个实例。
+/// 阻塞等一個客戶端連上這個例項。
 fn wait_client(stream: File) -> io::Result<File> {
     let handle = HANDLE(stream.as_raw_handle());
-    // 客户端在建实例与 ConnectNamedPipe 之间就连上了也算成功。
+    // 客戶端在建例項與 ConnectNamedPipe 之間就連上了也算成功。
     if let Err(error) = unsafe { ConnectNamedPipe(handle, None) }
         && error.code() != HRESULT::from_win32(ERROR_PIPE_CONNECTED.0)
     {
@@ -166,7 +166,7 @@ fn wait_client(stream: File) -> io::Result<File> {
     Ok(stream)
 }
 
-/// 服务一条连接：读消息 → 转给工人线程 → 写回，直到对端在帧边界关闭或出错。
+/// 服務一條連線：讀訊息 → 轉給工人執行緒 → 寫回，直到對端在幀邊界關閉或出錯。
 fn serve_connection(mut stream: File, sender: Sender<Work>) {
     let (reply_sender, reply_receiver) = mpsc::channel::<Option<ServerMessage>>();
     loop {

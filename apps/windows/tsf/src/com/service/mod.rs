@@ -1,6 +1,6 @@
-//! 文本服务对象 [`TextService`]：每线程一个，实现 `ITfTextInputProcessor`（激活 / 停用，[`processor`]）、
-//! `ITfKeyEventSink`（收键，[`key_sink`]）与显示属性提供者（[`display`]）。
-//! 连 Server 在 [`connection`]，中英模式在 [`mode`]，往文档写字在 [`document`]。
+//! 文本服務物件 [`TextService`]：每執行緒一個，實現 `ITfTextInputProcessor`（啟用 / 停用，[`processor`]）、
+//! `ITfKeyEventSink`（收鍵，[`key_sink`]）與顯示屬性提供者（[`display`]）。
+//! 連 Server 在 [`connection`]，中英模式在 [`mode`]，往文件寫字在 [`document`]。
 
 mod connection;
 mod display;
@@ -35,73 +35,73 @@ use super::poll::PollTimer;
 use crate::client::EngineClient;
 use crate::client::pipe::PipeStream;
 
-/// 连 Server 的会话客户端，与编辑会话 / 轮询定时器共享（STA 单线程）。连不上时为 `None`，键照样放行。
+/// 連 Server 的會話客戶端，與編輯會話 / 輪詢定時器共享（STA 單執行緒）。連不上時為 `None`，鍵照樣放行。
 pub(crate) type SharedClient = Rc<RefCell<Option<EngineClient<PipeStream>>>>;
 
-/// 连不上 Server 后隔多久再试（每次尝试都在应用的 UI 线程上，不能每键都试）。
+/// 連不上 Server 後隔多久再試（每次嘗試都在應用的 UI 執行緒上，不能每鍵都試）。
 const RECONNECT_INTERVAL: Duration = Duration::from_secs(2);
 
-/// 一个 TSF 文本服务实例（每线程一个）。
+/// 一個 TSF 文本服務例項（每執行緒一個）。
 #[implement(ITfTextInputProcessor, ITfKeyEventSink, ITfDisplayAttributeProvider)]
 pub struct TextService {
-    /// 激活时拿到的线程管理器，停用时用它反注册。
+    /// 啟用時拿到的執行緒管理器，停用時用它反註冊。
     thread_mgr: RefCell<Option<ITfThreadMgr>>,
 
     /// TSF 分配的 client id。
     client_id: Cell<u32>,
 
-    /// 引擎层。
+    /// 引擎層。
     engine: SharedClient,
 
-    /// 跨按键存活的组句状态。
+    /// 跨按鍵存活的組句狀態。
     shared: Rc<Shared>,
 
-    /// 云联想轮询定时器；挂失败时为 `None`，退化为只在按键时收云结果。
+    /// 雲聯想輪詢定時器；掛失敗時為 `None`，退化為只在按鍵時收雲結果。
     poll_timer: RefCell<Option<PollTimer>>,
 
-    /// 上次连 Server 失败的时间，按 [`RECONNECT_INTERVAL`] 退避。
+    /// 上次連 Server 失敗的時間，按 [`RECONNECT_INTERVAL`] 退避。
     last_connect_failure: Cell<Option<Instant>>,
 
-    /// 中 / 英模式（单击切换键翻转，见 `[shortcut] switch_mode`），与语言栏按钮共用。
+    /// 中 / 英模式（單擊切換鍵翻轉，見 `[shortcut] switch_mode`），與語言欄按鈕共用。
     mode_state: Rc<ModeState>,
 
-    /// 登记在系统语言栏上的中 / 英按钮；停用时反注册。
+    /// 登記在系統語言欄上的中 / 英按鈕；停用時反註冊。
     mode_button: RefCell<Option<ITfLangBarItemButton>>,
 
-    /// 「转换模式」与「输入法开 / 关」两条 compartment 的事件回调；停用时撤掉。
+    /// 「轉換模式」與「輸入法開 / 關」兩條 compartment 的事件回撥；停用時撤掉。
     mode_sinks: RefCell<Advice>,
 
-    /// 线程焦点通知（source + cookie），见 [`super::focus`]；停用时撤掉。
+    /// 執行緒焦點通知（source + cookie），見 [`super::focus`]；停用時撤掉。
     focus_sink: RefCell<Option<(ITfSource, u32)>>,
 
-    /// 单击中英切换键切中英的判定。
+    /// 單擊中英切換鍵切中英的判定。
     key_tap: KeyTap,
 
-    /// 语言 profile 通知挂上后的 cookie；挂一次就够（见 [`super::profile`]）。
+    /// 語言 profile 通知掛上後的 cookie；掛一次就夠（見 [`super::profile`]）。
     profile_cookie: Cell<Option<u32>>,
 
-    /// 登记成保留键的「翻译选中文字」组合；停用时撤掉（见 [`preserved`](crate::com::key::preserved)）。
+    /// 登記成保留鍵的「翻譯選中文字」組合；停用時撤掉（見 [`preserved`](crate::com::key::preserved)）。
     translate_combo: Cell<Option<KeyCombo>>,
 
-    /// Ctrl + Alt + Space 切换键当前是否已登记为保留键（`[shortcut] switch_mode` 勾了它时才有）。
+    /// Ctrl + Alt + Space 切換鍵當前是否已登記為保留鍵（`[shortcut] switch_mode` 勾了它時才有）。
     switch_preserved: Cell<bool>,
 
-    /// 上一次应用过的按键行为设置；与 Server 下发的一致时就不重复应用
-    /// （每一拍 `SyncMode` 都带着它，见 [`TextService_Impl::apply_input_settings`]）。
+    /// 上一次應用過的按鍵行為設定；與 Server 下發的一致時就不重複應用
+    /// （每一拍 `SyncMode` 都帶著它，見 [`TextService_Impl::apply_input_settings`]）。
     input_settings: Cell<Option<InputSettings>>,
 
-    /// 右键菜单打勾用的开关状态，Server 随 `SyncMode` 每一拍带下来。
+    /// 右鍵選單打勾用的開關狀態，Server 隨 `SyncMode` 每一拍帶下來。
     indicator_state: Cell<IndicatorState>,
 
-    /// 激活后一小段时间内忽略转换模式 compartment 的变化，见 [`TextService_Impl::sync_from_conversion_mode`]。
+    /// 啟用後一小段時間內忽略轉換模式 compartment 的變化，見 [`TextService_Impl::sync_from_conversion_mode`]。
     conversion_guard_until: Cell<Option<Instant>>,
 
-    /// 上次报给 Server 的「本线程用的是繁体 profile」；`None` 是这条连接上还没报过（见 [`profile`]）。
+    /// 上次報給 Server 的「本執行緒用的是繁體 profile」；`None` 是這條連線上還沒報過（見 [`profile`]）。
     profile_traditional: Cell<Option<bool>>,
 }
 
 thread_local! {
-    /// 本线程当前激活的文本服务，供 compartment 回调 / 轮询定时器切模式。`Activate` 设、`Deactivate` 清。
+    /// 本執行緒當前啟用的文本服務，供 compartment 回撥 / 輪詢定時器切模式。`Activate` 設、`Deactivate` 清。
     static ACTIVE: RefCell<Option<ComObject<TextService>>> = const { RefCell::new(None) };
 }
 
@@ -112,55 +112,55 @@ fn with_active(f: impl FnOnce(&TextService_Impl)) {
     }
 }
 
-/// 用户点了语言栏的中 / 英按钮（见 [`ModeButton`](crate::com::mode::ModeButton)）：翻转模式。
+/// 使用者點了語言欄的中 / 英按鈕（見 [`ModeButton`](crate::com::mode::ModeButton)）：翻轉模式。
 pub(super) fn toggle_mode() {
     with_active(|service| service.set_english_mode(!service.mode_state.english()));
 }
 
-/// 右键点了语言栏的中 / 英按钮：在 `point`（屏幕坐标）弹菜单。
+/// 右鍵點了語言欄的中 / 英按鈕：在 `point`（螢幕座標）彈選單。
 pub(super) fn show_indicator_menu(point: POINT) {
     with_active(|service| service.show_indicator_menu(point));
 }
 
-/// 「转换模式」compartment 变了（见 [`sink`](crate::com::mode::sink)）。
+/// 「轉換模式」compartment 變了（見 [`sink`](crate::com::mode::sink)）。
 pub(super) fn on_conversion_mode_changed() {
     with_active(TextService_Impl::sync_from_conversion_mode);
 }
 
-/// 「输入法开 / 关」compartment 变了（见 [`sink`](crate::com::mode::sink)）：系统的 Ctrl + Space。
+/// 「輸入法開 / 關」compartment 變了（見 [`sink`](crate::com::mode::sink)）：系統的 Ctrl + Space。
 pub(super) fn on_keyboard_open_changed() {
     with_active(TextService_Impl::sync_from_keyboard_open);
 }
 
-/// 本线程得到 / 失去了键盘焦点（见 [`super::focus`]）。
+/// 本執行緒得到 / 失去了鍵盤焦點（見 [`super::focus`]）。
 pub(super) fn on_thread_focus(foreground: bool) {
     with_active(|service| service.set_thread_focus(foreground));
 }
 
-/// 轮询发现前台会话没连着 Server（见 [`super::poll`]）：补连一次。
+/// 輪詢發現前臺會話沒連著 Server（見 [`super::poll`]）：補連一次。
 pub(super) fn on_reconnect_tick() {
     with_active(|service| {
         service.ensure_connected();
     });
 }
 
-/// 轮询取到了 Server 的全局模式（见 [`super::poll`]）；与当前相同就不动。
+/// 輪詢取到了 Server 的全域性模式（見 [`super::poll`]）；與當前相同就不動。
 pub(super) fn on_mode_sync(english: bool) {
     with_active(|service| service.adopt_mode(english));
 }
 
-/// 轮询取回了 Server 下发的按键行为设置（见 [`super::poll`]）：切换键 / 内置英文模式改了就地应用。
+/// 輪詢取回了 Server 下發的按鍵行為設定（見 [`super::poll`]）：切換鍵 / 內建英文模式改了就地應用。
 pub(super) fn on_input_settings(input: InputSettings) {
     with_active(|service| service.apply_input_settings(input));
 }
 
-/// 轮询取回了右键菜单打勾用的开关状态。
+/// 輪詢取回了右鍵選單打勾用的開關狀態。
 pub(super) fn on_indicator_state(state: IndicatorState) {
     with_active(|service| service.indicator_state.set(state));
 }
 
-/// 本线程切到了青简的某个语言 profile（见 [`crate::com::profile`]）：是繁体那个就让 Server 出繁体。
-/// 激活过程中来的通知到不了这里（`ACTIVE` 还没设），那一次由 `connect` 自己查。
+/// 本執行緒切到了青簡的某個語言 profile（見 [`crate::com::profile`]）：是繁體那個就讓 Server 出繁體。
+/// 啟用過程中來的通知到不了這裡（`ACTIVE` 還沒設），那一次由 `connect` 自己查。
 pub(super) fn on_profile_activated(traditional: bool) {
     with_active(|service| service.adopt_profile(traditional));
 }

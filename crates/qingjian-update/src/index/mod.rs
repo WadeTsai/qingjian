@@ -14,20 +14,20 @@ use qingjian_platform::UpdateChannel;
 
 use crate::{Available, Target, UpdateError, Version};
 
-/// 认得的索引格式版本；发版侧改了已有字段的含义才会加一，见到别的号就不读。
+/// 認得的索引格式版本；發版側改了已有欄位的含義才會加一，見到別的號就不讀。
 pub const SCHEMA_VERSION: u32 = 1;
 
-/// 版本索引 `releases.json`，只取检查更新用得着的字段。
+/// 版本索引 `releases.json`，只取檢查更新用得著的欄位。
 #[derive(Debug, Clone, Deserialize)]
 pub struct Index {
     pub schema_version: u32,
 
-    /// 从新到旧。
+    /// 從新到舊。
     pub releases: Vec<Release>,
 }
 
 impl Index {
-    /// 解析已经验过签名的索引。
+    /// 解析已經驗過簽名的索引。
     pub fn parse(bytes: &[u8]) -> Result<Self, UpdateError> {
         let index: Self = serde_json::from_slice(bytes)?;
         if index.schema_version != SCHEMA_VERSION {
@@ -36,7 +36,7 @@ impl Index {
         Ok(index)
     }
 
-    /// 比 `current` 新、渠道里看得到、有这台机器安装包的版本里最新的那个。
+    /// 比 `current` 新、渠道里看得到、有這臺機器安裝包的版本里最新的那個。
     pub fn newest(
         &self,
         current: &Version,
@@ -114,7 +114,7 @@ mod tests {
             newest("0.1.3", MAC, UpdateChannel::Beta).as_deref(),
             Some("0.1.5-beta.1")
         );
-        // 测试版用户在正式版出来后升到正式版
+        // 測試版使用者在正式版出來後升到正式版
         assert_eq!(
             newest("0.1.4-beta.2", WINDOWS, UpdateChannel::Beta).as_deref(),
             Some("0.1.4")
@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn only_releases_with_a_package_for_this_machine_count() {
-        // 0.1.5-beta.1 只发了 macOS
+        // 0.1.5-beta.1 只發了 macOS
         assert_eq!(newest("0.1.4", WINDOWS, UpdateChannel::Beta), None);
     }
 

@@ -1,4 +1,4 @@
-//! 释义生成：从一元词频表挑词，交给通用批量驱动。
+//! 釋義生成：從一元詞頻表挑詞，交給通用批次驅動。
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,7 +12,7 @@ use crate::prompt::{self, GlossLanguages};
 use crate::store::Store;
 use crate::words;
 
-/// 释义任务。
+/// 釋義任務。
 struct GlossTask {
     languages: GlossLanguages,
 }

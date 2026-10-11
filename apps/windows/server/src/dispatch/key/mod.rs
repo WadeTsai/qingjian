@@ -1,5 +1,5 @@
-//! 按键处理：键码 / 字符解析在 [`codes`]，分流在 [`input`]，「修饰键 + 数字」快捷键在 [`shortcut`]，
-//! 鼠标点候选窗口在 [`click`]（与数字键 / 译词键同一套上屏），一次按键的结果是 [`Effect`]。
+//! 按鍵處理：鍵碼 / 字元解析在 [`codes`]，分流在 [`input`]，「修飾鍵 + 數字」快捷鍵在 [`shortcut`]，
+//! 滑鼠點候選視窗在 [`click`]（與數字鍵 / 譯詞鍵同一套上屏），一次按鍵的結果是 [`Effect`]。
 
 mod click;
 mod codes;
@@ -10,8 +10,8 @@ mod shortcut;
 pub(super) use self::codes::{ESCAPE, RETURN};
 pub(super) use self::effect::Effect;
 
-/// 把先行上屏的文本接到本次结果前面。Windows 放行是同步的、上屏走异步编辑会话，
-/// 分两步会让应用先插这个键再插词，所以本该放行的键改由我们连同前缀一起插入。
+/// 把先行上屏的文本接到本次結果前面。Windows 放行是同步的、上屏走非同步編輯會話，
+/// 分兩步會讓應用先插這個鍵再插詞，所以本該放行的鍵改由我們連同字首一起插入。
 fn with_prefix(prefix: Option<String>, effect: Effect, c: char) -> Effect {
     let Some(mut prefix) = prefix else {
         return effect;

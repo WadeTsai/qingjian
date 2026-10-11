@@ -3,8 +3,8 @@ use objc2_app_kit::{NSModalResponseOK, NSOpenPanel};
 use objc2_foundation::NSString;
 use std::path::PathBuf;
 
-/// 弹系统的打开文件对话框选一个词库文件（TSV / Rime yaml / .qj）。用户取消返回 `None`。
-/// 模态运行，只在偏好设置窗口打开时调用（那时进程已是 Accessory，能出对话框）。
+/// 彈系統的開啟檔案對話方塊選一個詞庫檔案（TSV / Rime yaml / .qj）。使用者取消返回 `None`。
+/// 模態執行，只在偏好設定視窗開啟時呼叫（那時程序已是 Accessory，能出對話方塊）。
 pub fn choose_dictionary_file() -> Option<PathBuf> {
     let mtm = MainThreadMarker::new()?;
     let panel = NSOpenPanel::openPanel(mtm);

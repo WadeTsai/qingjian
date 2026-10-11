@@ -1,10 +1,10 @@
-//! 青简 Windows 输入法的 TSF 文本服务 DLL。
+//! 青簡 Windows 輸入法的 TSF 文本服務 DLL。
 //!
-//! TSF 会把这个 DLL 加载进每一个应用进程，所以 Engine 不在这里（在独立的 Server 进程）。
-//! DLL 只把 TSF 的按键翻成协议消息发给 Server、把回的文本 / 拼音行写进文档；候选窗口由 Server 自绘。
+//! TSF 會把這個 DLL 載入進每一個應用程序，所以 Engine 不在這裡（在獨立的 Server 程序）。
+//! DLL 只把 TSF 的按鍵翻成協議訊息發給 Server、把回的文本 / 拼音行寫進文件；候選視窗由 Server 自繪。
 //!
-//! - [`client`]：引擎层，连 Server 的管道客户端，平台无关部分可脱离 Windows 端到端测。
-//! - `com`（`cfg(windows)`）：COM 入口、TSF 接口实现、编辑会话 / 组句、云联想轮询、自注册。
+//! - [`client`]：引擎層，連 Server 的管道客戶端，平臺無關部分可脫離 Windows 端到端測。
+//! - `com`（`cfg(windows)`）：COM 入口、TSF 介面實現、編輯會話 / 組句、雲聯想輪詢、自注冊。
 
 pub mod client;
 #[cfg(windows)]

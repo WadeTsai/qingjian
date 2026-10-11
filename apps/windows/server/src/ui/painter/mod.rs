@@ -1,5 +1,5 @@
-//! 青简渲染器在 Windows 壳里的落地：字体库 + 渲染器一份，候选窗口与状态条共用（字形缓存共享）。
-//! 配置 `[general] renderer = "system"` 时没有它，两个窗口走原来的 GDI 画法（过渡期退路）。
+//! 青簡渲染器在 Windows 殼裡的落地：字型庫 + 渲染器一份，候選視窗與狀態條共用（字形快取共享）。
+//! 配置 `[general] renderer = "system"` 時沒有它，兩個視窗走原來的 GDI 畫法（過渡期退路）。
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -12,22 +12,22 @@ use qingjian_render::{
 
 use crate::dispatch::RenderSettings;
 
-/// UI 线程上共享的渲染器；`None` = 系统绘制。
+/// UI 執行緒上共享的渲染器；`None` = 系統繪製。
 pub(super) type SharedPainter = Rc<RefCell<Option<Painter>>>;
 
 pub(super) struct Painter {
-    /// 渲染器（字体库随它）。
+    /// 渲染器（字型庫隨它）。
     renderer: Renderer,
 
-    /// 建它时用的字族名（空为系统字体），设置没变就不重建。
+    /// 建它時用的字族名（空為系統字型），設定沒變就不重建。
     font: String,
 
-    /// 主题（浅色那一份，画的时候按外观取深浅）。
+    /// 主題（淺色那一份，畫的時候按外觀取深淺）。
     theme: Theme,
 }
 
 impl Painter {
-    /// `font` 是用户选的字族名，空为系统字体；没装就回到系统字体。字体库加载失败返回 `None`，调用方退回 GDI。
+    /// `font` 是使用者選的字族名，空為系統字型；沒裝就回到系統字型。字型庫載入失敗返回 `None`，呼叫方退回 GDI。
     fn new(font: &str) -> Option<Self> {
         let started = std::time::Instant::now();
         let library = if font.is_empty() {
@@ -42,14 +42,14 @@ impl Painter {
         let library = match library {
             Ok(library) => library,
             Err(error) => {
-                tracing::warn!(%error, "渲染器字体库加载失败，候选窗口与状态条退回 GDI 绘制");
+                tracing::warn!(%error, "渲染器字型庫載入失敗，候選視窗與狀態條退回 GDI 繪製");
                 return None;
             }
         };
         tracing::info!(
             elapsed = ?started.elapsed(),
             font = library.ui_family(),
-            "候选窗口与状态条使用青简渲染器"
+            "候選視窗與狀態條使用青簡渲染器"
         );
         Some(Self {
             renderer: Renderer::new(library),
@@ -58,7 +58,7 @@ impl Painter {
         })
     }
 
-    /// 按设置建 / 换 / 撤渲染器。
+    /// 按設定建 / 換 / 撤渲染器。
     pub(super) fn configure(shared: &SharedPainter, settings: &RenderSettings) {
         let mut painter = shared.borrow_mut();
         match settings.renderer {
@@ -66,7 +66,7 @@ impl Painter {
                 if painter.as_ref().map(|p| p.font.as_str()) != Some(settings.font.as_str()) {
                     *painter = Self::new(&settings.font);
                 }
-                // 设置变了才会走到这里（含主题文件的戳），每次都从主题目录重读
+                // 設定變了才會走到這裡（含主題檔案的戳），每次都從主題目錄重讀
                 if let Some(painter) = painter.as_mut() {
                     let themes =
                         ThemeLibrary::load(qingjian_platform::dirs::themes_dir().as_deref());
@@ -85,14 +85,14 @@ impl Painter {
             }
             CandidateRenderer::System => {
                 if painter.is_some() {
-                    tracing::info!("候选窗口与状态条切回 GDI 绘制");
+                    tracing::info!("候選視窗與狀態條切回 GDI 繪製");
                     *painter = None;
                 }
             }
         }
     }
 
-    /// 画一帧候选窗口；`dpi` 96 为 100%。失败记日志返回 `None`，调用方退回 GDI。
+    /// 畫一幀候選視窗；`dpi` 96 為 100%。失敗記日誌返回 `None`，呼叫方退回 GDI。
     pub(super) fn render_frame(
         &mut self,
         frame: &Frame,
@@ -109,32 +109,32 @@ impl Painter {
         let rendered = self
             .renderer
             .render(frame, layout, &self.theme.with_dark(dark), scale(dpi))
-            .inspect_err(|error| tracing::warn!(%error, "候选窗渲染失败"))
+            .inspect_err(|error| tracing::warn!(%error, "候選窗渲染失敗"))
             .ok()?;
         tracing::debug!(
             elapsed = ?started.elapsed(),
             width = rendered.content_width,
             height = rendered.content_height,
-            "候选窗位图已画"
+            "候選窗點陣圖已畫"
         );
         Some(rendered)
     }
 
-    /// 动画的下一帧；没有在播的返回 `None`。
+    /// 動畫的下一幀；沒有在播的返回 `None`。
     pub(super) fn tick(&mut self) -> Option<Rendered> {
         self.renderer
             .tick()
-            .inspect_err(|error| tracing::warn!(%error, "候选窗动画帧渲染失败"))
+            .inspect_err(|error| tracing::warn!(%error, "候選窗動畫幀渲染失敗"))
             .ok()
             .flatten()
     }
 
-    /// 候选窗收起：忘掉上一帧，下次显示不从旧位置过渡。
+    /// 候選窗收起：忘掉上一幀，下次顯示不從舊位置過渡。
     pub(super) fn forget(&mut self) {
         self.renderer.forget();
     }
 
-    /// 画状态条。
+    /// 畫狀態條。
     pub(super) fn render_status(
         &mut self,
         cells: &[StatusCell],
@@ -144,15 +144,15 @@ impl Painter {
     ) -> Option<RenderedStatus> {
         self.renderer
             .render_status(cells, mode, &self.theme.with_dark(dark), scale(dpi))
-            .inspect_err(|error| tracing::warn!(%error, "状态条渲染失败"))
+            .inspect_err(|error| tracing::warn!(%error, "狀態條渲染失敗"))
             .ok()
     }
 }
 
-/// 系统关了「动画效果」（设置 → 辅助功能 → 视觉效果）：不播过渡。读不到当开着。
+/// 系統關了「動畫效果」（設定 → 輔助功能 → 視覺效果）：不播過渡。讀不到當開著。
 fn reduce_motion() -> bool {
     let mut enabled = windows::core::BOOL(1);
-    // SAFETY: SPI_GETCLIENTAREAANIMATION 往 pvParam 写一个 BOOL。
+    // SAFETY: SPI_GETCLIENTAREAANIMATION 往 pvParam 寫一個 BOOL。
     let ok = unsafe {
         windows::Win32::UI::WindowsAndMessaging::SystemParametersInfoW(
             windows::Win32::UI::WindowsAndMessaging::SPI_GETCLIENTAREAANIMATION,
@@ -164,7 +164,7 @@ fn reduce_motion() -> bool {
     ok.is_ok() && !enabled.as_bool()
 }
 
-/// 点 → 像素的倍数。
+/// 點 → 畫素的倍數。
 fn scale(dpi: u32) -> f32 {
     dpi.max(96) as f32 / 96.0
 }

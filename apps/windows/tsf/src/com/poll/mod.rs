@@ -1,8 +1,8 @@
-//! 轮询定时器：组句期间每隔一小段时间向 Server 拉一次异步结果（云端候选 / 整句补全）；
-//! 没在组句、本线程在前台时，隔几拍向 Server 取一次全局中英模式（别的应用、悬浮状态条可能切过）。
-//! 云端结果几百毫秒后才回，那时往往没有新按键来「顺手收一次」，所以在 TSF 线程上挂一个 `WM_TIMER`；
-//! 传输仍是一问一答。定时器挂在隐藏的消息窗口上，与按键同在 STA 消息泵上跑。回调上下文在 [`context`]。
-//! 鼠标点候选窗口上屏的文本也是这样拉回来的（Server 不能直接写文档），拉到就开编辑会话写进去。
+//! 輪詢定時器：組句期間每隔一小段時間向 Server 拉一次非同步結果（雲端候選 / 整句補全）；
+//! 沒在組句、本執行緒在前臺時，隔幾拍向 Server 取一次全域性中英模式（別的應用、懸浮狀態條可能切過）。
+//! 雲端結果幾百毫秒後才回，那時往往沒有新按鍵來「順手收一次」，所以在 TSF 執行緒上掛一個 `WM_TIMER`；
+//! 傳輸仍是一問一答。定時器掛在隱藏的訊息視窗上，與按鍵同在 STA 訊息泵上跑。回撥上下文在 [`context`]。
+//! 滑鼠點候選視窗上屏的文本也是這樣拉回來的（Server 不能直接寫文件），拉到就開編輯會話寫進去。
 
 mod context;
 
@@ -35,22 +35,22 @@ static CLASS: WindowClass = WindowClass::new();
 const TIMER_ID: usize = 1;
 const INTERVAL_MS: u32 = 80;
 
-/// 没在组句时每几拍问一次状态条的切模式请求（320 ms 一次，点了状态条肉眼看不出延迟）。
-/// 按键行为设置（切换键、内置英文模式）也跟着这一拍取回，所以设置改完同样是约 320 ms 生效。
+/// 沒在組句時每幾拍問一次狀態條的切模式請求（320 ms 一次，點了狀態條肉眼看不出延遲）。
+/// 按鍵行為設定（切換鍵、內建英文模式）也跟著這一拍取回，所以設定改完同樣是約 320 ms 生效。
 const MODE_SYNC_EVERY: u32 = 4;
 
 thread_local! {
-    /// 本线程活着的定时器：消息窗口 → 回调上下文。查不到（已析构）就忽略这一拍。
+    /// 本執行緒活著的定時器：訊息視窗 → 回撥上下文。查不到（已析構）就忽略這一拍。
     static TIMERS: RefCell<HashMap<isize, Rc<PollContext>>> = RefCell::new(HashMap::new());
 }
 
-/// 承载轮询定时器的隐藏消息窗口；`Drop` 里停表、销毁窗口、注销上下文。
+/// 承載輪詢定時器的隱藏訊息視窗；`Drop` 裡停表、銷燬視窗、登出上下文。
 pub(crate) struct PollTimer {
     hwnd: HWND,
 }
 
 impl PollTimer {
-    /// 失败返回 `Err`，调用方降级为只在按键时收云结果。
+    /// 失敗返回 `Err`，呼叫方降級為只在按鍵時收雲結果。
     pub(crate) fn new(engine: SharedClient, shared: Rc<Shared>, client_id: u32) -> Result<Self> {
         CLASS.ensure(|| WNDCLASSEXW {
             lpfnWndProc: Some(wndproc),
@@ -105,10 +105,10 @@ impl Drop for PollTimer {
 
 unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     if msg == WM_TIMER {
-        // 先 clone 出来放开表的借用。
+        // 先 clone 出來放開表的借用。
         let context = TIMERS.with(|timers| timers.borrow().get(&(hwnd.0 as isize)).cloned());
         if let Some(context) = context {
-            // 从消息泵调进来：panic 不能越过 FFI。
+            // 從訊息泵調進來：panic 不能越過 FFI。
             let _ = catch_unwind(AssertUnwindSafe(|| poll_once(&context)));
         }
         return LRESULT(0);
@@ -116,7 +116,7 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: 
     unsafe { DefWindowProcW(hwnd, msg, wparam, lparam) }
 }
 
-/// 组句中或翻译评审中拉云结果；否则前台时隔几拍问一次切模式（顺路取回按键行为设置）。引擎正被按键处理借用时跳过这一拍；连接坏了断开。
+/// 組句中或翻譯評審中拉雲結果；否則前臺時隔幾拍問一次切模式（順路取回按鍵行為設定）。引擎正被按鍵處理借用時跳過這一拍；連線壞了斷開。
 fn poll_once(context: &PollContext) {
     let tick = context.ticks.get().wrapping_add(1);
     context.ticks.set(tick);
@@ -139,7 +139,7 @@ fn poll_once(context: &PollContext) {
             commit_clicked(context, &frame, commit);
         }
         Ok((frame, None)) => {
-            // 翻译评审时回空帧 = 翻译已在 Server 侧结束（云端没给译文）。
+            // 翻譯評審時回空幀 = 翻譯已在 Server 側結束（雲端沒給譯文）。
             if translating && frame.is_empty() {
                 drop(guard);
                 context.shared.set_translating(false);
@@ -147,27 +147,27 @@ fn poll_once(context: &PollContext) {
             }
         }
         Err(error) => {
-            log(&format!("云联想轮询失败，断开，下一键重连: {error}"));
+            log(&format!("雲聯想輪詢失敗，斷開，下一鍵重連: {error}"));
             *guard = None;
             context.shared.end_composing();
         }
     }
 }
 
-/// 鼠标点候选窗口上屏：与按键结果一样经异步编辑会话写进文档，剩下的拼音接着组句。
+/// 滑鼠點候選視窗上屏：與按鍵結果一樣經非同步編輯會話寫進文件，剩下的拼音接著組句。
 fn commit_clicked(context: &PollContext, frame: &Frame, commit: String) {
     let Some(document) = context.shared.last_context() else {
-        log(&format!("点击上屏没有上下文，丢弃: {commit:?}"));
+        log(&format!("點選上屏沒有上下文，丟棄: {commit:?}"));
         return;
     };
-    // 「只在候选窗口」模式应用里不放行内拼音，与按键路径一致
+    // 「只在候選視窗」模式應用裡不放行內拼音，與按鍵路徑一致
     let preedit = if frame.preedit_mode.inline() {
         preedit_string(frame)
     } else {
         String::new()
     };
     context.shared.set_composing(!frame.is_empty());
-    log(&format!("点击上屏: {commit:?} preedit={preedit:?}"));
+    log(&format!("點選上屏: {commit:?} preedit={preedit:?}"));
     if let Err(error) = request_update(
         &document,
         context.client_id,
@@ -176,12 +176,12 @@ fn commit_clicked(context: &PollContext, frame: &Frame, commit: String) {
         Some(commit),
         preedit,
     ) {
-        log(&format!("点击上屏的编辑会话没被受理: {error}"));
+        log(&format!("點選上屏的編輯會話沒被受理: {error}"));
     }
 }
 
-/// 本进程是不是在前台：当场看前台窗口属于谁，不只信线程焦点标记（后台进程的标记可能一直不清，
-/// 它来取模式会让 Server 以为青简仍是当前输入法）。UWP 应用的前台窗口在 ApplicationFrameHost 进程，那时退回看标记。
+/// 本程序是不是在前臺：當場看前臺視窗屬於誰，不只信執行緒焦點標記（後臺程序的標記可能一直不清，
+/// 它來取模式會讓 Server 以為青簡仍是當前輸入法）。UWP 應用的前臺視窗在 ApplicationFrameHost 程序，那時退回看標記。
 fn in_foreground(context: &PollContext) -> bool {
     let window = unsafe { GetForegroundWindow() };
     if window.is_invalid() {
@@ -192,7 +192,7 @@ fn in_foreground(context: &PollContext) -> bool {
     pid == unsafe { GetCurrentProcessId() } || (is_uwp_frame(window) && context.shared.foreground())
 }
 
-/// UWP 应用的框架窗口（类名 `ApplicationFrameWindow`）。
+/// UWP 應用的框架視窗（類名 `ApplicationFrameWindow`）。
 fn is_uwp_frame(window: HWND) -> bool {
     let mut name = [0u16; 32];
     let len = unsafe { GetClassNameW(window, &mut name) };
@@ -200,14 +200,14 @@ fn is_uwp_frame(window: HWND) -> bool {
         .is_ok_and(|len| String::from_utf16_lossy(&name[..len]) == "ApplicationFrameWindow")
 }
 
-/// 取一次全局中英模式，顺路取回 Server 下发的按键行为设置。切模式要落定组句、会借引擎，
+/// 取一次全域性中英模式，順路取回 Server 下發的按鍵行為設定。切模式要落定組句、會借引擎，
 /// 所以先放掉借用再切。
 fn sync_mode(context: &PollContext) {
     let Ok(mut guard) = context.engine.try_borrow_mut() else {
         return;
     };
     let Some(client) = guard.as_mut() else {
-        // 没连着（Server 起得晚 / 重启过）：不等下一键，这一拍就补连（自带退避）。
+        // 沒連著（Server 起得晚 / 重啟過）：不等下一鍵，這一拍就補連（自帶退避）。
         drop(guard);
         super::service::on_reconnect_tick();
         return;
@@ -215,13 +215,13 @@ fn sync_mode(context: &PollContext) {
     let reply = match client.sync_mode() {
         Ok(reply) => reply,
         Err(error) => {
-            log(&format!("同步中英模式失败，断开，下一键重连: {error}"));
+            log(&format!("同步中英模式失敗，斷開，下一鍵重連: {error}"));
             *guard = None;
             return;
         }
     };
     drop(guard);
-    // 按键行为设置每一拍都带（DLL 不读配置文件），切换键与内置英文模式开关改完靠它生效。
+    // 按鍵行為設定每一拍都帶（DLL 不讀配置檔案），切換鍵與內建英文模式開關改完靠它生效。
     super::service::on_input_settings(reply.input);
     super::service::on_indicator_state(reply.indicator);
     if let Some(english) = reply.english {

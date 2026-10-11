@@ -7,13 +7,13 @@ pub enum LmError {
 
     #[error("bad line {line} in {file}: {reason}")]
     Format {
-        /// 文件名。
+        /// 檔名。
         file: &'static str,
 
-        /// 行号（从 1 数）。
+        /// 行號（從 1 數）。
         line: usize,
 
-        /// 出错原因。
+        /// 出錯原因。
         reason: &'static str,
     },
 

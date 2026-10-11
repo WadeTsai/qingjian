@@ -1,4 +1,4 @@
-//! 后台线程：收请求、防抖、查缓存、发网络请求、回结果。
+//! 後臺執行緒：收請求、防抖、查快取、髮網絡請求、回結果。
 
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
 use std::time::{Duration, Instant};
@@ -11,27 +11,27 @@ use crate::cache::PredictionCache;
 use crate::chat_client::ChatClient;
 use crate::error::PredictError;
 
-/// 缓存条数。
+/// 快取條數。
 const CACHE_CAPACITY: usize = 64;
 
 pub struct Worker {
-    /// 请求入口。主线程 drop 掉发送端后线程自然退出。
+    /// 請求入口。主執行緒 drop 掉髮送端後執行緒自然退出。
     requests: Receiver<PredictionRequest>,
 
-    /// 结果出口。
+    /// 結果出口。
     responses: Sender<Prediction>,
 
-    /// 网络客户端。
+    /// 網路客戶端。
     client: ChatClient,
 
-    /// 防抖窗口。
+    /// 防抖視窗。
     debounce: Duration,
 
-    /// 结果缓存。
+    /// 結果快取。
     cache: PredictionCache,
 }
 
-/// 缓存里存的是解析后的回复。
+/// 快取裡存的是解析後的回覆。
 type Cached = Reply;
 
 impl Worker {
@@ -50,7 +50,7 @@ impl Worker {
         }
     }
 
-    /// 阻塞运行直到发送端全部关闭。
+    /// 阻塞執行直到傳送端全部關閉。
     pub fn run(mut self) -> Result<(), PredictError> {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -75,8 +75,8 @@ impl Worker {
                         sentence = reply.sentence.is_some(),
                         "联想完成"
                     );
-                    // 空回复不进缓存：模型偶尔什么都不给（问字尤其），缓存住就等于这个问题以后永远没答案，
-                    // 用户重打一遍也只会命中缓存（2026-09-07 `?mumumu` 就是这么卡住的）
+                    // 空回覆不進快取：模型偶爾什麼都不給（問字尤其），快取住就等於這個問題以後永遠沒答案，
+                    // 使用者重打一遍也只會命中快取（2026-09-07 `?mumumu` 就是這麼卡住的）
                     if !reply.is_empty() {
                         self.cache.insert(key, reply.clone());
                     }
@@ -90,7 +90,7 @@ impl Worker {
         Ok(())
     }
 
-    /// 防抖：在窗口内持续收到新请求就一直等，只保留最后一个。发送端关闭返回 `None`。
+    /// 防抖：在視窗內持續收到新請求就一直等，只保留最後一個。傳送端關閉返回 `None`。
     fn debounce(&self, mut latest: PredictionRequest) -> Option<PredictionRequest> {
         loop {
             match self.requests.recv_timeout(self.debounce) {
@@ -102,7 +102,7 @@ impl Worker {
     }
 
     fn reply(&self, sequence: u64, reply: Cached) {
-        // 接收端没了说明 Predictor 已经被 drop，线程随后也会退出
+        // 接收端沒了說明 Predictor 已經被 drop，執行緒隨後也會退出
         let _ = self.responses.send(Prediction {
             sequence,
             words: reply.words,

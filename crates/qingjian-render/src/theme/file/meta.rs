@@ -1,27 +1,27 @@
-//! 主题的元数据。
+//! 主題的後設資料。
 
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct Meta {
-    /// 主题 id，也是主题目录名。
+    /// 主題 id，也是主題目錄名。
     pub(crate) id: String,
 
-    /// 显示名。
+    /// 顯示名。
     pub(crate) name: String,
 
     #[serde(default)]
     pub(crate) author: String,
 
-    /// SPDX 许可证标识。
+    /// SPDX 許可證標識。
     #[serde(default)]
     pub(crate) license: String,
 
-    /// 只有一种外观时写 `"light"` / `"dark"`，不再跟随外观设置切换（背景是浅色图片的主题配深色文字就看不清）。
+    /// 只有一種外觀時寫 `"light"` / `"dark"`，不再跟隨外觀設定切換（背景是淺色圖片的主題配深色文字就看不清）。
     pub(crate) appearance: Option<LockedAppearance>,
 }
 
-/// 主题锁定的外观。
+/// 主題鎖定的外觀。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub(crate) enum LockedAppearance {

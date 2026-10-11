@@ -1,12 +1,12 @@
-//! 把本线程用的语言 profile（简 / 繁）报给 Server：连上时查一次，之后在两个 profile 之间切换再报。
-//! Server 开会话时按简体算，所以连上时只有繁体才要发；切换时两边都发。
+//! 把本執行緒用的語言 profile（簡 / 繁）報給 Server：連上時查一次，之後在兩個 profile 之間切換再報。
+//! Server 開會話時按簡體算，所以連上時只有繁體才要發；切換時兩邊都發。
 
 use super::TextService_Impl;
 use crate::com::log::log;
 use crate::com::profile;
 
 impl TextService_Impl {
-    /// 刚连上 Server：查当前 profile，是繁体就报。查不到按简体。
+    /// 剛連上 Server：查當前 profile，是繁體就報。查不到按簡體。
     pub(super) fn report_profile(&self) {
         let traditional = profile::active_traditional().unwrap_or(false);
         self.profile_traditional.set(Some(traditional));
@@ -15,7 +15,7 @@ impl TextService_Impl {
         }
     }
 
-    /// 线程切到了青简的另一个 profile；与上次报的一样就不发。
+    /// 執行緒切到了青簡的另一個 profile；與上次報的一樣就不發。
     pub(super) fn adopt_profile(&self, traditional: bool) {
         if self.profile_traditional.get() == Some(traditional) {
             return;
@@ -25,21 +25,15 @@ impl TextService_Impl {
     }
 
     fn send_profile(&self, traditional: bool) {
-        // 没连着 Server 就不发：下次 `connect` 会重新查一遍再报。
-        let Some(sent) = self
-            .engine
-            .borrow_mut()
-            .as_mut()
-            .map(|client| client.profile(traditional))
-        else {
+        // 沒連著 Server 就不發：下次 `connect` 會重新查一遍再報。
+        let mut engine = self.engine.borrow_mut();
+        let Some(client) = engine.as_mut() else {
             return;
         };
-        match sent {
-            Ok(()) => log(&format!(
-                "语言 profile：{}",
-                if traditional { "繁体（中文(台灣)）" } else { "简体" }
-            )),
-            Err(error) => log(&format!("报语言 profile 失败: {error}")),
+        let script = if traditional { "繁體（中文(台灣)）" } else { "簡體" };
+        match client.profile(traditional) {
+            Ok(()) => log(&format!("語言 profile：{script}")),
+            Err(error) => log(&format!("報語言 profile 失敗: {error}")),
         }
     }
 }

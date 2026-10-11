@@ -1,5 +1,5 @@
-//! 样例帧：离线预览（`examples/preview.rs`）与快照测试（`tests/snapshots.rs`）共用。
-//! 前几个与真机上敲同样拼音看到的候选窗对照，内容要和引擎当时给的一致（人工从截图抄）。
+//! 樣例幀：離線預覽（`examples/preview.rs`）與快照測試（`tests/snapshots.rs`）共用。
+//! 前幾個與真機上敲同樣拼音看到的候選窗對照，內容要和引擎當時給的一致（人工從截圖抄）。
 
 #![allow(dead_code)]
 
@@ -8,7 +8,7 @@ use qingjian_render::{
     Frame, Layout, Mode, Preedit, PreeditSegment, PreeditStyle, Row, StatusCell, Tone,
 };
 
-/// 候选窗样例：名字、帧、排布。
+/// 候選窗樣例：名字、幀、排布。
 pub fn candidate_scenes() -> Vec<(&'static str, Frame, Layout)> {
     vec![
         ("nihao-vertical", nihao(), Layout::Vertical),
@@ -33,7 +33,7 @@ pub fn candidate_scenes() -> Vec<(&'static str, Frame, Layout)> {
     ]
 }
 
-/// Windows 悬浮状态条的三格。
+/// Windows 懸浮狀態條的三格。
 pub fn status_cells() -> Vec<StatusCell> {
     vec![
         StatusCell::text("中 · 小鹤", true),
@@ -42,7 +42,7 @@ pub fn status_cells() -> Vec<StatusCell> {
     ]
 }
 
-/// 带云联想的一页：整句补全与云端词各带云朵。
+/// 帶雲聯想的一頁：整句補全與雲端詞各帶雲朵。
 pub fn cloud() -> Frame {
     let mut frame = nihao();
     frame.rows.truncate(3);
@@ -54,7 +54,7 @@ pub fn cloud() -> Frame {
     frame
 }
 
-/// 纠错后的拼音行（删除线 + 淡色剩余）加日文译词（汉字注假名）。
+/// 糾錯後的拼音行（刪除線 + 淡色剩餘）加日文譯詞（漢字注假名）。
 pub fn corrected_japanese() -> Frame {
     Frame {
         preedit: Some(Preedit {
@@ -108,7 +108,7 @@ pub fn corrected_japanese() -> Frame {
     }
 }
 
-/// 四条验收用的一行：汉字（zh 字形）、英文、彩色 emoji、日文假名与汉字。
+/// 四條驗收用的一行：漢字（zh 字形）、英文、彩色 emoji、日文假名與漢字。
 pub fn probe() -> Frame {
     Frame {
         preedit: None,
@@ -123,7 +123,7 @@ pub fn probe() -> Frame {
     }
 }
 
-/// 辅码态：拼音行末尾是触发键与带下划线的码段，候选词后面跟着命中的码。
+/// 輔碼態：拼音行末尾是觸發鍵與帶下劃線的碼段，候選詞後面跟著命中的碼。
 pub fn aux_code() -> Frame {
     let mut rows = vec![
         annotated(
@@ -168,7 +168,7 @@ pub fn aux_code() -> Frame {
     }
 }
 
-/// 组句中还没有候选：只有拼音行。
+/// 組句中還沒有候選：只有拼音行。
 pub fn preedit_only() -> Frame {
     Frame {
         preedit: Some(Preedit::plain("zhong'wen'shu'ru", 8)),
@@ -176,7 +176,7 @@ pub fn preedit_only() -> Frame {
     }
 }
 
-/// 候选都很短、没有译文、不高亮：竖排窗口要撑到最小宽度。
+/// 候選都很短、沒有譯文、不高亮：豎排視窗要撐到最小寬度。
 pub fn short() -> Frame {
     Frame {
         preedit: Some(Preedit::plain("a", 1)),

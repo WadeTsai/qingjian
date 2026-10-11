@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-/// 检查更新失败的原因；一律只记日志，不打扰输入。
+/// 檢查更新失敗的原因；一律只記日誌，不打擾輸入。
 #[derive(Debug, Error)]
 pub enum UpdateError {
     #[error("request failed: {0}")]

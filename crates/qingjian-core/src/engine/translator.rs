@@ -1,21 +1,21 @@
 use crate::candidate::{Language, Translation};
 
-/// 候选翻译 annotation 的提供方。实现必须是纯查表级别的开销，不能做网络请求。
+/// 候選翻譯 annotation 的提供方。實現必須是純查表級別的開銷，不能做網路請求。
 pub trait Translator: Send {
-    /// 当前学习语言。
+    /// 當前學習語言。
     fn language(&self) -> Language;
 
-    /// 查不到返回 `None`，候选框那一行留空。
+    /// 查不到返回 `None`，候選框那一行留空。
     fn translate(&self, text: &str) -> Option<Translation>;
 
-    /// 释义兜底从云端写好了一条释义：记进个人释义表，下次 [`Self::translate`] 查得到。只查随包表的实现留空即可。
+    /// 釋義兜底從雲端寫好了一條釋義：記進個人釋義表，下次 [`Self::translate`] 查得到。只查隨包表的實現留空即可。
     fn learn(&mut self, _word: &str, _translation: Translation) {}
 
-    /// 把个人释义表落盘；失败只记日志。
+    /// 把個人釋義表落盤；失敗只記日誌。
     fn flush(&mut self) {}
 }
 
-/// 不做翻译。
+/// 不做翻譯。
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoTranslator;
 

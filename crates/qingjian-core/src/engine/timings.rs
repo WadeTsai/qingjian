@@ -1,15 +1,15 @@
 use std::time::Duration;
 
-/// 一次候选查询各阶段的耗时。
+/// 一次候選查詢各階段的耗時。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Timings {
     /// 拼音切分。
     pub parse: Duration,
 
-    /// 词库查询（含所有切分）。
+    /// 詞庫查詢（含所有切分）。
     pub lookup: Duration,
 
-    /// 排序与去重。
+    /// 排序與去重。
     pub rank: Duration,
 }
 

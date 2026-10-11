@@ -1,19 +1,19 @@
 use super::super::{Candidate, CandidateKind};
 use super::Cell;
 
-/// 本地候选 + 云端词的分页排布。索引空间是「格」：第一页先本地后云端，之后各页全是本地候选。
+/// 本地候選 + 雲端詞的分頁排布。索引空間是「格」：第一頁先本地後雲端，之後各頁全是本地候選。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CandidateLayout {
-    /// 本地候选，顺序就是 Engine 排好的顺序。
+    /// 本地候選，順序就是 Engine 排好的順序。
     local: Vec<Candidate>,
 
-    /// 已到的云端词（≤ 槽位数，与本地候选去过重）。
+    /// 已到的雲端詞（≤ 槽位數，與本地候選去過重）。
     cloud: Vec<Candidate>,
 
-    /// 每页几格。
+    /// 每頁幾格。
     page_size: usize,
 
-    /// 配置的云端槽位数；0 表示不要云端词。
+    /// 配置的雲端槽位數；0 表示不要雲端詞。
     slots: usize,
 }
 
@@ -39,7 +39,7 @@ impl CandidateLayout {
         &self.cloud
     }
 
-    /// 第一页最多给云端几格：本地候选至少占第一格；没有本地候选（问字模式）时整页都给云端。
+    /// 第一頁最多給雲端幾格：本地候選至少佔第一格；沒有本地候選（問字模式）時整頁都給雲端。
     pub fn capacity(&self) -> usize {
         if self.local.is_empty() {
             self.page_size
@@ -57,7 +57,7 @@ impl CandidateLayout {
         }
     }
 
-    /// 云端词到了：与本地候选同文的不要（本地已经能给），其余按顺序填进第一页末尾，多出来的丢掉。返回填进去的条数。
+    /// 雲端詞到了：與本地候選同文的不要（本地已經能給），其餘按順序填進第一頁末尾，多出來的丟掉。返回填進去的條數。
     pub fn set_cloud(&mut self, words: Vec<Candidate>) -> usize {
         self.cloud.clear();
         let capacity = self.capacity();
@@ -74,7 +74,7 @@ impl CandidateLayout {
         self.cloud.len()
     }
 
-    /// 本地格数包含最大固定位置之前的空格。
+    /// 本地格數包含最大固定位置之前的空格。
     fn local_len(&self) -> usize {
         self.local
             .iter()
@@ -87,7 +87,7 @@ impl CandidateLayout {
             .max(self.local.len())
     }
 
-    /// 真实本地候选按固定位置放置，其余候选依次填入空格。
+    /// 真實本地候選按固定位置放置，其餘候選依次填入空格。
     fn local_cells(&self) -> Vec<Cell<'_>> {
         let mut cells = vec![Cell::Empty; self.local_len()];
         for candidate in &self.local {
@@ -111,7 +111,7 @@ impl CandidateLayout {
         cells
     }
 
-    /// 全部格子按索引顺序排开；空位只属于布局。
+    /// 全部格子按索引順序排開；空位只屬於佈局。
     pub fn cells(&self) -> Vec<Cell<'_>> {
         let mut cells = self.local_cells();
         let first = cells.len().min(self.page_size - self.cloud.len());
@@ -131,12 +131,12 @@ impl CandidateLayout {
         self.len().div_ceil(self.page_size)
     }
 
-    /// 第 `index` 格的候选；越界返回 `None`。
+    /// 第 `index` 格的候選；越界返回 `None`。
     pub fn candidate(&self, index: usize) -> Option<&Candidate> {
         self.cells().get(index).and_then(|cell| cell.candidate())
     }
 
-    /// 第 `page` 页的格子。
+    /// 第 `page` 頁的格子。
     pub fn page(&self, page: usize) -> Vec<Cell<'_>> {
         self.cells()
             .into_iter()
@@ -194,7 +194,7 @@ mod tests {
         );
         assert_eq!(layout.pages(), 2);
 
-        // 四条云端词只取前三条；前六格不动，原来 7–9 格的本地候选挪到第二页开头
+        // 四條雲端詞只取前三條；前六格不動，原來 7–9 格的本地候選挪到第二頁開頭
         let filled = layout.set_cloud(vec![cloud("云0"), cloud("云1"), cloud("云2"), cloud("云3")]);
         assert_eq!(filled, 3);
         assert_eq!(

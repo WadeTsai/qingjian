@@ -1,5 +1,5 @@
-//! 各进程日志的公共部分：按天分文件的命名与清理（[`daily`]）、密钥掩码（[`secrets`]）。
-//! 日志目录本身在 [`crate::dirs::log_dir`]。
+//! 各程序日誌的公共部分：按天分檔案的命名與清理（[`daily`]）、金鑰掩碼（[`secrets`]）。
+//! 日誌目錄本身在 [`crate::dirs::log_dir`]。
 
 pub mod daily;
 pub mod secrets;

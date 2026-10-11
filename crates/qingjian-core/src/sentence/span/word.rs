@@ -1,15 +1,15 @@
-/// 词图一个格子里的一个词：从词库命中里拷出来、不再借用词库的形式，能放进 [`super::SpanCache`]。
+/// 詞圖一個格子裡的一個詞：從詞庫命中裡拷出來、不再借用詞庫的形式，能放進 [`super::SpanCache`]。
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpanWord {
-    /// 词。
+    /// 詞。
     pub text: String,
 
-    /// 词的音节。
+    /// 詞的音節。
     pub syllables: Vec<String>,
 
-    /// 词库静态词频。
+    /// 詞庫靜態詞頻。
     pub frequency: u32,
 
-    /// 命中的音节不是敲的原样（模糊音 / 敲错变体）时的代价之和，进路径得分时扣掉；原样命中是 0。
+    /// 命中的音節不是敲的原樣（模糊音 / 敲錯變體）時的代價之和，進路徑得分時扣掉；原樣命中是 0。
     pub penalty: f64,
 }

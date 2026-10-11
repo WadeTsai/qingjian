@@ -1,9 +1,9 @@
-//! 诊断与日志：「关于」页的诊断信息（密钥抹掉）、输入日志开关与清空、打开外部程序。
+//! 診斷與日誌：「關於」頁的診斷資訊（金鑰抹掉）、輸入日誌開關與清空、開啟外部程式。
 
 use super::*;
 
 impl Host {
-    /// 给作者排查问题用的环境摘要：版本、系统、加载的数据、配置原文（密钥抹掉）、日志目录。
+    /// 給作者排查問題用的環境摘要：版本、系統、載入的資料、配置原文（金鑰抹掉）、日誌目錄。
     pub(super) fn diagnostics(&self) -> String {
         use std::fmt::Write as _;
 
@@ -79,12 +79,12 @@ impl Host {
         out
     }
 
-    /// 输入日志文件的路径（数据目录下 `input-log.jsonl`）。
+    /// 輸入日誌檔案的路徑（資料目錄下 `input-log.jsonl`）。
     pub fn input_log_path() -> Option<PathBuf> {
         paths::user_data_dir().map(|dir| dir.join("input-log.jsonl"))
     }
 
-    /// 按开关接上 / 拆掉输入日志。
+    /// 按開關接上 / 拆掉輸入日誌。
     pub(super) fn open_input_log(&mut self, enabled: bool) {
         match Self::input_log_path().filter(|_| enabled) {
             Some(path) => {
@@ -117,7 +117,7 @@ impl Host {
     }
 }
 
-/// 配置原文里的密钥行抹掉值（`api_key = "…"`；`api_key_env` 是变量名，不抹）。
+/// 配置原文裡的金鑰行抹掉值（`api_key = "…"`；`api_key_env` 是變數名，不抹）。
 pub(super) fn redact_secrets(text: &str) -> String {
     text.lines()
         .map(|line| {
@@ -132,7 +132,7 @@ pub(super) fn redact_secrets(text: &str) -> String {
         .join("\n")
 }
 
-/// 写进系统剪贴板。
+/// 寫進系統剪貼簿。
 pub(super) fn copy_to_pasteboard(text: &str) {
     let pasteboard = NSPasteboard::generalPasteboard();
     pasteboard.clearContents();

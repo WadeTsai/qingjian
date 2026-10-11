@@ -1,5 +1,5 @@
-//! 「模糊音」页：各组勾选，三列排布。配置键与 `FuzzyRules` 字段名一致。
-//! 用 CheckBox 不用 ToggleSwitch：Reactor 0.100 的 ToggleSwitch 去不掉「开/关」字样，多列会挤。
+//! 「模糊音」頁：各組勾選，三列排布。配置鍵與 `FuzzyRules` 欄位名一致。
+//! 用 CheckBox 不用 ToggleSwitch：Reactor 0.100 的 ToggleSwitch 去不掉「開/關」字樣，多列會擠。
 
 use windows_reactor::*;
 
@@ -40,8 +40,8 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             cell("in ↔ ing", "in_ing", f.in_ing, context),
         ]),
         note(
-            "勾上的两种读音互相通用（比如开 z ↔ zh，敲 zi 也出 zhi 的字），模糊命中的词排在准确命中之后。\
-             an ↔ ang 含 ian/iang、uan/uang。缺省全关。",
+            "勾上的兩種讀音互相通用（比如開 z ↔ zh，敲 zi 也出 zhi 的字），模糊命中的詞排在準確命中之後。\
+             an ↔ ang 含 ian/iang、uan/uang。預設全關。",
         ),
     ]);
     page("模糊音", body)

@@ -1,4 +1,4 @@
-//! 真正上屏触发曝光；Linux 回报按连接代次/上下文/帧验证，不能越过隐私边界。
+//! 真正上屏觸發曝光；Linux 回報按連線代次/上下文/幀驗證，不能越過隱私邊界。
 mod events;
 use qingjian_core::{Engine, Language, Sense, Translation, Translator, VocabularyTracker};
 use qingjian_dictionary::Dictionary;
@@ -150,7 +150,7 @@ fn same_frame_fallback_replaces_exposure_without_double_counting() {
 
 #[test]
 fn poll_with_an_unchanged_frame_keeps_the_acknowledged_display() {
-    // 插件组句期间定时 Poll 取重排结果；帧没变就不是新的展示，已回报的曝光照算
+    // 外掛組句期間定時 Poll 取重排結果；幀沒變就不是新的展示，已回報的曝光照算
     let (mut router, book) = router();
     let identity = compose(&mut router);
     router.handle_linux(
@@ -194,7 +194,7 @@ fn unfocused_or_resumed_session_requires_a_new_display_report() {
     router.handle(ClientMessage::Poll {
         session: SessionId(2),
     });
-    // 会话恢复不能把失焦前的显示记录带回来。
+    // 會話恢復不能把失焦前的顯示記錄帶回來。
     key(&mut router, ' ');
     assert!(book.lock().unwrap().is_empty());
 }

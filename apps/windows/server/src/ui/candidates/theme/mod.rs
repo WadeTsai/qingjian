@@ -1,4 +1,4 @@
-//! 候选窗口主题：字体、颜色、间距。视觉层级对齐 macOS 端；GDI 没有随外观切换的语义色，浅 / 深各写一套（[`Palette`]）。
+//! 候選視窗主題：字型、顏色、間距。視覺層級對齊 macOS 端；GDI 沒有隨外觀切換的語義色，淺 / 深各寫一套（[`Palette`]）。
 
 mod palette;
 
@@ -11,7 +11,7 @@ use windows::core::{PCWSTR, w};
 
 use self::palette::Palette;
 
-/// 常规字重；windows crate 未导出。
+/// 常規字重；windows crate 未匯出。
 const FW_NORMAL: i32 = 400;
 
 /// COLORREF 低位到高位是 R、G、B。
@@ -19,7 +19,7 @@ pub(super) const fn rgb(r: u8, g: u8, b: u8) -> COLORREF {
     COLORREF((r as u32) | ((g as u32) << 8) | ((b as u32) << 16))
 }
 
-/// 一套配色 + 按 DPI 造好的字体。字体是 GDI 资源，`Drop` 里删。
+/// 一套配色 + 按 DPI 造好的字型。字型是 GDI 資源，`Drop` 裡刪。
 pub(crate) struct Theme {
     pub text_font: HFONT,
 
@@ -27,7 +27,7 @@ pub(crate) struct Theme {
 
     pub index_font: HFONT,
 
-    /// 符号字体（状态条的齿轮 ⚙）：雅黑没有这些字形。
+    /// 符號字型（狀態條的齒輪 ⚙）：雅黑沒有這些字形。
     pub symbol_font: HFONT,
 
     pub text_color: COLORREF,
@@ -36,37 +36,37 @@ pub(crate) struct Theme {
 
     pub pos_color: COLORREF,
 
-    /// 生词译文，比普通译文醒目。
+    /// 生詞譯文，比普通譯文醒目。
     pub fresh_color: COLORREF,
 
     pub index_color: COLORREF,
 
-    /// 云联想的云朵与文字。
+    /// 雲聯想的雲朵與文字。
     pub cloud_color: COLORREF,
 
     pub background: COLORREF,
 
-    /// 当前候选的高亮底色（mac 的半透明蓝预混成不透明值，GDI 无 alpha）。
+    /// 當前候選的高亮底色（mac 的半透明藍預混成不透明值，GDI 無 alpha）。
     pub highlight: COLORREF,
 
-    /// 窗口内边距（已按 DPI 缩放）。
+    /// 視窗內邊距（已按 DPI 縮放）。
     pub padding: i32,
 
-    /// 行内上下留白。
+    /// 行內上下留白。
     pub row_padding: i32,
 
-    /// 列间距。
+    /// 列間距。
     pub column_gap: i32,
 
-    /// 窗口圆角半径。
+    /// 視窗圓角半徑。
     pub corner_radius: i32,
 }
 
 impl Theme {
-    /// `dpi` 96 为 100%。
+    /// `dpi` 96 為 100%。
     pub(crate) fn new(dpi: u32, dark: bool) -> Self {
         let scale = |px: i32| (px * dpi as i32) / 96;
-        // 负高度 = 字符高度（不含内部行距）。
+        // 負高度 = 字元高度（不含內部行距）。
         let font = |px: i32| create_font(-scale(px), w!("Microsoft YaHei UI"));
         let palette = if dark {
             Palette::dark()
@@ -109,7 +109,7 @@ impl Drop for Theme {
     }
 }
 
-/// 缺字由 GDI 字体链回落。`height` 为负的字符高度。
+/// 缺字由 GDI 字型鏈回落。`height` 為負的字元高度。
 fn create_font(height: i32, face: PCWSTR) -> HFONT {
     unsafe {
         CreateFontW(

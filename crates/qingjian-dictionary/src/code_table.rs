@@ -1,45 +1,45 @@
-//! 形码码表：按编码查字词（五笔）。
+//! 形碼碼錶：按編碼查字詞（五筆）。
 //!
-//! 与 [`crate::Dictionary`] 的区别在键：词库按拼音音节序列查，码表按编码本身查，
-//! 敲的编码是词的编码的前缀即可命中（`gan` 命中编码 `gant` 的 开发），没有音节也没有切分。
+//! 與 [`crate::Dictionary`] 的區別在鍵：詞庫按拼音音節序列查，碼錶按編碼本身查，
+//! 敲的編碼是詞的編碼的字首即可命中（`gan` 命中編碼 `gant` 的 開發），沒有音節也沒有切分。
 //!
-//! 文件格式 TSV：
+//! 檔案格式 TSV：
 //!
 //! ```text
-//! 词\t编码\t词频
-//! 开发\tgant\t9000
+//! 詞\t編碼\t詞頻
+//! 開發\tgant\t9000
 //! ```
 //!
-//! `#` 开头为注释行，空行忽略。编码统一按小写存，查询输入也须已小写。
+//! `#` 開頭為註釋行，空行忽略。編碼統一按小寫存，查詢輸入也須已小寫。
 
 use std::path::Path;
 
 use crate::error::DictionaryError;
 use crate::matching::Match;
 
-/// 一条码表词目。
+/// 一條碼錶詞目。
 #[derive(Debug, Clone)]
 struct Entry {
-    /// 全码，小写。
+    /// 全碼，小寫。
     code: String,
 
-    /// 词。
+    /// 詞。
     text: String,
 
-    /// 静态词频。
+    /// 靜態詞頻。
     frequency: u32,
 }
 
-/// 形码码表。词目按 `(编码, 词频降序)` 排好，同前缀的是一段连续区间。
+/// 形碼碼錶。詞目按 `(編碼, 詞頻降序)` 排好，同字首的是一段連續區間。
 ///
-/// `Clone` 是给回放用的：`Engine::set_code_table` 收所有权，而回放要在方案之间来回切，
-/// 手里得留一份（整份日志通常只有一套方案，切的次数很少）。
+/// `Clone` 是給回放用的：`Engine::set_code_table` 收所有權，而回放要在方案之間來回切，
+/// 手裡得留一份（整份日誌通常只有一套方案，切的次數很少）。
 #[derive(Debug, Default, Clone)]
 pub struct CodeTable {
-    /// 按编码字节序升序，同一个编码下按词频降序。
+    /// 按編碼位元組序升序，同一個編碼下按詞頻降序。
     entries: Vec<Entry>,
 
-    /// 全部词频之和，上下文得分的兜底用。
+    /// 全部詞頻之和，上下文得分的兜底用。
     total_frequency: u64,
 }
 
@@ -88,7 +88,7 @@ impl CodeTable {
                 .then_with(|| b.frequency.cmp(&a.frequency))
                 .then_with(|| a.text.cmp(&b.text))
         });
-        // 同一个词记了两遍（不同码表版本合并）留词频高的那条，排完序就是靠前的那条
+        // 同一個詞記了兩遍（不同碼錶版本合併）留詞頻高的那條，排完序就是靠前的那條
         entries.dedup_by(|a, b| a.code == b.code && a.text == b.text);
         let total_frequency = entries.iter().map(|e| u64::from(e.frequency)).sum();
         tracing::debug!(entries = entries.len(), "码表加载完成");
@@ -102,11 +102,11 @@ impl CodeTable {
         Self::parse(&std::fs::read_to_string(path)?)
     }
 
-    /// 编码正好等于输入，或输入是它的前缀的词，最多 `limit` 条。
+    /// 編碼正好等於輸入，或輸入是它的字首的詞，最多 `limit` 條。
     ///
-    /// 编码与输入相等（这个词打全了）的排在最前，其余按词频降序；`limit` 之后的不返回。
-    /// 单字母输入（`g`，一级简码）的前缀区间有上万条，所以先按 `limit` 线性选出前面一段再排序，
-    /// 不是把整个区间排完再截断——`lookup` 在每次按键的路径上。
+    /// 編碼與輸入相等（這個詞打全了）的排在最前，其餘按詞頻降序；`limit` 之後的不返回。
+    /// 單字母輸入（`g`，一級簡碼）的字首區間有上萬條，所以先按 `limit` 線性選出前面一段再排序，
+    /// 不是把整個區間排完再截斷——`lookup` 在每次按鍵的路徑上。
     pub fn lookup(&self, code: &str, limit: usize) -> Vec<Match<'_>> {
         if code.is_empty() || limit == 0 {
             return Vec::new();
@@ -138,7 +138,7 @@ impl CodeTable {
             .collect()
     }
 
-    /// 全部词频之和。
+    /// 全部詞頻之和。
     pub fn total_frequency(&self) -> u64 {
         self.total_frequency
     }
@@ -161,13 +161,13 @@ mod tests {
         let table =
             CodeTable::parse("开发\tgant\t900\n开\tga\t5000\n一\tggll\t100000\n个\twhj\t8000\n")
                 .unwrap();
-        // 打全了的编码排在前缀命中的词前面，哪怕前缀词词频更高
+        // 打全了的編碼排在字首命中的詞前面，哪怕字首詞詞頻更高
         let hits = table.lookup("ga", 10);
         assert_eq!(
             hits.iter().map(|h| (h.text, h.exact)).collect::<Vec<_>>(),
             [("开", true), ("开发", false)]
         );
-        // 没打全的编码只按词频
+        // 沒打全的編碼只按詞頻
         let hits = table.lookup("g", 10);
         assert_eq!(
             hits.iter().map(|h| h.text).collect::<Vec<_>>(),
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn truncates_to_the_limit_keeping_the_best() {
-        // 命中条数多于 limit 时先线性选一段再排，结果要与整体排序的前几条一致
+        // 命中條數多於 limit 時先線性選一段再排，結果要與整體排序的前幾條一致
         let table =
             CodeTable::parse("甲\tg\t10\n乙\tg\t50\n丙\tg\t30\n丁\tg\t40\n戊\tg\t20\n").unwrap();
         assert_eq!(

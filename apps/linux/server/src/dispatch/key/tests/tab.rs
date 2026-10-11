@@ -1,4 +1,4 @@
-//! Tab、整句补全与末页边界。
+//! Tab、整句補全與末頁邊界。
 use super::support::{compose, key, router};
 use qingjian_platform::protocol::{KeyModifiers, KeyOutcome};
 #[test]

@@ -1,6 +1,6 @@
-//! 「统计」页：用青简打了多少字。今天 / 最近 7 天 / 累计 三行，汉字 / 中文词 / 英文词 / 上屏次数 四列，
-//! 再把累计汉字数折成「几本《某书》」给个直观参照；下面一块是学习语言的词汇（见过 / 看熟 / 上屏过 / 打出过的译词数）。
-//! 数据来自 `Engine::usage_summary` / `Engine::vocabulary_summary`，打开窗口时更新。
+//! 「統計」頁：用青簡打了多少字。今天 / 最近 7 天 / 累計 三行，漢字 / 中文詞 / 英文詞 / 上屏次數 四列，
+//! 再把累計漢字數折成「幾本《某書》」給個直觀參照；下面一塊是學習語言的詞彙（見過 / 看熟 / 上屏過 / 打出過的譯詞數）。
+//! 資料來自 `Engine::usage_summary` / `Engine::vocabulary_summary`，開啟視窗時更新。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -11,50 +11,50 @@ use qingjian_core::{FRESH_UNTIL, Usage, UsageSummary, VocabularySummary, book_sc
 use crate::preferences::controls::{GROUP_GAP, caption, note_full, small_label};
 use crate::preferences::layout::{LABEL_WIDTH, Layout, PAGE_PADDING, ROW_HEIGHT};
 
-/// 三行的标题，顺序与 [`UsagePage::show`] 里取值一致。
+/// 三行的標題，順序與 [`UsagePage::show`] 裡取值一致。
 const ROWS: [&str; 3] = ["今天", "最近 7 天", "累计"];
 
-/// 四列的标题。
+/// 四列的標題。
 const COLUMNS: [&str; 4] = ["汉字", "中文词", "英文词", "上屏次数"];
 
-/// 等级块的四列。
+/// 等級塊的四列。
 const LEVEL_COLUMNS: [&str; 4] = ["词表", "见过", "看熟", "上屏过"];
 
-/// 等级块最多几行（CEFR 六级、JLPT 五级）。
+/// 等級塊最多幾行（CEFR 六級、JLPT 五級）。
 const MAX_LEVEL_ROWS: usize = 6;
 
-/// 词汇总览那一行的高度：两行字，数字多的时候折行而不是截断。
+/// 詞彙總覽那一行的高度：兩行字，數字多的時候折行而不是截斷。
 const VOCABULARY_LINE_HEIGHT: f64 = ROW_HEIGHT * 1.8;
 
-/// 「统计」页里要按数据刷新的控件。
+/// 「統計」頁裡要按資料重新整理的控制元件。
 pub struct UsagePage {
-    /// 数字格子，按行优先排：`cells[row * 4 + column]`。
+    /// 數字格子，按行優先排：`cells[row * 4 + column]`。
     cells: Vec<Retained<NSTextField>>,
 
-    /// 「累计 xx 字，约等于 n 本《某书》」。
+    /// 「累計 xx 字，約等於 n 本《某書》」。
     scale: Retained<NSTextField>,
 
-    /// 「自 某日 起，记了 n 天」。
+    /// 「自 某日 起，記了 n 天」。
     since: Retained<NSTextField>,
 
-    /// 词汇块标题：「词汇（英语）」。
+    /// 詞彙塊標題：「詞彙（英語）」。
     vocabulary_title: Retained<NSTextField>,
 
-    /// 词汇块正文：见过 / 看熟 / 上屏过 / 打出过 / 本周新见。
+    /// 詞彙塊正文：見過 / 看熟 / 上屏過 / 打出過 / 本週新見。
     vocabulary_line: Retained<NSTextField>,
 
-    /// 等级块的表头（没有等级表时整块隐藏）。
+    /// 等級塊的表頭（沒有等級表時整塊隱藏）。
     level_headers: Vec<Retained<NSTextField>>,
 
-    /// 等级块每行的等级名。
+    /// 等級塊每行的等級名。
     level_names: Vec<Retained<NSTextField>>,
 
-    /// 等级块的数字格子，按行优先排：`level_cells[row * 4 + column]`。
+    /// 等級塊的數字格子，按行優先排：`level_cells[row * 4 + column]`。
     level_cells: Vec<Retained<NSTextField>>,
 }
 
 impl UsagePage {
-    /// 把「统计」页的控件摆进 `layout`。
+    /// 把「統計」頁的控制元件擺進 `layout`。
     pub fn build(layout: &mut Layout, mtm: MainThreadMarker) -> Self {
         let column_width = (layout.inner_width() - LABEL_WIDTH) / COLUMNS.len() as f64;
         let column_x = |column: usize| PAGE_PADDING + LABEL_WIDTH + column_width * column as f64;
@@ -64,7 +64,7 @@ impl UsagePage {
             layout.place(&header, column_x(column), column_width, ROW_HEIGHT * 0.7);
         }
         layout.next_row(ROW_HEIGHT * 0.7);
-        // SAFETY: NSFontWeightRegular 是 AppKit 导出的常量，只读。
+        // SAFETY: NSFontWeightRegular 是 AppKit 匯出的常量，只讀。
         let weight = unsafe { objc2_app_kit::NSFontWeightRegular };
         let mut cells = Vec::with_capacity(ROWS.len() * COLUMNS.len());
         for title in ROWS {
@@ -105,7 +105,7 @@ impl UsagePage {
             ROW_HEIGHT,
         );
         layout.next_row(ROW_HEIGHT);
-        // 数字大了一行放不下（「本周新见 4,63…」被截断过），允许折成两行
+        // 數字大了一行放不下（「本週新見 4,63…」被截斷過），允許折成兩行
         let vocabulary_line = NSTextField::labelWithString(&NSString::from_str(""), mtm);
         vocabulary_line.setUsesSingleLineMode(false);
         if let Some(cell) = vocabulary_line.cell() {
@@ -162,7 +162,7 @@ impl UsagePage {
         }
     }
 
-    /// 按汇总刷新。`language` 是学习语言的显示名（「英语」）。
+    /// 按彙總重新整理。`language` 是學習語言的顯示名（「英語」）。
     pub fn show(&self, summary: &UsageSummary, vocabulary: &VocabularySummary, language: &str) {
         let rows = [summary.today, summary.week, summary.total];
         for (row, usage) in rows.iter().enumerate() {
@@ -204,7 +204,7 @@ impl UsagePage {
     }
 }
 
-/// 「见过 120 个词，看熟 80 个；上屏过 60 个，直接打出过 3 个；本周新见 12 个。」
+/// 「見過 120 個詞，看熟 80 個；上屏過 60 個，直接打出過 3 個；本週新見 12 個。」
 fn vocabulary_line(summary: &VocabularySummary) -> String {
     if summary.seen == 0 {
         return "还没见过译词：打中文时候选右侧的译词就是词汇的来源。".to_owned();
@@ -219,12 +219,12 @@ fn vocabulary_line(summary: &VocabularySummary) -> String {
     )
 }
 
-/// 一行四列的值，顺序同 [`COLUMNS`]。
+/// 一行四列的值，順序同 [`COLUMNS`]。
 fn columns(usage: &Usage) -> [u64; 4] {
     [usage.hanzi, usage.words, usage.english_words, usage.commits]
 }
 
-/// 「累计输入 12.3 万字，约等于 1.7 本《活着》（约 12 万字）。」；一个字没有时不比。
+/// 「累計輸入 12.3 萬字，約等於 1.7 本《活著》（約 12 萬字）。」；一個字沒有時不比。
 fn scale_line(hanzi: u64) -> String {
     if hanzi == 0 {
         return "累计输入 0 字。".to_owned();
@@ -252,7 +252,7 @@ fn group_digits(value: u64) -> String {
     out
 }
 
-/// 中文习惯的字数写法：万以下写整数（`2,500 字`），万以上一位小数（`12.3 万字`），亿以上同理。
+/// 中文習慣的字數寫法：萬以下寫整數（`2,500 字`），萬以上一位小數（`12.3 萬字`），億以上同理。
 fn hanzi_text(value: u64) -> String {
     const WAN: f64 = 10_000.0;
     const YI: f64 = 100_000_000.0;
@@ -266,13 +266,13 @@ fn hanzi_text(value: u64) -> String {
     }
 }
 
-/// 一位小数，`.0` 去掉。
+/// 一位小數，`.0` 去掉。
 fn trim_decimal(value: f64) -> String {
     let text = format!("{value:.1}");
     text.strip_suffix(".0").map_or(text.clone(), str::to_owned)
 }
 
-/// 倍数：不到 10 倍留一位小数，再多就取整。
+/// 倍數：不到 10 倍留一位小數，再多就取整。
 fn format_ratio(ratio: f64) -> String {
     if ratio >= 10.0 {
         format!("{}", ratio.round() as u64)

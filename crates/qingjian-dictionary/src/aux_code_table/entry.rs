@@ -1,25 +1,25 @@
-//! 码表的落盘条目：一个词与它的一个码。
+//! 碼錶的落盤條目：一個詞與它的一個碼。
 
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-/// 码表里的一条：一个词与它的一个码。12 字节、无填充，原样落盘。
+/// 碼錶裡的一條：一個詞與它的一個碼。12 位元組、無填充，原樣落盤。
 ///
-/// 条目按词文本的字节序升序排列，同一个词的条目相邻；`HASH` 索引指向这段区间的起点。
+/// 條目按詞文本的位元組序升序排列，同一個詞的條目相鄰；`HASH` 索引指向這段區間的起點。
 #[derive(Debug, Clone, Copy, FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 pub(super) struct CodeEntry {
-    /// 词文本在词 arena 里的字节偏移。
+    /// 詞文本在詞 arena 裡的位元組偏移。
     pub word_start: u32,
 
-    /// 码在码 arena 里的字节偏移。
+    /// 碼在碼 arena 裡的位元組偏移。
     pub code_start: u32,
 
-    /// 词文本的字节长度。
+    /// 詞文本的位元組長度。
     pub word_len: u16,
 
-    /// 码的字节长度（1–8）。
+    /// 碼的位元組長度（1–8）。
     pub code_len: u8,
 
-    /// 对齐用，全零。
+    /// 對齊用，全零。
     pub reserved: u8,
 }

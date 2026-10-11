@@ -1,11 +1,11 @@
-//! 候选窗口的一行：[`Candidate`] → 渲染器的 [`Row`]（序号、候选词、annotation 片段），与 macOS 端 `candidates/row.rs` 一致。
-//! GDI 画法也用同一个类型。
+//! 候選視窗的一行：[`Candidate`] → 渲染器的 [`Row`]（序號、候選詞、annotation 片段），與 macOS 端 `candidates/row.rs` 一致。
+//! GDI 畫法也用同一個型別。
 
 use qingjian_core::{Candidate, CandidateKind};
 use qingjian_render::{Row, Tone};
 
-/// `position` 是页内下标（从 0 起）。`show_code` 是 `[general] aux_code_show`：
-/// 打开且候选带码时，码用方括号括起来紧跟在候选词后面（`鹤[rbm]`），不进 annotation。
+/// `position` 是頁內下標（從 0 起）。`show_code` 是 `[general] aux_code_show`：
+/// 開啟且候選帶碼時，碼用方括號括起來緊跟在候選詞後面（`鶴[rbm]`），不進 annotation。
 pub(crate) fn from_candidate(position: usize, candidate: &Candidate, show_code: bool) -> Row {
     let code = candidate
         .aux_code

@@ -1,4 +1,4 @@
 ---
-title: 输入
+title: 輸入
 order: 2
 ---

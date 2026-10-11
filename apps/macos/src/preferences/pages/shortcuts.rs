@@ -1,4 +1,4 @@
-//! 「快捷键」页：翻页键、模式键、译词上屏 / 删候选 / 翻译选中文字的组合键。
+//! 「快捷鍵」頁：翻頁鍵、模式鍵、譯詞上屏 / 刪候選 / 翻譯選中文字的組合鍵。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -16,28 +16,28 @@ use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
 pub struct ShortcutsPage {
-    /// 翻页键对。
+    /// 翻頁鍵對。
     page_keys: Retained<NSPopUpButton>,
 
-    /// 表达式模式键。
+    /// 表示式模式鍵。
     expression: Retained<NSPopUpButton>,
 
-    /// 问字模式键。
+    /// 問字模式鍵。
     question: Retained<NSPopUpButton>,
 
-    /// 没在组句时敲 `?` 也进问字。
+    /// 沒在組句時敲 `?` 也進問字。
     question_mark: Retained<NSButton>,
 
-    /// 上屏第一个译词的修饰键。
+    /// 上屏第一個譯詞的修飾鍵。
     translation: Retained<KeyRecorder>,
 
-    /// 上屏第二个译词的修饰键。
+    /// 上屏第二個譯詞的修飾鍵。
     translation_second: Retained<KeyRecorder>,
 
-    /// 删除候选的修饰键。
+    /// 刪除候選的修飾鍵。
     delete_candidate: Retained<KeyRecorder>,
 
-    /// 翻译选中文字的组合键。
+    /// 翻譯選中文字的組合鍵。
     translate_selection: Retained<KeyRecorder>,
 }
 

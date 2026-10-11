@@ -1,4 +1,4 @@
-//! 能力同步清理重入时，真实 Server 的学习与输入日志必须遵守最新隐私能力。
+//! 能力同步清理重入時，真實 Server 的學習與輸入日誌必須遵守最新隱私能力。
 #include "qingjian.h"
 #include "support/context.h"
 #include <fcitx/inputcontextmanager.h>
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
         };
         type("kaifa ");
         assert(context.committed == "开发");
-        type("nihao"); // 旧普通组句也必须在能力边界被丢弃。
+        type("nihao"); // 舊普通組句也必須在能力邊界被丟棄。
         bool armed = true;
         const bool blocked = scenario == "password-reset" || scenario == "disable-focus"
             || scenario == "superseded-password" || scenario == "superseded-disable";
@@ -68,14 +68,14 @@ int main(int argc, char **argv) {
             else if (scenario == "superseded-disable") context.setCapabilityFlags(Flags(Flag::Preedit) | Flag::Sensitive | Flag::Disable);
             else if (scenario == "superseded-sensitive") context.setCapabilityFlags(Flags(Flag::Preedit) | Flag::Sensitive);
             else assert(scenario == "sensitive-key");
-            // 在 clear 尚未返回时直接重入按键，不能沿用 Server 的旧普通状态。
+            // 在 clear 尚未返回時直接重入按鍵，不能沿用 Server 的舊普通狀態。
             type("nihao ", !blocked);
         });
         context.setCapabilityFlags(Flags(Flag::Preedit) |
             (scenario == "password-reset" || scenario == "superseded-sensitive" ? Flag::Password :
              scenario == "disable-focus" ? Flag::Disable : Flag::Sensitive));
         assert(!armed);
-        type("nihao ", !blocked); // 清理返回后缓存也必须与 Server 一致。
+        type("nihao ", !blocked); // 清理返回後快取也必須與 Server 一致。
         assert(context.committed == (blocked ? "开发" : "开发你好你好"));
         context.setCapabilityFlags(Flag::Preedit);
         type("zhongguo ");

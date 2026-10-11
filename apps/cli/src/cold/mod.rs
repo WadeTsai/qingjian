@@ -1,4 +1,4 @@
-//! 冷启动字词评测：独立内存学习器、不上屏、不写个人数据，原候选与生成结果逐条保留。
+//! 冷啟動字詞評測：獨立記憶體學習器、不上屏、不寫個人資料，原候選與生成結果逐條保留。
 
 mod entry;
 pub mod error;
@@ -85,7 +85,7 @@ pub fn run(
         };
         let keys = entry.keys.replace('\'', "");
         let generated_start = Instant::now();
-        // 固定 beam 与生成上限，不能用目标字数限制搜索。分隔符只从 P2C 输入去掉。
+        // 固定 beam 與生成上限，不能用目標字數限制搜尋。分隔符只從 P2C 輸入去掉。
         let generated = decoder
             .as_ref()
             .map(|d| d.convert(&keys, 5, 16))
@@ -125,7 +125,7 @@ pub fn run(
     Ok(())
 }
 
-/// 可复现的实验合并策略：原首选保留，生成中新增的词放其后，再接原候选。不是最终产品排序。
+/// 可復現的實驗合併策略：原首選保留，生成中新增的詞放其後，再接原候選。不是最終產品排序。
 fn merge(baseline: &[String], generated: &[String]) -> Vec<String> {
     let mut out = Vec::new();
     for text in baseline

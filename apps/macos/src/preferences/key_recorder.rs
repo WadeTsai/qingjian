@@ -7,34 +7,34 @@ use objc2_app_kit::{NSBezelStyle, NSButton, NSEvent, NSEventModifierFlags};
 use objc2_foundation::{NSObjectProtocol, NSRect, NSString};
 use qingjian_platform::{KeyCombo, Modifiers};
 
-/// 录制中的按钮标题。
+/// 錄製中的按鈕標題。
 const RECORDING_TITLE: &str = "按下新的快捷键…";
 
-/// Esc 的键码：取消录制。
+/// Esc 的鍵碼：取消錄製。
 const ESCAPE_KEY: u16 = 53;
 
-/// 录制器的状态。
+/// 錄製器的狀態。
 pub struct Ivars {
-    /// 只记修饰键（配数字键上屏译词那两项）：按住修饰键再按任意键，键本身不算。
+    /// 只記修飾鍵（配數字鍵上屏譯詞那兩項）：按住修飾鍵再按任意鍵，鍵本身不算。
     modifiers_only: bool,
 
-    /// 正在等用户按键。
+    /// 正在等使用者按鍵。
     recording: Cell<bool>,
 
-    /// 当前值的配置写法（`control+option+t` / `shift+option`），`changed:` 里由 `setting_from_sender` 取走。
+    /// 當前值的配置寫法（`control+option+t` / `shift+option`），`changed:` 裡由 `setting_from_sender` 取走。
     recorded: RefCell<String>,
 
-    /// 当前值给人看的写法，取消录制时恢复到标题上。
+    /// 當前值給人看的寫法，取消錄製時恢復到標題上。
     label: RefCell<String>,
 }
 
 define_class!(
-    // SAFETY: NSButton 允许子类化；没有实现 Drop。
+    // SAFETY: NSButton 允許子類化；沒有實現 Drop。
     #[unsafe(super(NSButton))]
     #[thread_kind = MainThreadOnly]
     #[ivars = Ivars]
-    /// 快捷键录制按钮：点一下进入录制，按下组合键就记下并发 `changed:`，Esc 或失焦取消。
-    /// 标题显示当前组合（`⌃⌥T` / `⇧⌥`），配置写法放在 ivar 里。
+    /// 快捷鍵錄製按鈕：點一下進入錄製，按下組合鍵就記下併發 `changed:`，Esc 或失焦取消。
+    /// 標題顯示當前組合（`⌃⌥T` / `⇧⌥`），配置寫法放在 ivar 裡。
     pub struct KeyRecorder;
 
     impl KeyRecorder {
@@ -43,7 +43,7 @@ define_class!(
             true
         }
 
-        /// 点击：进入录制，成为第一响应者。不调父类，免得当成普通按钮点击发 action。
+        /// 點選：進入錄製，成為第一響應者。不調父類，免得當成普通按鈕點擊發 action。
         #[unsafe(method(mouseDown:))]
         fn mouse_down(&self, _event: &NSEvent) {
             if let Some(window) = self.window() {
@@ -56,7 +56,7 @@ define_class!(
         #[unsafe(method(keyDown:))]
         fn key_down(&self, event: &NSEvent) {
             if !self.ivars().recording.get() {
-                // SAFETY: 不在录制中就按普通按钮处理
+                // SAFETY: 不在錄製中就按普通按鈕處理
                 let _: () = unsafe { msg_send![super(self), keyDown: event] };
                 return;
             }
@@ -71,7 +71,7 @@ define_class!(
                 control: flags.contains(NSEventModifierFlags::Control),
                 command: flags.contains(NSEventModifierFlags::Command),
             };
-            // 没按修饰键的单键不算快捷键，继续等
+            // 沒按修飾鍵的單鍵不算快捷鍵，繼續等
             if modifiers.is_empty() {
                 return;
             }
@@ -100,22 +100,22 @@ define_class!(
             if let Some(window) = self.window() {
                 window.makeFirstResponder(None);
             }
-            // target / action 由 `wire` 挂上，与其他控件一致
+            // target / action 由 `wire` 掛上，與其他控制元件一致
             let target: Option<Retained<AnyObject>> = self.target();
             let action = self.action();
-            // SAFETY: 选择器是 PreferencesTarget 上定义的 `changed:`，签名 (id) -> void
+            // SAFETY: 選擇器是 PreferencesTarget 上定義的 `changed:`，簽名 (id) -> void
             unsafe {
                 self.sendAction_to(action, target.as_deref());
             }
         }
 
-        /// 失焦：录制没完成就恢复原标题。
+        /// 失焦：錄製沒完成就恢復原標題。
         #[unsafe(method(resignFirstResponder))]
         fn resign_first_responder(&self) -> bool {
             if self.ivars().recording.get() {
                 self.cancel();
             }
-            // SAFETY: 父类的缺省实现
+            // SAFETY: 父類的預設實現
             unsafe { msg_send![super(self), resignFirstResponder] }
         }
     }
@@ -124,7 +124,7 @@ define_class!(
 );
 
 impl KeyRecorder {
-    /// `modifiers_only` 为真时只记修饰键组合。
+    /// `modifiers_only` 為真時只記修飾鍵組合。
     pub fn new(mtm: MainThreadMarker, modifiers_only: bool) -> Retained<Self> {
         let this = mtm.alloc::<Self>().set_ivars(Ivars {
             modifiers_only,
@@ -137,7 +137,7 @@ impl KeyRecorder {
         this
     }
 
-    /// 按配置刷新显示：`key` 是配置写法，`label` 是给人看的。
+    /// 按配置重新整理顯示：`key` 是配置寫法，`label` 是給人看的。
     pub fn show(&self, key: &str, label: &str) {
         if self.ivars().recording.get() {
             return;
@@ -147,7 +147,7 @@ impl KeyRecorder {
         self.setTitle(&NSString::from_str(label));
     }
 
-    /// 最近一次录到的值的配置写法。
+    /// 最近一次錄到的值的配置寫法。
     pub fn recorded(&self) -> String {
         self.ivars().recorded.borrow().clone()
     }

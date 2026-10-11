@@ -1,39 +1,39 @@
 use super::TypoKind;
 
-/// 敲错纠正的代价（log 概率的扣分）。缺省值是现在用的那组，回放调参（`qingjian-cli --tune`）时可以整组换掉，
-/// 引擎与壳只用缺省值。
+/// 敲錯糾正的代價（log 機率的扣分）。預設值是現在用的那組，回放調參（`qingjian-cli --tune`）時可以整組換掉，
+/// 引擎與殼只用預設值。
 ///
-/// 音节级的四类代价叠在词的得分上：候选拼音与敲的不同时，要比原样的解释好这么多才排得过。
-/// 换位与相邻键最常见、代价最低；多敲少敲稍贵。数值按「一个音节敲错的先验约 1%，再分摊到它的十几个变体上」定，
-/// 与整段一处编辑的代价同一量级；定太低时常用词会借着个人词频从敲错边挤掉用户真要的生僻词。
+/// 音節級的四類代價疊在詞的得分上：候選拼音與敲的不同時，要比原樣的解釋好這麼多才排得過。
+/// 換位與相鄰鍵最常見、代價最低；多敲少敲稍貴。數值按「一個音節敲錯的先驗約 1%，再分攤到它的十幾個變體上」定，
+/// 與整段一處編輯的代價同一量級；定太低時常用詞會藉著個人詞頻從敲錯邊擠掉使用者真要的生僻詞。
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TypoCosts {
-    /// 相邻两键敲反了（`shou` → `shuo`）。
+    /// 相鄰兩鍵敲反了（`shou` → `shuo`）。
     pub transpose: f64,
 
-    /// 敲到了旁边的键（`ni` → `mi`）。
+    /// 敲到了旁邊的鍵（`ni` → `mi`）。
     pub substitute: f64,
 
-    /// 多敲了一个键（`gang` → `gan`）。
+    /// 多敲了一個鍵（`gang` → `gan`）。
     pub extra: f64,
 
-    /// 少敲了一个键（`gan` → `guan`）。
+    /// 少敲了一個鍵（`gan` → `guan`）。
     pub missing: f64,
 
-    /// 个人敲错表最多给一条边减多少代价：减到只剩 1.0 左右，敲错的解释仍要比原样好一点才排上来。
+    /// 個人敲錯表最多給一條邊減多少代價：減到只剩 1.0 左右，敲錯的解釋仍要比原樣好一點才排上來。
     pub discount_cap: f64,
 
-    /// 整段一处编辑的纠错代价：纠正后的整句得分要比原样转出的高出这么多才纠。
-    /// 相当于「敲错一个键」的先验约 1/150；原样是合法简拼（`nhao` → 你好）时两边路径一样，纠正不会赢。
+    /// 整段一處編輯的糾錯代價：糾正後的整句得分要比原樣轉出的高出這麼多才糾。
+    /// 相當於「敲錯一個鍵」的先驗約 1/150；原樣是合法簡拼（`nhao` → 你好）時兩邊路徑一樣，糾正不會贏。
     pub correction_penalty: f64,
 
-    /// 整段纠错里相邻换位比别的编辑便宜多少：一个位置只有一种换法、却有七八个相邻键可以换错，
-    /// 同样能说通时换位的解释更可能（`mignti` 换位成 `mingti` 而不是换字母成 `mianti`）。
+    /// 整段糾錯裡相鄰換位比別的編輯便宜多少：一個位置只有一種換法、卻有七八個相鄰鍵可以換錯，
+    /// 同樣能說通時換位的解釋更可能（`mignti` 換位成 `mingti` 而不是換字母成 `mianti`）。
     pub correction_transpose_discount: f64,
 }
 
 impl TypoCosts {
-    /// 现在用的那组。
+    /// 現在用的那組。
     pub const DEFAULT: Self = Self {
         transpose: 5.0,
         substitute: 5.0,
@@ -44,7 +44,7 @@ impl TypoCosts {
         correction_transpose_discount: 1.0,
     };
 
-    /// 这类敲错的基础代价。
+    /// 這類敲錯的基礎代價。
     pub fn cost(&self, kind: TypoKind) -> f64 {
         match kind {
             TypoKind::Transpose => self.transpose,
@@ -54,12 +54,12 @@ impl TypoCosts {
         }
     }
 
-    /// 词图里一条敲错边的代价：类别的基础代价按个人敲错表打折（见 [`Self::discounted`]）。
+    /// 詞圖裡一條敲錯邊的代價：類別的基礎代價按個人敲錯表打折（見 [`Self::discounted`]）。
     pub fn typo_cost(&self, kind: TypoKind, accepted: u32) -> f64 {
         self.discounted(self.cost(kind), accepted)
     }
 
-    /// 整段一处编辑的纠错代价：相邻换位先减 [`Self::correction_transpose_discount`]，再按个人敲错表打折。
+    /// 整段一處編輯的糾錯代價：相鄰換位先減 [`Self::correction_transpose_discount`]，再按個人敲錯表打折。
     pub fn correction_cost(&self, transpose: bool, accepted: u32) -> f64 {
         let base = if transpose {
             self.correction_penalty - self.correction_transpose_discount
@@ -69,7 +69,7 @@ impl TypoCosts {
         self.discounted(base, accepted)
     }
 
-    /// `base` 代价减去个人折扣：折扣 = min(ln(1 + 接受过的次数), [`Self::discount_cap`])。
+    /// `base` 代價減去個人折扣：折扣 = min(ln(1 + 接受過的次數), [`Self::discount_cap`])。
     pub fn discounted(&self, base: f64, accepted: u32) -> f64 {
         base - (1.0 + f64::from(accepted)).ln().min(self.discount_cap)
     }

@@ -5,30 +5,30 @@ use crate::sentence::SentenceScorer;
 
 use super::{GENERATE_BEAM, GENERATE_MAX_CHARS};
 
-/// 一次后台任务：两个条件与一批要打分的文本，外加可选的「直接按这段按键生成整句」。
-/// 两件事合成一条任务是因为它们都在用户停顿后一起发出，而排队的任务只算最新一条。
+/// 一次後臺任務：兩個條件與一批要打分的文本，外加可選的「直接按這段按鍵生成整句」。
+/// 兩件事合成一條任務是因為它們都在使用者停頓後一起發出，而排隊的任務只算最新一條。
 struct Job {
     context: String,
     keys: String,
     texts: Vec<String>,
 
-    /// 要生成整句的那段按键（整段作用域）；`None` 就只打分。
+    /// 要生成整句的那段按鍵（整段作用域）；`None` 就只打分。
     generate: Option<String>,
 }
 
-/// 后台算好的结果，与任务一一对应。
+/// 後臺算好的結果，與任務一一對應。
 pub(crate) struct Scored {
     pub context: String,
     pub keys: String,
     pub texts: Vec<String>,
     pub scores: Vec<f64>,
 
-    /// 生成用的按键与生成出来的整句，对应任务里的 `generate`。
+    /// 生成用的按鍵與生成出來的整句，對應任務裡的 `generate`。
     pub generated: Option<(String, Vec<String>)>,
 }
 
-/// 后台打分线程：模型前向要几十毫秒，不能放在按键回调里。
-/// 任务排队时只算最新的一条（旧的对应已经过去的输入状态）；线程随本结构一起结束。
+/// 後臺打分執行緒：模型前向要幾十毫秒，不能放在按鍵回撥裡。
+/// 任務排隊時只算最新的一條（舊的對應已經過去的輸入狀態）；執行緒隨本結構一起結束。
 pub(crate) struct RescoreWorker {
     jobs: Sender<Job>,
     results: Receiver<Scored>,
@@ -43,7 +43,7 @@ impl RescoreWorker {
             .name("qingjian-rescore".to_owned())
             .spawn(move || {
                 while let Ok(mut job) = job_rx.recv() {
-                    // 攒了好几条只算最后一条
+                    // 攢了好幾條只算最後一條
                     while let Ok(newer) = job_rx.try_recv() {
                         job = newer;
                     }
@@ -116,7 +116,7 @@ impl RescoreWorker {
         }
     }
 
-    /// 取一条打好的分；没有就 `None`。
+    /// 取一條打好的分；沒有就 `None`。
     pub fn poll(&self) -> Option<Scored> {
         self.results.try_recv().ok()
     }
@@ -124,7 +124,7 @@ impl RescoreWorker {
 
 impl Drop for RescoreWorker {
     fn drop(&mut self) {
-        // 关掉任务通道线程就会退出；不等它（模型可能正算到一半）
+        // 關掉任務通道執行緒就會退出；不等它（模型可能正算到一半）
         let _ = self.handle.take();
     }
 }

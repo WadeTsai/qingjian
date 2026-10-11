@@ -1,18 +1,18 @@
-//! 线上帧格式：4 字节小端长度前缀 + JSON 消息体。Server 与 TSF DLL 两端共用这套读写，
-//! 所以放在平台层而不是某个 app 里。传输本身（命名管道等）在 app 侧，这里只切帧。
+//! 線上幀格式：4 位元組小端長度字首 + JSON 訊息體。Server 與 TSF DLL 兩端共用這套讀寫，
+//! 所以放在平臺層而不是某個 app 裡。傳輸本身（命名管道等）在 app 側，這裡只切幀。
 
 use std::io::{self, Read, Write};
 
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-/// 缺省命名管道名。Server 在这上面监听，DLL 用同名连上。放这里让两端共享同一个字面量。
+/// 預設命名管道名。Server 在這上面監聽，DLL 用同名連上。放這裡讓兩端共享同一個字面量。
 pub const DEFAULT_PIPE_NAME: &str = r"\\.\pipe\qingjian";
 
-/// 单帧上限，挡住坏长度前缀导致的巨量分配。
+/// 單幀上限，擋住壞長度字首導致的巨量分配。
 const MAX_FRAME: u32 = 16 * 1024 * 1024;
 
-/// 编解码错误。
+/// 編解碼錯誤。
 #[derive(Debug, thiserror::Error)]
 pub enum CodecError {
     #[error("io: {0}")]
@@ -25,7 +25,7 @@ pub enum CodecError {
     TooLarge(usize),
 }
 
-/// 写一帧：长度前缀 + JSON，然后 flush。
+/// 寫一幀：長度字首 + JSON，然後 flush。
 pub fn write_message<W: Write, T: Serialize>(writer: &mut W, value: &T) -> Result<(), CodecError> {
     let body = serde_json::to_vec(value)?;
     let len = u32::try_from(body.len()).map_err(|_| CodecError::TooLarge(body.len()))?;
@@ -38,8 +38,8 @@ pub fn write_message<W: Write, T: Serialize>(writer: &mut W, value: &T) -> Resul
     Ok(())
 }
 
-/// 读一帧。对端在帧边界干净关闭（读长度前缀时就是 EOF）返回 `Ok(None)`；
-/// 读到一半断开算错误（`UnexpectedEof`）。
+/// 讀一幀。對端在幀邊界乾淨關閉（讀長度字首時就是 EOF）返回 `Ok(None)`；
+/// 讀到一半斷開算錯誤（`UnexpectedEof`）。
 pub fn read_message<R: Read, T: DeserializeOwned>(reader: &mut R) -> Result<Option<T>, CodecError> {
     let mut len_buf = [0u8; 4];
     if !read_fully_or_eof(reader, &mut len_buf)? {
@@ -54,8 +54,8 @@ pub fn read_message<R: Read, T: DeserializeOwned>(reader: &mut R) -> Result<Opti
     Ok(Some(serde_json::from_slice(&body)?))
 }
 
-/// 填满 `buf`。开头就 EOF（一个字节没读到）返回 `Ok(false)`（干净关闭）；
-/// 读到一半 EOF 返回 `UnexpectedEof`；填满返回 `Ok(true)`。
+/// 填滿 `buf`。開頭就 EOF（一個位元組沒讀到）返回 `Ok(false)`（乾淨關閉）；
+/// 讀到一半 EOF 返回 `UnexpectedEof`；填滿返回 `Ok(true)`。
 fn read_fully_or_eof<R: Read>(reader: &mut R, buf: &mut [u8]) -> io::Result<bool> {
     let mut filled = 0;
     while filled < buf.len() {

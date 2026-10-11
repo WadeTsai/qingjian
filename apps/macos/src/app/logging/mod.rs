@@ -1,7 +1,7 @@
-//! 输入法进程没有终端，日志只写文件：`~/Library/Logs/Qingjian/qingjian.log.<日期>`。
+//! 輸入法程序沒有終端，日誌只寫檔案：`~/Library/Logs/Qingjian/qingjian.log.<日期>`。
 //!
-//! 按天分文件，只留最近 [`KEEP_DAYS`] 天；文件被用户删掉后下一条日志会重新建（`tracing_appender::rolling`
-//! 一直握着旧文件描述符，删掉后日志会写进已经不在目录里的 inode，看起来就是「日志文件始终不出现」）。
+//! 按天分檔案，只留最近 [`KEEP_DAYS`] 天；檔案被使用者刪掉後下一條日誌會重新建（`tracing_appender::rolling`
+//! 一直握著舊檔案描述符，刪掉後日志會寫進已經不在目錄裡的 inode，看起來就是「日誌檔案始終不出現」）。
 
 mod log_file;
 
@@ -18,19 +18,19 @@ use tracing_subscriber::{EnvFilter, Registry, reload};
 
 pub use log_file::LogFile;
 
-/// 日志文件名前缀，后面跟 `.YYYY-MM-DD`。
+/// 日誌檔名字首，後面跟 `.YYYY-MM-DD`。
 pub const FILE_PREFIX: &str = "qingjian.log";
 
-/// 保留最近几天的日志。
+/// 保留最近幾天的日誌。
 pub const KEEP_DAYS: i32 = 7;
 
-/// 运行中改级别用的句柄（配置 `[general] log_level` 热切换）。
+/// 執行中改級別用的控制代碼（配置 `[general] log_level` 熱切換）。
 static FILTER: OnceLock<reload::Handle<EnvFilter, Registry>> = OnceLock::new();
 
-/// 环境变量 `RUST_LOG` 给了过滤器就以它为准，配置里的级别不再生效（开发时用）。
+/// 環境變數 `RUST_LOG` 給了過濾器就以它為準，配置裡的級別不再生效（開發時用）。
 static ENV_OVERRIDE: AtomicBool = AtomicBool::new(false);
 
-/// 返回的 guard 要活到进程结束，否则文件日志会丢尾巴。启动时按 info 记，配置加载后再按配置切。
+/// 返回的 guard 要活到程序結束，否則檔案日誌會丟尾巴。啟動時按 info 記，配置載入後再按配置切。
 pub fn init() -> Option<WorkerGuard> {
     let dir = log_dir()?;
     std::fs::create_dir_all(&dir).ok()?;
@@ -52,7 +52,7 @@ pub fn init() -> Option<WorkerGuard> {
     Some(guard)
 }
 
-/// 切日志级别。`RUST_LOG` 环境变量在时不动。
+/// 切日誌級別。`RUST_LOG` 環境變數在時不動。
 pub fn set_level(level: LogLevel) {
     if ENV_OVERRIDE.load(Ordering::Relaxed) {
         return;
@@ -64,7 +64,7 @@ pub fn set_level(level: LogLevel) {
     }
 }
 
-/// 各级别的过滤器：debug 下网络库仍只记 info，否则一次云联想刷几十行。
+/// 各級別的過濾器：debug 下網路庫仍只記 info，否則一次雲聯想刷幾十行。
 fn filter_for(level: LogLevel) -> EnvFilter {
     match level {
         LogLevel::Info => EnvFilter::new("info"),
@@ -74,13 +74,13 @@ fn filter_for(level: LogLevel) -> EnvFilter {
     }
 }
 
-/// 日志目录，菜单「打开日志目录」也用。
+/// 日誌目錄，選單「開啟日誌目錄」也用。
 pub fn log_dir() -> Option<PathBuf> {
     std::env::var_os("HOME").map(|home| PathBuf::from(home).join("Library/Logs/Qingjian"))
 }
 
-/// 把日志目录里的文件加 `config.toml` 打成桌面上的 `qingjian-logs-<日期>.zip`（`zip -j`，不带目录层级），返回 zip 路径。
-/// 与 Windows 设置程序的「打包日志到桌面」对应；密钥在 `.env` 里，不进包。
+/// 把日誌目錄裡的檔案加 `config.toml` 打成桌面上的 `qingjian-logs-<日期>.zip`（`zip -j`，不帶目錄層級），返回 zip 路徑。
+/// 與 Windows 設定程式的「打包日誌到桌面」對應；金鑰在 `.env` 裡，不進包。
 pub fn export_logs() -> Result<PathBuf, String> {
     let dir = log_dir().ok_or("找不到日志目录")?;
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
@@ -111,7 +111,7 @@ pub fn export_logs() -> Result<PathBuf, String> {
     Ok(zip)
 }
 
-/// 删掉目录里日期早于 `today - KEEP_DAYS` 的日志文件；文件名解析不出日期的不动。
+/// 刪掉目錄裡日期早於 `today - KEEP_DAYS` 的日誌檔案；檔名解析不出日期的不動。
 pub fn prune(dir: &Path, today: jiff::civil::Date) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;

@@ -1,4 +1,4 @@
-//! Tab 与分页的三端约定；直接注入整句补全状态，不接云服务。
+//! Tab 與分頁的三端約定；直接注入整句補全狀態，不接雲服務。
 use crate::dispatch::{Router, RouterConfig};
 use qingjian_core::{CustomPhrase, Engine};
 use qingjian_dictionary::{Dictionary, WordList};

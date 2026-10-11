@@ -1,43 +1,43 @@
-//! 候选窗口的输出端。
+//! 候選視窗的輸出端。
 
 use qingjian_platform::protocol::{Frame, ScreenRect};
 use qingjian_platform::{CandidateRenderer, FontSize};
 use qingjian_render::Mode;
 
-/// 候选窗口 / 状态条的画法。
+/// 候選視窗 / 狀態條的畫法。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RenderSettings {
-    /// 由谁画（`[general] renderer`）。
+    /// 由誰畫（`[general] renderer`）。
     pub renderer: CandidateRenderer,
 
-    /// 字族名（`[general] font`），空为系统字体。
+    /// 字族名（`[general] font`），空為系統字型。
     pub font: String,
 
-    /// 主题 id（`[general] theme`，已按旧写法兼容解析）。
+    /// 主題 id（`[general] theme`，已按舊寫法相容解析）。
     pub theme: String,
 
-    /// 候选字、译文字号（`[general] candidate_font_size` / `annotation_font_size`），盖过主题。
+    /// 候選字、譯文字號（`[general] candidate_font_size` / `annotation_font_size`），蓋過主題。
     pub font_sizes: (FontSize, FontSize),
 
-    /// 过渡动画（`[general] animations`）。
+    /// 過渡動畫（`[general] animations`）。
     pub animations: bool,
 
-    /// 用户主题目录的戳（`ThemeLibrary::stamp`）：主题文件改了它就变，UI 线程据此重读主题。
+    /// 使用者主題目錄的戳（`ThemeLibrary::stamp`）：主題檔案改了它就變，UI 執行緒據此重讀主題。
     pub themes_stamp: u64,
 }
 
-/// Router 只产出帧，画交给它；Windows 上由 UI 线程实现。
+/// Router 只產出幀，畫交給它；Windows 上由 UI 執行緒實現。
 pub trait CandidateSink: Send {
-    /// 把候选窗口摆到 `rect`（组句范围的屏幕矩形）下方并按 `frame` 重绘；`mode` 给主题显示中 / 英等状态。
+    /// 把候選視窗擺到 `rect`（組句範圍的螢幕矩形）下方並按 `frame` 重繪；`mode` 給主題顯示中 / 英等狀態。
     fn show(&self, frame: Frame, mode: Mode, rect: ScreenRect);
 
     fn hide(&self);
 
-    /// 换画法：装上时与配置热加载后调，只在设置变了时调。
+    /// 換畫法：裝上時與配置熱載入後調，只在設定變了時調。
     fn configure(&self, settings: RenderSettings);
 }
 
-/// 不画候选窗口的空实现。
+/// 不畫候選視窗的空實現。
 pub struct NoopSink;
 
 impl CandidateSink for NoopSink {

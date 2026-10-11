@@ -1,16 +1,16 @@
-/// 一处编辑：把用户敲的串变成纠正后的串。下标是**纠正后**串里的位置（纯 ASCII 小写，字节即字符）。
+/// 一處編輯：把使用者敲的串變成糾正後的串。下標是**糾正後**串裡的位置（純 ASCII 小寫，位元組即字元）。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Edit {
-    /// 原串这一位敲的是 `from`，纠正后换成了别的字母。
+    /// 原串這一位敲的是 `from`，糾正後換成了別的字母。
     Substitute { index: usize, from: char },
 
-    /// 原串在这一位多敲了 `removed`，纠正后没有它（`index` 是它在纠正后串里本该在的位置）。
+    /// 原串在這一位多敲了 `removed`，糾正後沒有它（`index` 是它在糾正後串裡本該在的位置）。
     Delete { index: usize, removed: char },
 
-    /// 原串漏了一个字母，纠正后在 `index` 处多出一个。
+    /// 原串漏了一個字母，糾正後在 `index` 處多出一個。
     Insert { index: usize },
 
-    /// 原串这一位与下一位敲反了（原来是 `first``second`，纠正后是 `second``first`）。
+    /// 原串這一位與下一位敲反了（原來是 `first``second`，糾正後是 `second``first`）。
     Transpose {
         index: usize,
         first: char,
@@ -19,12 +19,12 @@ pub enum Edit {
 }
 
 impl Edit {
-    /// 纠正后串开头 `corrected_len` 个字母对应原串开头多少个字母：候选按纠正后的音节消耗拼音，
-    /// 消耗掉的原串长度要按这处编辑换算回去。
+    /// 糾正後串開頭 `corrected_len` 個字母對應原串開頭多少個字母：候選按糾正後的音節消耗拼音，
+    /// 消耗掉的原串長度要按這處編輯換算回去。
     pub fn to_original(&self, corrected_len: usize) -> usize {
         match *self {
             Self::Substitute { .. } | Self::Transpose { .. } => corrected_len,
-            // 多敲的字母紧贴在消耗掉的部分后面时一并吃掉，别把它留给下一段
+            // 多敲的字母緊貼在消耗掉的部分後面時一併吃掉，別把它留給下一段
             Self::Delete { index, .. } if index <= corrected_len => corrected_len + 1,
             Self::Delete { .. } => corrected_len,
             Self::Insert { index } if index < corrected_len => corrected_len - 1,
@@ -32,8 +32,8 @@ impl Edit {
         }
     }
 
-    /// 这处编辑是不是改在刚敲的最后一个键上：换掉最后一个字母、或在末尾补一个字母（`corrected_len` 是纠正后串的长度）。
-    /// 用户多半还没敲完，这种编辑凑出的完整拼音说明不了什么。
+    /// 這處編輯是不是改在剛敲的最後一個鍵上：換掉最後一個字母、或在末尾補一個字母（`corrected_len` 是糾正後串的長度）。
+    /// 使用者多半還沒敲完，這種編輯湊出的完整拼音說明不了什麼。
     pub fn touches_last_letter(&self, corrected_len: usize) -> bool {
         match *self {
             Self::Substitute { index, .. } | Self::Insert { index } => index + 1 == corrected_len,
@@ -41,7 +41,7 @@ impl Edit {
         }
     }
 
-    /// 要画删除线的原字母及其在纠正后串里的位置（画在这一位之前）；漏字没有可划的。
+    /// 要畫刪除線的原字母及其在糾正後串裡的位置（畫在這一位之前）；漏字沒有可劃的。
     pub fn struck(&self) -> Option<(usize, String)> {
         match *self {
             Self::Substitute { index, from } => Some((index, from.to_string())),
@@ -56,7 +56,7 @@ impl Edit {
     }
 }
 
-/// `input` 的全部一处编辑变体：先换位，再替换、删除、插入。`input` 必须是纯小写字母。
+/// `input` 的全部一處編輯變體：先換位，再替換、刪除、插入。`input` 必須是純小寫字母。
 pub fn variants(input: &str) -> Vec<(Edit, String)> {
     let bytes = input.as_bytes();
     let n = bytes.len();
@@ -129,7 +129,7 @@ mod tests {
             .to_original(5),
             5
         );
-        // 原 nihooma（7）→ 纠正 nihoma？这里只看换算：删掉下标 3 的字母，消耗 3 个纠正后字母时把它一起吃掉
+        // 原 nihooma（7）→ 糾正 nihoma？這裡只看換算：刪掉下標 3 的字母，消耗 3 個糾正後字母時把它一起吃掉
         let delete = Edit::Delete {
             index: 3,
             removed: 'o',
@@ -151,7 +151,7 @@ mod tests {
         assert!(texts.contains(&"ac"));
         assert!(texts.contains(&"a"));
         assert!(texts.contains(&"zab"));
-        // 1 换位 + 2×25 替换 + 2 删除 + 3×26 插入
+        // 1 換位 + 2×25 替換 + 2 刪除 + 3×26 插入
         assert_eq!(all.len(), 1 + 50 + 2 + 78);
         assert!(
             variants("aa")

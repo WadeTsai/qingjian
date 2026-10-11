@@ -1,4 +1,4 @@
-//! 颜色：sRGB 8 位 + alpha，与平台无关；到 tiny-skia / cosmic-text 的换算集中在这里。
+//! 顏色：sRGB 8 位 + alpha，與平臺無關；到 tiny-skia / cosmic-text 的換算集中在這裡。
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
@@ -8,7 +8,7 @@ pub struct Color {
 
     pub b: u8,
 
-    /// 不透明度，255 为完全不透明。
+    /// 不透明度，255 為完全不透明。
     pub a: u8,
 }
 
@@ -21,7 +21,7 @@ impl Color {
         Self { r, g, b, a: 255 }
     }
 
-    /// 纯黑 / 纯白带不透明度，系统语义色（label / secondaryLabel…）都是这个形态。
+    /// 純黑 / 純白帶不透明度，系統語義色（label / secondaryLabel…）都是這個形態。
     pub const fn gray(level: u8, alpha: u8) -> Self {
         Self {
             r: level,
@@ -39,19 +39,19 @@ impl Color {
         cosmic_text::Color::rgba(self.r, self.g, self.b, self.a)
     }
 
-    /// 乘上一层覆盖率（字形遮罩的像素值）后的预乘颜色。
+    /// 乘上一層覆蓋率（字形遮罩的畫素值）後的預乘顏色。
     pub(crate) fn premultiplied(self, coverage: u8) -> tiny_skia::PremultipliedColorU8 {
         let alpha = mul_u8(self.a, coverage);
         premultiply(self.r, self.g, self.b, alpha)
     }
 }
 
-/// 8 位定点乘法：`a * b / 255`，四舍五入。
+/// 8 位定點乘法：`a * b / 255`，四捨五入。
 pub(crate) fn mul_u8(a: u8, b: u8) -> u8 {
     ((u32::from(a) * u32::from(b) + 127) / 255) as u8
 }
 
-/// 直通 RGBA → 预乘。
+/// 直通 RGBA → 預乘。
 pub(crate) fn premultiply(r: u8, g: u8, b: u8, a: u8) -> tiny_skia::PremultipliedColorU8 {
     tiny_skia::PremultipliedColorU8::from_rgba(mul_u8(r, a), mul_u8(g, a), mul_u8(b, a), a)
         .unwrap_or(tiny_skia::PremultipliedColorU8::TRANSPARENT)

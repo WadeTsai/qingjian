@@ -1,4 +1,4 @@
-//! AppKit 表格数据源；读取页面快照并把操作转发给 Host。
+//! AppKit 表格資料來源；讀取頁面快照並把操作轉發給 Host。
 
 use super::state::TableState;
 use objc2::{
@@ -16,7 +16,7 @@ use qingjian_core::CustomPhrase;
 use std::cell::RefCell;
 
 define_class!(
-    // SAFETY: 仅在主线程访问 AppKit 控件，数据回调不访问 Host。
+    // SAFETY: 僅在主執行緒訪問 AppKit 控制元件，資料回撥不訪問 Host。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = TableState]

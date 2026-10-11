@@ -1,4 +1,4 @@
-//! 设置程序只开一个：第二次启动把已开的窗口带到前台后退出。
+//! 設定程式只開一個：第二次啟動把已開的視窗帶到前臺後退出。
 
 use windows::Win32::Foundation::{ERROR_ALREADY_EXISTS, GetLastError};
 use windows::Win32::System::Threading::CreateMutexW;
@@ -7,16 +7,16 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows::core::w;
 
-/// 已有实例在跑就唤起它并返回 `false`；这是第一个实例返回 `true`。
+/// 已有例項在跑就喚起它並返回 `false`；這是第一個例項返回 `true`。
 ///
-/// 互斥体句柄故意不关，进程退出时由系统回收。
+/// 互斥體控制代碼故意不關，程序退出時由系統回收。
 pub(crate) fn acquire() -> bool {
     let created = unsafe { CreateMutexW(None, false, w!("Local\\QingjianSettings")) };
     if created.is_err() || unsafe { GetLastError() } != ERROR_ALREADY_EXISTS {
         return true;
     }
-    // 第一个实例还没建出窗口（连点两下）就找不到，直接退出即可。
-    if let Ok(hwnd) = unsafe { FindWindowW(None, w!("青简设置")) } {
+    // 第一個例項還沒建出視窗（連點兩下）就找不到，直接退出即可。
+    if let Ok(hwnd) = unsafe { FindWindowW(None, w!("青簡設定")) } {
         unsafe {
             if IsIconic(hwnd).as_bool() {
                 let _ = ShowWindow(hwnd, SW_RESTORE);

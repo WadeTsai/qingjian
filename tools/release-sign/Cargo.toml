@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-release-sign"
-description = "发版用：给 releases.json 生成 ed25519 分离签名，客户端（qingjian-update）按内置公钥验"
+description = "發版用：給 releases.json 生成 ed25519 分離簽名，客戶端（qingjian-update）按內建公鑰驗"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

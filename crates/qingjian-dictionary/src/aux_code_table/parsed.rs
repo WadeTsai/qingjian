@@ -1,44 +1,44 @@
-//! Rime 码表文本的解析：列位置、跨文件合表与导入统计。
+//! Rime 碼錶文本的解析：列位置、跨檔案合表與匯入統計。
 
 use std::path::Path;
 
 use super::columns::{Columns, default_column_names, names_to_columns};
 use super::table::is_valid_code;
 
-/// 一份码表文件（不含 `import_tables` 合进来的部分）解析出来的东西。
+/// 一份碼錶檔案（不含 `import_tables` 合進來的部分）解析出來的東西。
 #[derive(Debug, Default)]
 pub(super) struct ParsedTable {
-    /// YAML 头里的 `name:`。
+    /// YAML 頭裡的 `name:`。
     pub name: Option<String>,
 
-    /// YAML 头里的 `version:`。
+    /// YAML 頭裡的 `version:`。
     pub version: Option<String>,
 
-    /// 要一并读入的其他码表（`import_tables` 的原样字符串，相对路径由调用方按主文件目录解析）。
+    /// 要一併讀入的其他碼錶（`import_tables` 的原樣字串，相對路徑由呼叫方按主檔案目錄解析）。
     pub import_tables: Vec<String>,
 
     /// 列位置。
     pub columns: Columns,
 
-    /// `(词, 码)` 对，码已经过校验。
+    /// `(詞, 碼)` 對，碼已經過校驗。
     pub pairs: Vec<(String, String)>,
 
-    /// 正文行数（不含注释与空行）。
+    /// 正文行數（不含註釋與空行）。
     pub read: usize,
 
-    /// 成功建成条目的行数。
+    /// 成功建成條目的行數。
     pub with_code: usize,
 
-    /// 有词没有码的行数。
+    /// 有詞沒有碼的行數。
     pub no_code: usize,
 
-    /// 码非法被丢掉的行数。
+    /// 碼非法被丟掉的行數。
     pub skipped: usize,
 }
 
 impl ParsedTable {
-    /// 解析一份码表文本：`---` … `...` 是 YAML 头（`name` / `version` / `columns` / `import_tables`），
-    /// 正文每行按 `columns` 的列位置取词与码。没有头、直接 `词\t码` 的纯文本也认（按缺省列序）。
+    /// 解析一份碼錶文本：`---` … `...` 是 YAML 頭（`name` / `version` / `columns` / `import_tables`），
+    /// 正文每行按 `columns` 的列位置取詞與碼。沒有頭、直接 `詞\t碼` 的純文本也認（按預設列序）。
     pub fn parse(text: &str) -> Self {
         let mut parsed = Self::default();
         let mut names: Vec<String> = default_column_names();
@@ -59,12 +59,12 @@ impl ParsedTable {
                     pending_imports = false;
                     continue;
                 }
-                // 还没显式进 `---` 头：开头的空行与 `#` 注释行先跳过——
-                // 首行是注释 / 空行会把下面的启发式永久置位，整份正文都被当头吞掉
+                // 還沒顯式進 `---` 頭：開頭的空行與 `#` 註釋行先跳過——
+                // 首行是註釋 / 空行會把下面的啟發式永久置位，整份正文都被當頭吞掉
                 if !in_header && (trimmed.is_empty() || trimmed.starts_with('#')) {
                     continue;
                 }
-                // 头里（`---` 之后），或还没进头但这一行不像正文（没有制表符）
+                // 頭裡（`---` 之後），或還沒進頭但這一行不像正文（沒有製表符）
                 if in_header || !line.contains('\t') {
                     in_header = true;
                     if pending_imports {
@@ -108,7 +108,7 @@ impl ParsedTable {
         parsed
     }
 
-    /// 正文一行：按列下标取词与码。码列里空格分开的多个码都收（Rime 的简码 / 全码写法）。
+    /// 正文一行：按列下標取詞與碼。碼列裡空格分開的多個碼都收（Rime 的簡碼 / 全碼寫法）。
     fn push_body(&mut self, line: &str) {
         self.read += 1;
         let fields: Vec<&str> = line.split('\t').map(str::trim).collect();
@@ -143,7 +143,7 @@ impl ParsedTable {
     }
 }
 
-/// 追加一条 `import_tables`。
+/// 追加一條 `import_tables`。
 fn push_import(parsed: &mut ParsedTable, item: &str) {
     let item = unquote(item);
     if !item.is_empty() {
@@ -151,14 +151,14 @@ fn push_import(parsed: &mut ParsedTable, item: &str) {
     }
 }
 
-/// `key: value` 拆成两半；不是这个形状返回 `None`。
+/// `key: value` 拆成兩半；不是這個形狀返回 `None`。
 fn split_key(line: &str) -> Option<(&str, &str)> {
     let (key, value) = line.split_once(':')?;
     let key = key.trim();
     (!key.is_empty() && !key.contains(char::is_whitespace)).then_some((key, value.trim()))
 }
 
-/// `[a, b]` 形式的行内列表；不是这个形状返回 `None`。
+/// `[a, b]` 形式的行內列表；不是這個形狀返回 `None`。
 fn inline_list(value: &str) -> Option<Vec<String>> {
     let body = value.strip_prefix('[')?.strip_suffix(']')?;
     Some(
@@ -169,12 +169,12 @@ fn inline_list(value: &str) -> Option<Vec<String>> {
     )
 }
 
-/// 去掉 YAML 值两边的引号。
+/// 去掉 YAML 值兩邊的引號。
 fn unquote(value: &str) -> String {
     value.trim().trim_matches(['\'', '"']).to_owned()
 }
 
-/// 码表文件的主干名：`stroke.dict.yaml` → `stroke`（与词库导入同一套规则）。
+/// 碼錶檔案的主幹名：`stroke.dict.yaml` → `stroke`（與詞庫匯入同一套規則）。
 pub(super) fn stem_of(path: &Path) -> Option<String> {
     let name = path.file_name()?.to_str()?;
     let stem = crate::import::strip_extensions(name);

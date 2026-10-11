@@ -22,8 +22,8 @@ pub enum ConfigError {
     Parse {
         path: PathBuf,
 
-        /// 装着不拆：`toml::de::Error` 一百多字节，直接放进枚举会把 `ConfigError`
-        /// （以及各壳聚合它的错误类型）撑过 clippy 的 128 字节阈值。
+        /// 裝著不拆：`toml::de::Error` 一百多位元組，直接放進列舉會把 `ConfigError`
+        /// （以及各殼聚合它的錯誤型別）撐過 clippy 的 128 位元組閾值。
         #[source]
         source: Box<toml::de::Error>,
     },

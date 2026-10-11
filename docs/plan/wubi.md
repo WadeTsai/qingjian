@@ -1,11 +1,11 @@
-# 五笔（形码）支持方案
+# 五筆（形碼）支援方案
 
-2026-09-15 定。第一期做 **86 版**，平台范围 **Core + CLI + Windows**，配置收敛到 `[general] scheme` 并把配置迁移一起做。
-本文记录技术判断与分期；实现要点落地后同步 `docs/notes/crate-notes.md`。
+2026-09-15 定。第一期做 **86 版**，平臺範圍 **Core + CLI + Windows**，配置收斂到 `[general] scheme` 並把配置遷移一起做。
+本文記錄技術判斷與分期；實現要點落地後同步 `docs/notes/crate-notes.md`。
 
-## 一、为什么五笔不能按双拼的方式接
+## 一、為什麼五筆不能按雙拼的方式接
 
-现有代码里「输入方案」的抽象是**「把按键解码成拼音串」**，双拼与注音共用的是**拼音**这个底层，不是**方案**这个抽象：
+現有程式碼裡「輸入方案」的抽象是**「把按鍵解碼成拼音串」**，雙拼與注音共用的是**拼音**這個底層，不是**方案**這個抽象：
 
 ```rust
 // crates/qingjian-core/src/engine/setup.rs:79
@@ -15,161 +15,161 @@ pub(super) fn decode(&self, keys: &str) -> Option<EngineDecoded> {
 }
 ```
 
-解出来的 `EngineDecoded`（`engine/decoded.rs`）提供 `pinyin / tail / segmentation / marked / keys_for`，
-随后原样进 `engine/query/mod.rs:79` 之后的词级查找、排序、整句。
+解出來的 `EngineDecoded`（`engine/decoded.rs`）提供 `pinyin / tail / segmentation / marked / keys_for`，
+隨後原樣進 `engine/query/mod.rs:79` 之後的詞級查詢、排序、整句。
 
-五笔在这一层就不成立：码串不是拼音，切不出音节，没有读音，没有整句。拼音耦合在三个层次上：
+五筆在這一層就不成立：碼串不是拼音，切不出音節，沒有讀音，沒有整句。拼音耦合在三個層次上：
 
-| 层 | 耦合点 | 五笔的情况 |
+| 層 | 耦合點 | 五筆的情況 |
 |---|---|---|
-| 解析 | `parser::segment`（`parser/mod.rs:54`）+ `SYLLABLES` 表（`parser/syllable.rs:7`） | 码串无需切分，按音节切分本身就是错的 |
-| 词库 | `Dictionary` 的键是空格分隔的拼音串，查询接口全部收 `SyllablePattern`（`dictionary.rs:350-393`） | 需要按「码」索引，前缀匹配而非音节位置匹配 |
-| 排序 | `ranking/scored.rs` 的 `full_last` / `coverage` / `abbreviated` / 模糊音 `penalty` | 码等长时这些字段全部退化，词频主导 |
+| 解析 | `parser::segment`（`parser/mod.rs:54`）+ `SYLLABLES` 表（`parser/syllable.rs:7`） | 碼串無需切分，按音節切分本身就是錯的 |
+| 詞庫 | `Dictionary` 的鍵是空格分隔的拼音串，查詢介面全部收 `SyllablePattern`（`dictionary.rs:350-393`） | 需要按「碼」索引，字首匹配而非音節位置匹配 |
+| 排序 | `ranking/scored.rs` 的 `full_last` / `coverage` / `abbreviated` / 模糊音 `penalty` | 碼等長時這些欄位全部退化，詞頻主導 |
 
-所以「在 `shuangpin/` 旁边加个 `wubi/` 目录」不成立。
+所以「在 `shuangpin/` 旁邊加個 `wubi/` 目錄」不成立。
 
-## 二、方案：两条平行管线
+## 二、方案：兩條平行管線
 
-把方案抽象提升一层，**Engine 在 `query_inner` 顶部分派到两条平行管线**，而不是让五笔伪装成拼音：
+把方案抽象提升一層，**Engine 在 `query_inner` 頂部分派到兩條平行管線**，而不是讓五筆偽裝成拼音：
 
 ```rust
-// engine/query/mod.rs:62 query_inner 的开头
+// engine/query/mod.rs:62 query_inner 的開頭
 if let Some(code) = self.code {
-    return Ok(self.query_code(keys, rest, start));  // 形码：码串 → 码表 → 候选
+    return Ok(self.query_code(keys, rest, start));  // 形碼：碼串 → 碼錶 → 候選
 }
-// 以下原有拼音管线不动
+// 以下原有拼音管線不動
 ```
 
-三条理由：
+三條理由：
 
-1. **现成的先例。** `query/mod.rs:103-129` 那个「第一个字母都切不动」的分支已经在返回
-   `segmentations: Vec::new()` + `tail: keys` 的 `Query`，下游（`Engine::annotate`、输入日志、
-   `note_displayed`、各壳渲染）本来就吃得下「无切分」的 `Query`。五笔复用这个形状，不新造结果类型。
-2. **不该开的开关变成天然不存在**，而不是散落一地的 `if wubi`。沿用现有套路
-   （`engine/correcting.rs:9` 对双拼直接返回 `None`、`engine/setup.rs:70` 的 `modes()` 返回 `ModeKeys::LETTERLESS`），
-   在一个集中判断里关掉：整句 / Viterbi、神经重排、模糊音、拼写纠错与词图敲错边、中英混输、简拼、
-   v / u / i 前缀快捷键（**`v` 与 `i` 在五笔里是字根键，必须让位**）。
-3. **青简的产品特色全部自动保留。** `Learner`（词频 / 用户词 / 选择学习）、`Translator` + `Glossary` 释义、
-   生词本 `VocabularyBook`、CEFR / JLPT 等级、`InputLog`、`UsageStats` 都按「上屏的词」工作，与输入方案无关。
-   **五笔用户照样有候选旁的译文与生词统计**——这是「Core 才是青简」换来的好处，也是这个功能的卖点。
+1. **現成的先例。** `query/mod.rs:103-129` 那個「第一個字母都切不動」的分支已經在返回
+   `segmentations: Vec::new()` + `tail: keys` 的 `Query`，下游（`Engine::annotate`、輸入日誌、
+   `note_displayed`、各殼渲染）本來就吃得下「無切分」的 `Query`。五筆複用這個形狀，不新造結果型別。
+2. **不該開的開關變成天然不存在**，而不是散落一地的 `if wubi`。沿用現有套路
+   （`engine/correcting.rs:9` 對雙拼直接返回 `None`、`engine/setup.rs:70` 的 `modes()` 返回 `ModeKeys::LETTERLESS`），
+   在一個集中判斷裡關掉：整句 / Viterbi、神經重排、模糊音、拼寫糾錯與詞圖敲錯邊、中英混輸、簡拼、
+   v / u / i 字首快捷鍵（**`v` 與 `i` 在五筆裡是字根鍵，必須讓位**）。
+3. **青簡的產品特色全部自動保留。** `Learner`（詞頻 / 使用者詞 / 選擇學習）、`Translator` + `Glossary` 釋義、
+   生詞本 `VocabularyBook`、CEFR / JLPT 等級、`InputLog`、`UsageStats` 都按「上屏的詞」工作，與輸入方案無關。
+   **五筆使用者照樣有候選旁的譯文與生詞統計**——這是「Core 才是青簡」換來的好處，也是這個功能的賣點。
 
-### 数据层：静态全量码表，不做运行时取码
+### 資料層：靜態全量碼錶，不做執行時取碼
 
-新增 `CodeTable`（`crates/qingjian-dictionary/src/code_table.rs`，与 `Dictionary` 同属「文本 → 键」的查表；
-只有一个文件、没有同词干的兄弟，按约定不另开目录）。词目与 `WordList` 一样是排好序的 `Vec`，
-查询靠**前缀二分**——比现在按音节位置逐级收窄简单。`.qj` 容器加 `Kind::Code`（`crates/qingjian-format`，阶段 2）。
+新增 `CodeTable`（`crates/qingjian-dictionary/src/code_table.rs`，與 `Dictionary` 同屬「文本 → 鍵」的查表；
+只有一個檔案、沒有同詞幹的兄弟，按約定不另開目錄）。詞目與 `WordList` 一樣是排好序的 `Vec`，
+查詢靠**字首二分**——比現在按音節位置逐級收窄簡單。`.qj` 容器加 `Kind::Code`（`crates/qingjian-format`，階段 2）。
 
-词组取码规则（二字词 2+2、三字词 1+1+1、四字及以上 1+1+1+1）**在生成数据时算好，运行时不算**：
-规则连带简码与识别码很绕，而静态码表够小也够全；码表没有的词靠用户词学习补，不做运行时推导。
+片語取碼規則（二字詞 2+2、三字詞 1+1+1、四字及以上 1+1+1+1）**在生成資料時算好，執行時不算**：
+規則連帶簡碼與識別碼很繞，而靜態碼錶夠小也夠全；碼錶沒有的詞靠使用者詞學習補，不做執行時推導。
 
-一级 / 二级 / 三级简码不专门实现——它们就是「前缀查询 + 词频排序」的自然结果（`g` → 一，`gg` → 该前缀下词频最高的字）。
+一級 / 二級 / 三級簡碼不專門實現——它們就是「字首查詢 + 詞頻排序」的自然結果（`g` → 一，`gg` → 該字首下詞頻最高的字）。
 
-### 用户词
+### 使用者詞
 
-现有自动造词（连着选出的两个词合成用户词）按「词的字数 = 音节数」判断，形码没有音节，自然不触发
-（`try_auto_word` / `finish_buffer` 里 `chars != syllables.len()` 直接返回），不必另加开关。
-「同一个码下选过的词靠前」由现有的 `Learner::record_choice` 负责，形码不需要新的用户词表。
+現有自動造詞（連著選出的兩個詞合成使用者詞）按「詞的字數 = 音節數」判斷，形碼沒有音節，自然不觸發
+（`try_auto_word` / `finish_buffer` 裡 `chars != syllables.len()` 直接返回），不必另加開關。
+「同一個碼下選過的詞靠前」由現有的 `Learner::record_choice` 負責，形碼不需要新的使用者詞表。
 
-### 阶段 1 落定的三件事（2026-09-15）
+### 階段 1 落定的三件事（2026-09-15）
 
-1. **候选是新的一种 `CandidateKind::Code`**，不是塞进 `Chinese`。它的 `syllables` 为空、上屏吃掉整段作用域
-   （`commit` 里的 `whole_scope`）。这样「没有音节」是类型里的事实，而不是靠空串蒙混；整段造词也随之不触发。
-2. **简码不用专门做**。一级 / 二级 / 三级简码就是「编码打全的词排在同前缀的长编码词前面」，
-   由 `CodeTable::lookup` 的 `exact` 位给出，与拼音侧「音节数与输入一致者优先」是同一个排序位。
-3. **码表第一期只读 TSV**，不进 `.qj` 容器（`Kind::Code` 留到阶段 2 与 `pack` 一起做）。
-   段 1 的 CLI 入口是 `--wubi <码表.tsv>`。
+1. **候選是新的一種 `CandidateKind::Code`**，不是塞進 `Chinese`。它的 `syllables` 為空、上屏吃掉整段作用域
+   （`commit` 裡的 `whole_scope`）。這樣「沒有音節」是型別裡的事實，而不是靠空串矇混；整段造詞也隨之不觸發。
+2. **簡碼不用專門做**。一級 / 二級 / 三級簡碼就是「編碼打全的詞排在同字首的長編碼詞前面」，
+   由 `CodeTable::lookup` 的 `exact` 位給出，與拼音側「音節數與輸入一致者優先」是同一個排序位。
+3. **碼錶第一期只讀 TSV**，不進 `.qj` 容器（`Kind::Code` 留到階段 2 與 `pack` 一起做）。
+   段 1 的 CLI 入口是 `--wubi <碼錶.tsv>`。
 
-## 三、数据
+## 三、資料
 
-| 来源 | 许可 | 结论 |
+| 來源 | 許可 | 結論 |
 |---|---|---|
-| [rime-wubi86-jidian](https://github.com/sxjudya/rime-wubi86-jidian)（极点 86 码表） | Apache-2.0 | **采用**：宽松、词量最大 |
-| [rime/rime-wubi](https://github.com/rime/rime-wubi) 官方 `wubi86.dict.yaml` | LGPL-3.0 | 备选：与本仓库 GPL-3.0-or-later 兼容，但要单独带 LICENSE |
-| Gitee「大一统五笔」 | 未声明 | 不能用 |
+| [rime-wubi86-jidian](https://github.com/sxjudya/rime-wubi86-jidian)（極點 86 碼錶） | Apache-2.0 | **採用**：寬鬆、詞量最大 |
+| [rime/rime-wubi](https://github.com/rime/rime-wubi) 官方 `wubi86.dict.yaml` | LGPL-3.0 | 備選：與本倉庫 GPL-3.0-or-later 相容，但要單獨帶 LICENSE |
+| Gitee「大一統五筆」 | 未宣告 | 不能用 |
 
-**词频不用码表自带的权重**（那是码表顺序，不是语料词频）。用现有 `assets/lexicon/dict.tsv` 里
-同一个词的语料词频交叉回填——换方案不会让同一个词的排序变奇怪，释义兜底与生词识别也对得上。
+**詞頻不用碼錶自帶的權重**（那是碼錶順序，不是語料詞頻）。用現有 `assets/lexicon/dict.tsv` 裡
+同一個詞的語料詞頻交叉回填——換方案不會讓同一個詞的排序變奇怪，釋義兜底與生詞識別也對得上。
 
-管线：`tools/dict-convert` 加 `wubi` 子命令读码表 → `assets/wubi/wubi86.tsv`（`词\t码\t词频`）
+管線：`tools/dict-convert` 加 `wubi` 子命令讀碼錶 → `assets/wubi/wubi86.tsv`（`詞\t碼\t詞頻`）
 → `pack code` → `code-wubi86.qj`。
 
-`qingjian-dictionary/src/import/rime.rs` 已能把 Rime `.dict.yaml` 的 `词\t拼音\t权重` 转成青简 TSV，
-五笔码表正好是这个格式（第二列是 `ggll` 这样的码），转换主体可以直接复用。
+`qingjian-dictionary/src/import/rime.rs` 已能把 Rime `.dict.yaml` 的 `詞\t拼音\t權重` 轉成青簡 TSV，
+五筆碼錶正好是這個格式（第二列是 `ggll` 這樣的碼），轉換主體可以直接複用。
 
-**许可与署名**（同步四处，见 `docs/design/landscape.md:55`）：`assets/wubi/LICENSE`、
-`docs/design/landscape.md` 的数据源表与随包数据清单、README 的 License 一节、偏好设置「关于」页。
+**許可與署名**（同步四處，見 `docs/design/landscape.md:55`）：`assets/wubi/LICENSE`、
+`docs/design/landscape.md` 的資料來源表與隨包資料清單、README 的 License 一節、偏好設定「關於」頁。
 
-## 四、配置与壳
+## 四、配置與殼
 
-现状 `[general] shuangpin = ""` + `[general] zhuyin = false` 是**两个字段表达同一个维度**，
-再加一个并列字段就是三个字段打架。**收敛成 `[general] scheme`**：
+現狀 `[general] shuangpin = ""` + `[general] zhuyin = false` 是**兩個欄位表達同一個維度**，
+再加一個並列欄位就是三個欄位打架。**收斂成 `[general] scheme`**：
 
 ```toml
 [general]
 scheme = "pinyin"   # pinyin | xiaohe | ziranma | microsoft | sogou | zhuyin | wubi86
 ```
 
-值就是现有 `ShuangpinScheme::key()`（`shuangpin/scheme.rs:32`）与 `zhuyin` 的统一。
-旧键读取时兼容、写入时迁移，落地时把 `docs/plan/todo.md` 里挂着的「配置文件版本迁移」一起做掉。
+值就是現有 `ShuangpinScheme::key()`（`shuangpin/scheme.rs:32`）與 `zhuyin` 的統一。
+舊鍵讀取時相容、寫入時遷移，落地時把 `docs/plan/todo.md` 裡掛著的「配置檔案版本遷移」一起做掉。
 
-| 壳 | 落点 |
+| 殼 | 落點 |
 |---|---|
-| Core | `engine/mod.rs` 的 `shuangpin` 与 `zhuyin` 收敛为一个字段；`engine/setup.rs:20-33` 的 setter 合并；阶段 1 已加的 `code: Option<CodeTable>` 改为随 `scheme` 装载（哪个码表由配置决定，Core 不需要 `CodeScheme` 枚举） |
+| Core | `engine/mod.rs` 的 `shuangpin` 與 `zhuyin` 收斂為一個欄位；`engine/setup.rs:20-33` 的 setter 合併；階段 1 已加的 `code: Option<CodeTable>` 改為隨 `scheme` 裝載（哪個碼錶由配置決定，Core 不需要 `CodeScheme` 列舉） |
 | 配置 | `crates/qingjian-platform/src/config/general.rs:50-97` |
-| CLI | `apps/cli/src/args.rs:76` 加 `--wubi`；`apps/cli/src/main.rs:236-250` 应用；回放 `apps/cli/src/replay/mod.rs:95-116` 认新 scheme |
-| Windows 设置 | `apps/windows/settings/src/panel/pages/general.rs:14-20` 的 `SHUANGPIN` 列表扩成「输入方案」；`panel/message.rs:12-13`、`panel/component.rs:41-44` |
-| Windows Server | `server/src/main.rs:188-189` 启动应用；`dispatch/reload/mod.rs:107-108` 热加载；状态条 `dispatch/status/mod.rs:93-99` 用 `scheme.label()` |
-| macOS | **本期不动**。顺带记一笔：`apps/macos` 至今没有接注音（全目录无 `set_zhuyin_mode` 引用），mac 接方案时要把注音一起补上 |
+| CLI | `apps/cli/src/args.rs:76` 加 `--wubi`；`apps/cli/src/main.rs:236-250` 應用；回放 `apps/cli/src/replay/mod.rs:95-116` 認新 scheme |
+| Windows 設定 | `apps/windows/settings/src/panel/pages/general.rs:14-20` 的 `SHUANGPIN` 列表擴成「輸入方案」；`panel/message.rs:12-13`、`panel/component.rs:41-44` |
+| Windows Server | `server/src/main.rs:188-189` 啟動應用；`dispatch/reload/mod.rs:107-108` 熱載入；狀態條 `dispatch/status/mod.rs:93-99` 用 `scheme.label()` |
+| macOS | **本期不動**。順帶記一筆：`apps/macos` 至今沒有接注音（全目錄無 `set_zhuyin_mode` 引用），mac 接方案時要把注音一起補上 |
 
-中英切换仍然是布尔，不变（架构约定「输入方案是配置项，不是模式」）。
+中英切換仍然是布林，不變（架構約定「輸入方案是配置項，不是模式」）。
 
-## 五、分期与验收
+## 五、分期與驗收
 
-| 阶段 | 内容 | 估计 |
+| 階段 | 內容 | 估計 |
 |---|---|---|
-| 1 ✅ | Core `CodeTable` + `query_code` + Engine 分派 + CLI `--wubi`（2026-09-15 完成，233 + 21 个测试全绿，CLI 端到端验过） | 3–5 天 |
-| 2 | `dict-convert wubi` + 词频回填 + `pack code` + 许可署名 | 1–2 天 |
-| | 　└ `dict-convert wubi` 与词频回填**已做**（2026-09-15，读 Rime `.dict.yaml`，词频按词面从青简词库回填，4 个用例）；剩下载码表、`Kind::Code` 打包与许可署名 | |
-| 3 | `[general] scheme` 收敛 + 配置迁移 + Windows 设置页与状态条 | 2–3 天 |
-| | 　└ **已做**（2026-09-16）：`Scheme` 枚举与 `[general] scheme`；旧键 `shuangpin` / `zhuyin` 读取时推断（不自动改写文件）；CLI、macOS 偏好设置与 Windows 设置页/Server/状态条都改成读写新键；Windows Server 按方案装载码表（用户目录优先、随包 `assets/wubi/` 兜底，找不到只警告并按拼音跑）。打包与 macOS 接入**也已做**（2026-09-16 续）：`bundle.sh` 拷进 `Resources/wubi/`、Windows 安装器拷进 `{app}\assets\wubi\`，两处署名（macOS / Windows 的「关于」页）都补了；macOS 的偏好设置那栏换成「输入方案」下拉（`Scheme::ALL`），`apply_config` 里一并设注音与码表——macOS 侧因此顺带把一直没接的**大千注音**也接上了。**还差**：macOS 与 Windows 的真机验证 | |
-| | 　└ 壳真带上码表时，署名要同步：`bundle.sh` 是**按文件白名单**拷数据的（`assets/wubi/` 现在一个都没拷），偏好设置「关于」页的 `ATTRIBUTIONS` 也是照随包数据列的一份。现在两处都没加，因为 macOS 侧还没有输入方案，包里带它只是白占体积 | |
-| 4 | 释义 / 生词 / 统计 / 日志对齐验证、输入日志 `scheme` 进回放、`docs/user/input/` 加页 | 1–2 天 |
-| | 　└ **已做**（2026-09-16）：回放按每条日志的方案切换（`SchemeSwitcher`，形码要有 `--wubi` 的码表）；释义 / 生词 / 词汇记录 / 输入统计在形码下照常，有测试钉住（`code_commits_still_feed_translations_vocabulary_and_usage`）；`docs/user/` 的按键表、拼写纠错、英文模式、偏好设置、模糊音与输入方案各页都补了五笔 | |
+| 1 ✅ | Core `CodeTable` + `query_code` + Engine 分派 + CLI `--wubi`（2026-09-15 完成，233 + 21 個測試全綠，CLI 端到端驗過） | 3–5 天 |
+| 2 | `dict-convert wubi` + 詞頻回填 + `pack code` + 許可署名 | 1–2 天 |
+| | 　└ `dict-convert wubi` 與詞頻回填**已做**（2026-09-15，讀 Rime `.dict.yaml`，詞頻按詞面從青簡詞庫回填，4 個用例）；剩下載碼錶、`Kind::Code` 打包與許可署名 | |
+| 3 | `[general] scheme` 收斂 + 配置遷移 + Windows 設定頁與狀態條 | 2–3 天 |
+| | 　└ **已做**（2026-09-16）：`Scheme` 列舉與 `[general] scheme`；舊鍵 `shuangpin` / `zhuyin` 讀取時推斷（不自動改寫檔案）；CLI、macOS 偏好設定與 Windows 設定頁/Server/狀態條都改成讀寫新鍵；Windows Server 按方案裝載碼錶（使用者目錄優先、隨包 `assets/wubi/` 兜底，找不到只警告並按拼音跑）。打包與 macOS 接入**也已做**（2026-09-16 續）：`bundle.sh` 拷進 `Resources/wubi/`、Windows 安裝器拷進 `{app}\assets\wubi\`，兩處署名（macOS / Windows 的「關於」頁）都補了；macOS 的偏好設定那欄換成「輸入方案」下拉（`Scheme::ALL`），`apply_config` 裡一併設注音與碼錶——macOS 側因此順帶把一直沒接的**大千注音**也接上了。**還差**：macOS 與 Windows 的真機驗證 | |
+| | 　└ 殼真帶上碼錶時，署名要同步：`bundle.sh` 是**按檔案白名單**拷資料的（`assets/wubi/` 現在一個都沒拷），偏好設定「關於」頁的 `ATTRIBUTIONS` 也是照隨包資料列的一份。現在兩處都沒加，因為 macOS 側還沒有輸入方案，包裡帶它只是白佔體積 | |
+| 4 | 釋義 / 生詞 / 統計 / 日誌對齊驗證、輸入日誌 `scheme` 進回放、`docs/user/input/` 加頁 | 1–2 天 |
+| | 　└ **已做**（2026-09-16）：回放按每條日誌的方案切換（`SchemeSwitcher`，形碼要有 `--wubi` 的碼錶）；釋義 / 生詞 / 詞彙記錄 / 輸入統計在形碼下照常，有測試釘住（`code_commits_still_feed_translations_vocabulary_and_usage`）；`docs/user/` 的按鍵表、拼寫糾錯、英文模式、偏好設定、模糊音與輸入方案各頁都補了五筆 | |
 
-合计约 1.5–2 周（单人，不含真机来回）。
+合計約 1.5–2 周（單人，不含真機來回）。
 
-验收沿用仓库规矩：改动先跑 `apps/cli`。`--typing` 看逐键延迟（形码每键应当比拼音更快，
-没有整句与模糊音的开销）；`--replay` 看既有拼音日志有没有退化（应当完全不变）；
-`--eval-text` 不适用于形码，跑一次确认没被误触发即可。
+驗收沿用倉庫規矩：改動先跑 `apps/cli`。`--typing` 看逐鍵延遲（形碼每鍵應當比拼音更快，
+沒有整句與模糊音的開銷）；`--replay` 看既有拼音日誌有沒有退化（應當完全不變）；
+`--eval-text` 不適用於形碼，跑一次確認沒被誤觸發即可。
 
-## 五之二、混输（2026-09-16 追加，原计划之外）
+## 五之二、混輸（2026-09-16 追加，原計劃之外）
 
-原计划里 `[general] scheme` 是**单选**的，选了五笔就完全不进拼音管线。实际用起来要的是
-「双拼和五笔分开和组合」，所以拆成**两条独立的轴**：
+原計劃裡 `[general] scheme` 是**單選**的，選了五筆就完全不進拼音管線。實際用起來要的是
+「雙拼和五筆分開和組合」，所以拆成**兩條獨立的軸**：
 
 ```toml
-scheme = "pinyin"    # 拼音侧：pinyin / xiaohe / ziranma / microsoft / sogou / zhuyin / none（关）
-wubi   = "wubi86"    # 形码侧：空为关
+scheme = "pinyin"    # 拼音側：pinyin / xiaohe / ziranma / microsoft / sogou / zhuyin / none（關）
+wubi   = "wubi86"    # 形碼側：空為關
 ```
 
-三种用法：双拼 alone（`xiaohe` + 空）、五笔 alone（`none` + `wubi86`）、**混输**（两边都开）。
-`Engine` 上对应两个开关 `set_code_table` / `set_phonetic`，`query_inner` 按它们分派到
+三種用法：雙拼 alone（`xiaohe` + 空）、五筆 alone（`none` + `wubi86`）、**混輸**（兩邊都開）。
+`Engine` 上對應兩個開關 `set_code_table` / `set_phonetic`，`query_inner` 按它們分派到
 `query_code` / `query_phonetic` / `query_mixed`。
 
-### 排序：编码打全的形码词在前
+### 排序：編碼打全的形碼詞在前
 
-2026-09-18 定：**编码打全的形码词 → 拼音候选 → 只命中编码前缀的形码词**。一律形码在前的话，
-真实数据下 `kai` 的首选是编码 `kaik` 的 中共党员、`shi` 是 椒，拼音那半边没法用；打全的编码是精确的，
-留在最前（`ga` → 开、`wo` → 伙）。混输下模式键同双拼换成大写（`V1+2`），四码以内不做拼写纠错。
+2026-09-18 定：**編碼打全的形碼詞 → 拼音候選 → 只命中編碼字首的形碼詞**。一律形碼在前的話，
+真實資料下 `kai` 的首選是編碼 `kaik` 的 中共黨員、`shi` 是 椒，拼音那半邊沒法用；打全的編碼是精確的，
+留在最前（`ga` → 開、`wo` → 夥）。混輸下模式鍵同雙拼換成大寫（`V1+2`），四碼以內不做拼寫糾錯。
 
-另外两条规则也是拍板的：
+另外兩條規則也是拍板的：
 
-- 拼音读不出来时（`ggll` 切不成音节）整个按形码走，两边都空才算错。
-- 五笔码最长 4 位，**第 5 个字母起自然只剩拼音**，不用特判。
+- 拼音讀不出來時（`ggll` 切不成音節）整個按形碼走，兩邊都空才算錯。
+- 五筆碼最長 4 位，**第 5 個字母起自然只剩拼音**，不用特判。
 
 ## 六、不做的事
 
-- **运行时取码推导**（由单字码拼出词组码）：规则太绕，静态表够用。
-- **形码下的整句转换**：五笔的整句没有意义，码长即词长。
-- **临时拼音 / 反查（`z` 万能键）**：第一期不做，等有用户反馈再说。
-- **98 版与新世纪版**：`CodeTable` 按多码表设计，加版本只是加数据，但第一期只做 86。
+- **執行時取碼推導**（由單字碼拼出片語碼）：規則太繞，靜態表夠用。
+- **形碼下的整句轉換**：五筆的整句沒有意義，碼長即詞長。
+- **臨時拼音 / 反查（`z` 萬能鍵）**：第一期不做，等有使用者反饋再說。
+- **98 版與新世紀版**：`CodeTable` 按多碼錶設計，加版本只是加資料，但第一期只做 86。

@@ -1,5 +1,5 @@
-//! 前台是全屏应用（游戏、看视频、演示）时收起状态条，退出全屏再放出来。
-//! 按 F11 进全屏不换前台窗口、没有事件可等，状态条显示期间每秒看一次。
+//! 前臺是全屏應用（遊戲、看影片、演示）時收起狀態條，退出全屏再放出來。
+//! 按 F11 進全屏不換前臺視窗、沒有事件可等，狀態條顯示期間每秒看一次。
 
 use core::cell::Cell;
 
@@ -12,12 +12,12 @@ use windows::Win32::UI::WindowsAndMessaging::{
     KillTimer, SW_HIDE, SW_SHOWNA, SetTimer, ShowWindow, WS_CAPTION,
 };
 
-/// 状态条窗口上的定时器编号。
+/// 狀態條視窗上的定時器編號。
 pub(super) const TIMER_ID: usize = 1;
 
 const INTERVAL_MS: u32 = 1000;
 
-/// 显示状态条，前台正全屏就先收着；开始每秒检查。
+/// 顯示狀態條，前臺正全屏就先收著；開始每秒檢查。
 pub(super) fn show(hwnd: HWND, hidden: &Cell<bool>) {
     unsafe { SetTimer(Some(hwnd), TIMER_ID, INTERVAL_MS, None) };
     hidden.set(false);
@@ -27,14 +27,14 @@ pub(super) fn show(hwnd: HWND, hidden: &Cell<bool>) {
     }
 }
 
-/// 收起状态条（青简不在前台 / 关掉了），不再检查。
+/// 收起狀態條（青簡不在前臺 / 關掉了），不再檢查。
 pub(super) fn hide(hwnd: HWND, hidden: &Cell<bool>) {
     let _ = unsafe { KillTimer(Some(hwnd), TIMER_ID) };
     hidden.set(false);
     let _ = unsafe { ShowWindow(hwnd, SW_HIDE) };
 }
 
-/// 每秒一次：进全屏收起，出全屏放回。
+/// 每秒一次：進全屏收起，出全屏放回。
 pub(super) fn on_timer(hwnd: HWND, hidden: &Cell<bool>) {
     let fullscreen = foreground_is_fullscreen();
     if fullscreen != hidden.get() {
@@ -44,8 +44,8 @@ pub(super) fn on_timer(hwnd: HWND, hidden: &Cell<bool>) {
     }
 }
 
-/// 前台窗口盖满了它所在的整个显示器（连任务栏一起）。带标题栏的最大化窗口不算：
-/// 任务栏自动隐藏时它也盖满整屏，但用户要的是照常显示。
+/// 前臺視窗蓋滿了它所在的整個顯示器（連工作列一起）。帶標題欄的最大化視窗不算：
+/// 工作列自動隱藏時它也蓋滿整屏，但使用者要的是照常顯示。
 fn foreground_is_fullscreen() -> bool {
     let hwnd = unsafe { GetForegroundWindow() };
     if hwnd.is_invalid() || hwnd == unsafe { GetShellWindow() } {

@@ -1,27 +1,27 @@
-//! 码表页要显示的元数据，读不动也不报错。
+//! 碼錶頁要顯示的後設資料，讀不動也不報錯。
 
 use std::path::Path;
 
 use super::table::AuxCodeTable;
 
-/// 码表页要显示的元数据：名称、条数、许可、是不是坏文件。
+/// 碼錶頁要顯示的後設資料：名稱、條數、許可、是不是壞檔案。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuxCodeTableInfo {
-    /// 给人看的名称（`.qj` 元数据里的 name，取不到时是文件名主干）。
+    /// 給人看的名稱（`.qj` 後設資料裡的 name，取不到時是檔名主幹）。
     pub name: String,
 
-    /// 词条数（词 → 码 的条目数）。
+    /// 詞條數（詞 → 碼 的條目數）。
     pub entries: usize,
 
-    /// 许可证标识（SPDX）。
+    /// 許可證標識（SPDX）。
     pub license: String,
 
-    /// 打开失败（不是码表、文件损坏）时为真，界面标红。
+    /// 開啟失敗（不是碼錶、檔案損壞）時為真，介面標紅。
     pub broken: bool,
 }
 
-/// 读码表的元数据。打不开或不是码表时不报错：返回 `broken = true`，名称退回文件名主干，
-/// 设置页照样把它列出来（用户能看见并删掉这个坏文件）。
+/// 讀碼錶的後設資料。打不開或不是碼錶時不報錯：返回 `broken = true`，名稱退回檔名主幹，
+/// 設定頁照樣把它列出來（使用者能看見並刪掉這個壞檔案）。
 pub fn aux_code_table_info(path: &Path) -> AuxCodeTableInfo {
     let stem = path
         .file_stem()

@@ -1,4 +1,4 @@
-//! 词库文件变化在配置不变时仍应进入正在运行的引擎。
+//! 詞庫檔案變化在配置不變時仍應進入正在執行的引擎。
 
 use std::path::Path;
 use std::time::{Duration, Instant, SystemTime};
@@ -56,7 +56,7 @@ fn import_replace_and_remove_without_config_changes() {
         "合同法"
     );
 
-    // 只改词频，输出长度保持不变，必须靠 mtime 发现更新。
+    // 只改詞頻，輸出長度保持不變，必須靠 mtime 發現更新。
     let original_len = std::fs::metadata(&imported.path).unwrap().len();
     std::fs::write(&source, "---\nname: law\n...\n合同法\the tong fa\t121\n").unwrap();
     import::import(&source, &dir.join("dicts")).unwrap();
@@ -71,7 +71,7 @@ fn import_replace_and_remove_without_config_changes() {
         121
     );
 
-    // 保持旧词库映射打开，模拟运行中的 Server 收到同名替换。
+    // 保持舊詞庫對映開啟，模擬執行中的 Server 收到同名替換。
     std::fs::write(
         &source,
         "---\nname: law\n...\n民法典\tmin fa dian\t100\n法律\tfa lv\t30\n",
@@ -86,7 +86,7 @@ fn import_replace_and_remove_without_config_changes() {
         "民法典"
     );
 
-    // YAML 头中只有引用、没有本文件词条时，失败不能覆盖已有词库。
+    // YAML 頭中只有引用、沒有本檔案詞條時，失敗不能覆蓋已有詞庫。
     std::fs::write(&source, "---\nname: law\nimport_tables:\n  - other\n...\n").unwrap();
     assert!(import::import(&source, &dir.join("dicts")).is_err());
     assert_eq!(Dictionary::from_path(&imported.path).unwrap().len(), 2);
@@ -134,7 +134,7 @@ fn dictionary_changes_do_not_retry_broken_config() {
     assert_eq!(router.config.page_size, 5);
     assert_eq!(router.engine.extra_dictionaries().len(), 1);
 
-    // 保持坏配置的 mtime，以可观察的配置值确认后续轮询不会重新读它。
+    // 保持壞配置的 mtime，以可觀察的配置值確認後續輪詢不會重新讀它。
     std::fs::write(&config_path, "[general]\npage_size = 9\n").unwrap();
     modified_at(&config_path, 200);
     poll(&mut router);

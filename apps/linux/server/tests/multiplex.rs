@@ -1,4 +1,4 @@
-//! 同一真实 socket 的 128 会话、逐会话身份、回收及错误握手。
+//! 同一真實 socket 的 128 會話、逐會話身份、回收及錯誤握手。
 #![cfg(target_os = "linux")]
 #[path = "support/server.rs"]
 mod server;
@@ -59,7 +59,7 @@ fn simultaneous_sessions_keep_buffers_and_survive_retirement() {
     }
     let a = key(&mut stream, 1, 'n');
     key(&mut stream, 2, 'h');
-    // A 帧不能对 B 选词，合法旧事件也不能破坏 A/B 的输入状态。
+    // A 幀不能對 B 選詞，合法舊事件也不能破壞 A/B 的輸入狀態。
     let crossed = exchange(
         &mut stream,
         json!({"LinuxEvent": {"session": 2, "event": {"Candidate": {"identity": a["KeyResult"]["identity"], "index": 0}}}}),
@@ -72,7 +72,7 @@ fn simultaneous_sessions_keep_buffers_and_survive_retirement() {
     for id in 1..=128 {
         write_message(&mut stream, &json!({"CloseSession": {"session": id}})).unwrap();
     }
-    // 重复 Close 无响应，后续事务仍能正确读取自己一份答复。
+    // 重複 Close 無響應，後續事務仍能正確讀取自己一份答覆。
     write_message(&mut stream, &json!({"CloseSession": {"session": 1}})).unwrap();
     let ignored = exchange(
         &mut stream,
@@ -130,7 +130,7 @@ fn rejects_old_missing_duplicate_and_unnegotiated_messages() {
             "scenario {scenario}"
         );
     }
-    // 损坏客户端只影响自己的连接。
+    // 損壞客戶端隻影響自己的連線。
     let mut good = server.connect();
     open(&mut good, 1);
     let mut bad = server.connect();

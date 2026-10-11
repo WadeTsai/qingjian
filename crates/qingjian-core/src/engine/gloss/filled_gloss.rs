@@ -1,11 +1,11 @@
 use crate::candidate::Translation;
 
-/// 云端写好的一条释义。
+/// 雲端寫好的一條釋義。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FilledGloss {
-    /// 中文词。
+    /// 中文詞。
     pub word: String,
 
-    /// 学习语言的译词（最多两条）。
+    /// 學習語言的譯詞（最多兩條）。
     pub translation: Translation,
 }

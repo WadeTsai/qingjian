@@ -1,5 +1,5 @@
-//! 「辅码」页：触发键录制、候选上显示码开关、码表列表（随包 + 导入）与导入码表。
-//! 触发键与显示码写 `[general]`，码表开关写 `[aux_code] disabled`（列关掉的，与 `[dictionaries] disabled` 同形）。
+//! 「輔碼」頁：觸發鍵錄製、候選上顯示碼開關、碼錶列表（隨包 + 匯入）與匯入碼錶。
+//! 觸發鍵與顯示碼寫 `[general]`，碼錶開關寫 `[aux_code] disabled`（列關掉的，與 `[dictionaries] disabled` 同形）。
 
 use std::path::PathBuf;
 
@@ -12,23 +12,23 @@ use crate::panel::controls::{check_row, entry_title, feedback, field, note, page
 use crate::panel::recorder::Recorder;
 use crate::panel::{Message, Settings};
 
-/// 随包码表目录：随包根下的 `data/generated/codes/`（与 `dicts/` 并列），与 Server 装配同款。
+/// 隨包碼錶目錄：隨包根下的 `data/generated/codes/`（與 `dicts/` 並列），與 Server 裝配同款。
 const BUNDLED_DIR: &str = "data/generated/codes";
 
-/// 用户导入的码表目录 `%APPDATA%\Qingjian\codes`。
+/// 使用者匯入的碼錶目錄 `%APPDATA%\Qingjian\codes`。
 fn user_dir(settings: &Settings) -> PathBuf {
     settings.data_dir().join("codes")
 }
 
-/// 触发键控件：平时是显示当前键的按钮，点下去换成等按键的录制框。
+/// 觸發鍵控制元件：平時是顯示當前鍵的按鈕，點下去換成等按鍵的錄製框。
 fn record_control(settings: &Settings, context: &mut ViewContext<Settings>) -> View {
     match settings.recorder {
         Recorder::Idle => Button::new()
             .on_click(context.message(Message::AuxRecordStart))
             .content(settings.config.general.aux_code_key().to_string()),
         Recorder::Waiting { attempt } => {
-            // 密码框承接按键：不走输入法，按 A–Z 不弹候选窗，字符直接进来（Shift 与键盘布局由系统处理）。
-            // 一轮一代：敲过一次键就重建，框里不留上一轮的字符
+            // 密碼框承接按鍵：不走輸入法，按 A–Z 不彈候選窗，字元直接進來（Shift 與鍵盤佈局由系統處理）。
+            // 一輪一代：敲過一次鍵就重建，框裡不留上一輪的字元
             let record_box = settings.record_box.clone();
             context.use_effect("aux-code-record", attempt, move || {
                 let _ = record_box.request_focus();
@@ -42,7 +42,7 @@ fn record_control(settings: &Settings, context: &mut ViewContext<Settings>) -> V
                         format!("record-{attempt}"),
                         PasswordBox::new()
                             .element_ref(&settings.record_box)
-                            .placeholder_text("请按一个键")
+                            .placeholder_text("請按一個鍵")
                             .password_reveal_mode(PasswordRevealMode::Hidden)
                             .width(160.0)
                             .on_password_changed(context.callback(Message::AuxRecorded)),
@@ -58,16 +58,16 @@ fn record_control(settings: &Settings, context: &mut ViewContext<Settings>) -> V
     }
 }
 
-/// 随包码表：标「随包」，不给移除（开关还是能关）。
+/// 隨包碼錶：標「隨包」，不給移除（開關還是能關）。
 fn bundled_list(settings: &Settings, context: &mut ViewContext<Settings>) -> View {
     let Some(dir) = repo_resource(BUNDLED_DIR) else {
         return note(
-            "没找到随包码表目录（随包根的 data\\generated\\codes\\），随包笔画表装好后这里会列出来。",
+            "沒找到隨包碼錶目錄（隨包根的 data\\generated\\codes\\），隨包筆畫表裝好後這裡會列出來。",
         );
     };
     let tables = code_tables::list(&dir);
     if tables.is_empty() {
-        return note("随包码表目录是空的。");
+        return note("隨包碼錶目錄是空的。");
     }
     let mut rows: Vec<KeyedView> = Vec::with_capacity(tables.len());
     for (stem, path) in tables {
@@ -88,13 +88,13 @@ fn bundled_list(settings: &Settings, context: &mut ViewContext<Settings>) -> Vie
     StackPanel::new().spacing(6.0).keyed_children(rows)
 }
 
-/// 自己导入的码表：可开关、可移除（挪进 codes\removed，不真删）。
+/// 自己匯入的碼錶：可開關、可移除（挪進 codes\removed，不真刪）。
 fn user_list(settings: &Settings, context: &mut ViewContext<Settings>) -> View {
     let dir = user_dir(settings);
     let tables = code_tables::list(&dir);
     if tables.is_empty() {
         return note(
-            "还没有导入码表。点下面「导入码表」加一张，或把 .qj 放进 %APPDATA%\\Qingjian\\codes。",
+            "還沒有匯入碼錶。點下面「匯入碼錶」加一張，或把 .qj 放進 %APPDATA%\\Qingjian\\codes。",
         );
     }
     let mut rows: Vec<KeyedView> = Vec::with_capacity(tables.len());
@@ -120,36 +120,36 @@ fn user_list(settings: &Settings, context: &mut ViewContext<Settings>) -> View {
 pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> View {
     let body = StackPanel::new().spacing(12.0).children([
         note(
-            "拼音打完之后敲触发键进辅码态，再敲码表里的字母把候选缩到这些码上；码表没覆盖的词在辅码态不出现。改完自动生效。",
+            "拼音打完之後敲觸發鍵進輔碼態，再敲碼錶裡的字母把候選縮到這些碼上；碼錶沒覆蓋的詞在輔碼態不出現。改完自動生效。",
         ),
         field(
-            "启用辅码",
-            "开着时拼音打完之后敲触发键进辅码态；关着时触发键完全保持原生行为（英文直输段 / 双拼韵母键）。没有任何可用码表时也不会进辅码态。",
+            "啟用輔碼",
+            "開著時拼音打完之後敲觸發鍵進輔碼態；關著時觸發鍵完全保持原生行為（英文直輸段 / 雙拼韻母鍵）。沒有任何可用碼錶時也不會進輔碼態。",
             ToggleSwitch::new()
                 .is_on(settings.config.aux_code.enabled)
                 .on_toggled(context.callback(Message::AuxCodeEnabled)),
         ),
         field(
-            "触发键",
-            "点一下再按一个键；字母、数字、单引号与当前翻页键不能当触发键，微软、搜狗双拼里分号先当 ing 的韵母。",
+            "觸發鍵",
+            "點一下再按一個鍵；字母、數字、單引號與當前翻頁鍵不能當觸發鍵，微軟、搜狗雙拼裡分號先當 ing 的韻母。",
             record_control(settings, context),
         ),
         field(
-            "候选上显示码",
-            "码用方括号紧跟在候选词后面，显示成「鹤[rbm] crane」。开着时不用进辅码：纯拼音打字候选也带词的码（首条），方便边打边记。",
+            "候選上顯示碼",
+            "碼用方括號緊跟在候選詞後面，顯示成「鶴[rbm] crane」。開著時不用進輔碼：純拼音打字候選也帶詞的碼（首條），方便邊打邊記。",
             ToggleSwitch::new()
                 .is_on(settings.config.general.aux_code_show)
                 .on_toggled(context.callback(Message::AuxCodeShow)),
         ),
         field(
-            "码删空后保持辅码",
-            "删空码后 ; 仍在、候选全部回来，再按一次退格才退出辅码；关掉则删空即回拼音态。",
+            "碼刪空後保持輔碼",
+            "刪空碼後 ; 仍在、候選全部回來，再按一次退格才退出輔碼；關掉則刪空即回拼音態。",
             ToggleSwitch::new()
                 .is_on(settings.config.general.aux_code_keep_empty)
                 .on_toggled(context.callback(Message::AuxCodeKeepEmpty)),
         ),
         TextBlock::new()
-            .text("码表")
+            .text("碼錶")
             .font_weight(FontWeight::SEMI_BOLD)
             .into(),
         bundled_list(settings, context),
@@ -160,20 +160,20 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             .children((
                 Button::new()
                     .on_click(context.message(Message::ImportCodeTable))
-                    .content("导入码表…"),
+                    .content("匯入碼錶…"),
                 note(
-                    "接受 Rime 的 .dict.yaml（要有词、码两列）与现成的 .qj。码表由你自己取得，青简不随包分发第三方形码表。",
+                    "接受 Rime 的 .dict.yaml（要有詞、碼兩列）與現成的 .qj。碼錶由你自己取得，青簡不隨包分發第三方形碼錶。",
                 ),
             )),
         note(
-            "文件示例（词与码之间是制表符，另存为 my.dict.yaml 即可导入）：\n---\nname: 我的码表\nversion: 1\n...\n开发\tkf\n开放\tkf\n鹤\thn",
+            "檔案示例（詞與碼之間是製表符，另存為 my.dict.yaml 即可匯入）：\n---\nname: 我的碼錶\nversion: 1\n...\n開發\tkf\n開放\tkf\n鶴\thn",
         ),
         feedback(&settings.notice),
     ]);
-    page("辅码", body)
+    page("輔碼", body)
 }
 
-/// 录制框里敲进来的文本：合法就落盘，非法就红字提示、保持原值、继续等下一个键。
+/// 錄製框裡敲進來的文本：合法就落盤，非法就紅字提示、保持原值、繼續等下一個鍵。
 pub(crate) fn record_key(settings: &mut Settings, text: &str) {
     let Some(key) = text.chars().next() else {
         return;
@@ -181,7 +181,7 @@ pub(crate) fn record_key(settings: &mut Settings, text: &str) {
     let page_keys = settings.config.general.page_keys();
     if !is_valid_aux_code_key(key, page_keys) {
         settings.notice.fail(format!(
-            "「{key}」不能当触发键：要单个可见的符号，字母、数字、单引号与当前翻页键（{}{}）不行。",
+            "「{key}」不能當觸發鍵：要單個可見的符號，字母、數字、單引號與當前翻頁鍵（{}{}）不行。",
             page_keys.0, page_keys.1
         ));
         settings.recorder = settings.recorder.waiting();
@@ -192,7 +192,7 @@ pub(crate) fn record_key(settings: &mut Settings, text: &str) {
     settings.recorder = Recorder::Idle;
 }
 
-/// 挪进 `codes\removed`，不真删（与词库一致）。
+/// 挪進 `codes\removed`，不真刪（與詞庫一致）。
 pub(crate) fn remove_table(settings: &Settings, stem: &str) {
     let dir = user_dir(settings);
     let Some((_, path)) = code_tables::list(&dir)
@@ -203,22 +203,22 @@ pub(crate) fn remove_table(settings: &Settings, stem: &str) {
     };
     let removed = dir.join("removed");
     if let Err(error) = std::fs::create_dir_all(&removed) {
-        eprintln!("建 removed 目录失败: {error}");
+        eprintln!("建 removed 目錄失敗: {error}");
         return;
     }
     if let Some(file_name) = path.file_name()
         && let Err(error) = std::fs::rename(&path, removed.join(file_name))
     {
-        eprintln!("移除码表 {stem} 失败: {error}");
+        eprintln!("移除碼錶 {stem} 失敗: {error}");
     }
 }
 
-/// 文件选择器选一张码表，转换后放进用户码表目录；统计进 note，失败进红字。
+/// 檔案選擇器選一張碼錶，轉換後放進使用者碼錶目錄；統計進 note，失敗進紅字。
 pub(crate) fn import(settings: &mut Settings) {
     let Some(source) = rfd::FileDialog::new()
-        .add_filter("码表文件", &["yaml", "yml", "qj"])
-        .add_filter("所有文件", &["*"])
-        .set_title("导入码表")
+        .add_filter("碼錶檔案", &["yaml", "yml", "qj"])
+        .add_filter("所有檔案", &["*"])
+        .set_title("匯入碼錶")
         .pick_file()
     else {
         return;
@@ -227,13 +227,13 @@ pub(crate) fn import(settings: &mut Settings) {
         Ok(imported) => {
             let report = imported.report;
             settings.notice.succeed(format!(
-                "已导入码表「{}」：读入 {} · 有码 {} · 无码 {} · 跳过 {}",
+                "已匯入碼錶「{}」：讀入 {} · 有碼 {} · 無碼 {} · 跳過 {}",
                 imported.name, report.read, report.with_code, report.no_code, report.skipped
             ));
         }
         Err(DictionaryError::NoCodeEntries) => settings
             .notice
-            .fail("这个文件里没有识别到码表：要「词 + 码」两列，码只收 a–z。".to_owned()),
-        Err(error) => settings.notice.fail(format!("导入码表失败：{error}")),
+            .fail("這個檔案裡沒有識別到碼錶：要「詞 + 碼」兩列，碼只收 a–z。".to_owned()),
+        Err(error) => settings.notice.fail(format!("匯入碼錶失敗：{error}")),
     }
 }

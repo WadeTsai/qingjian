@@ -1,7 +1,7 @@
-//! Engine：Core 对外的唯一门面。
+//! Engine：Core 對外的唯一門面。
 //!
-//! 平台层只跟这里打交道：喂按键、拿候选、上屏。翻译与学习通过 trait 注入，
-//! 默认实现都是空操作，所以单元测试和 CLI 不需要真实词典也能跑。
+//! 平臺層只跟這裡打交道：喂按鍵、拿候選、上屏。翻譯與學習通過 trait 注入，
+//! 預設實現都是空操作，所以單元測試和 CLI 不需要真實詞典也能跑。
 
 mod alignment;
 mod annotation;
@@ -80,311 +80,311 @@ use crate::shuangpin::Scheme;
 use commit::CommitChain;
 
 pub struct Engine {
-    /// 静态词库。
+    /// 靜態詞庫。
     dictionary: Dictionary,
 
-    /// 译文提供方，缺省为 [`NoTranslator`]。
+    /// 譯文提供方，預設為 [`NoTranslator`]。
     translator: Box<dyn Translator>,
 
-    /// 前缀模式键（表达式 / 问字）。
+    /// 字首模式鍵（表示式 / 問字）。
     modes: ModeKeys,
 
-    /// 附加词库（领域词库、用户导入的），与主词库一起查词、一起进整句词图；不参与语言模型（它们没有 bigram，
-    /// 走词频兜底）。壳按用户目录 `dicts/` 与配置 `[dictionaries]` 装配。
+    /// 附加詞庫（領域詞庫、使用者匯入的），與主詞庫一起查詞、一起進整句詞圖；不參與語言模型（它們沒有 bigram，
+    /// 走詞頻兜底）。殼按使用者目錄 `dicts/` 與配置 `[dictionaries]` 裝配。
     extra_dictionaries: Vec<Dictionary>,
 
-    /// 英文候选的释义（英→中），缺省为 [`NoTranslator`]。英文候选的辅助语言是主语言中文，
-    /// 与中文候选查学习语言的表分开，仍是「一个候选只显示一种辅助语言」。
+    /// 英文候選的釋義（英→中），預設為 [`NoTranslator`]。英文候選的輔助語言是主語言中文，
+    /// 與中文候選查學習語言的表分開，仍是「一個候選只顯示一種輔助語言」。
     english_translator: Box<dyn Translator>,
 
-    /// 用户词频，缺省为 [`NoLearner`]；私密输入期间只读不写（[`learning::MutedLearner`]）。
+    /// 使用者詞頻，預設為 [`NoLearner`]；私密輸入期間只讀不寫（[`learning::MutedLearner`]）。
     learner: learning::MutedLearner,
 
-    /// 当前拼音缓冲区。
+    /// 當前拼音緩衝區。
     composition: Composition,
 
-    /// 英文词表，中英混输用；没有就不出英文候选。
+    /// 英文詞表，中英混輸用；沒有就不出英文候選。
     english: Option<WordList>,
 
-    /// 英文模式（壳里 Caps Lock 亮着）：缓冲区里的字母不当拼音，候选来自英文词表的补全与纠正。
+    /// 英文模式（殼裡 Caps Lock 亮著）：緩衝區裡的字母不當拼音，候選來自英文詞表的補全與糾正。
     english_mode: bool,
 
-    /// 全角标点与引号配对状态。
+    /// 全形標點與引號配對狀態。
     punctuation: Punctuation,
 
-    /// 中文标点转换开关。
+    /// 中文標點轉換開關。
     full_width_punctuation: bool,
 
-    /// 用户定义的固定位置文本。
+    /// 使用者定義的固定位置文本。
     custom_phrases: Vec<crate::CustomPhrase>,
 
-    /// 候选后面配不配 emoji（配置 `[general] emoji`，缺省开）；关了 emoji 表照样加载，只是不出候选。
+    /// 候選後面配不配 emoji（配置 `[general] emoji`，預設開）；關了 emoji 表照樣載入，只是不出候選。
     emoji_candidates: bool,
 
-    /// 中文模式下整段是英文词（或像英文词的开头）时给不给英文候选与补全（配置 `[general] english_in_chinese`，缺省开）。
+    /// 中文模式下整段是英文詞（或像英文詞的開頭）時給不給英文候選與補全（配置 `[general] english_in_chinese`，預設開）。
     english_in_chinese: bool,
 
-    /// 中英混输时中文候选总在英文词前面（缺省关：拼音不像话的输入英文词排第一，常在中文模式里打英文词的人靠它）。
+    /// 中英混輸時中文候選總在英文詞前面（預設關：拼音不像話的輸入英文詞排第一，常在中文模式裡打英文詞的人靠它）。
     chinese_first: bool,
 
-    /// 中文模式下 Shift+字母进组句缓冲区（配置 `[general] shift_letter = "compose"`，缺省关）。
-    /// 关着由壳直接把大写字母交给应用，Core 这一路就不该收——否则 `Cpan` 这种会被当成拼音。
+    /// 中文模式下 Shift+字母進組句緩衝區（配置 `[general] shift_letter = "compose"`，預設關）。
+    /// 關著由殼直接把大寫字母交給應用，Core 這一路就不該收——否則 `Cpan` 這種會被當成拼音。
     shift_letter_compose: bool,
 
-    /// 联想提供方，缺省为 [`NoPredictor`]。
+    /// 聯想提供方，預設為 [`NoPredictor`]。
     predictor: Box<dyn Predictor>,
 
-    /// 整句转换的语言模型，缺省为 [`NoLanguageModel`]（退化成一元词频）。
+    /// 整句轉換的語言模型，預設為 [`NoLanguageModel`]（退化成一元詞頻）。
     language_model: Box<dyn LanguageModel>,
 
-    /// 整句路径的同步神经重打分器（字级 Transformer，查询里当场打分；CLI 评测用）。
+    /// 整句路徑的同步神經重打分器（字級 Transformer，查詢裡當場打分；CLI 評測用）。
     sentence_scorer: Option<Box<dyn SentenceScorer>>,
 
-    /// 异步重打分：后台线程里的打分器，壳在停顿后送任务、轮询结果（见 [`rescoring`]）。
+    /// 非同步重打分：後臺執行緒裡的打分器，殼在停頓後送任務、輪詢結果（見 [`rescoring`]）。
     rescorer: Option<rescoring::RescoreWorker>,
 
-    /// 「前文 + 整句文本 → 神经分」缓存，同步与异步打分共用。
+    /// 「前文 + 整句文本 → 神經分」快取，同步與非同步打分共用。
     neural_cache: std::cell::RefCell<rescoring::NeuralCache>,
 
-    /// 壳给的应用里光标前的文本；`None` 时前文用本会话历史。
+    /// 殼給的應用裡游標前的文本；`None` 時前文用本會話歷史。
     rescoring_before: Option<String>,
 
-    /// 重打分时神经得分的权重 λ：最终分 = 路径分 + λ·(神经分 − 静态分)。
+    /// 重打分時神經得分的權重 λ：最終分 = 路徑分 + λ·(神經分 − 靜態分)。
     neural_weight: f64,
 
-    /// 只有路径分与最优路径差距在这么多 nat 以内的路径才参与重排：差距大的多半是个人 n-gram 拉开的，通用模型不该翻盘。
+    /// 只有路徑分與最優路徑差距在這麼多 nat 以內的路徑才參與重排：差距大的多半是個人 n-gram 拉開的，通用模型不該翻盤。
     neural_margin: f64,
 
-    /// 重打分给模型看的前文长度（本会话最近上屏的字符数），0 为不给前文。
+    /// 重打分給模型看的前文長度（本會話最近上屏的字元數），0 為不給前文。
     neural_context: usize,
 
-    /// 个人 n-gram 与静态模型插值的参数；只有回放调参会改（`set_interpolation`），壳用缺省值。
+    /// 個人 n-gram 與靜態模型插值的引數；只有回放調參會改（`set_interpolation`），殼用預設值。
     interpolation: Interpolation,
 
-    /// 敲错纠正的代价；同上，只有回放调参会改（`set_typo_costs`）。
+    /// 敲錯糾正的代價；同上，只有回放調參會改（`set_typo_costs`）。
     typo_costs: TypoCosts,
 
-    /// 最近几次上屏各记了哪些学习、之后退格了几个字；用户把它们删掉重选时把学习退回去（见 [`Self::note_backspace`]）。
-    /// 最新的在末尾，最多留 [`RECENT_COMMITS`] 条。
+    /// 最近幾次上屏各記了哪些學習、之後退格了幾個字；使用者把它們刪掉重選時把學習退回去（見 [`Self::note_backspace`]）。
+    /// 最新的在末尾，最多留 [`RECENT_COMMITS`] 條。
     recent_commits: Vec<LastCommit>,
 
-    /// 本次 commit 里记下的词转移，commit 结束时搬进 `last_commit`。
+    /// 本次 commit 裡記下的詞轉移，commit 結束時搬進 `last_commit`。
     recording: Vec<Transition>,
 
-    /// 输入日志的落盘方；缺省不记，私密输入期间一律不记（[`input_log::MutedLogger`]）。
+    /// 輸入日誌的落盤方；預設不記，私密輸入期間一律不記（[`input_log::MutedLogger`]）。
     logger: input_log::MutedLogger,
 
-    /// 私密输入中（见 [`Self::set_private`]）：不学、不记、不发云端。
+    /// 私密輸入中（見 [`Self::set_private`]）：不學、不記、不發雲端。
     private: bool,
 
-    /// 输入日志条目的序号。
+    /// 輸入日誌條目的序號。
     log_sequence: u64,
 
-    /// 最近一次查询的候选顺序是否经过神经重排（`rescore_paths` 置位，`query` 开头清零），写进输入日志。
+    /// 最近一次查詢的候選順序是否經過神經重排（`rescore_paths` 置位，`query` 開頭清零），寫進輸入日誌。
     last_rescored: std::cell::Cell<bool>,
 
-    /// 这段组句里第一次退格前的缓冲区：上屏时与最终键串不同就记一条 `retype`。
+    /// 這段組句裡第一次退格前的緩衝區：上屏時與最終鍵串不同就記一條 `retype`。
     retype_snapshot: Option<String>,
 
-    /// 组句外直通给应用的字符，攒到下一次上屏或上文断开时写成一条 `passthrough`。
+    /// 組句外直通給應用的字元，攢到下一次上屏或上文斷開時寫成一條 `passthrough`。
     passthrough_pending: String,
 
-    /// 这段组句翻了几页候选。
+    /// 這段組句翻了幾頁候選。
     page_turns: u32,
 
-    /// 这段组句第一键的时刻（算首键到上屏的毫秒）。
+    /// 這段組句第一鍵的時刻（算首鍵到上屏的毫秒）。
     composition_started: Option<Instant>,
 
-    /// 正在输入的应用标识，壳在焦点变化时给；写进输入日志。
+    /// 正在輸入的應用標識，殼在焦點變化時給；寫進輸入日誌。
     application: Option<String>,
 
-    /// 上次记 `break` 之后有没有上屏过：没有就不再记，免得失焦一次记一条。
+    /// 上次記 `break` 之後有沒有上屏過：沒有就不再記，免得失焦一次記一條。
     committed_since_break: bool,
 
-    /// 最近一次联想请求时的作用域：结果可能在上屏之后才到，日志里要记请求时的拼音。
+    /// 最近一次聯想請求時的作用域：結果可能在上屏之後才到，日誌裡要記請求時的拼音。
     last_prediction_scope: String,
 
-    /// 输入统计的累计方（打了多少字）；缺省不记。
+    /// 輸入統計的累計方（打了多少字）；預設不記。
     meter: Box<dyn UsageMeter>,
 
-    /// 学习语言的词汇记录（见过 / 上屏过哪些译词）；缺省不记也不标生词。
+    /// 學習語言的詞彙記錄（見過 / 上屏過哪些譯詞）；預設不記也不標生詞。
     vocabulary: Box<dyn VocabularyTracker>,
 
-    /// 释义兜底：释义表里没有的词上屏后问云端；缺省不问。
+    /// 釋義兜底：釋義表裡沒有的詞上屏後問雲端；預設不問。
     gloss_filler: Box<dyn GlossFiller>,
 
-    /// 候选窗口当前页上的译词（壳每次画完告知），上屏时记成「看到过」。
+    /// 候選視窗當前頁上的譯詞（殼每次畫完告知），上屏時記成「看到過」。
     displayed: Vec<(Language, String)>,
 
-    /// 上一次查询的摘要，上屏时写进输入日志。
+    /// 上一次查詢的摘要，上屏時寫進輸入日誌。
     last_query: std::cell::RefCell<Option<query::QuerySnapshot>>,
 
-    /// 上一次算过的拼写纠正：(作用域, 结果)。query 算一次，commit / take_raw 复用，别再跑一遍变体枚举。
+    /// 上一次算過的拼寫糾正：(作用域, 結果)。query 算一次，commit / take_raw 複用，別再跑一遍變體列舉。
     correction_cache: std::cell::RefCell<Option<(String, Option<Correction>)>>,
 
-    /// 整句转换的格子候选缓存：跨按键复用，学习数据一变就清（见 [`Self::forget_span_cache`]）。
+    /// 整句轉換的格子候選快取：跨按鍵複用，學習資料一變就清（見 [`Self::forget_span_cache`]）。
     span_cache: std::cell::RefCell<sentence::SpanCache>,
 
-    /// 本次会话经我们上屏的文本，应用不给上下文时用它联想。
+    /// 本次會話經我們上屏的文本，應用不給上下文時用它聯想。
     history: InputHistory,
 
-    /// 最近一次联想请求的序号，0 表示还没发过。
+    /// 最近一次聯想請求的序號，0 表示還沒發過。
     prediction_sequence: u64,
 
-    /// 最近一次联想请求的种类：只有组句联想的结果要按拼音校验。
+    /// 最近一次聯想請求的種類：只有組句聯想的結果要按拼音校驗。
     last_prediction_kind: PredictionKind,
 
-    /// 最近一次问字请求里本地把问题拼音转成的汉字，用来剔掉模型复述问题的「答案」。
+    /// 最近一次問字請求裡本地把問題拼音轉成的漢字，用來剔掉模型複述問題的「答案」。
     last_question_guess: String,
 
-    /// 连续上屏的链，个人 n-gram 与自动造词靠它。
+    /// 連續上屏的鏈，個人 n-gram 與自動造詞靠它。
     chain: CommitChain,
 
-    /// 模糊音开关，缺省全关。
+    /// 模糊音開關，預設全關。
     fuzzy: FuzzyRules,
 
-    /// 双拼方案，`None` 为全拼。开着时缓冲区里是双拼键，查词前先解成全拼（见 [`crate::shuangpin`]）。
+    /// 雙拼方案，`None` 為全拼。開著時緩衝區裡是雙拼鍵，查詞前先解成全拼（見 [`crate::shuangpin`]）。
     shuangpin: Option<Scheme>,
 
-    /// 双拼方案下 preedit 显示原始按键（如 `ljse`）还是展开成全拼（`lan'se`）。
+    /// 雙拼方案下 preedit 顯示原始按鍵（如 `ljse`）還是展開成全拼（`lan'se`）。
     shuangpin_raw_preedit: bool,
 
-    /// 注音模式开关，開著時緩衝區裡是注音大千鍵位，查詞前先解成拼音（見 [`crate::zhuyin`]）。
+    /// 注音模式開關，開著時緩衝區裡是注音大千鍵位，查詞前先解成拼音（見 [`crate::zhuyin`]）。
     zhuyin: bool,
 
-    /// 形码码表（五笔）。`Some` 时编码参与查询，按前缀查表（见 [`Engine::query_code`]）。
+    /// 形碼碼錶（五筆）。`Some` 時編碼參與查詢，按字首查表（見 [`Engine::query_code`]）。
     code: Option<CodeTable>,
 
-    /// 拼音侧（全拼 / 双拼 / 注音）参不参与查询，缺省参与。
+    /// 拼音側（全拼 / 雙拼 / 注音）參不參與查詢，預設參與。
     ///
-    /// 与 `code` 组合出三种情形：只有拼音（形码关）、只有形码（拼音关，`[general] scheme = "none"`）、
-    /// **两边都开 = 混输**（编码打全的形码候选在前，见 [`Engine::query_mixed`]）。两个都关着时按拼音走。
+    /// 與 `code` 組合出三種情形：只有拼音（形碼關）、只有形碼（拼音關，`[general] scheme = "none"`）、
+    /// **兩邊都開 = 混輸**（編碼打全的形碼候選在前，見 [`Engine::query_mixed`]）。兩個都關著時按拼音走。
     phonetic: bool,
 
-    /// emoji 表，没有就不出 emoji 候选。
+    /// emoji 表，沒有就不出 emoji 候選。
     emoji: Option<EmojiTable>,
 
-    /// 辅码态：`None` 是拼音态，`Some` 是辅码态（空串 = 刚敲下触发键、码段还没开始）。
-    /// 码段不进 `composition`：它与拼音分段记账、分段画（见 [`AuxSegment`]）。
+    /// 輔碼態：`None` 是拼音態，`Some` 是輔碼態（空串 = 剛敲下觸發鍵、碼段還沒開始）。
+    /// 碼段不進 `composition`：它與拼音分段記賬、分段畫（見 [`AuxSegment`]）。
     aux_code: Option<String>,
 
-    /// 辅码总开关（配置项 `[aux_code] enabled`，缺省关）：关着时触发键不进辅码态、纯拼音态也不挂码。
+    /// 輔碼總開關（配置項 `[aux_code] enabled`，預設關）：關著時觸發鍵不進輔碼態、純拼音態也不掛碼。
     aux_enabled: bool,
 
-    /// 候选上是否显示码（配置项 `[general] aux_code_show`，缺省关）：纯拼音态逐候查首条码的短路开关，
-    /// 由壳装配时告知（辅码态不受它管，看码有引导意义）。
+    /// 候選上是否顯示碼（配置項 `[general] aux_code_show`，預設關）：純拼音態逐候查首條碼的短路開關，
+    /// 由殼裝配時告知（輔碼態不受它管，看碼有引導意義）。
     aux_show: bool,
 
-    /// 进辅码态的触发键，配置项 `[general] aux_code_key`，缺省 [`DEFAULT_AUX_CODE_KEY`]。
+    /// 進輔碼態的觸發鍵，配置項 `[general] aux_code_key`，預設 [`DEFAULT_AUX_CODE_KEY`]。
     aux_code_key: char,
 
-    /// 码段删空后是否留在辅码态（配置项 `[general] aux_code_keep_empty`，缺省开）：开 = 删空停在
-    /// 辅码态（`;` 仍在、候选全回），空码段再按一次退格才退出；关 = 删空即回拼音态。
+    /// 碼段刪空後是否留在輔碼態（配置項 `[general] aux_code_keep_empty`，預設開）：開 = 刪空停在
+    /// 輔碼態（`;` 仍在、候選全回），空碼段再按一次退格才退出；關 = 刪空即回拼音態。
     aux_keep_empty: bool,
 
-    /// 辅码码表，壳按用户目录 `codes/` 与配置装配；空表示没装码表（辅码态筛不出任何词）。
+    /// 輔碼碼錶，殼按使用者目錄 `codes/` 與配置裝配；空表示沒裝碼錶（輔碼態篩不出任何詞）。
     aux_codes: Vec<Arc<dyn AuxCodeLookup>>,
 
-    /// 繁体输出模式。
+    /// 繁體輸出模式。
     traditional: bool,
 
-    /// 繁体转换器。
+    /// 繁體轉換器。
     opencc: Option<ferrous_opencc::OpenCC>,
 
-    /// 繁体输出时「繁体 → 原简体」的映射，组句结束清空；学习、译词、撤销都按简体原文走。
+    /// 繁體輸出時「繁體 → 原簡體」的對映，組句結束清空；學習、譯詞、撤銷都按簡體原文走。
     traditional_map: std::cell::RefCell<HashMap<String, String>>,
 }
 
-/// 形码编码最长几位（五笔四码）：混输下超过它的输入只可能是拼音。
+/// 形碼編碼最長几位（五筆四碼）：混輸下超過它的輸入只可能是拼音。
 const MAX_CODE_LENGTH: usize = 4;
 
-/// 英文补全最多几条（`compa` → company / compare / …）。
+/// 英文補全最多幾條（`compa` → company / compare / …）。
 const ENGLISH_COMPLETIONS: usize = 3;
 
-/// 原样上屏的字母串至少几个字母才当英文词学：单字母（`a`、`I`）不值得记。
+/// 原樣上屏的字母串至少幾個字母才當英文詞學：單字母（`a`、`I`）不值得記。
 const MIN_ENGLISH_WORD_LETTERS: usize = 2;
 
-/// 原样上屏的字母串最多几个字母才当英文词学：再长的多半不是一个词，是一整句打不出来的输入
-/// （`yongdockerbushuhenfangbian`），学进去会反过来堵住混输那条路。
-/// 15 是 2026-09-25 按数据定的：用户个人表 1102 条里超过 15 个字母的 9 条全是失败的拼音、无一真词；
-/// 随包英文词表 94568 条里超过 15 个字母的只占 0.69%，而那些词基本都已经在随包表里、不靠学。
-/// 英文模式下不设这个上限：那时敲的本来就是英文。
+/// 原樣上屏的字母串最多幾個字母才當英文詞學：再長的多半不是一個詞，是一整句打不出來的輸入
+/// （`yongdockerbushuhenfangbian`），學進去會反過來堵住混輸那條路。
+/// 15 是 2026-09-25 按資料定的：使用者個人表 1102 條裡超過 15 個字母的 9 條全是失敗的拼音、無一真詞；
+/// 隨包英文詞表 94568 條裡超過 15 個字母的只佔 0.69%，而那些詞基本都已經在隨包表裡、不靠學。
+/// 英文模式下不設這個上限：那時敲的本來就是英文。
 const MAX_ENGLISH_WORD_LETTERS: usize = 15;
 
-/// 英文模式一次最多给几条候选：两页足够，再往后没人翻。
+/// 英文模式一次最多給幾條候選：兩頁足夠，再往後沒人翻。
 const ENGLISH_MODE_CANDIDATES: usize = 18;
 
-/// 英文补全至少要几个字母：太短的前缀谁都像。
+/// 英文補全至少要幾個字母：太短的字首誰都像。
 const MIN_COMPLETION_LETTERS: usize = 3;
 
-/// 整段末尾当英文词的尾段至少几个字母，前面的拼音头至少几个字母（见 `query::EnglishTail`）。
+/// 整段末尾當英文詞的尾段至少幾個字母，前面的拼音頭至少幾個字母（見 `query::EnglishTail`）。
 const MIN_ENGLISH_TAIL_LETTERS: usize = 2;
 const MIN_ENGLISH_TAIL_HEAD_LETTERS: usize = 2;
 
-/// 尾段自己也是合法拼音时（`fan`、`database`）至少几个字母才考虑英文读法：三个字母的拼音音节太多。
+/// 尾段自己也是合法拼音時（`fan`、`database`）至少幾個字母才考慮英文讀法：三個字母的拼音音節太多。
 const MIN_PINYIN_LIKE_TAIL_LETTERS: usize = 4;
 
-/// 句中切到英文的代价（log 概率）：尾段像拼音时英文读法要比拼音读法高出这么多才胜出。拍的，攒够日志后用 `--replay` 调。
+/// 句中切到英文的代價（log 機率）：尾段像拼音時英文讀法要比拼音讀法高出這麼多才勝出。拍的，攢夠日誌後用 `--replay` 調。
 const ENGLISH_SWITCH_PENALTY: f64 = 3.0;
 
-/// 英文词频的下限（Zipf）：没有词频的词按百万分之一算。
+/// 英文詞頻的下限（Zipf）：沒有詞頻的詞按百萬分之一算。
 const ENGLISH_ZIPF_FLOOR: f64 = 3.0;
 
-/// emoji 只配给前几个候选，每个词最多几个、一次最多几个。
+/// emoji 只配給前幾個候選，每個詞最多幾個、一次最多幾個。
 const EMOJI_SCAN: usize = 5;
 const EMOJI_PER_WORD: usize = 2;
 const EMOJI_TOTAL: usize = 3;
 
-/// 自动造词：用户连着选出的两个词，合起来不在词库里、且这条接续已记过这么多次，就记成用户词。
-/// 同一段拼音里连着选出来的（`qingjian` 选 青 再选 简）是「用户把它当一个词打」的强信号，两次就够；
-/// 第一次可能是误选或偶然。
+/// 自動造詞：使用者連著選出的兩個詞，合起來不在詞庫裡、且這條接續已記過這麼多次，就記成使用者詞。
+/// 同一段拼音裡連著選出來的（`qingjian` 選 青 再選 簡）是「使用者把它當一個詞打」的強訊號，兩次就夠；
+/// 第一次可能是誤選或偶然。
 const AUTO_WORD_THRESHOLD_SAME_BUFFER: u32 = 2;
 
-/// 分两段打的（`qing` 选 青、再打 `jian` 选 简）信号弱一些，要三次，免得 了我 这类虚词接续也成词。
+/// 分兩段打的（`qing` 選 青、再打 `jian` 選 簡）訊號弱一些，要三次，免得 了我 這類虛詞接續也成詞。
 const AUTO_WORD_THRESHOLD: u32 = 3;
 
-/// 退格撤销最多回看几次上屏：删掉「沃德 书」两个词再重打时，要能找到两个词之前的那一次。
+/// 退格撤銷最多回看幾次上屏：刪掉「沃德 書」兩個詞再重打時，要能找到兩個詞之前的那一次。
 const RECENT_COMMITS: usize = 4;
 
-/// 自动造出的词最多几个字：再长就不是词而是短语了。
+/// 自動造出的詞最多幾個字：再長就不是詞而是短語了。
 const AUTO_WORD_MAX_CHARS: usize = 4;
 
-/// 用户自己点选的词，转移记几份；整句路径里顺带的记一份。
-/// 整句是模型自己算出来的，按空格接受它会把这条路径喂回模型，形成自我强化；用户明确改选的词要能压过这种回声。
+/// 使用者自己點選的詞，轉移記幾份；整句路徑裡順帶的記一份。
+/// 整句是模型自己算出來的，按空格接受它會把這條路徑喂回模型，形成自我強化；使用者明確改選的詞要能壓過這種回聲。
 pub const EXPLICIT_TRANSITION_WEIGHT: u32 = 2;
 
-/// 拼音短于这个字母数不联想：一两个字母的意图太模糊，白花一次请求。
+/// 拼音短於這個字母數不聯想：一兩個字母的意圖太模糊，白花一次請求。
 const MIN_PREDICTION_LETTERS: usize = 2;
 
-/// 辅码触发键的缺省值（`[general] aux_code_key`）。
+/// 輔碼觸發鍵的預設值（`[general] aux_code_key`）。
 pub const DEFAULT_AUX_CODE_KEY: char = ';';
 
-/// 随联想请求附带的本地候选条数。
+/// 隨聯想請求附帶的本地候選條數。
 const PREDICTION_CANDIDATE_HINTS: usize = 5;
 
-/// 一次查询最多给壳多少条候选。同音字最多的音节也不到这个数，再往后都是长词，没人会翻到。
+/// 一次查詢最多給殼多少條候選。同音字最多的音節也不到這個數，再往後都是長詞，沒人會翻到。
 const MAX_CANDIDATES: usize = 500;
 
-/// 神经重打分看 Viterbi 的前几条路径：束宽是 8，再多也没有。
+/// 神經重打分看 Viterbi 的前幾條路徑：束寬是 8，再多也沒有。
 const RESCORE_PATHS: usize = 6;
 
-/// 长输入最多给几条整句候选（重排后的前几条路径）：一条不够用，长句错一个字就得拆开重打。
+/// 長輸入最多給幾條整句候選（重排後的前幾條路徑）：一條不夠用，長句錯一個字就得拆開重打。
 const SENTENCE_CANDIDATES: usize = 3;
 
-/// 短于这么多音节的不给备选整句：那时候选表里的词级候选比另一种读法有用。
+/// 短於這麼多音節的不給備選整句：那時候選表裡的詞級候選比另一種讀法有用。
 const ALTERNATE_MIN_SYLLABLES: usize = 4;
 
-/// 短于这么多字母的不让模型直接生成整句：那么短的输入词级候选够用，生成的几十毫秒不值。
+/// 短於這麼多字母的不讓模型直接生成整句：那麼短的輸入詞級候選夠用，生成的幾十毫秒不值。
 const MIN_GENERATED_LETTERS: usize = 6;
 
-/// 神经重打分的缺省权重 λ（见 `Engine::neural_weight`）：整句评测集上 0.5 到 1.0 一样好、0.75 最高（见 docs/notes/neural-rescoring.md），
-/// 取 0.5 给个人 n-gram 留余量；回放里看到的「λ 大整句掉」是那把尺子的偏差。
+/// 神經重打分的預設權重 λ（見 `Engine::neural_weight`）：整句評測集上 0.5 到 1.0 一樣好、0.75 最高（見 docs/notes/neural-rescoring.md），
+/// 取 0.5 給個人 n-gram 留餘量；回放裡看到的「λ 大整句掉」是那把尺子的偏差。
 pub const NEURAL_WEIGHT: f64 = 0.5;
 
-/// 神经重打分的缺省门槛（nat）：路径分落后最优路径超过这么多的不参与重排。缺省不设（4 nat 试过没帮助），留作调参的旋钮。
+/// 神經重打分的預設門檻（nat）：路徑分落後最優路徑超過這麼多的不參與重排。預設不設（4 nat 試過沒幫助），留作調參的旋鈕。
 pub const NEURAL_MARGIN: f64 = f64::INFINITY;
 
-/// 重打分给模型看的前文：本次会话最近上屏的这么多个字符。
+/// 重打分給模型看的前文：本次會話最近上屏的這麼多個字元。
 pub const RESCORE_CONTEXT_CHARS: usize = 64;
 
 impl Engine {
@@ -462,8 +462,8 @@ impl Engine {
     }
 }
 
-/// 缓冲区是否是英文直输段：含拼音键与 `'` 以外的字符（`no-way`、`a.b`），且不是表达式 / 问字模式。
-/// 微软 / 搜狗双拼下 `;` 也是拼音键。
+/// 緩衝區是否是英文直輸段：含拼音鍵與 `'` 以外的字元（`no-way`、`a.b`），且不是表示式 / 問字模式。
+/// 微軟 / 搜狗雙拼下 `;` 也是拼音鍵。
 fn is_raw(text: &str, modes: ModeKeys, shuangpin: Option<Scheme>, zhuyin: bool) -> bool {
     let is_key = |c: char| {
         if zhuyin {
@@ -481,10 +481,10 @@ fn is_raw(text: &str, modes: ModeKeys, shuangpin: Option<Scheme>, zhuyin: bool) 
         && text.chars().any(|c| !(is_key(c) || c == '\''))
 }
 
-/// 命中是否靠模糊音：某个音节不被敲的那个模式接受。
-/// 原样上屏的字母串像不像一个英文词：纯 ASCII 字母、至少两个。中文模式下还要求它**不能**切成完整的拼音
-/// （`hao` 回车多半是要拼音字母本身，`gist` / `python` / `hello` 切不干净才是英文），
-/// 且不能长过 [`MAX_ENGLISH_WORD_LETTERS`]；英文模式下敲的全是英文，两条都不用判。
+/// 命中是否靠模糊音：某個音節不被敲的那個模式接受。
+/// 原樣上屏的字母串像不像一個英文詞：純 ASCII 字母、至少兩個。中文模式下還要求它**不能**切成完整的拼音
+/// （`hao` 回車多半是要拼音字母本身，`gist` / `python` / `hello` 切不乾淨才是英文），
+/// 且不能長過 [`MAX_ENGLISH_WORD_LETTERS`]；英文模式下敲的全是英文，兩條都不用判。
 fn looks_like_english_word(raw: &str, english_mode: bool) -> bool {
     if raw.len() < MIN_ENGLISH_WORD_LETTERS || !raw.bytes().all(|b| b.is_ascii_alphabetic()) {
         return false;
@@ -494,7 +494,7 @@ fn looks_like_english_word(raw: &str, english_mode: bool) -> bool {
             && !parser::is_fully_segmentable(&raw.to_ascii_lowercase()))
 }
 
-/// 模式的记忆化键：完整音节原样，前缀音节后加 `*`。
+/// 模式的記憶化鍵：完整音節原樣，字首音節後加 `*`。
 fn pattern_key(pattern: &[qingjian_dictionary::SyllablePattern<'_>]) -> String {
     let mut key = String::with_capacity(pattern.len() * 7);
     for p in pattern {
@@ -507,18 +507,18 @@ fn pattern_key(pattern: &[qingjian_dictionary::SyllablePattern<'_>]) -> String {
     key
 }
 
-/// 末尾 `count` 个字符。
+/// 末尾 `count` 個字元。
 fn take_last_chars(text: &str, count: usize) -> String {
     let total = text.chars().count();
     text.chars().skip(total.saturating_sub(count)).collect()
 }
 
-/// 开头 `count` 个字符。
+/// 開頭 `count` 個字元。
 fn take_first_chars(text: &str, count: usize) -> String {
     text.chars().take(count).collect()
 }
 
-/// 光标后剩余拼音的显示形式：能切就按音节用 `'` 连上，切不动就原样。
+/// 游標後剩餘拼音的顯示形式：能切就按音節用 `'` 連上，切不動就原樣。
 fn marked_rest(rest: &str) -> String {
     if rest.is_empty() {
         return String::new();
@@ -529,8 +529,8 @@ fn marked_rest(rest: &str) -> String {
     }
 }
 
-/// 整段切不动时退而求其次：找能切分的最长前缀，剩余字母作为尾部返回。
-/// `kaifv` → (`kai f…` 的切分, `v`)。连第一个字母都切不动才报错。
+/// 整段切不動時退而求其次：找能切分的最長字首，剩餘字母作為尾部返回。
+/// `kaifv` → (`kai f…` 的切分, `v`)。連第一個字母都切不動才報錯。
 fn segment_longest_prefix(text: &str) -> Result<(Vec<Segmentation>, &str), ParseError> {
     match parser::segment(text) {
         Ok(segmentations) => Ok((segmentations, "")),
@@ -546,12 +546,12 @@ fn segment_longest_prefix(text: &str) -> Result<(Vec<Segmentation>, &str), Parse
     }
 }
 
-/// 候选的音节序列在 `input` 开头覆盖了多少个字节。音节之间允许有 `'`。
+/// 候選的音節序列在 `input` 開頭覆蓋了多少個位元組。音節之間允許有 `'`。
 ///
-/// 每个音节吃掉输入里与它相同的最长前缀：全拼 `kaifa` 的 开发 吃 5 个，简拼 `kf` 的 开发 吃 2 个，
-/// 未打完的 `kaif` 也吃完。吃不到任何字母说明候选与输入的切分方式不一致，就此停止。
-/// 按输入串记选择用的键：作用域开头 `len` 个字节里的字母（去掉分隔符 `'`），
-/// 查询时按候选覆盖的字母数截取同一个串，两边才对得上。
+/// 每個音節吃掉輸入裡與它相同的最長字首：全拼 `kaifa` 的 開發 吃 5 個，簡拼 `kf` 的 開發 吃 2 個，
+/// 未打完的 `kaif` 也吃完。吃不到任何字母說明候選與輸入的切分方式不一致，就此停止。
+/// 按輸入串記選擇用的鍵：作用域開頭 `len` 個位元組裡的字母（去掉分隔符 `'`），
+/// 查詢時按候選覆蓋的字母數擷取同一個串，兩邊才對得上。
 fn choice_key(scope: &str, len: usize) -> String {
     scope[..len.min(scope.len())]
         .chars()
@@ -559,7 +559,7 @@ fn choice_key(scope: &str, len: usize) -> String {
         .collect()
 }
 
-/// 切分里非末尾的简拼音节数，见 `ranking::Scored::abbreviated`。
+/// 切分裡非末尾的簡拼音節數，見 `ranking::Scored::abbreviated`。
 fn abbreviated_count(patterns: &[qingjian_dictionary::SyllablePattern<'_>]) -> usize {
     patterns
         .iter()

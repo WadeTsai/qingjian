@@ -4,13 +4,13 @@ use qingjian_core::PredictionRequest;
 
 use crate::prompt::Reply;
 
-/// 最近若干次请求的结果。退格再打回同样的内容很常见，不用再花一次请求。
+/// 最近若干次請求的結果。退格再打回同樣的內容很常見，不用再花一次請求。
 #[derive(Debug, Default)]
 pub struct PredictionCache {
-    /// 请求内容 → 结果。
+    /// 請求內容 → 結果。
     entries: HashMap<String, Reply>,
 
-    /// 插入顺序，用来淘汰最旧的。
+    /// 插入順序，用來淘汰最舊的。
     order: VecDeque<String>,
 
     /// 容量。
@@ -26,7 +26,7 @@ impl PredictionCache {
         }
     }
 
-    /// 序号不参与：同样的上下文与拼音就是同一个请求。
+    /// 序號不參與：同樣的上下文與拼音就是同一個請求。
     pub fn key(request: &PredictionRequest) -> String {
         format!(
             "{:?}\u{1}{}\u{1}{}\u{1}{}\u{1}{}\u{1}{}\u{1}{}\u{1}{}\u{1}{}\u{1}{}",

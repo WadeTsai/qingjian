@@ -1,4 +1,4 @@
-//! Linux XDG 配置、用户数据、日志和随包产品资源定位。
+//! Linux XDG 配置、使用者資料、日誌和隨包產品資源定位。
 use std::path::{Path, PathBuf};
 
 fn xdg(name: &str, fallback: &str) -> PathBuf {

@@ -1,4 +1,4 @@
-//! 拼音行里的光标。
+//! 拼音行裡的游標。
 
 use serde::Deserialize;
 
@@ -6,7 +6,7 @@ use crate::theme::file::ColorSpec;
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub(crate) struct CaretSpec {
-    /// 宽度（点）。
+    /// 寬度（點）。
     pub(crate) width: f32,
 
     pub(crate) color: ColorSpec,

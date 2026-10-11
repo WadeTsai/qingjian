@@ -2,27 +2,27 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// 主语言或学习语言。
+/// 主語言或學習語言。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Language {
-    /// 中文，目前唯一的主语言。
+    /// 中文，目前唯一的主語言。
     Chinese,
 
-    /// 英语。
+    /// 英語。
     English,
 
-    /// 日语。
+    /// 日語。
     Japanese,
 
-    /// 西班牙语。
+    /// 西班牙語。
     Spanish,
 
-    /// 越南语。
+    /// 越南語。
     Vietnamese,
 }
 
 impl Language {
-    /// ISO 639-1 代码，用于配置与数据文件名。
+    /// ISO 639-1 程式碼，用於配置與資料檔名。
     pub fn code(self) -> &'static str {
         match self {
             Self::Chinese => "zh",

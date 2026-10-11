@@ -1,4 +1,4 @@
-//! 主题里的节点：种类 + 显示条件 + 盒子属性。
+//! 主題裡的節點：種類 + 顯示條件 + 盒子屬性。
 
 mod align;
 mod animation;
@@ -39,16 +39,16 @@ pub(crate) struct NodeSpec {
     #[serde(flatten)]
     pub(crate) kind: NodeKind,
 
-    /// 显示条件：数据字段名，`!` 取反，`a|b` 任一成立。不写总是显示。
+    /// 顯示條件：資料欄位名，`!` 取反，`a|b` 任一成立。不寫總是顯示。
     pub(crate) when: Option<String>,
 
-    /// 过渡配对用的名字：新一帧与上一帧同 `id` 的节点之间插值。
+    /// 過渡配對用的名字：新一幀與上一幀同 `id` 的節點之間插值。
     pub(crate) id: Option<String>,
 
-    /// 写了才过渡，没写的节点即使有 `id` 也直接跳到新位置。
+    /// 寫了才過渡，沒寫的節點即使有 `id` 也直接跳到新位置。
     pub(crate) transition: Option<TransitionSpec>,
 
-    /// 循环动画（关键帧）。
+    /// 迴圈動畫（關鍵幀）。
     pub(crate) animation: Option<AnimationSpec>,
 
     #[serde(flatten)]

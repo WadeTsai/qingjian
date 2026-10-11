@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::Modifiers;
 
-/// 一次按键按下时的修饰键状态（Windows 语义）。后两位不是物理修饰键，是输入法状态：
-/// `caps` 是 Caps Lock 锁定位（管大小写、亮着即临时英文大写），`english_mode` 是 Shift 单击切出来的持久中英模式。
+/// 一次按鍵按下時的修飾鍵狀態（Windows 語義）。後兩位不是物理修飾鍵，是輸入法狀態：
+/// `caps` 是 Caps Lock 鎖定位（管大小寫、亮著即臨時英文大寫），`english_mode` 是 Shift 單擊切出來的持久中英模式。
 ///
-/// 普通字符键通常都是 `false`，能干净序列化——不像配置层的 `Modifiers`（走字符串、空值不合法，
-/// 那个是给快捷键配置用的）。协议要能表达「没有修饰键」，所以自带这个而不复用它。
+/// 普通字元鍵通常都是 `false`，能幹淨序列化——不像配置層的 `Modifiers`（走字串、空值不合法，
+/// 那個是給快捷鍵配置用的）。協議要能表達「沒有修飾鍵」，所以自帶這個而不復用它。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct KeyModifiers {
     /// Ctrl
@@ -21,17 +21,17 @@ pub struct KeyModifiers {
     /// Win（⊞）
     pub win: bool,
 
-    /// Caps Lock 亮着（锁定状态，不是按着）。管字母大小写；亮着时无论中英文模式都直接出大写英文（微软拼音式）。
+    /// Caps Lock 亮著（鎖定狀態，不是按著）。管字母大小寫；亮著時無論中英文模式都直接出大寫英文（微軟拼音式）。
     #[serde(default)]
     pub caps: bool,
 
-    /// 持久的英文模式（Windows 单击 Shift 切换，DLL 记状态）。中文模式为 `false`。macOS 壳不用这个字段。
+    /// 持久的英文模式（Windows 單擊 Shift 切換，DLL 記狀態）。中文模式為 `false`。macOS 殼不用這個欄位。
     #[serde(default)]
     pub english_mode: bool,
 }
 
 impl KeyModifiers {
-    /// 按着的物理修饰键组合（去掉 Caps Lock 与中英模式这两个输入法状态位），拿来与配置的快捷键比。
+    /// 按著的物理修飾鍵組合（去掉 Caps Lock 與中英模式這兩個輸入法狀態位），拿來與配置的快捷鍵比。
     pub fn chord(self) -> Self {
         Self {
             caps: false,
@@ -40,13 +40,13 @@ impl KeyModifiers {
         }
     }
 
-    /// 有没有按着 Ctrl / Alt / Win（Shift 不算：它只改字符大小写与标点）。
+    /// 有沒有按著 Ctrl / Alt / Win（Shift 不算：它只改字元大小寫與標點）。
     pub fn has_command_key(self) -> bool {
         self.ctrl || self.alt || self.win
     }
 }
 
-/// 配置里的修饰键组合按 macOS 命名（option / command），落到 Windows 键位：⌥ 是 Alt、⌃ 是 Ctrl、⌘ 是 Win。
+/// 配置裡的修飾鍵組合按 macOS 命名（option / command），落到 Windows 鍵位：⌥ 是 Alt、⌃ 是 Ctrl、⌘ 是 Win。
 impl From<Modifiers> for KeyModifiers {
     fn from(modifiers: Modifiers) -> Self {
         Self {

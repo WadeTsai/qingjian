@@ -1,6 +1,6 @@
-//! 四则运算求值：`+ - * x / ^`、括号、小数、一元负号。递归下降，结果按整数或最多十位小数输出。
+//! 四則運算求值：`+ - * x / ^`、括號、小數、一元負號。遞迴下降，結果按整數或最多十位小數輸出。
 
-/// 算式求值。算不了（语法错、除零、溢出）返回 `None`。
+/// 算式求值。算不了（語法錯、除零、溢位）返回 `None`。
 pub fn evaluate(text: &str) -> Option<String> {
     let mut evaluator = Evaluator {
         bytes: text.as_bytes(),
@@ -13,12 +13,12 @@ pub fn evaluate(text: &str) -> Option<String> {
     Some(format_number(value))
 }
 
-/// 递归下降求值器，只在 [`evaluate`] 里用。
+/// 遞迴下降求值器，只在 [`evaluate`] 裡用。
 struct Evaluator<'a> {
     /// 算式文本。
     bytes: &'a [u8],
 
-    /// 当前读到的位置。
+    /// 當前讀到的位置。
     position: usize,
 }
 
@@ -27,7 +27,7 @@ impl Evaluator<'_> {
         self.bytes.get(self.position).copied()
     }
 
-    /// 加减。
+    /// 加減。
     fn expression(&mut self) -> Option<f64> {
         let mut value = self.term()?;
         while let Some(op @ (b'+' | b'-')) = self.peek() {
@@ -38,7 +38,7 @@ impl Evaluator<'_> {
         Some(value)
     }
 
-    /// 乘除。`x` 也当乘号，键盘上打 `*` 要按 Shift。
+    /// 乘除。`x` 也當乘號，鍵盤上打 `*` 要按 Shift。
     fn term(&mut self) -> Option<f64> {
         let mut value = self.power()?;
         while let Some(op @ (b'*' | b'x' | b'/')) = self.peek() {
@@ -56,7 +56,7 @@ impl Evaluator<'_> {
         Some(value)
     }
 
-    /// 乘方，右结合。
+    /// 乘方，右結合。
     fn power(&mut self) -> Option<f64> {
         let base = self.unary()?;
         if self.peek() == Some(b'^') {
@@ -67,7 +67,7 @@ impl Evaluator<'_> {
         Some(base)
     }
 
-    /// 一元正负号。
+    /// 一元正負號。
     fn unary(&mut self) -> Option<f64> {
         match self.peek() {
             Some(b'-') => {
@@ -82,7 +82,7 @@ impl Evaluator<'_> {
         }
     }
 
-    /// 数字或括号。
+    /// 數字或括號。
     fn atom(&mut self) -> Option<f64> {
         if self.peek() == Some(b'(') {
             self.position += 1;
@@ -107,7 +107,7 @@ impl Evaluator<'_> {
     }
 }
 
-/// 整数不带小数点，小数最多十位、去掉末尾的零。
+/// 整數不帶小數點，小數最多十位、去掉末尾的零。
 fn format_number(value: f64) -> String {
     if value.fract() == 0.0 && value.abs() < 1e15 {
         return format!("{value:.0}");

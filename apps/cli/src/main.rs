@@ -1,7 +1,7 @@
-//! 青简 CLI：Phase 1 的测试工具。
+//! 青簡 CLI：Phase 1 的測試工具。
 //!
-//! 输入拼音，打印候选（词性 + 译文）和各阶段耗时；输入序号上屏并记入用户词频。
-//! 不依赖任何平台 API，是 Core 的第一个「壳」。
+//! 輸入拼音，列印候選（詞性 + 譯文）和各階段耗時；輸入序號上屏並記入使用者詞頻。
+//! 不依賴任何平臺 API，是 Core 的第一個「殼」。
 
 mod args;
 mod cold;
@@ -56,7 +56,7 @@ fn run() -> Result<(), CliError> {
         )?;
         return Ok(());
     }
-    // 查码：只看码表，不查词、不进交互
+    // 查碼：只看碼錶，不查詞、不進互動
     if !args.aux_query.is_empty() {
         for word in &args.aux_query {
             let codes: Vec<&str> = engine
@@ -73,8 +73,8 @@ fn run() -> Result<(), CliError> {
         return Ok(());
     }
     if let Some(path) = &args.replay {
-        // 日志里形码那些行也要能重放：回放按每条的方案切引擎，所以它自己得留一份码表
-        // （`build_engine` 那份的所有权已经交给引擎了）
+        // 日誌裡形碼那些行也要能重放：回放按每條的方案切引擎，所以它自己得留一份碼錶
+        // （`build_engine` 那份的所有權已經交給引擎了）
         let code_table = args.wubi.as_ref().map(CodeTable::from_path).transpose()?;
         let report = replay::run(&mut engine, path, args.misses, code_table)?;
         print!("{report}");
@@ -117,7 +117,7 @@ fn run() -> Result<(), CliError> {
     Ok(())
 }
 
-/// 组装 Engine：这是 Core 之外唯一知道具体 Translator / Learner 类型的地方。
+/// 組裝 Engine：這是 Core 之外唯一知道具體 Translator / Learner 型別的地方。
 fn build_engine(args: &Args) -> Result<Engine, CliError> {
     let language: Language = args
         .language
@@ -176,7 +176,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
         }
         engine.set_extra_dictionaries(extras);
     }
-    // 英文候选的中文释义可选
+    // 英文候選的中文釋義可選
     let zh_glossary = args::default_data_file("glossary-zh.tsv");
     if zh_glossary.is_file() {
         let glossary = Glossary::from_path(Language::Chinese, &zh_glossary)?;
@@ -186,7 +186,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
     if let Some(words) = english {
         engine = engine.with_english(words);
     }
-    // emoji 表随仓库提供（Unicode License）：中文表 + 英文表合成一张，一张都没有就不出 emoji 候选
+    // emoji 表隨倉庫提供（Unicode License）：中文表 + 英文表合成一張，一張都沒有就不出 emoji 候選
     let mut emoji: Option<EmojiTable> = None;
     let started = Instant::now();
     for name in ["emoji-zh.tsv", "emoji-en.tsv"] {
@@ -208,7 +208,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
         );
         engine = engine.with_emoji(table);
     }
-    // 语言模型可选：没有就退化成一元词频整句；打包过的 lm.qj 优先
+    // 語言模型可選：沒有就退化成一元詞頻整句；打包過的 lm.qj 優先
     let packed = std::path::PathBuf::from("data/generated/lm.qj");
     let unigram = std::path::PathBuf::from("data/generated/lm-unigram.tsv");
     let bigram = std::path::PathBuf::from("data/generated/lm-bigram.tsv");
@@ -230,7 +230,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
     if let Some(dir) = &args.neural {
         let started = Instant::now();
         let scorer = qingjian_neural::CharScorer::load(dir)?;
-        // 与产品端一致：字表里有 <sep> 的是 P2C 模型，按按键打分；没有的是字级模型，按前文打分
+        // 與產品端一致：字表裡有 <sep> 的是 P2C 模型，按按鍵打分；沒有的是字級模型，按前文打分
         let p2c = scorer.vocab().sep().is_some();
         let scorer: Box<dyn qingjian_core::sentence::SentenceScorer> = if p2c {
             Box::new(qingjian_neural::P2cScorer(scorer))
@@ -305,7 +305,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
     engine.set_traditional_mode(config.general.traditional);
     engine.set_fuzzy(config.fuzzy);
     engine.set_mode_keys(config.shortcut.mode);
-    // `--shuangpin` 现在写的是 [general] scheme（同一个维度的旧键已经并进去），off 就是全拼
+    // `--shuangpin` 現在寫的是 [general] scheme（同一個維度的舊鍵已經並進去），off 就是全拼
     if let Some(scheme) = &args.shuangpin {
         config.general.scheme = if scheme == "off" {
             Scheme::Pinyin.key().to_owned()
@@ -313,16 +313,16 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
             scheme.clone()
         };
     }
-    // 两条轴：拼音侧看 `[general] scheme`，形码侧看 `[general] wubi`；`--wubi` 给了码表就算开着形码。
-    // 两边都开就是混输，见 docs/user/input/fuzzy-and-shuangpin.md
+    // 兩條軸：拼音側看 `[general] scheme`，形碼側看 `[general] wubi`；`--wubi` 給了碼錶就算開著形碼。
+    // 兩邊都開就是混輸，見 docs/user/input/fuzzy-and-shuangpin.md
     let scheme = config.general.scheme();
     let wubi = config.general.wubi() || args.wubi.is_some();
     tracing::info!(pinyin = scheme.key(), wubi, "输入方案已启用");
     engine.set_shuangpin(scheme.shuangpin());
     engine.set_zhuyin_mode(scheme == Scheme::Zhuyin);
-    // 拼音侧关掉且形码开着才是「只用形码」；两边都关着时留拼音兜底
+    // 拼音側關掉且形碼開著才是「只用形碼」；兩邊都關著時留拼音兜底
     engine.set_phonetic(scheme.is_on() || !wubi);
-    // 形码的码表由 `--wubi` 显式给（方案本身只说「用哪套」，码表文件在哪由壳决定）
+    // 形碼的碼錶由 `--wubi` 顯式給（方案本身只說「用哪套」，碼錶檔案在哪由殼決定）
     if let Some(path) = &args.wubi {
         engine.set_code_table(Some(CodeTable::from_path(path)?));
         tracing::info!(table = %path.display(), "形码码表已载入");
@@ -342,7 +342,7 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
             tables.push(Arc::new(table));
         }
         engine.set_aux_codes(tables);
-        // CLI 没有配置开关：给了码表即开辅码（缺省关），replay 统计不哑
+        // CLI 沒有配置開關：給了碼錶即開輔碼（預設關），replay 統計不啞
         engine.set_aux_enabled(true);
     }
     if config.predict.enabled {

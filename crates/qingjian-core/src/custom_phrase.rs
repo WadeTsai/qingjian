@@ -1,20 +1,20 @@
-//! 自定义短语配置及共享校验、预览；由 Core 匹配，平台负责编辑与展示。
+//! 自定義短語配置及共享校驗、預覽；由 Core 匹配，平臺負責編輯與展示。
 
 use serde::{Deserialize, Serialize};
 
-/// 按原始输入码匹配的固定位置文本。
+/// 按原始輸入碼匹配的固定位置文本。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CustomPhrase {
-    /// 小写英文字母输入码，1–32 个字符。
+    /// 小寫英文字母輸入碼，1–32 個字元。
     pub code: String,
 
-    /// 原样上屏的文本，保留空格和换行。
+    /// 原樣上屏的文本，保留空格和換行。
     pub text: String,
 
-    /// 从 1 开始的固定候选位置，最大 9。
+    /// 從 1 開始的固定候選位置，最大 9。
     pub position: usize,
 
-    /// 是否启用；停用规则仍保留位置。
+    /// 是否啟用；停用規則仍保留位置。
     #[serde(default = "enabled")]
     pub enabled: bool,
 }
@@ -23,7 +23,7 @@ fn enabled() -> bool {
     true
 }
 
-/// 保存和加载使用同一校验，不覆盖冲突条目。
+/// 儲存和載入使用同一校驗，不覆蓋衝突條目。
 pub fn validate_phrases(phrases: &[CustomPhrase]) -> Result<(), String> {
     let mut occupied = std::collections::BTreeSet::new();
     for phrase in phrases {
@@ -46,14 +46,14 @@ pub fn validate_phrases(phrases: &[CustomPhrase]) -> Result<(), String> {
     Ok(())
 }
 
-/// 输入码能不能当自定义短语用：1–32 个小写英文字母。
+/// 輸入碼能不能當自定義短語用：1–32 個小寫英文字母。
 fn valid_code(code: &str) -> bool {
     !code.is_empty() && code.len() <= 32 && code.bytes().all(|c| c.is_ascii_lowercase())
 }
 
-/// 把系统的文本替换（macOS「键盘 → 文本替换」这类「输入码 → 短语」表）并进自定义短语：
-/// 每条占该输入码最靠前的空位（1–9），输入码不是小写字母、短语为空、九位都满、或用户已有同码同文本的规则时跳过。
-/// 结果保证通过 [`validate_phrases`]（前提是 `base` 本身合法）。
+/// 把系統的文本替換（macOS「鍵盤 → 文本替換」這類「輸入碼 → 短語」表）並進自定義短語：
+/// 每條佔該輸入碼最靠前的空位（1–9），輸入碼不是小寫字母、短語為空、九位都滿、或使用者已有同碼同文本的規則時跳過。
+/// 結果保證通過 [`validate_phrases`]（前提是 `base` 本身合法）。
 pub fn merge_replacements<'a>(
     base: &[CustomPhrase],
     replacements: impl IntoIterator<Item = (&'a str, &'a str)>,
@@ -82,7 +82,7 @@ pub fn merge_replacements<'a>(
 }
 
 impl CustomPhrase {
-    /// 单行预览保留 Unicode 字符边界，用可见符号表示换行和制表符。
+    /// 單行預覽保留 Unicode 字元邊界，用可見符號表示換行和製表符。
     pub fn preview(text: &str, max_chars: usize) -> String {
         let mut chars = text.chars().peekable();
         let mut preview = String::new();

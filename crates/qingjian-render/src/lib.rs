@@ -1,10 +1,10 @@
-//! 自绘渲染器：把候选窗的一帧（拼音行、候选行、页脚）按主题画成一张位图，各平台壳只负责把位图贴到窗口上。
+//! 自繪渲染器：把候選窗的一幀（拼音行、候選行、頁尾）按主題畫成一張點陣圖，各平臺殼只負責把點陣圖貼到視窗上。
 //!
-//! 栅格用 tiny-skia（纯 CPU），文字用 cosmic-text（fontdb 选字体 + 整形 + swash 栅格，带回退链与彩色 emoji）。
-//! 字体不扫系统目录，按平台清单只加载界面字体、中文、日文、emoji 几个文件（[`FontLibrary`]）。
-//! 所有尺寸以「点」为单位写在 [`Theme`] 里，[`Renderer`] 按缩放倍数换成像素；输出是预乘 alpha 的 RGBA 位图。
+//! 柵格用 tiny-skia（純 CPU），文字用 cosmic-text（fontdb 選字型 + 整形 + swash 柵格，帶回退鏈與彩色 emoji）。
+//! 字型不掃系統目錄，按平臺清單隻載入介面字型、中文、日文、emoji 幾個檔案（[`FontLibrary`]）。
+//! 所有尺寸以「點」為單位寫在 [`Theme`] 裡，[`Renderer`] 按縮放倍數換成畫素；輸出是預乘 alpha 的 RGBA 點陣圖。
 //!
-//! 设计与验收见 `docs/design/rendering.md`。
+//! 設計與驗收見 `docs/design/rendering.md`。
 
 mod animation;
 mod canvas;
@@ -25,7 +25,7 @@ mod theme;
 
 pub use color::Color;
 pub use error::RenderError;
-/// Windows 的字体登记：按字族名找文件、列字族名（设置页用）。
+/// Windows 的字型登記：按字族名找檔案、列字族名（設定頁用）。
 #[cfg(target_os = "windows")]
 pub use fonts::directwrite as system_fonts;
 pub use fonts::{FontLibrary, UiFont};
@@ -34,5 +34,5 @@ pub use layout::Layout;
 pub use renderer::{HitRegion, HitTarget, Rendered, RenderedStatus, Renderer, StatusCell};
 pub use theme::{FontSpec, TextSizes, Theme, ThemeError, ThemeLibrary};
 
-/// 让 `tiny_skia::Pixmap` 的使用方不用再单独依赖 tiny-skia。
+/// 讓 `tiny_skia::Pixmap` 的使用方不用再單獨依賴 tiny-skia。
 pub use tiny_skia::Pixmap;

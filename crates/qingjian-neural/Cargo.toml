@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-neural"
-description = "字级 Transformer 语言模型的本地推理：加载 tools/lm-train 导出的权重，给整句路径重打分"
+description = "字級 Transformer 語言模型的本地推理：載入 tools/lm-train 匯出的權重，給整句路徑重打分"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,7 +11,7 @@ workspace = true
 
 [features]
 default = []
-# Apple Accelerate 的 BLAS（CPU 矩阵乘走 AMX）；缺省是 candle 自带的 gemm
+# Apple Accelerate 的 BLAS（CPU 矩陣乘走 AMX）；預設是 candle 自帶的 gemm
 accelerate = ["candle-core/accelerate", "candle-nn/accelerate"]
 # Apple GPU
 metal = ["candle-core/metal", "candle-nn/metal"]

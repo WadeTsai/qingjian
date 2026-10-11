@@ -1,5 +1,5 @@
-//! 状态条的齿轮：八齿外圈加一个圆孔，只描边不填充，对应 Windows 端原先用的 ⚙ 字形（Segoe UI Symbol）。
-//! 渲染器自己画是为了不受字体回退影响：Segoe UI Emoji 会把 U+2699 画成彩色。
+//! 狀態條的齒輪：八齒外圈加一個圓孔，只描邊不填充，對應 Windows 端原先用的 ⚙ 字形（Segoe UI Symbol）。
+//! 渲染器自己畫是為了不受字型回退影響：Segoe UI Emoji 會把 U+2699 畫成彩色。
 
 use std::f32::consts::TAU;
 
@@ -8,13 +8,13 @@ use tiny_skia::{BlendMode, PathBuilder, Pixmap};
 use crate::canvas::Canvas;
 use crate::color::Color;
 
-/// 齿数。
+/// 齒數。
 const TEETH: usize = 8;
 
-/// 描边宽度相对边长的比例。
+/// 描邊寬度相對邊長的比例。
 const STROKE_RATIO: f32 = 0.09;
 
-/// 画在 `(x, y)` 为左上角、边长 `size` 像素的方块里。
+/// 畫在 `(x, y)` 為左上角、邊長 `size` 畫素的方塊裡。
 pub(crate) fn draw_gear(canvas: &mut Canvas, x: f32, y: f32, size: f32, color: Color) {
     let side = size.ceil() as u32 + 1;
     let Some(icon) = Pixmap::new(side, side) else {
@@ -28,7 +28,7 @@ pub(crate) fn draw_gear(canvas: &mut Canvas, x: f32, y: f32, size: f32, color: C
     if let Some(inner) = gear_outline(size, stroke) {
         layer.fill_path(&inner, Color::rgb(0, 0, 0), BlendMode::Clear);
     }
-    // 中间的孔：先挖空一圈再补一个内圈，就是描边的圆
+    // 中間的孔：先挖空一圈再補一個內圈，就是描邊的圓
     let center = size / 2.0;
     let hole = size * 0.18;
     let mut path = PathBuilder::new();
@@ -48,7 +48,7 @@ pub(crate) fn draw_gear(canvas: &mut Canvas, x: f32, y: f32, size: f32, color: C
     canvas.blend_pixmap(x.round() as i32, y.round() as i32, &icon);
 }
 
-/// 齿轮外轮廓：齿顶与齿根交替的折线，向内收 `inset` 像素的版本用来挖空。
+/// 齒輪外輪廓：齒頂與齒根交替的折線，向內收 `inset` 畫素的版本用來挖空。
 fn gear_outline(size: f32, inset: f32) -> Option<tiny_skia::Path> {
     let center = size / 2.0;
     let outer = size * 0.48 - inset;
@@ -56,7 +56,7 @@ fn gear_outline(size: f32, inset: f32) -> Option<tiny_skia::Path> {
     if inner <= 0.0 {
         return None;
     }
-    // 每齿四个顶点：齿根起、齿顶起、齿顶止、齿根止；齿顶略窄于齿根
+    // 每齒四個頂點：齒根起、齒頂起、齒頂止、齒根止；齒頂略窄於齒根
     let step = TAU / TEETH as f32;
     let root_half = step * 0.28;
     let tip_half = step * 0.18;

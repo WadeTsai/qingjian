@@ -1,4 +1,4 @@
-//! 节点在父框交叉轴上的对齐。
+//! 節點在父框交叉軸上的對齊。
 
 use serde::Deserialize;
 
@@ -11,6 +11,6 @@ pub(crate) enum Align {
 
     Center,
 
-    /// 撑满。
+    /// 撐滿。
     Stretch,
 }

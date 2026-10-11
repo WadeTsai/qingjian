@@ -2,13 +2,13 @@ use qingjian_core::{Language, Translation, Translator};
 
 use crate::{Glossary, PersonalGlossary};
 
-/// 随包释义表 + 个人释义表叠成一个译者：个人表优先（用户手改过的、云端兜底写的），查不到再查随包表；
-/// 释义兜底学到的释义写进个人表，flush 时落盘。
+/// 隨包釋義表 + 個人釋義表疊成一個譯者：個人表優先（使用者手改過的、雲端兜底寫的），查不到再查隨包表；
+/// 釋義兜底學到的釋義寫進個人表，flush 時落盤。
 pub struct LayeredTranslator {
-    /// 个人释义表。
+    /// 個人釋義表。
     personal: PersonalGlossary,
 
-    /// 随包释义表。
+    /// 隨包釋義表。
     bundled: Glossary,
 }
 
@@ -17,7 +17,7 @@ impl LayeredTranslator {
         Self { personal, bundled }
     }
 
-    /// 随包释义表的条数。
+    /// 隨包釋義表的條數。
     pub fn len(&self) -> usize {
         self.bundled.len()
     }
@@ -26,7 +26,7 @@ impl LayeredTranslator {
         self.bundled.is_empty()
     }
 
-    /// 个人释义表的条数。
+    /// 個人釋義表的條數。
     pub fn personal_len(&self) -> usize {
         self.personal.len()
     }

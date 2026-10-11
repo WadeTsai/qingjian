@@ -1,11 +1,11 @@
-//! 状态条的节点树画法：格子按 `repeat` 绑定 `cells` 展开，点击边界按各格盒子算；输入状态能用 `when` 分支。
+//! 狀態條的節點樹畫法：格子按 `repeat` 繫結 `cells` 展開，點選邊界按各格盒子算；輸入狀態能用 `when` 分支。
 
 use std::path::PathBuf;
 
 use qingjian_render::{FontLibrary, Mode, Renderer, StatusCell, Theme};
 
-/// 左边按中英各画一个同尺寸不同色的方块（不用字：Linux CI 没有中文字体，两个字都画成同一个缺字框），
-/// 格子之间各夹一个 10 点宽的装饰，格子 4 点内边距。
+/// 左邊按中英各畫一個同尺寸不同色的方塊（不用字：Linux CI 沒有中文字型，兩個字都畫成同一個缺字框），
+/// 格子之間各夾一個 10 點寬的裝飾，格子 4 點內邊距。
 const THEME: &str = r##"{
     "extends": "qingjian", "schema": 1, "meta": { "id": "status-tree", "name": "status-tree" },
     "components": {
@@ -58,10 +58,10 @@ fn status_tree_cells_and_mode() {
         *edges.last().unwrap(),
         chinese.rendered.content_width as f32
     );
-    // 第一格前面是中文模式的方块：第一格的右边界比它自己的宽度靠右
+    // 第一格前面是中文模式的方塊：第一格的右邊界比它自己的寬度靠右
     assert!(edges[0] > 0.0);
 
-    // 第二格前的红点装饰画出来了：在第一格右边界之后 10 点（20 像素）以内找红色
+    // 第二格前的紅點裝飾畫出來了：在第一格右邊界之後 10 點（20 畫素）以內找紅色
     let pixmap = &chinese.rendered.pixmap;
     let (cx, cy) = (chinese.rendered.content_x, chinese.rendered.content_y);
     let y = cy + 10;
@@ -71,7 +71,7 @@ fn status_tree_cells_and_mode() {
     });
     assert!(red, "格子之间的装饰没画出来");
 
-    // 英文模式左边换成另一色的方块：同宽，格子边界不变
+    // 英文模式左邊換成另一色的方塊：同寬，格子邊界不變
     let english = renderer
         .render_status(
             &cells,

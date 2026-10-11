@@ -2,13 +2,13 @@ use std::fmt;
 
 use qingjian_dictionary::{SyllablePattern, canonical_syllable};
 
-/// 切分出的一个音节。
+/// 切分出的一個音節。
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Syllable {
-    /// 用户敲的字母。
+    /// 使用者敲的字母。
     pub text: String,
 
-    /// 是完整音节；否则是声母（简拼 `k`）或未打完的前缀（`zho`）。
+    /// 是完整音節；否則是聲母（簡拼 `k`）或未打完的字首（`zho`）。
     pub complete: bool,
 }
 
@@ -35,10 +35,10 @@ impl Syllable {
     }
 }
 
-/// 一种切分方式。
+/// 一種切分方式。
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Segmentation {
-    /// 音节，顺序与输入一致。
+    /// 音節，順序與輸入一致。
     pub syllables: Vec<Syllable>,
 }
 
@@ -47,7 +47,7 @@ impl Segmentation {
         self.syllables.iter().map(Syllable::pattern).collect()
     }
 
-    /// 覆盖的输入字母数（不含 `'`）。
+    /// 覆蓋的輸入字母數（不含 `'`）。
     pub fn letters(&self) -> usize {
         self.syllables.iter().map(|s| s.text.len()).sum()
     }
@@ -60,7 +60,7 @@ impl Segmentation {
         self.syllables.last().is_some_and(|s| !s.complete)
     }
 
-    /// 用分隔符连接各音节，给 marked text 用：`kai'fa`、`k'f`。
+    /// 用分隔符連線各音節，給 marked text 用：`kai'fa`、`k'f`。
     pub fn joined(&self, separator: &str) -> String {
         self.syllables
             .iter()

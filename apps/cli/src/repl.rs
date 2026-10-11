@@ -1,4 +1,4 @@
-//! 交互模式：拼音 → 候选；数字 → 上屏；`:raw` 把上一次输入原样上屏（相当于回车）；`:q` 退出。
+//! 互動模式：拼音 → 候選；數字 → 上屏；`:raw` 把上一次輸入原樣上屏（相當於回車）；`:q` 退出。
 
 use std::io::{self, BufRead, Write};
 
@@ -49,7 +49,7 @@ pub fn run(engine: &mut Engine, limit: usize) -> Result<(), CliError> {
     Ok(())
 }
 
-/// 删掉上一次查询的第 `index` 个（从 1 数）候选：用户词整个删、词库词清学习。
+/// 刪掉上一次查詢的第 `index` 個（從 1 數）候選：使用者詞整個刪、詞庫詞清學習。
 fn forget(engine: &mut Engine, last: Option<&Query>, index: usize) {
     match last.and_then(|q| q.candidates.items.get(index.wrapping_sub(1))) {
         Some(candidate) => {
@@ -60,7 +60,7 @@ fn forget(engine: &mut Engine, last: Option<&Query>, index: usize) {
     }
 }
 
-/// 把上一次查询的第 `index` 个（从 1 数）候选上屏。
+/// 把上一次查詢的第 `index` 個（從 1 數）候選上屏。
 fn commit(engine: &mut Engine, last: Option<Query>, index: usize) {
     match last.and_then(|q| q.candidates.items.into_iter().nth(index.wrapping_sub(1))) {
         Some(candidate) => {

@@ -1,4 +1,4 @@
-//! 主题里的盒子属性 → Taffy 样式。长度进来是点，乘倍数成像素。
+//! 主題裡的盒子屬性 → Taffy 樣式。長度進來是點，乘倍數成畫素。
 
 use taffy::{
     AlignItems, Dimension, Display, FlexDirection, LengthPercentage, LengthPercentageAuto,
@@ -9,7 +9,7 @@ use crate::theme::file::node::{
     Align, BoxSpec, Direction, Edges, Length, Position as SpecPosition,
 };
 
-/// 盒子属性（不含排列方向）。
+/// 盒子屬性（不含排列方向）。
 pub(super) fn from_box(spec: &BoxSpec, scale: f32) -> Style {
     let px = |points: f32| points * scale;
     let mut style = Style::default();
@@ -44,7 +44,7 @@ pub(super) fn from_box(spec: &BoxSpec, scale: f32) -> Style {
     style
 }
 
-/// 框：按方向排子节点，交叉轴缺省顶端（左端）对齐。
+/// 框：按方向排子節點，交叉軸預設頂端（左端）對齊。
 pub(super) fn flex(style: Style, direction: Direction) -> Style {
     Style {
         display: Display::Flex,
@@ -79,7 +79,7 @@ fn edges_auto(value: Edges, scale: f32) -> Rect<LengthPercentageAuto> {
     }
 }
 
-/// 内边距不认 `auto`，当 0。
+/// 內邊距不認 `auto`，當 0。
 fn edges(value: Edges, scale: f32) -> Rect<LengthPercentage> {
     let side = |length: Length| match length {
         Length::Points(points) => LengthPercentage::length(points * scale),

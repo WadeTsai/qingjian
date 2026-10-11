@@ -1,4 +1,4 @@
-//! 主题预览图的错误：整体失败（[`PreviewError`]）与单张失败（[`ShotError`]）。
+//! 主題預覽圖的錯誤：整體失敗（[`PreviewError`]）與單張失敗（[`ShotError`]）。
 
 use std::path::PathBuf;
 

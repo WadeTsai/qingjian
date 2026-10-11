@@ -1,4 +1,4 @@
-//! 注音大千键盘布局。
+//! 注音大千鍵盤佈局。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Component {
     Initial(char),
@@ -22,7 +22,7 @@ impl Component {
     }
 }
 
-/// 解析大千鍵盤的 ASCII 按鍵，轉為注音符號組件
+/// 解析大千鍵盤的 ASCII 按鍵，轉為注音符號元件
 pub fn map_key(key: char) -> Option<Component> {
     match key {
         // 聲母 (Initials)

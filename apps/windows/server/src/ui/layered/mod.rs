@@ -1,6 +1,6 @@
-//! 分层窗口合成：圆角背景 + 四周柔和阴影 + 一段 GDI 内容，合成进一张预乘 alpha 的 BGRA 位图，
-//! `UpdateLayeredWindow` 一次贴上。候选窗口与状态条共用。位图在 [`Canvas`]，内容圆角矩形在 [`RoundRect`]。
-//! 青简渲染器画好的整张位图（已含阴影）走 [`present`]，只做 RGBA → BGRA 再贴。
+//! 分層視窗合成：圓角背景 + 四周柔和陰影 + 一段 GDI 內容，合成進一張預乘 alpha 的 BGRA 點陣圖，
+//! `UpdateLayeredWindow` 一次貼上。候選視窗與狀態條共用。點陣圖在 [`Canvas`]，內容圓角矩形在 [`RoundRect`]。
+//! 青簡渲染器畫好的整張點陣圖（已含陰影）走 [`present`]，只做 RGBA → BGRA 再貼。
 
 mod canvas;
 mod round_rect;
@@ -16,45 +16,45 @@ use windows::core::{Error, Result};
 use self::canvas::Canvas;
 use self::round_rect::RoundRect;
 
-/// 内容四周留给阴影的宽度（逻辑像素）。
+/// 內容四周留給陰影的寬度（邏輯畫素）。
 const SHADOW_MARGIN: i32 = 16;
 
-/// 定向主阴影（光从上方来）的最浓 alpha：底部拿满、两侧减半、顶部为 0。
+/// 定向主陰影（光從上方來）的最濃 alpha：底部拿滿、兩側減半、頂部為 0。
 const KEY_MAX: f64 = 65.0;
 
-/// 环境光晕的最浓 alpha，四边等浓。
+/// 環境光暈的最濃 alpha，四邊等濃。
 const AMBIENT_MAX: f64 = 18.0;
 
-/// 阴影留白的物理像素宽度（`dpi` 96 为 100%）。
+/// 陰影留白的物理畫素寬度（`dpi` 96 為 100%）。
 pub(super) fn shadow_margin(dpi: u32) -> i32 {
     ((SHADOW_MARGIN * dpi as i32) / 96).max(1)
 }
 
-/// 一次合成的输入。
+/// 一次合成的輸入。
 pub(super) struct Layered<'a> {
-    /// 内容尺寸（不含阴影留白）。
+    /// 內容尺寸（不含陰影留白）。
     pub content: (i32, i32),
 
-    /// 阴影留白（= [`shadow_margin`]）。
+    /// 陰影留白（= [`shadow_margin`]）。
     pub margin: i32,
 
-    /// 窗口左上角屏幕坐标（= 内容左上角 − 留白）。
+    /// 視窗左上角螢幕座標（= 內容左上角 − 留白）。
     pub win_pos: (i32, i32),
 
-    /// 窗口尺寸（= 内容 + 2·留白）。
+    /// 視窗尺寸（= 內容 + 2·留白）。
     pub win_size: (i32, i32),
 
-    /// 内容背景色。
+    /// 內容背景色。
     pub background: COLORREF,
 
-    /// 内容圆角半径。
+    /// 內容圓角半徑。
     pub corner_radius: i32,
 
-    /// 在内容坐标系里画内容；`client` 是 `{0, 0, w, h}`。
+    /// 在內容座標系裡畫內容；`client` 是 `{0, 0, w, h}`。
     pub paint: &'a dyn Fn(HDC, RECT),
 }
 
-/// 合成一帧并贴到分层窗口上。
+/// 合成一幀並貼到分層視窗上。
 pub(super) fn composite(hwnd: HWND, layered: &Layered) -> Result<()> {
     let (w, h) = layered.win_size;
     if w <= 0 || h <= 0 {
@@ -71,7 +71,7 @@ pub(super) fn composite(hwnd: HWND, layered: &Layered) -> Result<()> {
         layered.margin,
     );
 
-    // 视口原点挪到内容左上，内容闭包按自己的坐标画。
+    // 視口原點挪到內容左上，內容閉包按自己的座標畫。
     let hdc = canvas.dc();
     unsafe {
         let _ = SetViewportOrgEx(hdc, layered.margin, layered.margin, None);
@@ -86,19 +86,19 @@ pub(super) fn composite(hwnd: HWND, layered: &Layered) -> Result<()> {
     unsafe {
         let _ = SetViewportOrgEx(hdc, 0, 0, None);
     }
-    // GDI 只写 RGB、把碰到的像素 alpha 留成 0（分层窗口里会全透明），画完把内容区补回 255。
+    // GDI 只寫 RGB、把碰到的畫素 alpha 留成 0（分層窗口裡會全透明），畫完把內容區補回 255。
     restore_content_alpha(canvas.pixels(), w, h, &round);
     update(hwnd, canvas.dc(), layered.win_pos, (w, h))
 }
 
-/// 把渲染器出的预乘 RGBA 位图（已含阴影边）贴到分层窗口上，`win_pos` 是位图左上角的屏幕坐标。
+/// 把渲染器出的預乘 RGBA 點陣圖（已含陰影邊）貼到分層視窗上，`win_pos` 是點陣圖左上角的螢幕座標。
 pub(super) fn present(hwnd: HWND, pixmap: &Pixmap, win_pos: (i32, i32)) -> Result<()> {
     let (w, h) = (pixmap.width() as i32, pixmap.height() as i32);
     if w <= 0 || h <= 0 {
         return Err(Error::from(E_INVALIDARG));
     }
     let mut canvas = Canvas::new(w, h)?;
-    // tiny-skia 是 RGBA，DIB 是 BGRA；都是预乘，只换通道顺序。
+    // tiny-skia 是 RGBA，DIB 是 BGRA；都是預乘，只換通道順序。
     for (dst, src) in canvas.pixels().chunks_exact_mut(4).zip(pixmap.pixels()) {
         dst[0] = src.blue();
         dst[1] = src.green();
@@ -108,7 +108,7 @@ pub(super) fn present(hwnd: HWND, pixmap: &Pixmap, win_pos: (i32, i32)) -> Resul
     update(hwnd, canvas.dc(), win_pos, (w, h))
 }
 
-/// `UpdateLayeredWindow`：整张位图按预乘 alpha 贴上并挪到 `win_pos`。
+/// `UpdateLayeredWindow`：整張點陣圖按預乘 alpha 貼上並挪到 `win_pos`。
 fn update(hwnd: HWND, hdc: HDC, win_pos: (i32, i32), win_size: (i32, i32)) -> Result<()> {
     let (w, h) = win_size;
     let dst = POINT {
@@ -138,8 +138,8 @@ fn update(hwnd: HWND, hdc: HDC, win_pos: (i32, i32), win_size: (i32, i32)) -> Re
     }
 }
 
-/// 圆角矩形内填背景色（alpha 255），外面画黑色阴影。阴影纯黑、背景不透明，所以不用真做预乘。
-/// 阴影从内容边缘就开始淡出，不偏移、不填实心色带（否则底边多一道生硬暗带）。
+/// 圓角矩形內填背景色（alpha 255），外面畫黑色陰影。陰影純黑、背景不透明，所以不用真做預乘。
+/// 陰影從內容邊緣就開始淡出，不偏移、不填實心色帶（否則底邊多一道生硬暗帶）。
 fn fill_shadow_and_background(
     pixels: &mut [u8],
     w: i32,
@@ -148,7 +148,7 @@ fn fill_shadow_and_background(
     background: COLORREF,
     margin: i32,
 ) {
-    // COLORREF 低位到高位是 R、G、B；DIB 每像素是 B、G、R、A。
+    // COLORREF 低位到高位是 R、G、B；DIB 每畫素是 B、G、R、A。
     let bg = background.0;
     let bg_r = (bg & 0xFF) as u8;
     let bg_g = ((bg >> 8) & 0xFF) as u8;
@@ -177,7 +177,7 @@ fn fill_shadow_and_background(
     }
 }
 
-/// 把内容区所有像素 alpha 补成 255。
+/// 把內容區所有畫素 alpha 補成 255。
 fn restore_content_alpha(pixels: &mut [u8], w: i32, h: i32, round: &RoundRect) {
     for y in 0..h {
         for x in 0..w {

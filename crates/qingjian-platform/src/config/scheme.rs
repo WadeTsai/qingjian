@@ -1,35 +1,35 @@
-//! 拼音侧方案：全拼 / 双拼七套 / 大千注音 / 关。配置项 `[general] scheme` 的值。
+//! 拼音側方案：全拼 / 雙拼七套 / 大千注音 / 關。配置項 `[general] scheme` 的值。
 //!
-//! 「输入方案是配置项，不是模式」：中英切换始终是布尔，换方案不改变别的方案的既定按键行为。
+//! 「輸入方案是配置項，不是模式」：中英切換始終是布林，換方案不改變別的方案的既定按鍵行為。
 //!
-//! **拼音与形码是两条独立的轴**：这里只管拼音侧（读法），形码侧（五笔）看 `[general] wubi`。
-//! 两边都开就是混输，所以旧版那个「单选的 `scheme`」表达不了，2026-09-16 拆开——
-//! 当时五笔是 `scheme = "wubi86"`，等价于「拼音关 + 五笔开」。
+//! **拼音與形碼是兩條獨立的軸**：這裡只管拼音側（讀法），形碼側（五筆）看 `[general] wubi`。
+//! 兩邊都開就是混輸，所以舊版那個「單選的 `scheme`」表達不了，2026-09-16 拆開——
+//! 當時五筆是 `scheme = "wubi86"`，等價於「拼音關 + 五筆開」。
 
 use std::fmt;
 use std::str::FromStr;
 
 use qingjian_core::ShuangpinScheme;
 
-/// 拼音侧方案。
+/// 拼音側方案。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Scheme {
     /// 全拼。
     #[default]
     Pinyin,
 
-    /// 双拼，七套键位见 [`ShuangpinScheme`]。
+    /// 雙拼，七套鍵位見 [`ShuangpinScheme`]。
     Shuangpin(ShuangpinScheme),
 
     /// 大千注音。
     Zhuyin,
 
-    /// 关：拼音侧不参与查询，只用形码。形码也关着的话没有候选。
+    /// 關：拼音側不參與查詢，只用形碼。形碼也關著的話沒有候選。
     Off,
 }
 
 impl Scheme {
-    /// 全部方案，设置界面与状态条按这个顺序列。
+    /// 全部方案，設定介面與狀態條按這個順序列。
     pub const ALL: [Self; 10] = [
         Self::Pinyin,
         Self::Shuangpin(ShuangpinScheme::Xiaohe),
@@ -43,7 +43,7 @@ impl Scheme {
         Self::Off,
     ];
 
-    /// 配置文件里的写法。`const`：设置界面按 [`Self::ALL`] 直接建常量表，不再手抄一份。
+    /// 配置檔案裡的寫法。`const`：設定介面按 [`Self::ALL`] 直接建常量表，不再手抄一份。
     pub const fn key(self) -> &'static str {
         match self {
             Self::Pinyin => "pinyin",
@@ -53,7 +53,7 @@ impl Scheme {
         }
     }
 
-    /// 界面上的名字。`const` 的理由同上。
+    /// 介面上的名字。`const` 的理由同上。
     pub const fn label(self) -> &'static str {
         match self {
             Self::Pinyin => "全拼",
@@ -63,7 +63,7 @@ impl Scheme {
         }
     }
 
-    /// 这套方案是双拼时是哪一套；装配引擎用（不是双拼时为 `None`）。
+    /// 這套方案是雙拼時是哪一套；裝配引擎用（不是雙拼時為 `None`）。
     pub const fn shuangpin(self) -> Option<ShuangpinScheme> {
         match self {
             Self::Shuangpin(scheme) => Some(scheme),
@@ -71,17 +71,17 @@ impl Scheme {
         }
     }
 
-    /// 这套方案是否为双拼方案。
+    /// 這套方案是否為雙拼方案。
     pub const fn is_shuangpin(self) -> bool {
         matches!(self, Self::Shuangpin(_))
     }
 
-    /// 拼音侧参不参与查询。
+    /// 拼音側參不參與查詢。
     pub const fn is_on(self) -> bool {
         !matches!(self, Self::Off)
     }
 
-    /// 日志里的写法：全拼为空串（老日志里没有这个字段就是全拼），其余同 [`Self::key`]。
+    /// 日誌裡的寫法：全拼為空串（老日誌裡沒有這個欄位就是全拼），其餘同 [`Self::key`]。
     pub const fn log_key(self) -> &'static str {
         match self {
             Self::Pinyin => "",
@@ -90,11 +90,11 @@ impl Scheme {
     }
 }
 
-/// 状态条上显示的方案名，形码在前（与候选顺序一致）；全拼且不开形码时为空串。
-/// 全拼只在同时开着形码时才写出来——单开全拼是缺省，标它没意义。
+/// 狀態條上顯示的方案名，形碼在前（與候選順序一致）；全拼且不開形碼時為空串。
+/// 全拼只在同時開著形碼時才寫出來——單開全拼是預設，標它沒意義。
 ///
-/// 做成跟 [`Scheme`] 与形码开关一起算的自由函数，而不是存进 `RouterConfig`：
-/// 存下来的话它会与那两项冗余、手搓配置的地方就会漂移（测试正是这么发现的）。
+/// 做成跟 [`Scheme`] 與形碼開關一起算的自由函式，而不是存進 `RouterConfig`：
+/// 存下來的話它會與那兩項冗餘、手搓配置的地方就會漂移（測試正是這麼發現的）。
 pub fn scheme_label(pinyin: Scheme, wubi: bool) -> String {
     let mut parts: Vec<&str> = Vec::new();
     if wubi {
@@ -106,7 +106,7 @@ pub fn scheme_label(pinyin: Scheme, wubi: bool) -> String {
     parts.join(" + ")
 }
 
-/// 主题显示的方案名：同 [`scheme_label`]，只是单开全拼时也写出「全拼」（主题要一个总有内容的名字）。
+/// 主題顯示的方案名：同 [`scheme_label`]，只是單開全拼時也寫出「全拼」（主題要一個總有內容的名字）。
 pub fn scheme_name(pinyin: Scheme, wubi: bool) -> String {
     let label = scheme_label(pinyin, wubi);
     if label.is_empty() {
@@ -119,12 +119,12 @@ pub fn scheme_name(pinyin: Scheme, wubi: bool) -> String {
 impl FromStr for Scheme {
     type Err = String;
 
-    /// 认不出来的写法报错，由调用方决定退回什么（配置层退回全拼并警告）。
+    /// 認不出來的寫法報錯，由呼叫方決定退回什麼（配置層退回全拼並警告）。
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         match text.trim() {
             "" | "pinyin" => Ok(Self::Pinyin),
             "zhuyin" => Ok(Self::Zhuyin),
-            // 旧配置把五笔写在这一栏（2026-09-16 之前），等价于「拼音关」
+            // 舊配置把五筆寫在這一欄（2026-09-16 之前），等價於「拼音關」
             "wubi" | "wubi86" => Ok(Self::Off),
             "none" | "off" => Ok(Self::Off),
             other => other.parse().map(Self::Shuangpin),
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn the_old_wubi_spelling_means_turn_the_pinyin_side_off() {
-        // 2026-09-16 之前五笔是 `scheme = "wubi86"`，那时它是一个单选的方案
+        // 2026-09-16 之前五筆是 `scheme = "wubi86"`，那時它是一個單選的方案
         assert_eq!("wubi86".parse::<Scheme>(), Ok(Scheme::Off));
         assert_eq!("wubi".parse::<Scheme>(), Ok(Scheme::Off));
         assert!(!Scheme::Off.is_on());

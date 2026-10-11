@@ -9,21 +9,21 @@ use crate::model::PrefixCache;
 use crate::vocab::EOS;
 use crate::{CharLm, ModelConfig, NeuralError, Vocab, find_model, qjm};
 
-/// 加载好的模型 + 字表：给「前文 + 候选」打分。
+/// 載入好的模型 + 字表：給「前文 + 候選」打分。
 pub struct CharScorer {
     model: CharLm,
     vocab: Vocab,
 
-    /// `.qjm` 的 `META`（名称 / 许可证 / 署名）；三件套目录没有。
+    /// `.qjm` 的 `META`（名稱 / 許可證 / 署名）；三件套目錄沒有。
     metadata: Option<Metadata>,
 
-    /// 最近一段前文的 K / V 缓存（前文 token 与缓存）：一次组句里前文不变，候选换了只算候选。
+    /// 最近一段前文的 K / V 快取（前文 token 與快取）：一次組句裡前文不變，候選換了只算候選。
     cache: Mutex<Option<(Vec<u32>, PrefixCache)>>,
 }
 
 impl CharScorer {
-    /// 加载模型。`path` 是 `.qjm` 单文件、三件套目录（`model.safetensors` / `config.json` / `vocab.json`），
-    /// 或装着其中之一的目录（按 [`find_model`] 挑）。
+    /// 載入模型。`path` 是 `.qjm` 單檔案、三件套目錄（`model.safetensors` / `config.json` / `vocab.json`），
+    /// 或裝著其中之一的目錄（按 [`find_model`] 挑）。
     pub fn load(path: &Path) -> Result<Self, NeuralError> {
         let source = if path.is_dir() {
             find_model(path).ok_or_else(|| NeuralError::NotFound(path.to_owned()))?
@@ -48,7 +48,7 @@ impl CharScorer {
         Ok(scorer)
     }
 
-    /// 三件套目录：权重 mmap 给 candle。
+    /// 三件套目錄：權重 mmap 給 candle。
     fn load_directory(dir: &Path, dtype: DType, device: Device) -> Result<Self, NeuralError> {
         let config_path = dir.join(qjm::CONFIG_FILE);
         let text = std::fs::read_to_string(&config_path).map_err(|source| NeuralError::Io {
@@ -57,14 +57,14 @@ impl CharScorer {
         })?;
         let cfg = ModelConfig::from_json(&text, &config_path)?;
         let vocab = Vocab::load(&dir.join(qjm::VOCAB_FILE))?;
-        // SAFETY：mmap 的权重文件在模型存活期间不改动
+        // SAFETY：mmap 的權重檔案在模型存活期間不改動
         let vb = unsafe {
             VarBuilder::from_mmaped_safetensors(&[dir.join(qjm::WEIGHTS_FILE)], dtype, &device)?
         };
         Self::assemble(cfg, vocab, vb, device, None)
     }
 
-    /// `.qjm`：容器 mmap 一次，三节各自切片；张量搬上设备后容器就可以丢了。
+    /// `.qjm`：容器 mmap 一次，三節各自切片；張量搬上裝置後容器就可以丟了。
     fn load_packed(path: &Path, dtype: DType, device: Device) -> Result<Self, NeuralError> {
         let container = Container::open(path, Kind::Model)?;
         let cfg = ModelConfig::from_json(&container.text(qjm::CONFIG_TAG)?, path)?;
@@ -93,12 +93,12 @@ impl CharScorer {
         })
     }
 
-    /// 加载好的模型本体：逐字生成一类的实验直接用它。
+    /// 載入好的模型本體：逐字生成一類的實驗直接用它。
     pub fn model(&self) -> &CharLm {
         &self.model
     }
 
-    /// `.qjm` 带的元数据（名称 / 许可证 / 署名 / 参数量）；三件套目录加载的没有。
+    /// `.qjm` 帶的後設資料（名稱 / 許可證 / 署名 / 引數量）；三件套目錄載入的沒有。
     pub fn metadata(&self) -> Option<&Metadata> {
         self.metadata.as_ref()
     }
@@ -107,8 +107,8 @@ impl CharScorer {
         &self.vocab
     }
 
-    /// 教师强制计算 `log P(候选 | 完整拼音)`，只累加候选字符，不计 EOS。
-    /// 与字级重排使用相同的求和口径；超长输入报错，不截断用户拼音。
+    /// 教師強制計算 `log P(候選 | 完整拼音)`，只累加候選字元，不計 EOS。
+    /// 與字級重排使用相同的求和口徑；超長輸入報錯，不截斷使用者拼音。
     pub fn score_p2c(&self, keys: &str, texts: &[&str]) -> Result<Vec<f64>, NeuralError> {
         let sep = self.vocab.sep().ok_or(NeuralError::Corrupt(
             "Hanzhang Tongbian model requires a <sep> token in its vocabulary",
@@ -156,10 +156,10 @@ impl CharScorer {
             .collect())
     }
 
-    /// 每个候选接在 `context` 后面的 `log P(候选 | 前文)`，按字累加。
-    /// 序列是 `<eos> + 前文 + 候选`；前文（不含最后一个 token）的 K / V 走缓存，同一段前文只算一次，
-    /// 每个候选只算「前文最后一个 token + 候选」这一小段；几个候选拼成一个 batch、末尾补 0 对齐，一次前向。
-    /// 前文加最长候选超过模型上下文时前文从左边截（与训练脚本 `score.py` 一致）。
+    /// 每個候選接在 `context` 後面的 `log P(候選 | 前文)`，按字累加。
+    /// 序列是 `<eos> + 前文 + 候選`；前文（不含最後一個 token）的 K / V 走快取，同一段前文只算一次，
+    /// 每個候選只算「前文最後一個 token + 候選」這一小段；幾個候選拼成一個 batch、末尾補 0 對齊，一次前向。
+    /// 前文加最長候選超過模型上下文時前文從左邊截（與訓練指令碼 `score.py` 一致）。
     pub fn score(&self, context: &str, texts: &[&str]) -> Result<Vec<f64>, NeuralError> {
         if texts.is_empty() {
             return Ok(Vec::new());
@@ -168,7 +168,7 @@ impl CharScorer {
         let full: Vec<u32> = std::iter::once(EOS)
             .chain(self.vocab.encode(context))
             .collect();
-        // 候选最长不能超过上下文减一（还要留前文的最后一个 token）：再长的从开头截
+        // 候選最長不能超過上下文減一（還要留前文的最後一個 token）：再長的從開頭截
         let tails: Vec<Vec<u32>> = texts
             .iter()
             .map(|text| {
@@ -181,7 +181,7 @@ impl CharScorer {
             .collect();
         let longest = tails.iter().map(Vec::len).max().unwrap_or(0);
         let width = longest + 1;
-        // 缓存的是前文去掉最后一个 token 的部分，最后一个 token 放进每一行的开头，它的输出分布给候选第一个字用
+        // 快取的是前文去掉最後一個 token 的部分，最後一個 token 放進每一行的開頭，它的輸出分佈給候選第一個字用
         let (last, head) = full.split_last().expect("has eos");
         let head = &head[head.len().saturating_sub(limit - width)..];
         let batch = tails.len();
@@ -213,8 +213,8 @@ impl CharScorer {
     }
 }
 
-/// 权重与中间量的精度：Metal 上缺省 f16（与 f32 打分一致，显存减一半、略快），CPU 上 f32（candle 的 CPU f16 矩阵乘慢）；
-/// 环境变量 `QINGJIAN_NEURAL_DTYPE=f32|f16` 可强制。
+/// 權重與中間量的精度：Metal 上預設 f16（與 f32 打分一致，視訊記憶體減一半、略快），CPU 上 f32（candle 的 CPU f16 矩陣乘慢）；
+/// 環境變數 `QINGJIAN_NEURAL_DTYPE=f32|f16` 可強制。
 fn weight_dtype(device: &Device) -> DType {
     match std::env::var("QINGJIAN_NEURAL_DTYPE").as_deref() {
         Ok("f16") => DType::F16,
@@ -231,7 +231,7 @@ fn default_device() -> Result<Device, NeuralError> {
 
 #[cfg(feature = "metal")]
 fn default_device() -> Result<Device, NeuralError> {
-    // candle-metal 在创建设备时会使用此类；旧版 macOS 缺少它会直接 panic。
+    // candle-metal 在建立裝置時會使用此類；舊版 macOS 缺少它會直接 panic。
     if objc2::runtime::AnyClass::get(c"MTLResidencySetDescriptor").is_none() {
         tracing::warn!("系统不支持 Metal residency set，本地模型改用 CPU");
         return Ok(Device::Cpu);
@@ -243,13 +243,13 @@ fn default_device() -> Result<Device, NeuralError> {
 mod tests {
     use super::*;
 
-    /// 随包知微模型的三件套；没有就跳过这些测试。
+    /// 隨包知微模型的三件套；沒有就跳過這些測試。
     fn export_dir() -> Option<std::path::PathBuf> {
         let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/models/hanzhang-zhiwei");
         dir.join(qjm::WEIGHTS_FILE).exists().then_some(dir)
     }
 
-    /// 用未拆前缀的完整前向核对位置偏移、批量补齐、缓存切换和长度边界。
+    /// 用未拆字首的完整前向核對位置偏移、批次補齊、快取切換和長度邊界。
     #[test]
     fn p2c_cached_scores_match_full_forward() {
         let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/models/hanzhang-tongbian");
@@ -297,7 +297,7 @@ mod tests {
         assert!(scorer.score_p2c("a", &[]).unwrap().is_empty());
     }
 
-    /// 与训练脚本 `score.py` 对拍：同一模型、同一序列，log 概率要一致（数值差在 fp16 权重转 f32 的误差内）。
+    /// 與訓練指令碼 `score.py` 對拍：同一模型、同一序列，log 機率要一致（數值差在 fp16 權重轉 f32 的誤差內）。
     #[test]
     fn matches_the_python_scorer() {
         let Some(dir) = export_dir() else {
@@ -312,23 +312,23 @@ mod tests {
         assert!((scores[0] - -4.981).abs() < 0.05, "{scores:?}");
         assert!((scores[1] - -13.113).abs() < 0.05, "{scores:?}");
         assert!((scores[2] - -6.491).abs() < 0.05, "{scores:?}");
-        // 单独算与批量算一致
+        // 單獨算與批次算一致
         let alone = scorer.score("我今天想去", &["伤害"]).unwrap();
         assert!(
             (alone[0] - scores[1]).abs() < 1e-3,
             "{alone:?} vs {scores:?}"
         );
-        // 前文超长时从左截，不报错
+        // 前文超長時從左截，不報錯
         let long: String = "很长的前文。".repeat(40);
         assert!(scorer.score(&long, &["上海"]).unwrap()[0] < 0.0);
-        // 换过前文再换回来（缓存重算）结果不变；候选比上下文还长也不报错
+        // 換過前文再換回來（快取重算）結果不變；候選比上下文還長也不報錯
         let again = scorer.score("我今天想去", &["上海"]).unwrap();
         assert!((again[0] - scores[0]).abs() < 1e-3, "{again:?}");
         let huge: String = "字".repeat(300);
         assert!(scorer.score("", &[huge.as_str()]).unwrap()[0] < 0.0);
     }
 
-    /// 三件套打成 `.qjm` 再加载，分数与目录加载一致，元数据原样带回；目录里有 `.qjm` 时 `load(目录)` 挑的是它。
+    /// 三件套打成 `.qjm` 再載入，分數與目錄載入一致，後設資料原樣帶回；目錄裡有 `.qjm` 時 `load(目錄)` 挑的是它。
     #[test]
     fn packed_file_scores_like_the_directory() {
         let Some(dir) = export_dir() else {
@@ -350,7 +350,7 @@ mod tests {
         let meta = packed.metadata().unwrap();
         assert_eq!(meta.name, "测试模型");
         assert_eq!(meta.entries, parameters);
-        // 与 load 同一设备同一精度（workspace 一起测时 metal feature 会被统一打开）
+        // 與 load 同一裝置同一精度（workspace 一起測時 metal feature 會被統一開啟）
         let device = default_device().unwrap();
         let by_dir = CharScorer::load_directory(&dir, weight_dtype(&device), device).unwrap();
         let texts = ["上海", "伤害", "吃饭"];
@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(find_model(&out_dir), Some(out.clone()));
         assert!(CharScorer::load(&out_dir).unwrap().metadata().is_some());
 
-        // 别的 .qj 种类不认
+        // 別的 .qj 種類不認
         let error = CharScorer::load(&dir.join("../generated/lm.qj"))
             .err()
             .map(|e| e.to_string())
@@ -379,7 +379,7 @@ mod tests {
 mod latency {
     use super::*;
 
-    /// 延迟探针：前文 64 字 + 8 条约 8 字的候选，一次 batch。`cargo test --release -p qingjian-neural -- --ignored --nocapture`
+    /// 延遲探針：前文 64 字 + 8 條約 8 字的候選，一次 batch。`cargo test --release -p qingjian-neural -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn batch_latency() {
@@ -415,7 +415,7 @@ mod latency {
             );
             let start = std::time::Instant::now();
             for i in 0..10 {
-                // 每次换一段前文，逼它重算缓存
+                // 每次換一段前文，逼它重算快取
                 let fresh = format!("{ctx}{i}");
                 let _ = scorer.score(&fresh, &texts[..n]).unwrap();
             }

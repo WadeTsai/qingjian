@@ -1,13 +1,13 @@
-//! 短语层：常用词表是词典词头，不收 我的 / 好的 / 不知道 / 有没有 这类人会整块打出来的组合，输入法里它们却是最常打的。
-//! 扫两遍语料：第一遍按词库分词数相邻两词，第二遍只数两段二元都够频的相邻三词；取出现够多、边界像话的组合，读音直接由成分词的读音拼出（不用再标多音字），写成 `phrases.tsv`（`词\t次数\t拼音`），
-//! 由 `lexicon --extra-words` 并入基础词库。
+//! 短語層：常用詞表是詞典詞頭，不收 我的 / 好的 / 不知道 / 有沒有 這類人會整塊打出來的組合，輸入法裡它們卻是最常打的。
+//! 掃兩遍語料：第一遍按詞庫分詞數相鄰兩詞，第二遍只數兩段二元都夠頻的相鄰三詞；取出現夠多、邊界像話的組合，讀音直接由成分詞的讀音拼出（不用再標多音字），寫成 `phrases.tsv`（`詞\t次數\t拼音`），
+//! 由 `lexicon --extra-words` 併入基礎詞庫。
 //!
-//! 次数按语料文件分开数，短语要在**对话语料**（`--dialogue`，人打字的样子）里就够频：维基里的模板句（一个市镇、面积为）
-//! 次数再高也不是人会打的。只按次数与边界规则（[`rules`]）筛，不用点互信息：虚词组合的 PMI 天然低，而它们正是要收的。
-//! 结果要人工过一遍再拷进 `assets/lexicon/`。
+//! 次數按語料檔案分開數，短語要在**對話語料**（`--dialogue`，人打字的樣子）裡就夠頻：維基裡的模板句（一個市鎮、面積為）
+//! 次數再高也不是人會打的。只按次數與邊界規則（[`rules`]）篩，不用點互資訊：虛詞組合的 PMI 天然低，而它們正是要收的。
+//! 結果要人工過一遍再拷進 `assets/lexicon/`。
 //!
-//! 分词用的词库必须是**还没并入短语**的：并入后 我的 是一个词，相邻词对里就没有 我 + 的 了。重跑时给 `--refresh <上次的 phrases.tsv>`，
-//! 里面的词会先从分词词表里摘掉。
+//! 分詞用的詞庫必須是**還沒併入短語**的：併入後 我的 是一個詞，相鄰詞對裡就沒有 我 + 的 了。重跑時給 `--refresh <上次的 phrases.tsv>`，
+//! 裡面的詞會先從分詞詞表裡摘掉。
 
 mod rules;
 
@@ -19,31 +19,31 @@ use std::path::{Path, PathBuf};
 use crate::bigram::{Vocabulary, is_han};
 use crate::error::ConvertError;
 
-/// `phrases` 子命令的参数。
+/// `phrases` 子命令的引數。
 pub struct PhraseOptions {
-    /// 分词与成分读音用的词库（同目录 `dicts/` 一并读）。
+    /// 分詞與成分讀音用的詞庫（同目錄 `dicts/` 一併讀）。
     pub dict: PathBuf,
 
-    /// 上一次的短语表：里面的词先从分词词表里摘掉（词库已并入短语时重跑用）。
+    /// 上一次的短語表：裡面的詞先從分詞詞表裡摘掉（詞庫已併入短語時重跑用）。
     pub refresh: Option<PathBuf>,
 
-    /// 语料。
+    /// 語料。
     pub corpus: Vec<PathBuf>,
 
-    /// 对话语料（`corpus` 里的一个）：短语在它里面的次数也要够 `min_count`。
+    /// 對話語料（`corpus` 裡的一個）：短語在它裡面的次數也要夠 `min_count`。
     pub dialogue: PathBuf,
 
-    /// 次数下限。
+    /// 次數下限。
     pub min_count: u32,
 
-    /// 短语最多几个字。
+    /// 短語最多幾個字。
     pub max_chars: usize,
 }
 
-/// 次数超过下限这么多倍的算「够常见」，形状规则不再筛它（见 [`rules::passes`]）。
+/// 次數超過下限這麼多倍的算「夠常見」，形狀規則不再篩它（見 [`rules::passes`]）。
 const STRONG_MULTIPLIER: u32 = 5;
 
-/// 一条短语候选。
+/// 一條短語候選。
 struct Phrase {
     text: String,
     count: u32,
@@ -135,17 +135,17 @@ pub fn mine(options: &PhraseOptions, out_dir: &Path) -> Result<(), ConvertError>
     Ok(())
 }
 
-/// 一个词组合在全部语料与对话语料里各出现几次。
+/// 一個詞組合在全部語料與對話語料裡各出現幾次。
 #[derive(Debug, Default, Clone, Copy)]
 struct Tally {
-    /// 全部语料。
+    /// 全部語料。
     total: u32,
 
-    /// 对话语料。
+    /// 對話語料。
     dialogue: u32,
 }
 
-/// 读一个 `词\t…` 文件的第一列。
+/// 讀一個 `詞\t…` 檔案的第一列。
 fn read_words(path: &Path) -> Result<HashSet<String>, ConvertError> {
     Ok(std::fs::read_to_string(path)?
         .lines()
@@ -154,7 +154,7 @@ fn read_words(path: &Path) -> Result<HashSet<String>, ConvertError> {
         .collect())
 }
 
-/// 扫语料数相邻词组合：`frequent_pairs` 为 `None` 数全部相邻两词，否则数两段二元都在里面的相邻三词。
+/// 掃語料數相鄰詞組合：`frequent_pairs` 為 `None` 數全部相鄰兩詞，否則數兩段二元都在裡面的相鄰三詞。
 fn count(
     corpus: &[PathBuf],
     dialogue: &Path,
@@ -186,7 +186,7 @@ fn count(
                     continue;
                 }
                 vocabulary.segment(run, &mut tokens);
-                // 笑声串（哈哈哈 切成 哈哈 + 哈）不算相邻：你哈哈哈 会把 你 + 哈 灌成高频短语；孤立的 哈（对哈）照常
+                // 笑聲串（哈哈哈 切成 哈哈 + 哈）不算相鄰：你哈哈哈 會把 你 + 哈 灌成高頻短語；孤立的 哈（對哈）照常
                 let laughter: Vec<bool> = tokens
                     .iter()
                     .map(|t| t.is_some_and(|id| vocabulary.words[id as usize].starts_with('哈')))
@@ -221,14 +221,14 @@ fn count(
                 }
             }
         }
-        // 内存兜底：只出现一次的二元扔掉
+        // 記憶體兜底：只出現一次的二元扔掉
         counts.retain(|_, t| t.total > 1);
         tracing::info!(lines, combinations = counts.len(), "本文件扫描完成");
     }
     Ok(counts)
 }
 
-/// 词 → 读音（同一个词多个读音取词频最高的那条），读 `dict` 与同目录 `dicts/`。
+/// 詞 → 讀音（同一個詞多個讀音取詞頻最高的那條），讀 `dict` 與同目錄 `dicts/`。
 fn load_readings(dict: &Path) -> Result<HashMap<String, String>, ConvertError> {
     let mut best: HashMap<String, (u64, String)> = HashMap::new();
     for path in Vocabulary::files(dict) {

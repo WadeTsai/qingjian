@@ -1,6 +1,6 @@
-//! 自注册：写 COM 的 InprocServer32，经 `ITfInputProcessorProfiles` / `ITfCategoryMgr` 把青简登记成键盘类文本服务，
-//! 语言 profile 在「中文(简体)」与「中文(台灣)」下各登记一个（见 [`crate::com::profile::language`]）。
-//! 写的是 `HKEY_CLASSES_ROOT`，所以 regsvr32 要管理员。输入法图标文件在 [`icon`]。
+//! 自注冊：寫 COM 的 InprocServer32，經 `ITfInputProcessorProfiles` / `ITfCategoryMgr` 把青簡登記成鍵盤類文本服務，
+//! 語言 profile 在「中文(簡體)」與「中文(台灣)」下各登記一個（見 [`crate::com::profile::language`]）。
+//! 寫的是 `HKEY_CLASSES_ROOT`，所以 regsvr32 要管理員。輸入法圖示檔案在 [`icon`]。
 
 mod icon;
 
@@ -21,7 +21,7 @@ use windows_registry::CLASSES_ROOT;
 use crate::com::profile::language::PROFILES;
 use crate::com::{CLSID_QINGJIAN, CLSID_QINGJIAN_STR, SERVICE_DESCRIPTION};
 
-/// 除「键盘类 TIP」外还要声明沉浸式 / 系统托盘等能力，否则 Win10/11 的输入切换器会把它过滤掉（表现为「装上又消失」）。
+/// 除「鍵盤類 TIP」外還要宣告沉浸式 / 系統托盤等能力，否則 Win10/11 的輸入切換器會把它過濾掉（表現為「裝上又消失」）。
 const CATEGORIES: &[GUID] = &[
     GUID_TFCAT_TIP_KEYBOARD,
     GUID_TFCAT_TIPCAP_UIELEMENTENABLED,
@@ -47,7 +47,7 @@ pub(crate) fn register() -> Result<()> {
     register_profiles()
 }
 
-/// 撤销 [`register`]，尽力而为。
+/// 撤銷 [`register`]，盡力而為。
 pub(crate) fn unregister() -> Result<()> {
     let _ = unregister_profiles();
     icon::uninstall();
@@ -60,13 +60,13 @@ fn register_profiles() -> Result<()> {
         let profiles: ITfInputProcessorProfiles = unsafe {
             CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)?
         };
-        // 两个 profile 共用一张图标。
+        // 兩個 profile 共用一張圖示。
         let icon = icon::install()
             .map(|path| wide_z(&path.to_string_lossy()))
             .unwrap_or_else(|| vec![0]);
         unsafe { profiles.Register(&CLSID_QINGJIAN)? };
         for profile in &PROFILES {
-            // AddLanguageProfile 按 null 扫描读字符串，不补 0 会多读相邻内存（曾显示成「青简C」）。
+            // AddLanguageProfile 按 null 掃描讀字串，不補 0 會多讀相鄰記憶體（曾顯示成「青簡C」）。
             let description = wide_z(profile.description);
             unsafe {
                 profiles.AddLanguageProfile(
@@ -120,7 +120,7 @@ fn unregister_profiles() -> Result<()> {
     })
 }
 
-/// regsvr32 一般已初始化过 COM；已是别的套间模式（`RPC_E_CHANGED_MODE`）就不配对反初始化。
+/// regsvr32 一般已初始化過 COM；已是別的套間模式（`RPC_E_CHANGED_MODE`）就不配對反初始化。
 fn com_scope<T>(body: impl FnOnce() -> Result<T>) -> Result<T> {
     let initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) }.is_ok();
     let result = body();
@@ -130,7 +130,7 @@ fn com_scope<T>(body: impl FnOnce() -> Result<T>) -> Result<T> {
     result
 }
 
-/// 以 0 结尾的宽字符串。
+/// 以 0 結尾的寬字串。
 fn wide_z(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
 }

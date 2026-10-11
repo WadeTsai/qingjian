@@ -1,6 +1,6 @@
 #[derive(Debug, thiserror::Error)]
 pub enum LearningError {
-    /// 学习数据文件读写失败（权限、坏盘一类；格式不对的行只跳过不报错）。
+    /// 學習資料檔案讀寫失敗（許可權、壞盤一類；格式不對的行只跳過不報錯）。
     #[error("failed to read or write user learning file: {0}")]
     Io(#[from] std::io::Error),
 }

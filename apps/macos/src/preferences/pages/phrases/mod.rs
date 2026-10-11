@@ -1,4 +1,4 @@
-//! 自定义短语表格与独立编辑表单。
+//! 自定義短語表格與獨立編輯表單。
 mod state;
 mod table;
 use crate::preferences::{
@@ -20,19 +20,19 @@ use std::cell::{Cell, RefCell};
 use table::PhraseTableSource;
 
 pub struct PhrasesPage {
-    /// 常驻规则列表。
+    /// 常駐規則列表。
     table: Retained<NSTableView>,
 
-    /// 表格数据源与代理。
+    /// 表格資料來源與代理。
     _source: Retained<PhraseTableSource>,
 
-    /// 新增或编辑时才显示的表单。
+    /// 新增或編輯時才顯示的表單。
     editor: Retained<NSWindow>,
 
-    /// 表单校验错误，不清除草稿。
+    /// 表單校驗錯誤，不清除草稿。
     error: Retained<NSTextField>,
 
-    /// 输入码。
+    /// 輸入碼。
     code: Retained<NSTextField>,
 
     /// 位置。
@@ -41,16 +41,16 @@ pub struct PhrasesPage {
     /// 多行文本。
     text: Retained<NSTextView>,
 
-    /// 启用状态。
+    /// 啟用狀態。
     enabled: Retained<NSButton>,
 
-    /// 编辑中的规则下标；None 为新增。
+    /// 編輯中的規則下標；None 為新增。
     selected: Cell<Option<usize>>,
 
-    /// 打开表单时的规则快照，用于识别外部修改并保留草稿。
+    /// 開啟表單時的規則快照，用於識別外部修改並保留草稿。
     original: RefCell<Vec<CustomPhrase>>,
 
-    /// 系统设置「键盘 → 文本替换」里的条目也当短语。
+    /// 系統設定「鍵盤 → 文本替換」裡的條目也當短語。
     system_replacements: Retained<NSButton>,
 }
 
@@ -77,7 +77,7 @@ impl PhrasesPage {
         }
         let source = PhraseTableSource::new(mtm, edit.clone(), delete.clone());
         source.attach(table.clone());
-        // SAFETY: 数据源保留在页面内，选择器签名与 PreferencesTarget 相符。
+        // SAFETY: 資料來源保留在頁面內，選擇器簽名與 PreferencesTarget 相符。
         unsafe {
             table.setDataSource(Some(ProtocolObject::from_ref(&*source)));
             table.setDelegate(Some(ProtocolObject::from_ref(&*source)));
@@ -294,7 +294,7 @@ impl PhrasesPage {
     }
 }
 
-// 保存前比较整个列表：删除、重排或同位置替换都不能沿用旧行号。
+// 儲存前比較整個列表：刪除、重排或同位置替換都不能沿用舊行號。
 fn unchanged_phrases(before: &[CustomPhrase], current: &[CustomPhrase]) -> Result<(), String> {
     if before != current {
         Err("规则已在其他地方修改，草稿已保留；请复制草稿后取消并重新打开编辑。".into())

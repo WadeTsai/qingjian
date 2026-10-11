@@ -1,4 +1,4 @@
-//! Linux 会话路由：独立保存各上下文的组句，词库和学习服务保持单实例。本地整句模型在 [`rescore`]。
+//! Linux 會話路由：獨立儲存各上下文的組句，詞庫和學習服務保持單例項。本地整句模型在 [`rescore`]。
 
 mod composed;
 mod config;
@@ -20,51 +20,51 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-/// 学习数据落盘间隔（与 macOS 壳一致）；Server 没有定时器，借消息节拍与主循环的 tick 看时间。
+/// 學習資料落盤間隔（與 macOS 殼一致）；Server 沒有定時器，借訊息節拍與主迴圈的 tick 看時間。
 const LEARNING_FLUSH_INTERVAL: Duration = Duration::from_secs(60);
 
-/// Fcitx5 输入上下文分派器；所有 Engine 操作都在 Server 主线程串行执行。
+/// Fcitx5 輸入上下文分派器；所有 Engine 操作都在 Server 主執行緒序列執行。
 pub struct Router {
-    /// 唯一的词库及学习服务，输入状态在会话切换时交换。
+    /// 唯一的詞庫及學習服務，輸入狀態在會話切換時交換。
     engine: Engine,
 
-    /// 按键及候选展示配置。
+    /// 按鍵及候選展示配置。
     config: RouterConfig,
 
-    /// 会话表。
+    /// 會話表。
     sessions: HashMap<SessionId, SessionInfo>,
 
-    /// 当前装入 Engine 的会话。
+    /// 當前裝入 Engine 的會話。
     focused: Option<SessionId>,
 
-    /// 当前候选与 preedit。
+    /// 當前候選與 preedit。
     composed: Option<Composed>,
 
-    /// 当前高亮的跨页下标。
+    /// 當前高亮的跨頁下標。
     highlight: usize,
 
-    /// 本轮是否已主动移动候选。
+    /// 本輪是否已主動移動候選。
     navigated: bool,
 
-    /// 可选的整句提示；首版没有云服务。
+    /// 可選的整句提示；首版沒有云服務。
     sentence: Option<String>,
 
-    /// 删除候选等操作提示。
+    /// 刪除候選等操作提示。
     notice: Option<String>,
 
-    /// 全服务帧号递增，关闭再开不会复用展示身份。
+    /// 全服務幀號遞增，關閉再開不會複用展示身份。
     display_revision: u64,
 
-    /// 最近一次学习落盘的时刻。
+    /// 最近一次學習落盤的時刻。
     last_flush: Instant,
 
-    /// 本地整句模型（`.qjm` 或三件套目录）；没有模型文件为 `None`。
+    /// 本地整句模型（`.qjm` 或三件套目錄）；沒有模型檔案為 `None`。
     model_path: Option<PathBuf>,
 
-    /// 进行中的模型加载；加载完接到 Engine 上就清掉。
+    /// 進行中的模型載入；載入完接到 Engine 上就清掉。
     model_loader: Option<ModelLoader>,
 
-    /// 重排的防抖 / 轮询进行态。
+    /// 重排的防抖 / 輪詢進行態。
     rescore: RescoreState,
 }
 
@@ -89,7 +89,7 @@ impl Router {
             rescore: RescoreState::default(),
         }
     }
-    /// 一条客户端消息；无需答复的通知返回 None。
+    /// 一條客戶端訊息；無需答覆的通知返回 None。
     pub fn handle(&mut self, message: ClientMessage) -> Option<ServerMessage> {
         let response = self.dispatch(message);
         if self.last_flush.elapsed() >= LEARNING_FLUSH_INTERVAL {
@@ -101,7 +101,7 @@ impl Router {
         self.engine.flush_learning();
         self.last_flush = Instant::now();
     }
-    /// 到点了：接上加载好的模型、推进重排、到点落盘学习（输入停止后也不能一直不落盘）。主循环超时与插件的 `Poll` 都会调。
+    /// 到點了：接上載入好的模型、推進重排、到點落盤學習（輸入停止後也不能一直不落盤）。主迴圈超時與外掛的 `Poll` 都會調。
     pub fn tick(&mut self) {
         self.attach_loaded_model();
         self.advance_rescoring();

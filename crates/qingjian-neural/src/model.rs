@@ -3,10 +3,10 @@ use candle_nn::{Embedding, LayerNorm, Linear, VarBuilder, layer_norm, linear, op
 
 use crate::ModelConfig;
 
-/// 掩码里未来位置加的值：够大到 softmax 后为 0，又在 f16 范围内。
+/// 掩碼裡未來位置加的值：夠大到 softmax 後為 0，又在 f16 範圍內。
 const MASKED: f32 = -1.0e4;
 
-/// 一层：pre-LN 自注意力 + pre-LN MLP，都带残差。
+/// 一層：pre-LN 自注意力 + pre-LN MLP，都帶殘差。
 struct Block {
     ln1: LayerNorm,
     qkv: Linear,
@@ -16,8 +16,8 @@ struct Block {
     mlp_proj: Linear,
 }
 
-/// 一段前文在每层的 K / V（形状 `[1, h, p, d]`）。前文在一次组句里不变，算一次存下来，
-/// 候选接在后面时只算候选自己那几个 token（见 [`CharLm::log_probs_after`]）。
+/// 一段前文在每層的 K / V（形狀 `[1, h, p, d]`）。前文在一次組句裡不變，算一次存下來，
+/// 候選接在後面時只算候選自己那幾個 token（見 [`CharLm::log_probs_after`]）。
 pub struct PrefixCache {
     keys: Vec<Tensor>,
     values: Vec<Tensor>,
@@ -25,7 +25,7 @@ pub struct PrefixCache {
 }
 
 impl PrefixCache {
-    /// 前文的 token 数。
+    /// 前文的 token 數。
     pub fn len(&self) -> usize {
         self.len
     }
@@ -34,8 +34,8 @@ impl PrefixCache {
         self.len == 0
     }
 
-    /// 按行号重排 batch 维：beam search 每步挑完候选要把各条的 K / V 跟着搬。
-    /// `order` 是 `[b]` 的 u32 行号，允许重复（一行可以分裂成多条）。
+    /// 按行號重排 batch 維：beam search 每步挑完候選要把各條的 K / V 跟著搬。
+    /// `order` 是 `[b]` 的 u32 行號，允許重複（一行可以分裂成多條）。
     pub fn select(&self, order: &Tensor) -> Result<Self> {
         let pick = |t: &Tensor| t.index_select(order, 0);
         Ok(Self {
@@ -46,17 +46,17 @@ impl PrefixCache {
     }
 }
 
-/// 字级 decoder-only Transformer。张量名见 `tools/lm-train/model.py`。
+/// 字級 decoder-only Transformer。張量名見 `tools/lm-train/model.py`。
 pub struct CharLm {
     tok_emb: Embedding,
     pos_emb: Tensor,
     blocks: Vec<Block>,
     ln_f: LayerNorm,
-    /// 输出层复用输入嵌入。
+    /// 輸出層複用輸入嵌入。
     head: Linear,
     cfg: ModelConfig,
     device: Device,
-    /// 权重与中间量的精度（f32，或 Metal 上的 f16）。
+    /// 權重與中間量的精度（f32，或 Metal 上的 f16）。
     dtype: DType,
 }
 
@@ -100,7 +100,7 @@ impl CharLm {
         &self.device
     }
 
-    /// 因果掩码 `[t, past + t]`：前 `past` 列是前文，全部可见；后面 `t` 列里未来位置加上极小值。
+    /// 因果掩碼 `[t, past + t]`：前 `past` 列是前文，全部可見；後面 `t` 列裡未來位置加上極小值。
     fn causal_mask(&self, t: usize, past: usize) -> Result<Tensor> {
         let width = past + t;
         let data: Vec<f32> = (0..t)
@@ -109,8 +109,8 @@ impl CharLm {
         Tensor::from_vec(data, (t, width), &self.device)?.to_dtype(self.dtype)
     }
 
-    /// 一层注意力。`past` 是前文的 K / V（`[1, h, p, d]` 或 `[b, h, p, d]`），有就拼在本段 K / V 前面。
-    /// 返回输出与拼好的 K / V（`[b, h, p + t, d]`），记缓存用。
+    /// 一層注意力。`past` 是前文的 K / V（`[1, h, p, d]` 或 `[b, h, p, d]`），有就拼在本段 K / V 前面。
+    /// 返回輸出與拼好的 K / V（`[b, h, p + t, d]`），記快取用。
     fn attention(
         &self,
         block: &Block,
@@ -155,8 +155,8 @@ impl CharLm {
         Ok((block.attn_proj.forward(&y)?, k_all, v_all))
     }
 
-    /// 跑一段 token：`idx` 形状 `[b, t]`，位置从 `past` 的长度接着数；`record` 为真时把每层的 K / V
-    /// 连同前文一起收成缓存返回。返回 logits `[b, t, vocab]`。
+    /// 跑一段 token：`idx` 形狀 `[b, t]`，位置從 `past` 的長度接著數；`record` 為真時把每層的 K / V
+    /// 連同前文一起收成快取返回。返回 logits `[b, t, vocab]`。
     fn run(
         &self,
         idx: &Tensor,
@@ -195,18 +195,18 @@ impl CharLm {
         Ok((logits, cache))
     }
 
-    /// 前向：`idx` 形状 `[b, t]`（u32），返回 logits `[b, t, vocab]`。
+    /// 前向：`idx` 形狀 `[b, t]`（u32），返回 logits `[b, t, vocab]`。
     pub fn forward(&self, idx: &Tensor) -> Result<Tensor> {
         Ok(self.run(idx, None, false)?.0)
     }
 
-    /// 每个位置对下一个 token 的 log-softmax，`[b, t, vocab]`，f32。
+    /// 每個位置對下一個 token 的 log-softmax，`[b, t, vocab]`，f32。
     pub fn log_probs(&self, idx: &Tensor) -> Result<Tensor> {
         let logits = self.forward(idx)?.to_dtype(DType::F32)?;
         ops::log_softmax(&logits, D::Minus1)
     }
 
-    /// 算一段前文的 K / V 缓存；空前文给空缓存。
+    /// 算一段前文的 K / V 快取；空前文給空快取。
     pub fn prefix_cache(&self, ids: &[u32]) -> Result<PrefixCache> {
         if ids.is_empty() {
             return Ok(PrefixCache {
@@ -220,8 +220,8 @@ impl CharLm {
         Ok(cache.expect("record was requested"))
     }
 
-    /// 接着缓存推进一段（`idx` 形状 `[b, t]`），返回最后一位对下一个 token 的 log-softmax（`[b, vocab]`，f32）
-    /// 与长出这一段之后的新缓存。逐字生成用。
+    /// 接著快取推進一段（`idx` 形狀 `[b, t]`），返回最後一位對下一個 token 的 log-softmax（`[b, vocab]`，f32）
+    /// 與長出這一段之後的新快取。逐字生成用。
     pub fn step(&self, cache: &PrefixCache, idx: &Tensor) -> Result<(Tensor, PrefixCache)> {
         let (logits, next) = self.run(idx, Some(cache), true)?;
         let t = logits.dim(1)?;
@@ -235,8 +235,8 @@ impl CharLm {
         ))
     }
 
-    /// 接在前文缓存后面的一段（`[b, t]`）每个位置对下一个 token 的 log-softmax，`[b, t, vocab]`，f32。
-    /// 前文长度加 `t` 不能超过模型上下文。
+    /// 接在前文快取後面的一段（`[b, t]`）每個位置對下一個 token 的 log-softmax，`[b, t, vocab]`，f32。
+    /// 前文長度加 `t` 不能超過模型上下文。
     pub fn log_probs_after(&self, cache: &PrefixCache, idx: &Tensor) -> Result<Tensor> {
         let (logits, _) = self.run(idx, Some(cache), false)?;
         ops::log_softmax(&logits.to_dtype(DType::F32)?, D::Minus1)

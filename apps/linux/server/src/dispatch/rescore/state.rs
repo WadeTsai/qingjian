@@ -1,41 +1,41 @@
-//! 本地整句模型的两个节拍：停键后的防抖（到点才把整句路径送去后台打分）与结果轮询。
-//! Server 没有定时器，主循环按 [`RescoreState::next_deadline`] 给的时长等消息，超时就来一次 `tick`；
-//! 常数与 macOS 壳的 `RescoreMonitor`、Windows Server 的同名模块相同。
+//! 本地整句模型的兩個節拍：停鍵後的防抖（到點才把整句路徑送去後臺打分）與結果輪詢。
+//! Server 沒有定時器，主迴圈按 [`RescoreState::next_deadline`] 給的時長等訊息，超時就來一次 `tick`；
+//! 常數與 macOS 殼的 `RescoreMonitor`、Windows Server 的同名模組相同。
 
 use std::time::{Duration, Instant};
 
-/// 停键多久才请求重排：比一般的击键间隔短，连着敲时不请求。
+/// 停鍵多久才請求重排：比一般的擊鍵間隔短，連著敲時不請求。
 pub(super) const DEBOUNCE: Duration = Duration::from_millis(80);
 
-/// 轮询间隔：模型一次几十毫秒。
+/// 輪詢間隔：模型一次幾十毫秒。
 pub(super) const POLL_INTERVAL: Duration = Duration::from_millis(20);
 
-/// 最长等多久；后台线程卡住时兜底。
+/// 最長等多久；後臺執行緒卡住時兜底。
 pub(super) const MAX_WAIT: Duration = Duration::from_secs(2);
 
-/// 重排的进行态。
+/// 重排的進行態。
 #[derive(Debug, Default)]
 pub(crate) struct RescoreState {
-    /// 最近一次缓冲变化的时间；有它表示在等防抖到点。
+    /// 最近一次緩衝變化的時間；有它表示在等防抖到點。
     wanted_since: Option<Instant>,
 
-    /// 本轮请求发出的时间；有它表示在等后台结果。
+    /// 本輪請求發出的時間；有它表示在等後臺結果。
     polling_since: Option<Instant>,
 }
 
 impl RescoreState {
-    /// 又敲了一键：重新计时。
+    /// 又敲了一鍵：重新計時。
     pub(super) fn schedule(&mut self) {
         self.wanted_since = Some(Instant::now());
     }
 
-    /// 防抖到点了没。
+    /// 防抖到點了沒。
     pub(super) fn debounce_elapsed(&self) -> bool {
         self.wanted_since
             .is_some_and(|since| since.elapsed() >= DEBOUNCE)
     }
 
-    /// 请求已发出：开始等结果。
+    /// 請求已發出：開始等結果。
     pub(super) fn start_polling(&mut self) {
         self.wanted_since = None;
         self.polling_since = Some(Instant::now());
@@ -45,19 +45,19 @@ impl RescoreState {
         self.polling_since.is_some()
     }
 
-    /// 等结果等太久了。
+    /// 等結果等太久了。
     pub(super) fn expired(&self) -> bool {
         self.polling_since
             .is_some_and(|since| since.elapsed() > MAX_WAIT)
     }
 
-    /// 什么都不等。
+    /// 什麼都不等。
     pub(super) fn stop(&mut self) {
         self.wanted_since = None;
         self.polling_since = None;
     }
 
-    /// 下一次该来 `tick` 的时长；什么都不等为 `None`。
+    /// 下一次該來 `tick` 的時長；什麼都不等為 `None`。
     pub(super) fn next_deadline(&self) -> Option<Duration> {
         if self.polling_since.is_some() {
             return Some(POLL_INTERVAL);

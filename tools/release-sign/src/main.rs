@@ -1,10 +1,10 @@
-//! 版本索引的签名工具。
+//! 版本索引的簽名工具。
 //!
-//!   qingjian-release-sign keygen --out <私钥文件>        # 生成密钥对：私钥写文件（不打印），公钥打印出来填进 qingjian-update
-//!   qingjian-release-sign sign <releases.json>           # 私钥取环境变量 QINGJIAN_INDEX_SIGNING_KEY，写 <文件>.sig
-//!   qingjian-release-sign verify <releases.json>         # 按程序内置的公钥验 <文件>.sig
+//!   qingjian-release-sign keygen --out <私鑰檔案>        # 生成金鑰對：私鑰寫檔案（不列印），公鑰打印出來填進 qingjian-update
+//!   qingjian-release-sign sign <releases.json>           # 私鑰取環境變數 QINGJIAN_INDEX_SIGNING_KEY，寫 <檔案>.sig
+//!   qingjian-release-sign verify <releases.json>         # 按程式內建的公鑰驗 <檔案>.sig
 //!
-//! 私钥与公钥都是 base64 的 32 字节，签名是 base64 的 64 字节。
+//! 私鑰與公鑰都是 base64 的 32 位元組，簽名是 base64 的 64 位元組。
 
 use std::path::{Path, PathBuf};
 
@@ -25,17 +25,17 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
-    /// 生成密钥对
+    /// 生成金鑰對
     Keygen {
-        /// 私钥写到这个文件（已存在就拒绝）
+        /// 私鑰寫到這個檔案（已存在就拒絕）
         #[arg(long)]
         out: PathBuf,
     },
 
-    /// 给文件生成分离签名 <文件>.sig
+    /// 給檔案生成分離簽名 <檔案>.sig
     Sign { file: PathBuf },
 
-    /// 按内置公钥验 <文件>.sig
+    /// 按內建公鑰驗 <檔案>.sig
     Verify { file: PathBuf },
 }
 
@@ -106,7 +106,7 @@ fn sign(file: &Path) -> Result<(), SignError> {
         .and_then(|bytes| bytes.try_into().ok())
         .ok_or(SignError::MalformedKey)?;
     let key = SigningKey::from_bytes(&seed);
-    // 私钥与程序里的公钥对不上时签出来的索引所有客户端都不认，当场拦下
+    // 私鑰與程式裡的公鑰對不上時簽出來的索引所有客戶端都不認，當場攔下
     let public = STANDARD.encode(key.verifying_key().to_bytes());
     if !qingjian_update::PUBLIC_KEYS.contains(&public.as_str()) {
         return Err(SignError::ForeignKey);
@@ -124,7 +124,7 @@ fn signature_path(file: &Path) -> PathBuf {
     PathBuf::from(name)
 }
 
-/// 系统随机源：Unix 读 /dev/urandom；Windows 上不生成密钥（密钥在维护者的 Mac 上生成一次）。
+/// 系統隨機源：Unix 讀 /dev/urandom；Windows 上不生成金鑰（金鑰在維護者的 Mac 上生成一次）。
 fn fill_random(seed: &mut [u8; 32]) -> Result<(), SignError> {
     use std::io::Read;
     std::fs::File::open("/dev/urandom")?.read_exact(seed)?;

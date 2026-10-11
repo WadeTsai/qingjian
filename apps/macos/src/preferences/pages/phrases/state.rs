@@ -1,4 +1,4 @@
-//! 自定义短语表格的快照与控件引用，供表格回调独立读取。
+//! 自定義短語表格的快照與控制元件引用，供表格回撥獨立讀取。
 
 use objc2::rc::Retained;
 use objc2_app_kit::{NSButton, NSTableView};
@@ -6,15 +6,15 @@ use qingjian_core::CustomPhrase;
 use std::cell::RefCell;
 
 pub(super) struct TableState {
-    /// 当前配置的只读显示副本，回调不借用 Host。
+    /// 當前配置的只讀顯示副本，回撥不借用 Host。
     pub rows: RefCell<Vec<CustomPhrase>>,
 
-    /// 所属表格。
+    /// 所屬表格。
     pub table: RefCell<Option<Retained<NSTableView>>>,
 
-    /// 无选中行时禁用编辑。
+    /// 無選中行時停用編輯。
     pub edit: Retained<NSButton>,
 
-    /// 无选中行时禁用删除。
+    /// 無選中行時停用刪除。
     pub delete: Retained<NSButton>,
 }

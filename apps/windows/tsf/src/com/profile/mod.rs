@@ -1,11 +1,11 @@
-//! 语言 profile：青简登记的两个 profile（简 / 繁，[`language`]）、查当前激活的是哪个、以及切换通知。
+//! 語言 profile：青簡登記的兩個 profile（簡 / 繁，[`language`]）、查當前啟用的是哪個、以及切換通知。
 //!
-//! 本线程把输入法切成别的（微软拼音等）时告诉 Server 收状态条。
-//! 应用退出时只有 `Deactivate`、没有别的 profile 被激活，所以状态条不跟会话开关走。
-//! 通知在青简停用**之后**到来，那时会话连接已关，用一条临时连接发。
-//! 在青简自己的两个 profile 之间切换（「中文(简体)」的青简 ↔「中文(台灣)」的青簡）TSF 不停用再激活，
-//! 只来这条通知，据它把简 / 繁报给 Server。
-//! sink 挂在线程管理器上，激活一次、之后不撤（线程管理器销毁时自然释放），重复激活不再挂。
+//! 本執行緒把輸入法切成別的（微軟拼音等）時告訴 Server 收狀態條。
+//! 應用退出時只有 `Deactivate`、沒有別的 profile 被啟用，所以狀態條不跟會話開關走。
+//! 通知在青簡停用**之後**到來，那時會話連線已關，用一條臨時連線發。
+//! 在青簡自己的兩個 profile 之間切換（「中文(簡體)」的青簡 ↔「中文(台灣)」的青簡）TSF 不停用再啟用，
+//! 只來這條通知，據它把簡 / 繁報給 Server。
+//! sink 掛在執行緒管理器上，啟用一次、之後不撤（執行緒管理器銷燬時自然釋放），重複啟用不再掛。
 
 pub(crate) mod language;
 
@@ -24,7 +24,7 @@ use crate::client::pipe::connect_default;
 
 #[implement(ITfActiveLanguageProfileNotifySink)]
 struct ProfileSink {
-    /// 通知里带的会话标识（Server 只当信号，不查会话）。
+    /// 通知裡帶的會話標識（Server 只當訊號，不查會話）。
     session: SessionId,
 }
 
@@ -66,30 +66,32 @@ impl ITfActiveLanguageProfileNotifySink_Impl for ProfileSink_Impl {
                 EngineClient::notify_ime_switched(stream, self.session).map_err(|e| e.to_string())
             });
         match sent {
-            Ok(()) => log("切到别的输入法，已通知 Server 收状态条"),
-            Err(error) => log(&format!("切到别的输入法，通知 Server 失败: {error}")),
+            Ok(()) => log("切到別的輸入法，已通知 Server 收狀態條"),
+            Err(error) => log(&format!("切到別的輸入法，通知 Server 失敗: {error}")),
         }
         Ok(())
     }
 }
 
-/// 挂上通知，返回 cookie（只用来判断挂过没有）。
+/// 掛上通知，返回 cookie（只用來判斷掛過沒有）。
 pub(super) fn advise(thread_mgr: &ITfThreadMgr, session: SessionId) -> Result<u32> {
     let source: ITfSource = thread_mgr.cast()?;
     let sink: ITfActiveLanguageProfileNotifySink = ProfileSink::new(session).into();
     unsafe { source.AdviseSink(&ITfActiveLanguageProfileNotifySink::IID, &sink) }
 }
 
-/// 本线程当前激活的是青简的繁体 profile 吗；查不到（还没激活任何一个）为 `None`。
-/// 激活时 TSF 已把 profile 记为当前，`Activate` 里就能查。
+/// 本執行緒當前啟用的是青簡的繁體 profile 嗎；查不到（還沒啟用任何一個）為 `None`。
+/// 啟用時 TSF 已把 profile 記為當前，`Activate` 裡就能查。
 pub(super) fn active_traditional() -> Option<bool> {
-    let profiles: ITfInputProcessorProfiles = unsafe {
+    let created: Result<ITfInputProcessorProfiles> = unsafe {
         CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)
-    }
-    .ok()?;
+    };
+    let profiles = created.ok()?;
     let mut langid = 0u16;
     let mut guid = GUID::zeroed();
-    unsafe { profiles.GetActiveLanguageProfile(&super::CLSID_QINGJIAN, &mut langid, &mut guid) }
-        .ok()?;
+    let active = unsafe {
+        profiles.GetActiveLanguageProfile(&super::CLSID_QINGJIAN, &mut langid, &mut guid)
+    };
+    active.ok()?;
     Some(language::is_traditional(&guid))
 }

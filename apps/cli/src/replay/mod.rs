@@ -1,9 +1,9 @@
-//! 回放评测：把输入日志里每次上屏时的键重新喂给引擎，看现在的排序会不会把当时选的词放在首选。
+//! 回放評測：把輸入日誌裡每次上屏時的鍵重新餵給引擎，看現在的排序會不會把當時選的詞放在首選。
 //!
-//! 只在内存里学习（CLI 没给 `--user-dict` 就是内存学习器），不写任何文件；按日志顺序回放，
-//! 命中的候选照样上屏，让上文（个人 n-gram、上一个词）跟真实使用一样往前走。
-//! 云端词、云端整句、原样上屏、译词不评：它们不是本地排序的结果，只计数。
-//! 其他事件（重打、直通、云端联想、上文断开、会话）按 `docs/plan/model-eval.md` 里的尺子计数。
+//! 只在記憶體裡學習（CLI 沒給 `--user-dict` 就是記憶體學習器），不寫任何檔案；按日誌順序回放，
+//! 命中的候選照樣上屏，讓上文（個人 n-gram、上一個詞）跟真實使用一樣往前走。
+//! 雲端詞、雲端整句、原樣上屏、譯詞不評：它們不是本地排序的結果，只計數。
+//! 其他事件（重打、直通、雲端聯想、上文斷開、會話）按 `docs/plan/model-eval.md` 裡的尺子計數。
 
 mod line;
 mod report;
@@ -21,7 +21,7 @@ use line::Line;
 use scheme::SchemeSwitcher;
 use tally::Tally;
 
-/// 跑一遍日志，返回报告。`code_table` 是给日志里形码那些行用的（`--wubi` 给的码表）。
+/// 跑一遍日誌，返回報告。`code_table` 是給日誌裡形碼那些行用的（`--wubi` 給的碼錶）。
 pub fn run(
     engine: &mut Engine,
     path: &Path,
@@ -55,7 +55,7 @@ pub fn run(
                 engine.break_chain();
             }
             InputLogEntry::Passthrough { text } => {
-                // 直通字符也进标点状态与上文链，与真实使用一致
+                // 直通字元也進標點狀態與上文鏈，與真實使用一致
                 report.passthrough_chars += text.chars().count();
                 for c in text.chars() {
                     engine.note_passthrough(c);
@@ -66,9 +66,9 @@ pub fn run(
                 report.prediction_pending = true;
             }
             InputLogEntry::Commit(commit) => {
-                // 2026-09-12 以前的日志里壳每次回车 / 失焦都记一条空的原样上屏，不算数
+                // 2026-09-12 以前的日誌裡殼每次回車 / 失焦都記一條空的原樣上屏，不算數
                 if commit.keys.is_empty() && commit.text.is_empty() {
-                    // 那一条对应的是一次回车 / 失焦：上文链照样断，只是不计数
+                    // 那一條對應的是一次回車 / 失焦：上文鏈照樣斷，只是不計數
                     report.empty += 1;
                     engine.clear();
                     engine.break_chain();
@@ -96,8 +96,8 @@ fn replay_commit(
     report: &mut Report,
     show_misses: usize,
 ) {
-    // 这条日志所属方案回放不了（形码但没给 `--wubi`）：只计数。拿拼音的读法去喂形码的键会算出
-    // 看着像真的、实则无意义的命中率。
+    // 這條日誌所屬方案回放不了（形碼但沒給 `--wubi`）：只計數。拿拼音的讀法去喂形碼的鍵會算出
+    // 看著像真的、實則無意義的命中率。
     if !switcher.can_replay(&commit.scheme) {
         report.skip(commit.source);
         engine.clear();
@@ -106,8 +106,8 @@ fn replay_commit(
     }
     switcher.apply(engine, &commit.scheme);
     let Some(tally) = report.tally_for(commit.source) else {
-        // 不是本地排序给出的（云端词、原样上屏……）：只计数；那次上屏的词没法接进上文，断链。
-        // 原样上屏照样走一遍 `take_raw`：个人英文词（`gist`）与「这个串不纠」都是从这里学的，不走它回放里的英文候选与纠错就比真实使用差
+        // 不是本地排序給出的（雲端詞、原樣上屏……）：只計數；那次上屏的詞沒法接進上文，斷鏈。
+        // 原樣上屏照樣走一遍 `take_raw`：個人英文詞（`gist`）與「這個串不糾」都是從這裡學的，不走它回放裡的英文候選與糾錯就比真實使用差
         report.skip(commit.source);
         if commit.source == InputSource::Raw && !commit.keys.is_empty() {
             engine.set_english_mode(commit.english);
@@ -127,8 +127,8 @@ fn replay_commit(
         commit.scope.as_str()
     };
     engine.set_english_mode(commit.english);
-    // 日志里记的是实际敲键：含触发键的按壳那样逐键重喂（进辅码态、码段进码段），
-    // 否则按当时的作用域喂。进过辅码态时留下拼音段，上屏后拿它量学习闭环。
+    // 日誌裡記的是實際敲鍵：含觸發鍵的按殼那樣逐鍵重喂（進輔碼態、碼段進碼段），
+    // 否則按當時的作用域喂。進過輔碼態時留下拼音段，上屏後拿它量學習閉環。
     let pinyin = if commit.keys.contains(engine.aux_code_key()) {
         let (aux, pinyin) = feed(engine, &commit.keys);
         aux.then_some(pinyin)
@@ -183,7 +183,7 @@ fn replay_commit(
             )),
         ));
     }
-    // 照着当时的选择上屏，让上下文往前走；不在候选里就原样清掉
+    // 照著當時的選擇上屏，讓上下文往前走；不在候選裡就原樣清掉
     match position.map(|i| query.candidates.items[i].clone()) {
         Some(candidate) => {
             engine.commit(&candidate);
@@ -191,7 +191,7 @@ fn replay_commit(
         }
         None => engine.clear(),
     }
-    // 辅码选词的闭环：学习记完之后，同样的拼音改成纯拼音输入，这个词该排到首选
+    // 輔碼選詞的閉環：學習記完之後，同樣的拼音改成純拼音輸入，這個詞該排到首選
     if let Some(pinyin) = pinyin {
         report.aux_total += 1;
         engine.set_input(&pinyin);
@@ -206,8 +206,8 @@ fn replay_commit(
     }
 }
 
-/// 与壳一样逐个喂键：触发键进辅码态、之后的字母进码段，其余进拼音缓冲区。
-/// 返回 (是否进过辅码态, 进辅码态那一刻的拼音缓冲区)。
+/// 與殼一樣逐個喂鍵：觸發鍵進輔碼態、之後的字母進碼段，其餘進拼音緩衝區。
+/// 返回 (是否進過輔碼態, 進輔碼態那一刻的拼音緩衝區)。
 fn feed(engine: &mut Engine, keys: &str) -> (bool, String) {
     engine.clear();
     let mut aux = false;
@@ -229,7 +229,7 @@ fn feed(engine: &mut Engine, keys: &str) -> (bool, String) {
     (aux, pinyin)
 }
 
-/// 回放的错误。
+/// 回放的錯誤。
 #[derive(Debug, thiserror::Error)]
 pub enum ReplayError {
     #[error("cannot read input log {path}: {source}")]
@@ -240,7 +240,7 @@ pub enum ReplayError {
     },
 }
 
-/// 没命中例子里标来源用的短名，与报告各计数板同名。
+/// 沒命中例子裡標來源用的短名，與報告各計數板同名。
 fn source_label(source: InputSource) -> &'static str {
     match source {
         InputSource::Word => "词",

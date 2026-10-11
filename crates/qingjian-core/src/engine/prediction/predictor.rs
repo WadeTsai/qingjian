@@ -2,27 +2,27 @@ use super::policy::PredictionPolicy;
 use super::request::PredictionRequest;
 use super::response::Prediction;
 
-/// 联想提供方。实现可以联网，但接口是**非阻塞**的：提交立刻返回，结果由壳定时轮询。
+/// 聯想提供方。實現可以聯網，但介面是**非阻塞**的：提交立刻返回，結果由殼定時輪詢。
 ///
-/// 「最新请求优先」：实现收到新请求时可以直接丢掉还没发出去的旧请求；
-/// Engine 只认序号等于最近一次提交的结果，其余一律丢弃。
+/// 「最新請求優先」：實現收到新請求時可以直接丟掉還沒發出去的舊請求；
+/// Engine 只認序號等於最近一次提交的結果，其餘一律丟棄。
 pub trait Predictor: Send {
-    /// 观察窗口、条数上限与开关。
+    /// 觀察視窗、條數上限與開關。
     fn policy(&self) -> PredictionPolicy;
 
-    /// 提交请求，不能阻塞。
+    /// 提交請求，不能阻塞。
     fn submit(&mut self, request: PredictionRequest);
 
-    /// 取一条已到达的结果，没有就返回 `None`，不能阻塞。
+    /// 取一條已到達的結果，沒有就返回 `None`，不能阻塞。
     fn poll(&mut self) -> Option<Prediction>;
 
-    /// 是否真的会联想；`false` 时 Engine 根本不构造请求。
+    /// 是否真的會聯想；`false` 時 Engine 根本不構造請求。
     fn is_enabled(&self) -> bool {
         true
     }
 }
 
-/// 不联想。
+/// 不聯想。
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoPredictor;
 

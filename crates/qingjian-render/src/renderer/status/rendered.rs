@@ -1,11 +1,11 @@
-//! 状态条的渲染结果：位图加各格的右边界。
+//! 狀態條的渲染結果：點陣圖加各格的右邊界。
 
 use crate::renderer::Rendered;
 
 pub struct RenderedStatus {
-    /// 位图与内容区位置。
+    /// 點陣圖與內容區位置。
     pub rendered: Rendered,
 
-    /// 各格右边界在内容区里的像素 x，从左到右；点击按 x 落进哪格。
+    /// 各格右邊界在內容區裡的畫素 x，從左到右；點選按 x 落進哪格。
     pub cell_edges: Vec<f32>,
 }

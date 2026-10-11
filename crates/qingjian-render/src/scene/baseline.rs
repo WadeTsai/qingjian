@@ -1,7 +1,7 @@
-//! 表格一行里的各格按第一行文字的基线对齐。
+//! 表格一行裡的各格按第一行文字的基線對齊。
 //!
-//! 主题用上边距按自己的字号把序号、候选、译文手调到同一条基线；设置里候选与译文按不同比例改了字号后，
-//! 这里量出差多少，补到偏高那几格的上边距上。不用 taffy 自带的基线对齐：嵌套的框上报的基线是 0，且它把上边距也算进基线。
+//! 主題用上邊距按自己的字號把序號、候選、譯文手調到同一條基線；設定裡候選與譯文按不同比例改了字號後，
+//! 這裡量出差多少，補到偏高那幾格的上邊距上。不用 taffy 自帶的基線對齊：巢狀的框上報的基線是 0，且它把上邊距也算進基線。
 
 use std::collections::HashMap;
 
@@ -12,14 +12,14 @@ use crate::error::RenderError;
 use crate::text::TextSize;
 
 impl Scene {
-    /// 登记表格的一行，`cells` 不含横跨整行的格子。
+    /// 登記表格的一行，`cells` 不含橫跨整行的格子。
     pub(crate) fn add_table_row(&mut self, cells: Vec<NodeId>) {
         if cells.len() > 1 {
             self.table_rows.push(cells);
         }
     }
 
-    /// 把每行基线偏高的格子往下挪，返回挪没挪（挪了要重新布局）。差不到一像素的不动，按主题自己的字号显示时一格都不挪。
+    /// 把每行基線偏高的格子往下挪，返回挪沒挪（挪了要重新佈局）。差不到一畫素的不動，按主題自己的字號顯示時一格都不挪。
     pub(super) fn align_baselines(
         &mut self,
         measured: &HashMap<NodeId, TextSize>,
@@ -52,7 +52,7 @@ impl Scene {
         Ok(!shifts.is_empty())
     }
 
-    /// 节点里第一段文字的基线离节点顶边多远；绝对定位的子节点（高亮条这类叠层）不算。
+    /// 節點裡第一段文字的基線離節點頂邊多遠；絕對定位的子節點（高亮條這類疊層）不算。
     fn first_baseline(
         &self,
         node: NodeId,

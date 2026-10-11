@@ -1,4 +1,4 @@
-//! 「云服务」页：本地整句模型开关（`[model]`）、`[predict]` 各项与「测试连接」（后台线程跑）。
+//! 「雲服務」頁：本地整句模型開關（`[model]`）、`[predict]` 各項與「測試連線」（後臺執行緒跑）。
 
 use qingjian_predict::{ConnectionTest, PredictConfig};
 use windows_reactor::*;
@@ -7,7 +7,7 @@ use crate::panel::cloud_status::CloudStatus;
 use crate::panel::controls::{field, labeled, note, page};
 use crate::panel::{Message, Settings};
 
-/// 后台跑一次连通性测试，轮询到有结果或被取消。
+/// 後臺跑一次連通性測試，輪詢到有結果或被取消。
 pub(crate) fn run_test(
     config: &PredictConfig,
     cancel: &CancellationToken,
@@ -21,7 +21,7 @@ pub(crate) fn run_test(
             return result
                 .map(|report| {
                     format!(
-                        "连接成功：模型 {}，耗时 {} ms",
+                        "連線成功：模型 {}，耗時 {} ms",
                         report.model,
                         report.elapsed.as_millis()
                     )
@@ -36,28 +36,28 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
     let p = &settings.config.predict;
     let status = match &settings.cloud_status {
         CloudStatus::Idle => String::new(),
-        CloudStatus::Testing => "测试中…".to_owned(),
+        CloudStatus::Testing => "測試中…".to_owned(),
         CloudStatus::Ok(message) => message.clone(),
-        CloudStatus::Failed(message) => format!("失败：{message}"),
+        CloudStatus::Failed(message) => format!("失敗：{message}"),
     };
     let rows = [
         field(
             "本地整句模型",
-            "随包的小模型在本机给整句候选重新排序，全程离线；停键后几十毫秒生效。关掉只用词库统计。",
+            "隨包的小模型在本機給整句候選重新排序，全程離線；停鍵後幾十毫秒生效。關掉只用詞庫統計。",
             ToggleSwitch::new()
                 .is_on(settings.config.model.enabled)
                 .on_toggled(context.callback(Message::LocalModel)),
         ),
         field(
-            "启用云联想",
-            "开启后组句时会把光标附近的几十个字发给下面的服务，让模型补全整句、联想下文；密钥框里的内容不发送。",
+            "啟用雲聯想",
+            "開啟後組句時會把游標附近的幾十個字發給下面的服務，讓模型補全整句、聯想下文；金鑰框裡的內容不傳送。",
             ToggleSwitch::new()
                 .is_on(p.enabled)
                 .on_toggled(context.callback(Message::CloudEnabled)),
         ),
         field(
-            "云端词格数",
-            "云端词到了只补进第一页末尾这几格，前面的本地候选不动；没到就什么都不变。0 = 只要整句补全。",
+            "雲端詞格數",
+            "雲端詞到了只補進第一頁末尾這幾格，前面的本地候選不動；沒到就什麼都不變。0 = 只要整句補全。",
             NumberBox::new()
                 .minimum(0.0)
                 .maximum(9.0)
@@ -65,14 +65,14 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
                 .on_value_changed(context.callback(Message::CloudSlots)),
         ),
         field(
-            "整句补全",
-            "preedit 右侧给出整句补全，按 Tab 采用。",
+            "整句補全",
+            "preedit 右側給出整句補全，按 Tab 採用。",
             ToggleSwitch::new()
                 .is_on(p.sentence)
                 .on_toggled(context.callback(Message::CloudSentence)),
         ),
         field(
-            "接口地址",
+            "介面地址",
             "",
             TextBox::new()
                 .text(p.base_url.clone())
@@ -86,11 +86,11 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
                 .on_text_changed(context.callback(Message::CloudModel)),
         ),
         field(
-            "API 密钥",
-            "只保存在这台电脑上，不会随配置文件导出，也不显示已填的值。留空则读环境变量 QINGJIAN_API_KEY。",
+            "API 金鑰",
+            "只儲存在這臺電腦上，不會隨配置檔案匯出，也不顯示已填的值。留空則讀環境變數 QINGJIAN_API_KEY。",
             PasswordBox::new()
                 .password(p.api_key.clone().unwrap_or_default())
-                .placeholder_text("留空则读环境变量 QINGJIAN_API_KEY")
+                .placeholder_text("留空則讀環境變數 QINGJIAN_API_KEY")
                 .on_password_changed(context.callback(Message::CloudApiKey)),
         ),
         labeled(
@@ -101,13 +101,13 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
                 .children((
                     Button::new()
                         .on_click(context.message(Message::TestConnection))
-                        .content("测试连接"),
+                        .content("測試連線"),
                     TextBlock::new().text(status),
                 )),
         ),
         note(
-            "用上面填的地址、模型、密钥发一条最小请求。走不通时先查这里；Server 进程看不到终端里的代理变量。",
+            "用上面填的地址、模型、金鑰發一條最小請求。走不通時先查這裡；Server 程序看不到終端裡的代理變數。",
         ),
     ];
-    page("云服务", StackPanel::new().spacing(16.0).children(rows))
+    page("雲服務", StackPanel::new().spacing(16.0).children(rows))
 }

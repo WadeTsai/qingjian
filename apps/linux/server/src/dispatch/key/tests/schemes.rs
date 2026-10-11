@@ -1,4 +1,4 @@
-//! 双拼模式入口与注音符号、声调、提交键边界。
+//! 雙拼模式入口與注音符號、聲調、提交鍵邊界。
 use super::support::{compose, key, router};
 use qingjian_core::{ModeKeys, ShuangpinScheme};
 use qingjian_platform::protocol::{KeyModifiers, KeyOutcome};
@@ -53,7 +53,7 @@ fn zhuyin_symbol_keys_and_tones_are_input_and_enter_selects() {
         assert_eq!(router.engine.composition().text(), c.to_string());
         key(&mut router, 27, None, normal);
     }
-    // ㄋㄧˇ 对应你；声调前空格补一声，再空格上屏。
+    // ㄋㄧˇ 對應你；聲調前空格補一聲，再空格上屏。
     compose(&mut router, "su3", normal);
     let result = key(&mut router, 13, None, normal);
     assert_eq!(result.1.as_deref(), Some("你"));

@@ -1,4 +1,4 @@
-//! 任务栏「中 / 英」图标右键菜单（见 [`crate::com::mode::menu`]）落到文本服务上。
+//! 工作列「中 / 英」圖示右鍵選單（見 [`crate::com::mode::menu`]）落到文本服務上。
 
 use windows::Win32::Foundation::{HWND, POINT};
 use windows::Win32::System::Threading::GetCurrentThreadId;
@@ -15,10 +15,10 @@ use crate::com::mode::menu::{self, MenuChoice, MenuState};
 impl TextService_Impl {
     pub(super) fn show_indicator_menu(&self, point: POINT) {
         let Some(owner) = self.menu_owner() else {
-            log("右键菜单：找不到本线程的窗口，不弹");
+            log("右鍵選單：找不到本執行緒的視窗，不彈");
             return;
         };
-        // 先跟上全局模式，菜单上的勾与悬浮状态条一致（悬浮条上刚点过、还没到轮询那一拍时）
+        // 先跟上全域性模式，選單上的勾與懸浮狀態條一致（懸浮條上剛點過、還沒到輪詢那一拍時）
         self.sync_mode_from_server();
         let english = self.mode_state.english();
         let indicator = self.indicator_state.get();
@@ -47,20 +47,20 @@ impl TextService_Impl {
             command,
             IndicatorCommand::OpenSettings | IndicatorCommand::OpenDownload
         ) {
-            // 设置程序 / 浏览器由 Server 起；前台权在点菜单的这边，让出去它的窗口才能到前面
+            // 設定程式 / 瀏覽器由 Server 起；前臺權在點選單的這邊，讓出去它的窗口才能到前面
             let _ = unsafe { AllowSetForegroundWindow(ASFW_ANY) };
         }
         match self.engine.borrow_mut().as_mut() {
             Some(client) => {
                 if let Err(error) = client.indicator(command) {
-                    log(&format!("右键菜单发给 Server 失败: {error}"));
+                    log(&format!("右鍵選單發給 Server 失敗: {error}"));
                 }
             }
-            None => log("右键菜单：没连上 Server"),
+            None => log("右鍵選單：沒連上 Server"),
         }
     }
 
-    /// 菜单要挂在本线程的窗口上：先取焦点输入框所在窗口，没有再看前台窗口是不是本线程的。
+    /// 選單要掛在本執行緒的視窗上：先取焦點輸入框所在視窗，沒有再看前臺視窗是不是本執行緒的。
     fn menu_owner(&self) -> Option<HWND> {
         let from_context = self
             .thread_mgr

@@ -1,4 +1,4 @@
-//! 配置热加载：config.toml 改了就整份重新套用到 Engine 与窗口；激活期间的定时事务。
+//! 配置熱載入：config.toml 改了就整份重新套用到 Engine 與視窗；啟用期間的定時事務。
 
 mod text_replacements;
 mod watch;
@@ -12,8 +12,8 @@ use super::init::load_glossary;
 use super::*;
 
 impl Host {
-    /// 把当前配置推给 Engine 与界面：模糊音 / 模式键 / 翻页 / 外观直接设；学习语言变了换释义表；
-    /// `[predict]` 变了（或 `force`）才重建 Predictor；最后刷新云朵标识、菜单勾选与设置窗口。
+    /// 把當前配置推給 Engine 與介面：模糊音 / 模式鍵 / 翻頁 / 外觀直接設；學習語言變了換釋義表；
+    /// `[predict]` 變了（或 `force`）才重建 Predictor；最後重新整理雲朵標識、選單勾選與設定視窗。
     pub fn apply_config(&mut self, force: bool) {
         let config = self.settings.config().clone();
         self.engine.set_fuzzy(config.fuzzy);
@@ -64,7 +64,7 @@ impl Host {
         }
         if force || config.predict != self.applied_predict {
             if config.predict.enabled {
-                // 没密钥等失败只记日志、退回不联想：输入优先于一切附加功能
+                // 沒金鑰等失敗只記日誌、退回不聯想：輸入優先於一切附加功能
                 match CloudPredictor::new(&config.predict) {
                     Ok(predictor) => self.engine.set_predictor(Box::new(predictor)),
                     Err(error) => {
@@ -72,7 +72,7 @@ impl Host {
                         self.engine.set_predictor(Box::new(NoPredictor));
                     }
                 }
-                // 释义兜底随云联想一起开：释义表里没有的词上屏后问云端写进个人释义表
+                // 釋義兜底隨雲聯想一起開：釋義表裡沒有的詞上屏後問雲端寫進個人釋義表
                 match CloudGlossFiller::new(&config.predict) {
                     Ok(filler) => self.engine.set_gloss_filler(Box::new(filler)),
                     Err(error) => {
@@ -120,7 +120,7 @@ impl Host {
         self.sync_update();
     }
 
-    /// 配置里的自定义短语，`[general] system_text_replacements` 开着时再并上系统的文本替换，一起推给 Engine。
+    /// 配置裡的自定義短語，`[general] system_text_replacements` 開著時再並上系統的文本替換，一起推給 Engine。
     fn apply_custom_phrases(&mut self, config: &qingjian_platform::Config) {
         let phrases = if config.general.system_text_replacements {
             qingjian_core::custom_phrase::merge_replacements(
@@ -137,7 +137,7 @@ impl Host {
         }
     }
 
-    /// 重读系统的文本替换（激活输入法时调，系统设置里改过就能跟上）；列表变了才重新套用短语。
+    /// 重讀系統的文本替換（啟用輸入法時調，系統設定裡改過就能跟上）；列表變了才重新套用短語。
     pub fn refresh_text_replacements(&mut self) {
         let latest = text_replacements::read_system();
         if latest == self.text_replacements {
@@ -151,7 +151,7 @@ impl Host {
         }
     }
 
-    /// 学习语言变了就换释义表，`off` 换成不翻译；文件缺失或坏了保持原样，只记日志。
+    /// 學習語言變了就換釋義表，`off` 換成不翻譯；檔案缺失或壞了保持原樣，只記日誌。
     pub(super) fn apply_learning_language(&mut self, general: &GeneralConfig) {
         if general.learning_language_off() {
             if self.learning_language.take().is_some() {
@@ -182,16 +182,16 @@ impl Host {
         }
     }
 
-    /// 配置文件被手改过就热加载；激活输入法时和监视定时器都会调。
+    /// 配置檔案被手改過就熱載入；啟用輸入法時和監視定時器都會調。
     pub fn reload_config_if_changed(&mut self) {
         if self.settings.reload_if_changed() {
             self.apply_config(false);
         }
     }
 
-    /// 激活期间的定时器每秒调一次：看配置文件，再看学习数据要不要落盘。
-    /// 学习数据原本只在停用输入法时保存，进程被 launchd 杀掉就丢一整段；现在最多丢 [`LEARNING_FLUSH_INTERVAL`] 这么久。
-    /// 配置里选的主题，盖上设置里的字号与动画开关。
+    /// 啟用期間的定時器每秒調一次：看配置檔案，再看學習資料要不要落盤。
+    /// 學習資料原本只在停用輸入法時儲存，程序被 launchd 殺掉就丟一整段；現在最多丟 [`LEARNING_FLUSH_INTERVAL`] 這麼久。
+    /// 配置裡選的主題，蓋上設定裡的字號與動畫開關。
     fn render_theme(&self, general: &GeneralConfig) -> qingjian_render::Theme {
         let sizes = TextSizes {
             candidate: general.candidate_font_size.get(),
@@ -203,10 +203,10 @@ impl Host {
             .with_animations(general.animations)
     }
 
-    /// 没有新数据时 flush 是空操作（各表按 dirty 位判断），不会每分钟碰一次磁盘。
+    /// 沒有新資料時 flush 是空操作（各表按 dirty 位判斷），不會每分鐘碰一次磁碟。
     pub fn tick(&mut self) {
         self.reload_config_if_changed();
-        // 用户主题目录里的 theme.json 改了就重读，当前主题当场换上（边改主题边看效果）
+        // 使用者主題目錄裡的 theme.json 改了就重讀，當前主題當場換上（邊改主題邊看效果）
         if self.themes.refresh() {
             let general = self.settings.config().general.clone();
             tracing::info!(id = general.theme_id(), "主题目录有变化，已重读");
@@ -226,7 +226,7 @@ impl Host {
         self.sync_update();
     }
 
-    /// 检查更新的状态变了就刷菜单里的「有新版本」与「关于」页；没变什么都不做。
+    /// 檢查更新的狀態變了就刷選單裡的「有新版本」與「關於」頁；沒變什麼都不做。
     pub fn sync_update(&mut self) {
         let Some(updates) = &self.updates else {
             return;
@@ -245,14 +245,14 @@ impl Host {
         }
     }
 
-    /// 按配置的两条轴装配引擎：拼音侧（全拼 / 双拼 / 注音 / 关）与形码侧（五笔）。
-    /// 两边都开就是混输——编码打全的形码候选在前，见 `Engine::query_mixed`。
+    /// 按配置的兩條軸裝配引擎：拼音側（全拼 / 雙拼 / 注音 / 關）與形碼側（五筆）。
+    /// 兩邊都開就是混輸——編碼打全的形碼候選在前，見 `Engine::query_mixed`。
     ///
-    /// 开了形码却找不到码表时只警告并退回只用拼音——配置说五笔、引擎一个字都打不出更糟。
+    /// 開了形碼卻找不到碼錶時只警告並退回只用拼音——配置說五筆、引擎一個字都打不出更糟。
     fn apply_scheme(&mut self, pinyin: Scheme, wubi: bool) {
         self.engine.set_shuangpin(pinyin.shuangpin());
         self.engine.set_zhuyin_mode(pinyin == Scheme::Zhuyin);
-        // 拼音侧关掉且形码开着才是「只用形码」；两边都关着时留拼音兜底（否则一个候选都没有）
+        // 拼音側關掉且形碼開著才是「只用形碼」；兩邊都關著時留拼音兜底（否則一個候選都沒有）
         self.engine.set_phonetic(pinyin.is_on() || !wubi);
         if !wubi {
             self.engine.set_code_table(None);

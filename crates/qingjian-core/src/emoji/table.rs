@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-/// 词 → emoji 列表。表里一个词后面的 emoji 按相关度排好（名字正好是这个词的在前）。
+/// 詞 → emoji 列表。表裡一個詞後面的 emoji 按相關度排好（名字正好是這個詞的在前）。
 #[derive(Debug, Default)]
 pub struct EmojiTable {
-    /// 词 → emoji。
+    /// 詞 → emoji。
     entries: HashMap<String, Vec<String>>,
 }
 
 impl EmojiTable {
-    /// 解析 TSV：`词\temoji emoji …`，空行与 `#` 开头跳过；格式不对的行返回行号。
+    /// 解析 TSV：`詞\temoji emoji …`，空行與 `#` 開頭跳過；格式不對的行返回行號。
     pub fn parse(source: &str) -> Result<Self, usize> {
         let mut entries: HashMap<String, Vec<String>> = HashMap::new();
         for (index, raw) in source.lines().enumerate() {
@@ -38,8 +38,8 @@ impl EmojiTable {
         })
     }
 
-    /// 这个词对应的 emoji（没有就是空）。
-    /// 并入另一张表（中文表 + 英文表合成一张：键是不同文字，不会撞）；同键的 emoji 追加去重。
+    /// 這個詞對應的 emoji（沒有就是空）。
+    /// 併入另一張表（中文表 + 英文表合成一張：鍵是不同文字，不會撞）；同鍵的 emoji 追加去重。
     pub fn merge(&mut self, other: EmojiTable) {
         for (word, emojis) in other.entries {
             let list = self.entries.entry(word).or_default();

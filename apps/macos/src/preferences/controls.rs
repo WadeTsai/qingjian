@@ -1,5 +1,5 @@
-//! 偏好设置各页共用的控件搭建函数：标签、说明小字、成行的弹出菜单 / 文本框 / 录制按钮，
-//! 以及把控件接到 [`PreferencesTarget`] 的 `changed:` 上。页面文件只描述「放什么」，不重复这些细节。
+//! 偏好設定各頁共用的控制元件搭建函式：標籤、說明小字、成行的彈出選單 / 文本框 / 錄製按鈕，
+//! 以及把控制元件接到 [`PreferencesTarget`] 的 `changed:` 上。頁面檔案只描述「放什麼」，不重複這些細節。
 
 use objc2::rc::Retained;
 use objc2::{MainThreadMarker, sel};
@@ -15,13 +15,13 @@ use super::layout::{CONTROL_X, LABEL_WIDTH, Layout, PAGE_PADDING, ROW_HEIGHT};
 use super::setting::Setting;
 use super::target::PreferencesTarget;
 
-/// 说明小字一行的高度。
+/// 說明小字一行的高度。
 pub(super) const NOTE_HEIGHT: f64 = 15.0;
 
-/// 说明小字按多少像素一个字估算折行（11 号字，中文约 11 px，估得宽一点宁可多留一行）。
+/// 說明小字按多少畫素一個字估算折行（11 號字，中文約 11 px，估得寬一點寧可多留一行）。
 const NOTE_CHAR_WIDTH: f64 = 11.5;
 
-/// 分组之间的留白。
+/// 分組之間的留白。
 pub(super) const GROUP_GAP: f64 = 14.0;
 
 pub(super) fn language_label(language: Language) -> &'static str {
@@ -43,7 +43,7 @@ pub(super) fn page_keys_label(pair: &str) -> String {
     }
 }
 
-/// 换掉弹出菜单的全部选项（列表会变的，如主题）。
+/// 換掉彈出選單的全部選項（列表會變的，如主題）。
 pub(super) fn set_items(popup: &NSPopUpButton, titles: &[String]) {
     popup.removeAllItems();
     let items: Vec<Retained<NSString>> = titles.iter().map(|t| NSString::from_str(t)).collect();
@@ -64,9 +64,9 @@ pub(super) fn set_checked(button: &NSButton, on: bool) {
     });
 }
 
-/// 挂 target / action / tag：所有控件都发 `changed:`，靠 tag 区分。
+/// 掛 target / action / tag：所有控制元件都發 `changed:`，靠 tag 區分。
 fn wire(control: &NSControl, setting: Setting, target: &PreferencesTarget) {
-    // SAFETY: 选择器与 PreferencesTarget 上定义的 `changed:` 一致，签名 (id) -> void
+    // SAFETY: 選擇器與 PreferencesTarget 上定義的 `changed:` 一致，簽名 (id) -> void
     unsafe {
         control.setTarget(Some(target));
         control.setAction(Some(sel!(changed:)));
@@ -81,12 +81,12 @@ pub(super) fn small_label(mtm: MainThreadMarker, text: &str) -> Retained<NSTextF
     label
 }
 
-/// 控件下方的说明小字，与控件列对齐，放不下就折行（按字数估行数，宁可多留一行）。
+/// 控制元件下方的說明小字，與控制元件列對齊，放不下就折行（按字數估行數，寧可多留一行）。
 pub(super) fn note(layout: &mut Layout, mtm: MainThreadMarker, text: &str) {
     note_at(layout, mtm, text, CONTROL_X, layout.control_width());
 }
 
-/// 整行宽的说明小字（勾选框、按钮下面用）。
+/// 整行寬的說明小字（勾選框、按鈕下面用）。
 pub(super) fn note_full(layout: &mut Layout, mtm: MainThreadMarker, text: &str) {
     note_at(layout, mtm, text, PAGE_PADDING, layout.inner_width());
 }
@@ -104,20 +104,20 @@ fn note_at(layout: &mut Layout, mtm: MainThreadMarker, text: &str, x: f64, width
     layout.next_row(height);
 }
 
-/// 勾选框独占一行，从标题列起始处摆（勾选框自带标题，不用左列标题）。
+/// 勾選框獨佔一行，從標題列起始處擺（勾選框自帶標題，不用左列標題）。
 pub(super) fn row_checkbox(layout: &mut Layout, button: &NSButton) {
     layout.place(button, PAGE_PADDING, layout.inner_width(), ROW_HEIGHT);
     layout.next_row(ROW_HEIGHT);
 }
 
-/// 标题列，右对齐贴着控件。
+/// 標題列，右對齊貼著控制元件。
 pub(super) fn caption(mtm: MainThreadMarker, text: &str) -> Retained<NSTextField> {
     let label = NSTextField::labelWithString(&NSString::from_str(text), mtm);
     label.setAlignment(NSTextAlignment::Right);
     label
 }
 
-/// 一行「标题 + 控件」，控件占满控件列。
+/// 一行「標題 + 控制元件」，控制元件佔滿控制元件列。
 pub(super) fn row_control(
     layout: &mut Layout,
     mtm: MainThreadMarker,
@@ -154,7 +154,7 @@ pub(super) fn row_popup(
     popup
 }
 
-/// 一行「标题 + 快捷键录制按钮」。
+/// 一行「標題 + 快捷鍵錄製按鈕」。
 pub(super) fn row_recorder(
     layout: &mut Layout,
     mtm: MainThreadMarker,
@@ -178,7 +178,7 @@ pub(super) fn checkbox(
     setting: Setting,
     target: &PreferencesTarget,
 ) -> Retained<NSButton> {
-    // SAFETY: target / action 与 `wire` 相同
+    // SAFETY: target / action 與 `wire` 相同
     let button = unsafe {
         NSButton::checkboxWithTitle_target_action(
             &NSString::from_str(title),
@@ -210,7 +210,7 @@ pub(super) fn button(
     button
 }
 
-/// 可编辑单行文本框：回车或失焦时发 action。
+/// 可編輯單行文本框：回車或失焦時發 action。
 pub(super) fn text_field(
     mtm: MainThreadMarker,
     setting: Setting,

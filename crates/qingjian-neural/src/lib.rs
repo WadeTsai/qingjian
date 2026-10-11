@@ -1,10 +1,10 @@
-//! 字级 Transformer 语言模型的本地推理（candle）。
+//! 字級 Transformer 語言模型的本地推理（candle）。
 //!
-//! 加载导出的模型——开发时是三件套目录（`model.safetensors` + `config.json` + `vocab.json`），
-//! 随包与用户目录里是打成一个文件的 `.qjm`（见 [`qjm`]）——给「光标前文 + 候选文本」按字累加 log 概率，供 Core 给整句路径重打分。
-//! 结构是 GPT-2 风格 decoder-only（pre-LN、erf GELU、可学习位置嵌入、输入输出嵌入共享），张量名与训练脚本约定一致。
+//! 載入匯出的模型——開發時是三件套目錄（`model.safetensors` + `config.json` + `vocab.json`），
+//! 隨包與使用者目錄裡是打成一個檔案的 `.qjm`（見 [`qjm`]）——給「游標前文 + 候選文本」按字累加 log 機率，供 Core 給整句路徑重打分。
+//! 結構是 GPT-2 風格 decoder-only（pre-LN、erf GELU、可學習位置嵌入、輸入輸出嵌入共享），張量名與訓練指令碼約定一致。
 //!
-//! 缺省 CPU；`metal` feature 走 Apple GPU。
+//! 預設 CPU；`metal` feature 走 Apple GPU。
 
 mod config;
 mod core_scorer;

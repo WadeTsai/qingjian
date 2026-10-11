@@ -1,12 +1,12 @@
-//! `cfg(windows)`：TSF 文本服务的 COM 外壳。DLL 入口在这里，类厂在 [`factory`]，文本服务对象在 [`service`]，
-//! 注册表 / TSF profile 在 [`registry`]。
+//! `cfg(windows)`：TSF 文本服務的 COM 外殼。DLL 入口在這裡，類廠在 [`factory`]，文本服務物件在 [`service`]，
+//! 登錄檔 / TSF profile 在 [`registry`]。
 //!
-//! - [`key`]：按键翻译、单击中英切换键判定、翻译快捷键的保留键。
-//! - [`mode`]：中 / 英模式的指示（转换模式 compartment、语言栏按钮）与反向同步（任务栏点选、系统热键关掉输入法）。
-//! - [`profile`]：登记的两个语言 profile（「中文(简体)」的青简 / 「中文(台灣)」的青簡）与切换通知。
-//! - [`edit`]：编辑会话（写组句 / 读选区 / 读前文与输入范围）与候选窗口锚点；[`context`]：上下文的键盘禁用开关（密码框）。
-//! - [`composition`]：组句 preedit；[`display_attribute`]：组句内联下划线；[`poll`]：轮询定时器。
-#![allow(non_snake_case)] // 导出的 Dll* 入口按 COM 约定命名
+//! - [`key`]：按鍵翻譯、單擊中英切換鍵判定、翻譯快捷鍵的保留鍵。
+//! - [`mode`]：中 / 英模式的指示（轉換模式 compartment、語言欄按鈕）與反向同步（工作列點選、系統熱鍵關掉輸入法）。
+//! - [`profile`]：登記的兩個語言 profile（「中文(簡體)」的青簡 / 「中文(台灣)」的青簡）與切換通知。
+//! - [`edit`]：編輯會話（寫組句 / 讀選區 / 讀前文與輸入範圍）與候選視窗錨點；[`context`]：上下文的鍵盤停用開關（密碼框）。
+//! - [`composition`]：組句 preedit；[`display_attribute`]：組句內聯下劃線；[`poll`]：輪詢定時器。
+#![allow(non_snake_case)] // 匯出的 Dll* 入口按 COM 約定命名
 
 pub(crate) mod composition;
 pub(crate) mod context;
@@ -38,19 +38,19 @@ use windows::core::{BOOL, GUID, HRESULT, HSTRING, Interface};
 
 use qingjian_platform::protocol::SessionId;
 
-/// 文本服务的 CLSID。注册表 InprocServer32、TSF profile、[`DllGetClassObject`] 都认它。
+/// 文本服務的 CLSID。登錄檔 InprocServer32、TSF profile、[`DllGetClassObject`] 都認它。
 pub(crate) const CLSID_QINGJIAN: GUID = GUID::from_u128(0x4fdca82d_e923_49bf_9e75_bb906b93b8bb);
 
-/// [`CLSID_QINGJIAN`] 的注册表字符串形式，两者必须同步改。
+/// [`CLSID_QINGJIAN`] 的登錄檔字串形式，兩者必須同步改。
 pub(crate) const CLSID_QINGJIAN_STR: &str = "{4FDCA82D-E923-49BF-9E75-BB906B93B8BB}";
 
-/// 文本服务（CLSID 注册表项）的名字。各语言下显示的名字跟 profile 走，见 [`profile::language`]。
+/// 文本服務（CLSID 登錄檔項）的名字。各語言下顯示的名字跟 profile 走，見 [`profile::language`]。
 pub(crate) const SERVICE_DESCRIPTION: &str = "青简";
 
-/// 存活的 COM 对象 + LockServer 计数，[`DllCanUnloadNow`] 据它判断能否卸载。
+/// 存活的 COM 物件 + LockServer 計數，[`DllCanUnloadNow`] 據它判斷能否解除安裝。
 static DLL_REFERENCES: AtomicIsize = AtomicIsize::new(0);
 
-/// 本 DLL 的模块句柄，[`DllMain`] 加载时记下。
+/// 本 DLL 的模組控制代碼，[`DllMain`] 載入時記下。
 static DLL_MODULE: AtomicPtr<c_void> = AtomicPtr::new(ptr::null_mut());
 
 pub(crate) fn lock_module() {
@@ -61,12 +61,12 @@ pub(crate) fn unlock_module() {
     DLL_REFERENCES.fetch_sub(1, Ordering::SeqCst);
 }
 
-/// 本 DLL 的实例句柄（注册窗口类 / 建窗口用）。
+/// 本 DLL 的例項控制代碼（註冊視窗類 / 建視窗用）。
 pub(crate) fn dll_instance() -> HINSTANCE {
     HINSTANCE(DLL_MODULE.load(Ordering::SeqCst))
 }
 
-/// 本 DLL 在磁盘上的完整路径，注册 InprocServer32 用。
+/// 本 DLL 在磁碟上的完整路徑，註冊 InprocServer32 用。
 pub(crate) fn module_path() -> windows::core::Result<HSTRING> {
     let module = HMODULE(DLL_MODULE.load(Ordering::SeqCst));
     let mut buf = [0u16; 260];
@@ -77,12 +77,12 @@ pub(crate) fn module_path() -> windows::core::Result<HSTRING> {
     Ok(HSTRING::from_wide(&buf[..len]))
 }
 
-/// 本线程的会话号：线程 id，全系统唯一（TSF 的 client id 各进程都是同样那几个值，会撞号）。
+/// 本執行緒的會話號：執行緒 id，全系統唯一（TSF 的 client id 各程序都是同樣那幾個值，會撞號）。
 pub(crate) fn session_id() -> SessionId {
     SessionId(u64::from(unsafe { GetCurrentThreadId() }))
 }
 
-/// 宿主应用的 exe 文件名（`Code.exe`），开会话时报给 Server（对应 macOS 端的 bundle identifier）。
+/// 宿主應用的 exe 檔名（`Code.exe`），開會話時報給 Server（對應 macOS 端的 bundle identifier）。
 pub(crate) fn host_app_name() -> Option<String> {
     let exe = std::env::current_exe().ok()?;
     let name = exe.file_name()?.to_string_lossy().into_owned();

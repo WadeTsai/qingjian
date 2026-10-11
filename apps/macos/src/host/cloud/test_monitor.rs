@@ -1,5 +1,5 @@
-//! 云服务连通性测试的轮询定时器。点「测试连接」时开始，结果到了或超时就停；
-//! 与配置监视定时器分开，因为偏好设置窗口在前台时输入法多半处于未激活状态，那个定时器没在跑。
+//! 雲服務連通性測試的輪詢定時器。點「測試連線」時開始，結果到了或超時就停；
+//! 與配置監視定時器分開，因為偏好設定視窗在前臺時輸入法多半處於未啟用狀態，那個定時器沒在跑。
 
 use std::time::{Duration, Instant};
 
@@ -8,17 +8,17 @@ use objc2::runtime::AnyObject;
 use objc2::{MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
 use objc2_foundation::{NSObject, NSObjectProtocol, NSTimer};
 
-/// 轮询间隔。
+/// 輪詢間隔。
 const POLL_INTERVAL: f64 = 0.2;
 
-/// 最长等多久；请求本身有超时，这里只是兜底。
+/// 最長等多久；請求本身有超時，這裡只是兜底。
 const MAX_WAIT: Duration = Duration::from_secs(30);
 
 pub struct CloudTestMonitor {
-    /// 定时器；没在等结果时为 `None`。
+    /// 定時器；沒在等結果時為 `None`。
     timer: Option<Retained<NSTimer>>,
 
-    /// 本轮开始等待的时间。
+    /// 本輪開始等待的時間。
     since: Option<Instant>,
 
     mtm: MainThreadMarker,
@@ -58,14 +58,14 @@ impl CloudTestMonitor {
         self.since = None;
     }
 
-    /// 等太久了就放弃。
+    /// 等太久了就放棄。
     pub fn expired(&self) -> bool {
         self.since.is_some_and(|since| since.elapsed() > MAX_WAIT)
     }
 }
 
 define_class!(
-    // SAFETY: NSObject 没有子类化要求；没有实现 Drop。
+    // SAFETY: NSObject 沒有子類化要求；沒有實現 Drop。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = ()]

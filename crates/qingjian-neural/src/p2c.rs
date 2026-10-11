@@ -1,27 +1,27 @@
-//! 带噪拼音 → 汉字（beam search）。
+//! 帶噪拼音 → 漢字（beam search）。
 //!
-//! 训练序列是 `[带噪拼音] <sep> [汉字] <eos>`，所以解码就是：把拼音和 `<sep>` 喂进去当前缀，
-//! 然后逐字生成到 `<eos>`。前缀的 K/V 算一次存下来，每敲一键只需把新字母接上去。
+//! 訓練序列是 `[帶噪拼音] <sep> [漢字] <eos>`，所以解碼就是：把拼音和 `<sep>` 喂進去當前綴，
+//! 然後逐字生成到 `<eos>`。字首的 K/V 算一次存下來，每敲一鍵只需把新字母接上去。
 //!
-//! 前缀开头要带一个 `<eos>`：训练流里每个样本的拼音前面都跟着上一个样本的 `<eos>`，
-//! 少了它模型会当成在续写上文、把短拼音看成被截断的尾巴，于是把正确的词放句尾再补一堆前缀
-//! （`jiekou` → 我们可以使用多个接口）。
+//! 字首開頭要帶一個 `<eos>`：訓練流裡每個樣本的拼音前面都跟著上一個樣本的 `<eos>`，
+//! 少了它模型會當成在續寫上文、把短拼音看成被截斷的尾巴，於是把正確的詞放句尾再補一堆字首
+//! （`jiekou` → 我們可以使用多個介面）。
 
 use candle_core::Tensor;
 
 use crate::vocab::{EOS, Vocab};
 use crate::{CharLm, NeuralError};
 
-/// 一条候选。
+/// 一條候選。
 #[derive(Debug, Clone)]
 pub struct Candidate {
     pub text: String,
 
-    /// 生成这段汉字的 log 概率之和（越接近 0 越好）。
+    /// 生成這段漢字的 log 機率之和（越接近 0 越好）。
     pub score: f64,
 }
 
-/// P2C 解码器：借用已加载的模型与字表。
+/// P2C 解碼器：借用已載入的模型與字表。
 pub struct P2c<'a> {
     model: &'a CharLm,
     vocab: &'a Vocab,
@@ -29,13 +29,13 @@ pub struct P2c<'a> {
 }
 
 impl<'a> P2c<'a> {
-    /// 字表里没有 `<sep>`（是字级 LM 的模型）就返回 `None`。
+    /// 字表裡沒有 `<sep>`（是字級 LM 的模型）就返回 `None`。
     pub fn new(model: &'a CharLm, vocab: &'a Vocab) -> Option<Self> {
         let sep = vocab.sep()?;
         Some(Self { model, vocab, sep })
     }
 
-    /// 拼音键 → 前 `beam` 条候选，按分数降序。`max_chars` 是生成长度上限。
+    /// 拼音鍵 → 前 `beam` 條候選，按分數降序。`max_chars` 是生成長度上限。
     pub fn convert(
         &self,
         keys: &str,
@@ -57,7 +57,7 @@ impl<'a> P2c<'a> {
 
         let device = self.model.device();
         let split = prefix.len() - 1;
-        // 前缀最后一位留给 step 走，这样不用为空缓存分支
+        // 字首最後一位留給 step 走，這樣不用為空快取分支
         let mut cache = self.model.prefix_cache(&prefix[..split])?;
         let last = Tensor::from_vec(prefix[split..].to_vec(), (1, 1), device)?;
         let (mut log_probs, mut grown) = self.model.step(&cache, &last)?;
@@ -107,7 +107,7 @@ impl<'a> P2c<'a> {
             beams = next;
         }
 
-        // 没走到 <eos> 的也收进来，短拼音常常 beam 还没耗完就够了
+        // 沒走到 <eos> 的也收進來，短拼音常常 beam 還沒耗完就夠了
         done.extend(beams);
         done.sort_by(|a, b| b.0.total_cmp(&a.0));
 
@@ -128,7 +128,7 @@ impl<'a> P2c<'a> {
     }
 }
 
-/// 一行 log 概率里最大的 `k` 个，返回 `(token, log 概率)`。
+/// 一行 log 機率裡最大的 `k` 個，返回 `(token, log 機率)`。
 fn top_k(row: &[f32], k: usize) -> Vec<(u32, &f32)> {
     let mut best: Vec<(u32, &f32)> = Vec::with_capacity(k + 1);
     for (token, lp) in row.iter().enumerate() {

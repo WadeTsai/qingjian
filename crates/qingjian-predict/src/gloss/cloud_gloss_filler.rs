@@ -7,17 +7,17 @@ use crate::chat_client::ChatClient;
 use crate::config::PredictConfig;
 use crate::error::PredictError;
 
-/// 走网络的释义兜底。构造时起一个后台线程，`request` / `poll` 都只碰通道，不阻塞。
+/// 走網路的釋義兜底。構造時起一個後臺執行緒，`request` / `poll` 都只碰通道，不阻塞。
 pub struct CloudGlossFiller {
-    /// 往后台线程送词。
+    /// 往後臺執行緒送詞。
     requests: Sender<(Language, String)>,
 
-    /// 从后台线程收释义。
+    /// 從後臺執行緒收釋義。
     responses: Receiver<FilledGloss>,
 }
 
 impl CloudGlossFiller {
-    /// 与云联想共用一份配置（接口、模型、密钥、超时）；没有密钥直接报错，壳退回 [`qingjian_core::NoGlossFiller`]。
+    /// 與雲聯想共用一份配置（介面、模型、金鑰、超時）；沒有金鑰直接報錯，殼退回 [`qingjian_core::NoGlossFiller`]。
     pub fn new(config: &PredictConfig) -> Result<Self, PredictError> {
         let api_key = config
             .resolve_api_key()
@@ -49,7 +49,7 @@ impl GlossFiller for CloudGlossFiller {
     }
 
     fn poll(&mut self) -> Vec<FilledGloss> {
-        // Empty 与 Disconnected 都当没有：线程退出时已经记过日志
+        // Empty 與 Disconnected 都當沒有：執行緒退出時已經記過日誌
         self.responses.try_iter().collect()
     }
 }

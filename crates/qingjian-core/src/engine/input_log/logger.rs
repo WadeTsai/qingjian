@@ -1,20 +1,20 @@
 use super::InputLogEntry;
 
-/// 输入日志的落盘方。实现放学习 crate，Core 只往里送条目。
+/// 輸入日誌的落盤方。實現放學習 crate，Core 只往裡送條目。
 pub trait InputLogger: Send {
-    /// 记一条。实现不能阻塞输入：写失败只记日志。
+    /// 記一條。實現不能阻塞輸入：寫失敗只記日誌。
     fn record(&mut self, entry: InputLogEntry);
 
-    /// 把缓冲写出去。壳在停用输入法时调用。
+    /// 把緩衝寫出去。殼在停用輸入法時呼叫。
     fn flush(&mut self) {}
 
-    /// 有没有在记（缺省实现没有，壳据此在诊断信息里说明）。
+    /// 有沒有在記（預設實現沒有，殼據此在診斷資訊裡說明）。
     fn is_enabled(&self) -> bool {
         true
     }
 }
 
-/// 不记。
+/// 不記。
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoInputLogger;
 

@@ -1,4 +1,4 @@
-//! 查词、切分、光标与上屏消耗。
+//! 查詞、切分、游標與上屏消耗。
 
 use super::*;
 
@@ -15,7 +15,7 @@ fn partial_last_syllable_expands() {
 #[test]
 fn initials_match_abbreviated_words_and_commit_consumes_letters() {
     let all = texts("kf");
-    assert_eq!(all[0], "开放"); // 同为简拼命中，按词频
+    assert_eq!(all[0], "开放"); // 同為簡拼命中，按詞頻
     assert!(all.contains(&"开发".to_owned()) && all.contains(&"咖啡".to_owned()));
 
     let mut engine = engine();
@@ -36,7 +36,7 @@ fn initials_match_abbreviated_words_and_commit_consumes_letters() {
 #[test]
 fn unparsable_tail_is_kept_aside() {
     let mut engine = engine();
-    // kaiv 唯一的纠法是删掉刚敲的 v，那不算纠错：v 留作尾巴等下一键（kaifv 会被纠成 kaifa）
+    // kaiv 唯一的糾法是刪掉剛敲的 v，那不算糾錯：v 留作尾巴等下一鍵（kaifv 會被糾成 kaifa）
     engine.set_input("kaiv");
     let query = engine.query().unwrap();
     assert!(query.correction.is_none());
@@ -53,7 +53,7 @@ fn unparsable_tail_is_kept_aside() {
         .clone();
     engine.commit(&kaifa);
     assert_eq!(engine.composition().text(), "v");
-    // 剩下的 v 进表达式模式：没候选但也不报错
+    // 剩下的 v 進表示式模式：沒候選但也不報錯
     assert!(engine.query().unwrap().candidates.items.is_empty());
 }
 
@@ -77,7 +77,7 @@ fn cursor_edits_requery_from_the_start_and_map_into_marked_text() {
     engine.move_cursor_left();
     let query = engine.query().unwrap();
     assert_eq!(query.marked_text(), "xi'an");
-    assert_eq!(query.marked_cursor(), 3); // xi'|an，紧跟用户自己敲的 '
+    assert_eq!(query.marked_cursor(), 3); // xi'|an，緊跟使用者自己敲的 '
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn marked_text_joins_best_segmentation_with_apostrophes() {
 
 #[test]
 fn prefix_words_appear_after_full_matches() {
-    // 开放 / 开饭 来自 `kai f… a zhe` 这种切分的前缀 `kai f…`，排在覆盖更多字母的 开发 之后
+    // 開放 / 開飯 來自 `kai f… a zhe` 這種切分的字首 `kai f…`，排在覆蓋更多字母的 開發 之後
     let all = texts("kaifazhe");
     assert_eq!(&all[..2], ["开发者", "开发"]);
     assert_eq!(all.last().map(String::as_str), Some("开"));
@@ -118,7 +118,7 @@ fn ambiguous_segmentation_merges_results() {
 
 #[test]
 fn complete_syllable_that_is_also_prefix_expands_after_exact() {
-    // 下 是完整命中；先 / 想 来自 xia → xian / xiang 的前缀扩展；西安 来自 xi + a… 的次级切分
+    // 下 是完整命中；先 / 想 來自 xia → xian / xiang 的字首擴充套件；西安 來自 xi + a… 的次級切分
     assert_eq!(texts("xia"), ["下", "先", "想", "西安"]);
 }
 
@@ -223,7 +223,7 @@ fn choice_key_strips_separators_and_clamps() {
 
 #[test]
 fn sentence_conversion_leads_when_input_spans_several_words() {
-    // 想开发：SAMPLE 里没有整词，最优路径是 想 + 开发
+    // 想開發：SAMPLE 裡沒有整詞，最優路徑是 想 + 開發
     let all = texts("xiangkaifa");
     assert_eq!(all[0], "想开发");
     let mut engine = engine();
@@ -235,12 +235,12 @@ fn sentence_conversion_leads_when_input_spans_several_words() {
     assert_eq!(engine.commit(&sentence), "想开发");
     assert!(engine.composition().is_empty());
 
-    // 整段本身是一个词：不出整句
+    // 整段本身是一個詞：不出整句
     let all = texts("kaifa");
     assert_eq!(all[0], "开发");
     assert_eq!(all.iter().filter(|t| *t == "开发").count(), 1);
 
-    // 末尾只有一个字母时整句不算它：xiangkaif → 想开
+    // 末尾只有一個字母時整句不算它：xiangkaif → 想開
     let all = texts("xiangkaif");
     assert_eq!(all[0], "想开");
 }
@@ -297,13 +297,13 @@ fn shift_letters_join_the_buffer_only_when_configured() {
         }
     };
 
-    // 缺省 `shift_letter = "passthrough"`：壳直接把大写字母交给应用，这一路本来就不会走到；
-    // 万一走到也不该被当成拼音去匹配（所以「C盘」出不来）
+    // 預設 `shift_letter = "passthrough"`：殼直接把大寫字母交給應用，這一路本來就不會走到；
+    // 萬一走到也不該被當成拼音去匹配（所以「C盤」出不來）
     type_cpan(&mut engine);
     assert_ne!(engine.query().unwrap().candidates.items[0].text, "C盘");
     engine.clear();
 
-    // 开了 compose：按小写参与匹配，拼音行按敲的样子显示，回车原样上屏时保留大写
+    // 開了 compose：按小寫參與匹配，拼音行按敲的樣子顯示，回車原樣上屏時保留大寫
     engine.set_shift_letter_compose(true);
     type_cpan(&mut engine);
     let query = engine.query().unwrap();
@@ -329,13 +329,13 @@ fn expression_mode_skips_pinyin_and_evaluates() {
     assert_eq!(engine.commit(&result), "3");
     assert!(engine.composition().is_empty());
 
-    // 只有 v：候选为空但不报错，preedit 照显示
+    // 只有 v：候選為空但不報錯，preedit 照顯示
     engine.set_input("v");
     let query = engine.query().unwrap();
     assert!(query.candidates.items.is_empty());
     assert_eq!(query.marked_text(), "v");
 
-    // v 开头的英文词仍能混输
+    // v 開頭的英文詞仍能混輸
     let words = WordList::parse("very\tvery\t4800\n").unwrap();
     let mut engine = self::engine().with_english(words);
     engine.set_input("very");
@@ -344,7 +344,7 @@ fn expression_mode_skips_pinyin_and_evaluates() {
     assert_eq!(query.candidates.items[0].kind, CandidateKind::English);
 }
 
-/// 只认句首的 开发 与 开发 → 先 的假模型：让两词路径压过整段的词。
+/// 只認句首的 開發 與 開發 → 先 的假模型：讓兩詞路徑壓過整段的詞。
 struct XianModel;
 
 impl LanguageModel for XianModel {
@@ -359,7 +359,7 @@ impl LanguageModel for XianModel {
 
 #[test]
 fn a_word_spelling_the_sentence_keeps_its_rank_unless_its_reading_differs() {
-    // 词级排序里 开发线 在 开发先 前面；整句转换读出的是 开发 + 先，与词 开发先 同文本同读音：不重复插，词留在原位
+    // 詞級排序裡 開發線 在 開發先 前面；整句轉換讀出的是 開發 + 先，與詞 開發先 同文本同讀音：不重複插，詞留在原位
     let sample = format!("{SAMPLE}开发线\tkai fa xian\t5000\n开发先\tkai fa xian\t1\n");
     let mut engine =
         Engine::new(Dictionary::parse(&sample).unwrap()).with_language_model(Box::new(XianModel));
@@ -368,7 +368,7 @@ fn a_word_spelling_the_sentence_keeps_its_rank_unless_its_reading_differs() {
     assert_eq!(&all[..2], ["开发线", "开发先"]);
     assert_eq!(all.iter().filter(|t| *t == "开发先").count(), 1);
 
-    // 同文本的词是按别的读音（xiang，靠模糊音 an-ang 对上）收的：那条错读音的词让位，整句以正确读音排最前
+    // 同文本的詞是按別的讀音（xiang，靠模糊音 an-ang 對上）收的：那條錯讀音的詞讓位，整句以正確讀音排最前
     let sample = format!("{SAMPLE}开发线\tkai fa xian\t5000\n开发先\tkai fa xiang\t1\n");
     let mut engine =
         Engine::new(Dictionary::parse(&sample).unwrap()).with_language_model(Box::new(XianModel));
@@ -387,7 +387,7 @@ fn a_word_spelling_the_sentence_keeps_its_rank_unless_its_reading_differs() {
 #[test]
 fn option_backspace_deletes_a_syllable_and_command_backspace_deletes_to_the_start() {
     let mut engine = engine();
-    // 全拼：删最优切分的最后一个音节；`'` 连同前面的音节一起删；切不动的尾巴整个删
+    // 全拼：刪最優切分的最後一個音節；`'` 連同前面的音節一起刪；切不動的尾巴整個刪
     engine.set_input("kaifaxian");
     assert!(engine.delete_syllable_backward());
     assert_eq!(engine.composition().text(), "kaifa");
@@ -399,7 +399,7 @@ fn option_backspace_deletes_a_syllable_and_command_backspace_deletes_to_the_star
     assert_eq!(engine.composition().text(), "kaif");
     assert!(engine.delete_syllable_backward());
     assert_eq!(engine.composition().text(), "kai");
-    // 光标停在中间：只动光标前的
+    // 游標停在中間：只動游標前的
     engine.set_input("kaifaxian");
     for _ in 0..4 {
         engine.move_cursor_left();
@@ -412,13 +412,13 @@ fn option_backspace_deletes_a_syllable_and_command_backspace_deletes_to_the_star
     assert_eq!(engine.composition().cursor(), 0);
     assert!(!engine.delete_syllable_backward());
     assert!(!engine.delete_to_start());
-    // 英文直输段：字母一段一段删，标点一次一个
+    // 英文直輸段：字母一段一段刪，標點一次一個
     engine.set_input("hello,world");
     assert!(engine.delete_syllable_backward());
     assert_eq!(engine.composition().text(), "hello,");
     assert!(engine.delete_syllable_backward());
     assert_eq!(engine.composition().text(), "hello");
-    // 双拼：两键一音节，落单的一键单删
+    // 雙拼：兩鍵一音節，落單的一鍵單刪
     let mut engine = xiaohe();
     engine.set_input("kdfah");
     assert!(engine.delete_syllable_backward());
@@ -430,7 +430,7 @@ fn option_backspace_deletes_a_syllable_and_command_backspace_deletes_to_the_star
 #[test]
 fn option_arrows_move_the_cursor_by_syllable() {
     let mut engine = engine();
-    // 光标在末尾发现前面错了：⌥← 两下跳到第二个音节后面，⌥⌫ 删掉它，重敲，⌘→ 回末尾
+    // 游標在末尾發現前面錯了：⌥← 兩下跳到第二個音節後面，⌥⌫ 刪掉它，重敲，⌘→ 回末尾
     engine.set_input("kaifa'xian'xia");
     assert!(engine.move_cursor_syllable_left());
     assert_eq!(engine.composition().cursor(), "kaifa'xian'".len());
@@ -443,7 +443,7 @@ fn option_arrows_move_the_cursor_by_syllable() {
     engine.push('x');
     engine.push('i');
     assert_eq!(engine.composition().text(), "xifa'xian'xia");
-    // ⌥→：从 xi| 起跳过一个音节到 xifa|，再跳先越过 `'` 再过一个音节
+    // ⌥→：從 xi| 起跳過一個音節到 xifa|，再跳先越過 `'` 再過一個音節
     assert!(engine.move_cursor_syllable_right());
     assert_eq!(engine.composition().cursor(), "xifa".len());
     assert!(engine.move_cursor_syllable_right());
@@ -453,7 +453,7 @@ fn option_arrows_move_the_cursor_by_syllable() {
     assert!(!engine.move_cursor_syllable_right());
     engine.move_cursor_home();
     assert!(!engine.move_cursor_syllable_left());
-    // 直输段按字母段跳
+    // 直輸段按字母段跳
     engine.set_input("hello,world");
     assert!(engine.move_cursor_syllable_left());
     assert_eq!(engine.composition().cursor(), "hello,".len());

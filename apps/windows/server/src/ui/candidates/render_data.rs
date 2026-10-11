@@ -1,4 +1,4 @@
-//! 候选窗口一次绘制要用的全部内容，由帧换算而来；渲染器要的帧由 [`RenderData::render_frame`] 再换一次。
+//! 候選視窗一次繪製要用的全部內容，由幀換算而來；渲染器要的幀由 [`RenderData::render_frame`] 再換一次。
 
 use std::rc::Rc;
 
@@ -9,42 +9,42 @@ use qingjian_render::{Mode, Preedit, PreeditSegment, PreeditStyle, Row};
 use super::row;
 use super::theme::Theme;
 
-/// 一次绘制要用的全部内容。
+/// 一次繪製要用的全部內容。
 pub(crate) struct RenderData {
-    /// 配色与字体（随 DPI / 深浅重建）。
+    /// 配色與字型（隨 DPI / 深淺重建）。
     pub(super) theme: Rc<Theme>,
 
-    /// 顶部拼音行的各段。
+    /// 頂部拼音行的各段。
     pub(super) preedit: Vec<(String, PreeditKind)>,
 
-    /// 光标在拼音行里的字符位置。
+    /// 游標在拼音行裡的字元位置。
     pub(super) cursor: usize,
 
-    /// 候选行。
+    /// 候選行。
     pub(super) rows: Vec<Row>,
 
-    /// 高亮行下标（页内）。
+    /// 高亮行下標（頁內）。
     pub(super) highlight: usize,
 
-    /// 页码，只有多页时有。
+    /// 頁碼，只有多頁時有。
     pub(super) footer: Option<String>,
 
-    /// 整句补全，画在拼音行右侧。
+    /// 整句補全，畫在拼音行右側。
     pub(super) sentence: Option<String>,
 
-    /// 屏幕提示（删候选后的「已删除…」），画在拼音行下方。
+    /// 螢幕提示（刪候選後的「已刪除…」），畫在拼音行下方。
     pub(super) notice: Option<String>,
 
-    /// 候选排布。
+    /// 候選排布。
     pub(super) layout: LayoutMode,
 
-    /// 外观；`System` 由窗口按系统深浅色解析。
+    /// 外觀；`System` 由視窗按系統深淺色解析。
     pub(super) appearance: Appearance,
 
-    /// 候选上是否显示辅码（随帧下发的 `[general] aux_code_show`）。
+    /// 候選上是否顯示輔碼（隨幀下發的 `[general] aux_code_show`）。
     pub(super) show_code: bool,
 
-    /// 输入状态，给主题显示中 / 英、简 / 繁等。
+    /// 輸入狀態，給主題顯示中 / 英、簡 / 繁等。
     pub(super) mode: Mode,
 }
 
@@ -87,7 +87,7 @@ impl RenderData {
         self.notice = frame.notice.clone();
     }
 
-    /// 渲染器要的帧。提示（删了什么词）在渲染器里画在拼音行右侧，与 macOS 一致。
+    /// 渲染器要的幀。提示（刪了什麼詞）在渲染器裡畫在拼音行右側，與 macOS 一致。
     pub(super) fn render_frame(&self) -> qingjian_render::Frame {
         let preedit = (!self.preedit.is_empty()).then(|| Preedit {
             segments: self
@@ -108,7 +108,7 @@ impl RenderData {
         qingjian_render::Frame {
             preedit,
             rows: self.rows.clone(),
-            // 协议里 usize::MAX 表示不高亮。
+            // 協議裡 usize::MAX 表示不高亮。
             highlighted: (self.highlight != usize::MAX).then_some(self.highlight),
             columns: 0,
             column_ems: Vec::new(),
@@ -120,8 +120,8 @@ impl RenderData {
     }
 }
 
-/// 窗口顶部要画的拼音行：`[general] preedit` 配成「只在行内」时为空（拼音已经在应用里）；
-/// 整句补全仍画在这一行上，所以空行时窗口仍可能留出这条线。
+/// 視窗頂部要畫的拼音行：`[general] preedit` 配成「只在行內」時為空（拼音已經在應用裡）；
+/// 整句補全仍畫在這一行上，所以空行時視窗仍可能留出這條線。
 fn window_preedit(frame: &Frame) -> Vec<(String, PreeditKind)> {
     if !frame.preedit_mode.in_window() {
         return Vec::new();
@@ -151,7 +151,7 @@ mod tests {
         }
     }
 
-    /// 只有「只在行内」不给窗口拼音行；另两档窗口都得画。
+    /// 只有「只在行內」不給視窗拼音行；另兩檔視窗都得畫。
     #[test]
     fn window_keeps_the_pinyin_row_unless_inline_only() {
         assert_eq!(window_preedit(&frame(PreeditMode::Both)).len(), 1);

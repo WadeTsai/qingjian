@@ -1,9 +1,9 @@
-//! 主题：一份 `theme.json`（图层树 + 组件 + 颜色变量 + 文字样式）加当前外观（浅色 / 深色）。格式见 `docs/design/theme.md`；
-//! 文件可以写注释与尾逗号（见 `jsonc.rs`）。
+//! 主題：一份 `theme.json`（圖層樹 + 元件 + 顏色變數 + 文字樣式）加當前外觀（淺色 / 深色）。格式見 `docs/design/theme.md`；
+//! 檔案可以寫註釋與尾逗號（見 `jsonc.rs`）。
 //!
-//! 内置主题随 crate 编进来（`themes/<id>/theme.json`），第一次用到时解析一次；用户主题用 [`Theme::from_json`]。
-//! 主题可以 `"extends": "<内置主题 id>"`，只写要改的部分（见 `extends.rs`）。
-//! 渲染时引用不到的颜色、样式退回缺省值，加载时 [`validate`] 先把这类问题记成警告。
+//! 內建主題隨 crate 編進來（`themes/<id>/theme.json`），第一次用到時解析一次；使用者主題用 [`Theme::from_json`]。
+//! 主題可以 `"extends": "<內建主題 id>"`，只寫要改的部分（見 `extends.rs`）。
+//! 渲染時引用不到的顏色、樣式退回預設值，載入時 [`validate`] 先把這類問題記成警告。
 
 mod assets;
 mod error;
@@ -33,10 +33,10 @@ use assets::Assets;
 use file::{ColorRef, FontRef, LockedAppearance, SCHEMA, ThemeFile};
 pub(crate) use svg_image::SvgImage;
 
-/// 内置主题编进程序的图片：主题里写的路径与文件内容。
+/// 內建主題編程序序的圖片：主題裡寫的路徑與檔案內容。
 type EmbeddedFiles = &'static [(&'static str, &'static [u8])];
 
-/// 内置主题：id、源文件与图片，按设置界面列出的顺序；第一个是缺省主题。
+/// 內建主題：id、原始檔與圖片，按設定介面列出的順序；第一個是預設主題。
 const BUILTINS: [(&str, &str, EmbeddedFiles); 4] = [
     (
         "qingjian",
@@ -109,45 +109,45 @@ const BUILTINS: [(&str, &str, EmbeddedFiles); 4] = [
     ),
 ];
 
-/// 最底层的主题：没写 `extends` 的主题都以它为底，它自己不再往下找。
+/// 最底層的主題：沒寫 `extends` 的主題都以它為底，它自己不再往下找。
 const ROOT_THEME: &str = "qingjian";
 
-/// 引用不到的文字样式退回这个（点）。
+/// 引用不到的文字樣式退回這個（點）。
 const FALLBACK_FONT: FontSpec = FontSpec::new(16.0, 19.0);
 
 #[derive(Debug, Clone)]
 pub struct Theme {
-    /// 解析后的主题文件，同一主题的浅色 / 深色共用。
+    /// 解析後的主題檔案，同一主題的淺色 / 深色共用。
     file: Arc<ThemeFile>,
 
     /// 用深色那一套值。
     dark: bool,
 
-    /// 图片与字体素材（主题目录里的），同一主题的浅色 / 深色共用。
+    /// 圖片與字型素材（主題目錄裡的），同一主題的淺色 / 深色共用。
     assets: Arc<Assets>,
 
-    /// 字族表与命名样式，同一主题的浅色 / 深色共用。
+    /// 字族表與命名樣式，同一主題的淺色 / 深色共用。
     families: Arc<FontFamilies>,
 
-    /// 设置里的字号，盖过主题的。
+    /// 設定裡的字號，蓋過主題的。
     sizes: TextSizes,
 
-    /// 设置里关了过渡动画时为 `false`：过渡直接跳到终点，循环动画停在第一帧。
+    /// 設定裡關了過渡動畫時為 `false`：過渡直接跳到終點，迴圈動畫停在第一幀。
     animations: bool,
 }
 
 impl Theme {
-    /// 缺省内置主题，浅色。
+    /// 預設內建主題，淺色。
     pub fn light() -> Self {
         Self::default_builtin().clone()
     }
 
-    /// 缺省内置主题，深色。
+    /// 預設內建主題，深色。
     pub fn dark() -> Self {
         Self::default_builtin().with_dark(true)
     }
 
-    /// 按 id 找内置主题；没有这个 id 时为 `None`。
+    /// 按 id 找內建主題；沒有這個 id 時為 `None`。
     pub fn builtin(id: &str, dark: bool) -> Option<Self> {
         builtins()
             .iter()
@@ -155,13 +155,13 @@ impl Theme {
             .map(|theme| theme.with_dark(dark))
     }
 
-    /// 全部内置主题（浅色），按设置界面列出的顺序。
+    /// 全部內建主題（淺色），按設定介面列出的順序。
     pub fn builtins() -> &'static [Theme] {
         builtins()
     }
 
-    /// 从 `theme.json` 的内容读主题。可以 `extends` 内置主题；引用不到的名字只记警告。
-    /// 没写 `extends` 时以青简绿为底（青简绿自己除外）。
+    /// 從 `theme.json` 的內容讀主題。可以 `extends` 內建主題；引用不到的名字只記警告。
+    /// 沒寫 `extends` 時以青簡綠為底（青簡綠自己除外）。
     pub fn from_json(json: &str, dark: bool) -> Result<Self, ThemeError> {
         let value = extends::resolve(json, &builtin_source, ROOT_THEME)?;
         let file: ThemeFile = serde_json::from_value(value)?;
@@ -187,7 +187,7 @@ impl Theme {
         Ok(theme.with_dark(dark))
     }
 
-    /// 读主题目录：`dir/theme.json` 加它用到的图片与字体（路径相对 `dir`）。
+    /// 讀主題目錄：`dir/theme.json` 加它用到的圖片與字型（路徑相對 `dir`）。
     pub fn from_dir(dir: &Path, dark: bool) -> Result<Self, ThemeError> {
         let json = std::fs::read_to_string(dir.join("theme.json"))?;
         let mut theme = Self::from_json(&json, dark)?;
@@ -196,7 +196,7 @@ impl Theme {
         Ok(theme)
     }
 
-    /// 同一主题换外观；主题锁定了外观（`meta.appearance`）时不换。
+    /// 同一主題換外觀；主題鎖定了外觀（`meta.appearance`）時不換。
     pub fn with_dark(&self, dark: bool) -> Self {
         Self {
             file: Arc::clone(&self.file),
@@ -208,7 +208,7 @@ impl Theme {
         }
     }
 
-    /// 同一主题换上设置里的字号。
+    /// 同一主題換上設定裡的字號。
     pub fn with_text_sizes(&self, sizes: TextSizes) -> Self {
         Self {
             sizes,
@@ -216,7 +216,7 @@ impl Theme {
         }
     }
 
-    /// 同一主题换上设置里的动画开关。
+    /// 同一主題換上設定裡的動畫開關。
     pub fn with_animations(&self, animations: bool) -> Self {
         Self {
             animations,
@@ -228,22 +228,22 @@ impl Theme {
         self.animations
     }
 
-    /// 设置里的候选字号相对主题的比例：表格行高与状态条整体跟着它缩放。
+    /// 設定裡的候選字號相對主題的比例：表格行高與狀態條整體跟著它縮放。
     pub(crate) fn candidate_scale(&self) -> f32 {
         self.sizes.ratio("candidate", |name| self.theme_size(name))
     }
 
-    /// 主题自己写的字号（不算设置里的）：设置界面拿它当字号框的初始值。
+    /// 主題自己寫的字號（不算設定裡的）：設定介面拿它當字號框的初始值。
     pub fn theme_size(&self, name: &str) -> Option<f32> {
         self.families.style(name).map(|spec| spec.size)
     }
 
-    /// 主题 id。
+    /// 主題 id。
     pub fn id(&self) -> &str {
         &self.file.meta.id
     }
 
-    /// 显示名。
+    /// 顯示名。
     pub fn name(&self) -> &str {
         &self.file.meta.name
     }
@@ -252,17 +252,17 @@ impl Theme {
         &self.file.meta.author
     }
 
-    /// SPDX 许可证标识。
+    /// SPDX 許可證標識。
     pub fn license(&self) -> &str {
         &self.file.meta.license
     }
 
-    /// 样式里写到的系统字族名（不含 `system`）。壳按名字查出字体文件，交给 [`crate::Renderer::load_theme_fonts`]。
+    /// 樣式裡寫到的系統字族名（不含 `system`）。殼按名字查出字型檔案，交給 [`crate::Renderer::load_theme_fonts`]。
     pub fn font_families(&self) -> Vec<String> {
         self.families.names()
     }
 
-    /// 随主题带的字体文件（已检查在主题目录里）。
+    /// 隨主題帶的字型檔案（已檢查在主題目錄裡）。
     pub fn font_files(&self) -> &[PathBuf] {
         self.assets.fonts()
     }
@@ -271,7 +271,7 @@ impl Theme {
         &builtins()[0]
     }
 
-    /// 锁定的外观：`Some(true)` 只有深色，`Some(false)` 只有浅色。
+    /// 鎖定的外觀：`Some(true)` 只有深色，`Some(false)` 只有淺色。
     pub(crate) fn locked_dark(&self) -> Option<bool> {
         self.file
             .meta
@@ -283,7 +283,7 @@ impl Theme {
         &self.file
     }
 
-    /// 颜色引用按当前外观取值；变量不存在时透明。
+    /// 顏色引用按當前外觀取值；變數不存在時透明。
     pub(crate) fn color(&self, color: &ColorRef) -> Color {
         match color {
             ColorRef::Literal(color) => *color,
@@ -295,39 +295,39 @@ impl Theme {
         }
     }
 
-    /// 主题里写的图片路径对应的位图；没有、没读进来或是 SVG 时为 `None`。
+    /// 主題裡寫的圖片路徑對應的點陣圖；沒有、沒讀進來或是 SVG 時為 `None`。
     pub(crate) fn image(&self, path: &str) -> Option<Arc<Pixmap>> {
         self.assets.image(path)
     }
 
-    /// 主题里写的 SVG 图片；没有、没读进来或不是 SVG 时为 `None`。
+    /// 主題裡寫的 SVG 圖片；沒有、沒讀進來或不是 SVG 時為 `None`。
     pub(crate) fn svg(&self, path: &str) -> Option<Arc<SvgImage>> {
         self.assets.svg(path)
     }
 
-    /// 命名文字样式（点）。
+    /// 命名文字樣式（點）。
     pub(crate) fn font(&self, name: &str) -> FontSpec {
         let spec = self.families.style(name).unwrap_or(FALLBACK_FONT);
         text_sizes::scaled(spec, self.sizes.ratio(name, |base| self.theme_size(base)))
     }
 
-    /// 字族表，渲染器按 [`FamilyId`] 查回退链；两份 `Theme` 共用同一张表时指针相同。
+    /// 字族表，渲染器按 [`FamilyId`] 查回退鏈；兩份 `Theme` 共用同一張表時指標相同。
     pub(crate) fn families(&self) -> &Arc<FontFamilies> {
         &self.families
     }
 
-    /// 节点里的 `font`：样式名，或在样式上改字号 / 字重。
+    /// 節點裡的 `font`：樣式名，或在樣式上改字號 / 字重。
     pub(crate) fn font_ref(&self, font: &FontRef) -> FontSpec {
         font.apply(font.base().map_or(FALLBACK_FONT, |name| self.font(name)))
     }
 
-    /// 当前外观下的文字覆盖率 gamma。
+    /// 當前外觀下的文字覆蓋率 gamma。
     pub(crate) fn text_gamma(&self) -> f32 {
         self.file.text.gamma.get(self.dark)
     }
 }
 
-/// 解析好的内置主题，第一次用到时解析。内置主题是随包的，解析失败是 bug。
+/// 解析好的內建主題，第一次用到時解析。內建主題是隨包的，解析失敗是 bug。
 fn builtins() -> &'static [Theme] {
     static THEMES: OnceLock<Vec<Theme>> = OnceLock::new();
     THEMES.get_or_init(|| {
@@ -344,7 +344,7 @@ fn builtins() -> &'static [Theme] {
     })
 }
 
-/// 内置主题编进程序的图片；不是内置主题为空。
+/// 內建主題編程序序的圖片；不是內建主題為空。
 fn builtin_files(id: &str) -> EmbeddedFiles {
     BUILTINS
         .iter()
@@ -352,7 +352,7 @@ fn builtin_files(id: &str) -> EmbeddedFiles {
         .map_or(&[], |(.., files)| *files)
 }
 
-/// `extends` 按 id 找内置主题的源文件。
+/// `extends` 按 id 找內建主題的原始檔。
 fn builtin_source(id: &str) -> Option<&'static str> {
     BUILTINS
         .iter()
@@ -472,9 +472,9 @@ mod tests {
         assert_eq!(sized.font("index").size, index.size * ratio);
         assert_eq!(sized.font("annotation"), annotation);
         assert_eq!(sized.candidate_scale(), ratio);
-        // 换外观不丢设置里的字号
+        // 換外觀不丟設定裡的字號
         assert_eq!(sized.with_dark(true).font("candidate").size, 26.0);
-        // 不是正数当没填
+        // 不是正數當沒填
         assert_eq!(TextSizes::new(-1.0, f32::NAN), TextSizes::default());
     }
 }

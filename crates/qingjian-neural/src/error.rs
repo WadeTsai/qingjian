@@ -6,19 +6,19 @@ use thiserror::Error;
 pub enum NeuralError {
     #[error("io error reading {path}: {source}")]
     Io {
-        /// 出错的文件。
+        /// 出錯的檔案。
         path: PathBuf,
 
-        /// 底层错误。
+        /// 底層錯誤。
         source: std::io::Error,
     },
 
     #[error("bad json in {path}: {source}")]
     Json {
-        /// 出错的文件。
+        /// 出錯的檔案。
         path: PathBuf,
 
-        /// 底层错误。
+        /// 底層錯誤。
         source: serde_json::Error,
     },
 

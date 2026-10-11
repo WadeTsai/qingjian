@@ -17,7 +17,7 @@ pub enum PredictError {
     #[error("API returned no usable content")]
     EmptyReply,
 
-    /// 正文为空且回复因长度截断：模型开着思考，输出额度花在思考上了。
+    /// 正文為空且回覆因長度截斷：模型開著思考，輸出額度花在思考上了。
     #[error("API reply was cut off before any content (output budget spent on reasoning)")]
     BudgetExhausted,
 

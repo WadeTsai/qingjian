@@ -1,4 +1,4 @@
-//! 双拼 ü 键的拼音规范化，以及查询、上屏消耗的回归。
+//! 雙拼 ü 鍵的拼音規範化，以及查詢、上屏消耗的迴歸。
 
 use qingjian_core::{Engine, ShuangpinScheme as Scheme};
 use qingjian_dictionary::Dictionary;
@@ -25,7 +25,7 @@ fn umlaut_keys_decode_to_standard_pinyin() {
             assert_eq!(scheme.decode(&keys).pinyin(), expected, "{scheme}: {keys}");
         }
     }
-    // 同键的合法读法保持优先，不能把微软的 jue 或小浪的 jing 改成 ju。
+    // 同鍵的合法讀法保持優先，不能把微軟的 jue 或小浪的 jing 改成 ju。
     assert_eq!(Scheme::Microsoft.decode("jv").pinyin(), "jue");
     assert_eq!(Scheme::Xiaolang.decode("jv").pinyin(), "jing");
     assert_eq!(Scheme::Sogou.decode("gy").pinyin(), "guai");

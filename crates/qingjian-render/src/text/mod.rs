@@ -1,4 +1,4 @@
-//! 文字测绘：cosmic-text 整形 + swash 栅格，单行、像素坐标；普通字形走覆盖率遮罩，彩色 emoji 走 RGBA 位图。
+//! 文字測繪：cosmic-text 整形 + swash 柵格，單行、畫素座標；普通字形走覆蓋率遮罩，彩色 emoji 走 RGBA 點陣圖。
 
 mod size;
 mod style;
@@ -19,28 +19,28 @@ pub(crate) use size::TextSize;
 pub(crate) use style::TextStyle;
 
 pub(crate) struct TextPainter {
-    /// 字体库与回退链。
+    /// 字型庫與回退鏈。
     font_system: FontSystem,
 
-    /// 字形位图缓存（按字体、字号、亚像素位移）。
+    /// 字形點陣圖快取（按字型、字號、亞畫素位移）。
     cache: SwashCache,
 
-    /// 复用的单行缓冲。
+    /// 複用的單行緩衝。
     buffer: Buffer,
 
-    /// 每张字体的字距表（没有的记 `None`），按字形所用字体各查各的，与 CoreText 一致。
+    /// 每張字型的字距表（沒有的記 `None`），按字形所用字型各查各的，與 CoreText 一致。
     tracking: HashMap<ID, Option<Trak>>,
 
-    /// 覆盖率 gamma 查找表，按 gamma 值缓存。
+    /// 覆蓋率 gamma 查詢表，按 gamma 值快取。
     gamma_tables: HashMap<u32, Box<[u8; 256]>>,
 
-    /// 当前主题的字族表；换了主题或加载了新字体就重新挑。
+    /// 當前主題的字族表；換了主題或載入了新字型就重新挑。
     families: Option<Arc<FontFamilies>>,
 
-    /// 字族表每条回退链挑中的字族名（字体库里的写法），`None` 用界面字体。
+    /// 字族表每條回退鏈挑中的字族名（字型庫裡的寫法），`None` 用介面字型。
     resolved: Vec<Option<String>>,
 
-    /// 主题要求加载过的字体文件（加载失败的也记，不反复试）。
+    /// 主題要求載入過的字型檔案（載入失敗的也記，不反覆試）。
     loaded: HashSet<PathBuf>,
 }
 
@@ -60,12 +60,12 @@ impl TextPainter {
         }
     }
 
-    /// 字体库里有没有这个字族（不分大小写）。
+    /// 字型庫裡有沒有這個字族（不分大小寫）。
     pub(crate) fn has_family(&self, name: &str) -> bool {
         self.family_name(name).is_some()
     }
 
-    /// 字体库里这个字族的写法。
+    /// 字型庫裡這個字族的寫法。
     fn family_name(&self, name: &str) -> Option<String> {
         self.font_system.db().faces().find_map(|face| {
             face.families
@@ -75,7 +75,7 @@ impl TextPainter {
         })
     }
 
-    /// 加载字体文件；每个文件只试一次。加载了新文件就重新挑字族。
+    /// 載入字型檔案；每個檔案只試一次。載入了新檔案就重新挑字族。
     pub(crate) fn load_fonts(&mut self, paths: &[PathBuf]) {
         let mut added = false;
         for path in paths {
@@ -89,7 +89,7 @@ impl TextPainter {
         }
     }
 
-    /// 换成这个主题的字族表：每条回退链挑第一个字体库里有的字族，同一张表不重挑。
+    /// 換成這個主題的字族表：每條回退鏈挑第一個字型庫裡有的字族，同一張表不重挑。
     pub(crate) fn use_families(&mut self, families: &Arc<FontFamilies>) {
         if self
             .families
@@ -117,13 +117,13 @@ impl TextPainter {
         self.families = Some(Arc::clone(families));
     }
 
-    /// 光学字号（点）：SF 这类带 `opsz` 轴的字体在小字号用文本视觉尺寸，CoreText 对系统字体自动做，这里要显式给。
-    /// 现在是整个画笔一个值（cosmic-text 的字体实例缓存没按它分键），候选窗几种字号都在 20 pt 以下，落到同一档。
+    /// 光學字號（點）：SF 這類帶 `opsz` 軸的字型在小字號用文本視覺尺寸，CoreText 對系統字型自動做，這裡要顯式給。
+    /// 現在是整個畫筆一個值（cosmic-text 的字型例項快取沒按它分鍵），候選窗幾種字號都在 20 pt 以下，落到同一檔。
     pub(crate) fn set_optical_size(&mut self, points: Option<f32>) {
         self.font_system.set_optical_size(points);
     }
 
-    /// 一段文字的宽高（像素）。高度就是行高。
+    /// 一段文字的寬高（畫素）。高度就是行高。
     pub(crate) fn measure(&mut self, text: &str, style: &TextStyle) -> TextSize {
         self.shape(text, style);
         let mut width = 0.0_f32;
@@ -146,7 +146,7 @@ impl TextPainter {
         }
     }
 
-    /// 把文字画到 `(x, y)`，`y` 是行框顶边。返回宽度。
+    /// 把文字畫到 `(x, y)`，`y` 是行框頂邊。返回寬度。
     pub(crate) fn draw(
         &mut self,
         canvas: &mut Canvas,
@@ -164,7 +164,7 @@ impl TextPainter {
         let mut underline: Option<(f32, f32)> = None;
         for run in self.buffer.layout_runs() {
             let baseline = y + run.line_y;
-            // 每个字形画完把它那份字距累加到后面所有字形的 x 上
+            // 每個字形畫完把它那份字距累加到後面所有字形的 x 上
             let mut tracked = 0.0_f32;
             for glyph in run.glyphs {
                 let physical = glyph.physical((x + tracked, y), 1.0);
@@ -185,7 +185,7 @@ impl TextPainter {
                         canvas.blend_mask(gx, gy, w, h, &data, style.color);
                     }
                     SwashContent::Color => canvas.blend_rgba(gx, gy, w, h, &image.data),
-                    // 没有申请亚像素格式，不会出现
+                    // 沒有申請亞畫素格式，不會出現
                     SwashContent::SubpixelMask => {}
                 }
             }
@@ -198,13 +198,13 @@ impl TextPainter {
             }
         }
         if let Some((baseline, line_w)) = strike {
-            // 删除线穿过小写字母中部
+            // 刪除線穿過小寫字母中部
             let thickness = (style.size / 14.0).max(1.0);
             let line_y = baseline - style.size * 0.3;
             canvas.fill_rect(x, line_y, line_w, thickness, style.color);
         }
         if let Some((baseline, line_w)) = underline {
-            // 下划线压在基线下面一点，与删除线同一套粗细
+            // 下劃線壓在基線下面一點，與刪除線同一套粗細
             let thickness = (style.size / 14.0).max(1.0);
             let line_y = baseline + style.size * 0.14;
             canvas.fill_rect(x, line_y, line_w, thickness, style.color);
@@ -212,8 +212,8 @@ impl TextPainter {
         width
     }
 
-    /// 描边：整段文字的字形轮廓拼成一条路径，按两倍宽描一次（字形随后压在上面，露出来的就是向外的宽度）。
-    /// 一条路径描一次，半透明的描边在字形相交处不会叠深。没有轮廓的字形（位图 emoji）不描。
+    /// 描邊：整段文字的字形輪廓拼成一條路徑，按兩倍寬描一次（字形隨後壓在上面，露出來的就是向外的寬度）。
+    /// 一條路徑描一次，半透明的描邊在字形相交處不會疊深。沒有輪廓的字形（點陣圖 emoji）不描。
     fn draw_stroke(
         &mut self,
         canvas: &mut Canvas,
@@ -267,7 +267,7 @@ impl TextPainter {
         }
     }
 
-    /// 每个字形用的字族名（相邻相同的合并），拿来核对中日字形与 emoji 回退到了哪家字体。
+    /// 每個字形用的字族名（相鄰相同的合併），拿來核對中日字形與 emoji 回退到了哪家字型。
     pub(crate) fn trace_families(&mut self, text: &str, style: &TextStyle) -> Vec<String> {
         self.shape(text, style);
         let mut names: Vec<String> = Vec::new();
@@ -309,7 +309,7 @@ impl TextPainter {
     }
 }
 
-/// 文件能解析就加载进字体库；返回是否加载了。
+/// 檔案能解析就載入進字型庫；返回是否載入了。
 fn load_font(font_system: &mut FontSystem, path: &Path) -> bool {
     match font_system.db_mut().load_font_file(path) {
         Ok(()) => {
@@ -323,7 +323,7 @@ fn load_font(font_system: &mut FontSystem, path: &Path) -> bool {
     }
 }
 
-/// 某张字体在这个字号下每个字形要加的间距（像素）；第一次用到时解析它的 `trak` 表。
+/// 某張字型在這個字號下每個字形要加的間距（畫素）；第一次用到時解析它的 `trak` 表。
 fn tracking_px(
     font_system: &FontSystem,
     cache: &mut HashMap<ID, Option<Trak>>,
@@ -340,7 +340,7 @@ fn tracking_px(
         .map_or(0.0, |trak| trak.tracking_em(style.points) * style.size)
 }
 
-/// 覆盖率 → gamma 校正后的覆盖率。
+/// 覆蓋率 → gamma 校正後的覆蓋率。
 fn gamma_table(cache: &mut HashMap<u32, Box<[u8; 256]>>, gamma: f32) -> &[u8; 256] {
     cache.entry(gamma.to_bits()).or_insert_with(|| {
         let mut table = [0u8; 256];

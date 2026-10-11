@@ -1,21 +1,21 @@
-//! AAT `trak` 字距表：Apple 的系统字体按字号给每个字形加减一点间距（SF 在 11 pt 是 +12、16 pt 是 −40 个字体单位），
-//! CoreText 对系统字体自动应用；不读它，英文比原生窄或宽一截。只取水平方向、正常轨（track 0）。
+//! AAT `trak` 字距表：Apple 的系統字型按字號給每個字形加減一點間距（SF 在 11 pt 是 +12、16 pt 是 −40 個字型單位），
+//! CoreText 對系統字型自動應用；不讀它，英文比原生窄或寬一截。只取水平方向、正常軌（track 0）。
 
-/// 一张字体的水平字距曲线。
+/// 一張字型的水平字距曲線。
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Trak {
-    /// 采样字号（点），升序。
+    /// 取樣字號（點），升序。
     sizes: Vec<f32>,
 
-    /// 每个采样字号的间距（字体单位），与 `sizes` 一一对应。
+    /// 每個取樣字號的間距（字型單位），與 `sizes` 一一對應。
     values: Vec<i16>,
 
-    /// 字体单位数。
+    /// 字型單位數。
     units_per_em: f32,
 }
 
 impl Trak {
-    /// 从一张 sfnt 面的数据里读；没有 `trak` 表或没有正常轨返回 `None`。
+    /// 從一張 sfnt 面的資料裡讀；沒有 `trak` 表或沒有正常軌返回 `None`。
     pub(crate) fn parse(face_data: &[u8], face_index: u32) -> Option<Self> {
         let units_per_em = f32::from(u16_at(table(face_data, face_index, b"head")?, 18)?);
         let trak = table(face_data, face_index, b"trak")?;
@@ -27,7 +27,7 @@ impl Trak {
         let sizes: Vec<f32> = (0..n_sizes)
             .map(|i| u32_at(trak, size_table_offset + i * 4).map(fixed_to_f32))
             .collect::<Option<_>>()?;
-        // 轨表每条 8 字节：track（Fixed）、名字下标、到 n_sizes 个 i16 的偏移
+        // 軌表每條 8 位元組：track（Fixed）、名字下標、到 n_sizes 個 i16 的偏移
         let normal = (0..n_tracks)
             .map(|i| 8 + i * 8)
             .find(|&entry| u32_at(data, entry).map(fixed_to_f32) == Some(0.0))?;
@@ -42,7 +42,7 @@ impl Trak {
         })
     }
 
-    /// 某字号下每个字形要加的间距，单位 em（乘字号就是点）。采样点之间线性插值，范围外取端点。
+    /// 某字號下每個字形要加的間距，單位 em（乘字號就是點）。取樣點之間線性插值，範圍外取端點。
     pub(crate) fn tracking_em(&self, size: f32) -> f32 {
         let units = match self.sizes.iter().position(|&s| s >= size) {
             Some(0) => f32::from(self.values[0]),
@@ -50,7 +50,7 @@ impl Trak {
             Some(i) => {
                 let (s0, s1) = (self.sizes[i - 1], self.sizes[i]);
                 let (v0, v1) = (f32::from(self.values[i - 1]), f32::from(self.values[i]));
-                // 采样点该严格升序；相邻相等的坏表别除出 NaN。
+                // 取樣點該嚴格升序；相鄰相等的壞表別除出 NaN。
                 if s1 <= s0 {
                     v0
                 } else {
@@ -62,7 +62,7 @@ impl Trak {
     }
 }
 
-/// sfnt 表目录里找一张表；TTC 先按面下标取那张目录。
+/// sfnt 表目錄裡找一張表；TTC 先按面下標取那張目錄。
 fn table<'a>(data: &'a [u8], face_index: u32, tag: &[u8; 4]) -> Option<&'a [u8]> {
     let directory = if data.get(0..4)? == b"ttcf" {
         u32_at(data, 12 + face_index as usize * 4)? as usize

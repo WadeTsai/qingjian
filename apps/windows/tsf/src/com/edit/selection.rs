@@ -1,5 +1,5 @@
-//! 「翻译选中文字」的读选区会话：Server 收到快捷键后请 DLL 读当前选区，这里在异步只读会话里取文本与屏幕矩形回给 Server。
-//! 读到非空选区才置 [`Shared::set_translating`]。
+//! 「翻譯選中文字」的讀選區會話：Server 收到快捷鍵後請 DLL 讀當前選區，這裡在非同步只讀會話裡取文本與螢幕矩形回給 Server。
+//! 讀到非空選區才置 [`Shared::set_translating`]。
 
 use std::rc::Rc;
 
@@ -15,21 +15,21 @@ use crate::com::composition::Shared;
 use crate::com::log::log;
 use crate::com::service::SharedClient;
 
-/// 原文字符上限（与 macOS 壳一致），超过就不译，避免整篇误触。
+/// 原文字元上限（與 macOS 殼一致），超過就不譯，避免整篇誤觸。
 const MAX_TRANSLATE_CHARS: usize = 500;
 
 #[implement(ITfEditSession)]
 pub(crate) struct SelectionSession {
-    /// 目标文档上下文。
+    /// 目標文件上下文。
     context: ITfContext,
 
-    /// 引擎层：把选区文本发给 Server。
+    /// 引擎層：把選區文本發給 Server。
     engine: SharedClient,
 
-    /// 读到非空选区就置「翻译评审进行中」。
+    /// 讀到非空選區就置「翻譯評審進行中」。
     shared: Rc<Shared>,
 
-    /// 请求标识，回给 Server 对上是哪一次 `RequestSelection`。
+    /// 請求標識，回給 Server 對上是哪一次 `RequestSelection`。
     request: u64,
 }
 
@@ -37,21 +37,21 @@ impl ITfEditSession_Impl for SelectionSession_Impl {
     fn DoEditSession(&self, ec: u32) -> Result<()> {
         let (text, rect) = read_selection(&self.context, ec);
         let has_text = !text.trim().is_empty();
-        // 发成功再置本地评审态，免得卡在无窗口的评审里。
+        // 發成功再置本地評審態，免得卡在無視窗的評審裡。
         if let Ok(mut guard) = self.engine.try_borrow_mut()
             && let Some(client) = guard.as_mut()
         {
             match client.selection(self.request, text, rect) {
                 Ok(_) if has_text => self.shared.set_translating(true),
                 Ok(_) => {}
-                Err(error) => log(&format!("回选区给 Server 失败: {error}")),
+                Err(error) => log(&format!("回選區給 Server 失敗: {error}")),
             }
         }
         Ok(())
     }
 }
 
-/// 请求一个异步只读会话读选区。`Ok` 只说明已受理。
+/// 請求一個非同步只讀會話讀選區。`Ok` 只說明已受理。
 pub(crate) fn request_selection(
     context: &ITfContext,
     client_id: u32,
@@ -68,7 +68,7 @@ pub(crate) fn request_selection(
     super::update::request(context, client_id, session.into(), TF_ES_READ)
 }
 
-/// 没有选区 / 读不到 / 过长时文本为空串（矩形退到鼠标处）。
+/// 沒有選區 / 讀不到 / 過長時文本為空串（矩形退到滑鼠處）。
 fn read_selection(context: &ITfContext, ec: u32) -> (String, ScreenRect) {
     let Some(range) = selection_range(context, ec) else {
         return (String::new(), mouse_screen_rect());

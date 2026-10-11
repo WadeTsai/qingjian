@@ -1,20 +1,20 @@
 use super::{Usage, UsageSummary};
 
-/// 输入统计的累计方。实现放学习 crate，Core 只往里送每次上屏的用量。
+/// 輸入統計的累計方。實現放學習 crate，Core 只往裡送每次上屏的用量。
 pub trait UsageMeter: Send {
-    /// 记一次上屏。实现不能阻塞输入：只加内存里的计数，落盘放 [`Self::flush`]。
+    /// 記一次上屏。實現不能阻塞輸入：只加記憶體裡的計數，落盤放 [`Self::flush`]。
     fn record(&mut self, usage: Usage);
 
-    /// 落盘。壳在停用输入法时调用，激活期间也定时调；失败只记日志。
+    /// 落盤。殼在停用輸入法時呼叫，啟用期間也定時調；失敗只記日誌。
     fn flush(&mut self) {}
 
-    /// 给偏好设置看的汇总。
+    /// 給偏好設定看的彙總。
     fn summary(&self) -> UsageSummary {
         UsageSummary::default()
     }
 }
 
-/// 不统计。
+/// 不統計。
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoUsageMeter;
 

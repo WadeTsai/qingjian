@@ -1,4 +1,4 @@
-//! 弹出按钮子类：长得和其他设置项一样，但点它不弹菜单，弹的是带搜索框的字体列表。
+//! 彈出按鈕子類：長得和其他設定項一樣，但點它不彈選單，彈的是帶搜尋框的字型列表。
 
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
@@ -8,27 +8,27 @@ use objc2_foundation::NSRect;
 
 use super::source::FontListSource;
 
-/// 视图状态。
+/// 檢視狀態。
 pub(super) struct ButtonState {
-    /// 列表与下拉框的主人。
+    /// 列表與下拉框的主人。
     pub source: Retained<FontListSource>,
 }
 
 define_class!(
-    // SAFETY: NSPopUpButton 允许子类化；没有实现 Drop。
+    // SAFETY: NSPopUpButton 允許子類化；沒有實現 Drop。
     #[unsafe(super(NSPopUpButton))]
     #[thread_kind = MainThreadOnly]
     #[ivars = ButtonState]
     pub(super) struct FontPopUpButton;
 
     impl FontPopUpButton {
-        /// 鼠标点下去：不走菜单，开我们的下拉框。
+        /// 滑鼠點下去：不走選單，開我們的下拉框。
         #[unsafe(method(mouseDown:))]
         fn mouse_down(&self, _event: &NSEvent) {
             self.ivars().source.open();
         }
 
-        /// 键盘（空格 / 回车）触发也一样。
+        /// 鍵盤（空格 / 回車）觸發也一樣。
         #[unsafe(method(performClick:))]
         fn perform_click(&self, _sender: Option<&AnyObject>) {
             self.ivars().source.open();

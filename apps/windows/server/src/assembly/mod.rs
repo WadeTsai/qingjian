@@ -1,4 +1,4 @@
-//! 装配 Engine：Server 里唯一知道具体 Translator / Learner 类型的地方，装的东西与 macOS 的 `host::init` 一致。
+//! 裝配 Engine：Server 裡唯一知道具體 Translator / Learner 型別的地方，裝的東西與 macOS 的 `host::init` 一致。
 
 mod language_model;
 mod spec;
@@ -90,21 +90,21 @@ pub fn assemble(spec: &AssemblySpec) -> Result<Engine, ServerError> {
     Ok(engine)
 }
 
-/// 用户导入词库目录 `dicts/`，不存在则创建；建不了当没有。
+/// 使用者匯入詞庫目錄 `dicts/`，不存在則建立；建不了當沒有。
 pub fn user_dicts_dir(user_dir: Option<&Path>) -> Option<std::path::PathBuf> {
     let dir = user_dir?.join("dicts");
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir)
 }
 
-/// 用户导入码表目录 `codes/`，不存在则创建；建不了当没有。
+/// 使用者匯入碼錶目錄 `codes/`，不存在則建立；建不了當沒有。
 pub fn user_codes_dir(user_dir: Option<&Path>) -> Option<std::path::PathBuf> {
     let dir = user_dir?.join("codes");
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir)
 }
 
-/// 读不了就退回只在内存里学，不拿空表覆盖用户文件。
+/// 讀不了就退回只在記憶體裡學，不拿空表覆蓋使用者檔案。
 fn load_learner(dir: &Path) -> FrequencyLearner {
     let path = dir.join("user.tsv");
     match FrequencyLearner::from_path(&path) {
@@ -116,7 +116,7 @@ fn load_learner(dir: &Path) -> FrequencyLearner {
     }
 }
 
-/// 配置里的学习语言；`off` 为 `None`（不显示译文），写得不认识按英文。
+/// 配置裡的學習語言；`off` 為 `None`（不顯示譯文），寫得不認識按英文。
 pub fn learning_language(config: &Config) -> Option<Language> {
     if config.general.learning_language_off() {
         return None;
@@ -128,7 +128,7 @@ pub fn learning_language(config: &Config) -> Option<Language> {
     }))
 }
 
-/// 某语言的释义表：`<root>/data/generated/` 打包过的 `.qj` 优先，否则随 git 的 `assets/glossary/` TSV；都没有为 `None`。
+/// 某語言的釋義表：`<root>/data/generated/` 打包過的 `.qj` 優先，否則隨 git 的 `assets/glossary/` TSV；都沒有為 `None`。
 pub fn glossary_file(root: &Path, language: Language) -> Option<PathBuf> {
     let code = language.code();
     [
@@ -141,7 +141,7 @@ pub fn glossary_file(root: &Path, language: Language) -> Option<PathBuf> {
     .find(|path| path.is_file())
 }
 
-/// 随包释义表叠上个人释义表（`user-glossary-<语言>.tsv`）。启动装配与热加载换语言共用。
+/// 隨包釋義表疊上個人釋義表（`user-glossary-<語言>.tsv`）。啟動裝配與熱載入換語言共用。
 pub(crate) fn load_glossary(
     language: Language,
     path: &Path,
@@ -165,7 +165,7 @@ pub(crate) fn load_glossary(
     Ok(LayeredTranslator::new(bundled, personal))
 }
 
-/// 词汇记录（`user-vocab.tsv`），有等级表就按级统计。
+/// 詞彙記錄（`user-vocab.tsv`），有等級表就按級統計。
 fn load_vocabulary(user_dir: &Path, levels_dir: Option<&Path>) -> VocabularyBook {
     let mut vocabulary = VocabularyBook::open(user_dir.join("user-vocab.tsv"));
     let Some(levels_dir) = levels_dir else {
@@ -191,7 +191,7 @@ fn load_vocabulary(user_dir: &Path, levels_dir: Option<&Path>) -> VocabularyBook
     vocabulary
 }
 
-/// 几张 emoji 表合成一张；坏的跳过。
+/// 幾張 emoji 表合成一張；壞的跳過。
 fn load_emoji(paths: &[std::path::PathBuf]) -> Option<EmojiTable> {
     let mut merged: Option<EmojiTable> = None;
     for path in paths {

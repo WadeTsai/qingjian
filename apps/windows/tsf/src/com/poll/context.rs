@@ -1,4 +1,4 @@
-//! 轮询定时器每一拍回调要用的东西：按消息窗口句柄从线程表里查出来。
+//! 輪詢定時器每一拍回撥要用的東西：按訊息視窗控制代碼從執行緒表裡查出來。
 
 use std::cell::Cell;
 use std::rc::Rc;
@@ -7,15 +7,15 @@ use crate::com::composition::Shared;
 use crate::com::service::SharedClient;
 
 pub(super) struct PollContext {
-    /// 引擎层：拉云结果 / 问切模式请求。
+    /// 引擎層：拉雲結果 / 問切模式請求。
     pub(super) engine: SharedClient,
 
-    /// 组句状态：在不在组句 / 翻译评审 / 前台。
+    /// 組句狀態：在不在組句 / 翻譯評審 / 前臺。
     pub(super) shared: Rc<Shared>,
 
-    /// 拍数计数，给 [`MODE_SYNC_EVERY`](super::MODE_SYNC_EVERY) 取模。
+    /// 拍數計數，給 [`MODE_SYNC_EVERY`](super::MODE_SYNC_EVERY) 取模。
     pub(super) ticks: Cell<u32>,
 
-    /// 本服务的 TSF client id：点击上屏要申请编辑会话。
+    /// 本服務的 TSF client id：點選上屏要申請編輯會話。
     pub(super) client_id: u32,
 }

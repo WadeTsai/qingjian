@@ -8,53 +8,53 @@ use crate::error::DictionaryError;
 use crate::matching::Match;
 use crate::pattern::{SyllablePattern, canonical_syllable};
 
-/// 收窄到多小的区间就改成逐键比对。
+/// 收窄到多小的區間就改成逐鍵比對。
 const LINEAR_SCAN_LIMIT: usize = 48;
 
-/// `.qj` 里的分节：词文本 arena、拼音键 arena、键索引、词目。
+/// `.qj` 裡的分節：詞文本 arena、拼音鍵 arena、鍵索引、詞目。
 const TEXT_TAG: [u8; 4] = *b"TEXT";
 const KEYS_TAG: [u8; 4] = *b"KEYS";
 const INDEX_TAG: [u8; 4] = *b"INDX";
 const SLOTS_TAG: [u8; 4] = *b"SLOT";
 
-/// 一条词目：词文本在 arena 里的位置与词频。12 字节、无填充，原样落盘。
+/// 一條詞目：詞文本在 arena 裡的位置與詞頻。12 位元組、無填充，原樣落盤。
 #[derive(Debug, Clone, Copy, FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 struct Slot {
-    /// 在 `Dictionary::texts` 里的字节偏移。
+    /// 在 `Dictionary::texts` 裡的位元組偏移。
     text_start: u32,
 
-    /// 静态词频。
+    /// 靜態詞頻。
     frequency: u32,
 
-    /// 字节长度。
+    /// 位元組長度。
     text_len: u16,
 
-    /// 对齐用，全零。
+    /// 對齊用，全零。
     reserved: u16,
 }
 
-/// 一个拼音键（如 `kai fa`）及其下的词目范围。16 字节、无填充，原样落盘。
+/// 一個拼音鍵（如 `kai fa`）及其下的詞目範圍。16 位元組、無填充，原樣落盤。
 #[derive(Debug, Clone, Copy, FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 struct KeyIndex {
-    /// 在 `Dictionary::keys` 里的字节偏移。
+    /// 在 `Dictionary::keys` 裡的位元組偏移。
     key_start: u32,
 
-    /// 在 `Dictionary::slots` 里的起始下标。
+    /// 在 `Dictionary::slots` 裡的起始下標。
     first_slot: u32,
 
-    /// 词目个数（同音词）。
+    /// 詞目個數（同音詞）。
     slot_count: u32,
 
-    /// 字节长度。
+    /// 位元組長度。
     key_len: u16,
 
-    /// 对齐用，全零。
+    /// 對齊用，全零。
     reserved: u16,
 }
 
-/// 解析阶段的临时行，排序后才归并成 `KeyIndex` + `Slot`。
+/// 解析階段的臨時行，排序後才歸併成 `KeyIndex` + `Slot`。
 #[derive(Debug, Clone, Copy)]
 struct Row {
     key_start: u32,
@@ -62,25 +62,25 @@ struct Row {
     slot: Slot,
 }
 
-/// 内存词库。从 TSV 解析时四段数据是自己的，从 `.qj` 打开时是映射文件里的，查询代码不区分。
+/// 記憶體詞庫。從 TSV 解析時四段資料是自己的，從 `.qj` 開啟時是對映檔案裡的，查詢程式碼不區分。
 #[derive(Debug, Default)]
 pub struct Dictionary {
-    /// 所有词文本首尾相接。
+    /// 所有詞文本首尾相接。
     texts: Text,
 
-    /// 所有拼音键首尾相接（同音词共用一个键）。
+    /// 所有拼音鍵首尾相接（同音詞共用一個鍵）。
     keys: Text,
 
-    /// 按键的字节序升序排列。
+    /// 按鍵的位元組序升序排列。
     index: Table<KeyIndex>,
 
-    /// 与 `index` 同序；同一个键下按词频降序。
+    /// 與 `index` 同序；同一個鍵下按詞頻降序。
     slots: Table<Slot>,
 
-    /// 全部词频之和，整句转换把词频归一化成概率时用。
+    /// 全部詞頻之和，整句轉換把詞頻歸一化成機率時用。
     total_frequency: u64,
 
-    /// `.qj` 里的来历（名称、许可证、署名）；TSV 解析的没有。
+    /// `.qj` 裡的來歷（名稱、許可證、署名）；TSV 解析的沒有。
     metadata: Option<Metadata>,
 }
 
@@ -138,7 +138,7 @@ impl Dictionary {
                 },
             });
             texts.push_str(text);
-            // 规范化：音节之间恰好一个空格
+            // 規範化：音節之間恰好一個空格
             let mut first = true;
             for syllable in pinyin.split_whitespace() {
                 if !first {
@@ -153,7 +153,7 @@ impl Dictionary {
         Ok(Self::assemble(texts, keys, rows))
     }
 
-    /// 按键排序、同键归并。
+    /// 按鍵排序、同鍵歸併。
     fn assemble(texts: String, keys: String, mut rows: Vec<Row>) -> Self {
         let key_of = |row: &Row| {
             &keys[row.key_start as usize..row.key_start as usize + row.key_len as usize]
@@ -196,7 +196,7 @@ impl Dictionary {
         }
     }
 
-    /// 按文件内容选加载方式：`.qj` 容器直接映射，否则当 TSV 解析。
+    /// 按檔案內容選載入方式：`.qj` 容器直接對映，否則當 TSV 解析。
     pub fn from_path(path: impl AsRef<Path>) -> Result<Self, DictionaryError> {
         let path = path.as_ref();
         if Container::is_qj(path) {
@@ -206,7 +206,7 @@ impl Dictionary {
         }
     }
 
-    /// 打开 `.qj` 词库：映射四个分节，逐条校验偏移落在 arena 内且在字符边界上（坏文件报错而不是查询时 panic）。
+    /// 開啟 `.qj` 詞庫：對映四個分節，逐條校驗偏移落在 arena 內且在字元邊界上（壞檔案報錯而不是查詢時 panic）。
     pub fn open_qj(path: &Path) -> Result<Self, DictionaryError> {
         let container = Container::open(path, Kind::Dictionary)?;
         let texts = container.text(TEXT_TAG)?;
@@ -296,7 +296,7 @@ impl Dictionary {
         })
     }
 
-    /// 写成 `.qj`：内存里的四段原样落盘。`metadata.entries` 会填成词条数。
+    /// 寫成 `.qj`：記憶體裡的四段原樣落盤。`metadata.entries` 會填成詞條數。
     pub fn write_qj(&self, path: &Path, metadata: &Metadata) -> Result<(), DictionaryError> {
         let metadata = Metadata {
             entries: self.slots.len() as u64,
@@ -311,7 +311,7 @@ impl Dictionary {
         Ok(())
     }
 
-    /// `.qj` 里的来历；TSV 解析的返回 `None`。
+    /// `.qj` 裡的來歷；TSV 解析的返回 `None`。
     pub fn metadata(&self) -> Option<&Metadata> {
         self.metadata.as_ref()
     }
@@ -324,12 +324,12 @@ impl Dictionary {
         self.slots.is_empty()
     }
 
-    /// 全部词频之和。
+    /// 全部詞頻之和。
     pub fn total_frequency(&self) -> u64 {
         self.total_frequency
     }
 
-    /// 全部词目，按拼音键的字节序、同一个键下按词频降序。给反查（汉字 → 读音）建索引用。
+    /// 全部詞目，按拼音鍵的位元組序、同一個鍵下按詞頻降序。給反查（漢字 → 讀音）建索引用。
     pub fn entries(&self) -> impl Iterator<Item = Match<'_>> + '_ {
         self.index.iter().flat_map(move |entry| {
             let key = self.key(entry);
@@ -344,19 +344,19 @@ impl Dictionary {
         })
     }
 
-    /// 只查音节数与模式长度**恰好相等**的词：整句转换的词图每个格子只要正好覆盖这几个音节的词，
-    /// 输入前缀出候选也只要这种。与 [`Self::lookup_pattern`] 同一套收窄，只是最后一级不收更长的词、
-    /// 简拼位置只看每个音节块的第一条键，代价与匹配到的音节组合数成正比。
+    /// 只查音節數與模式長度**恰好相等**的詞：整句轉換的詞圖每個格子只要正好覆蓋這幾個音節的詞，
+    /// 輸入前綴出候選也只要這種。與 [`Self::lookup_pattern`] 同一套收窄，只是最後一級不收更長的詞、
+    /// 簡拼位置只看每個音節塊的第一條鍵，代價與匹配到的音節組合數成正比。
     pub fn lookup_exact(&self, pattern: &[SyllablePattern<'_>]) -> Vec<Match<'_>> {
         let positions: Vec<&[SyllablePattern<'_>]> =
             pattern.iter().map(std::slice::from_ref).collect();
         self.lookup_positions(&positions, true)
     }
 
-    /// 按音节序列查词。
+    /// 按音節序列查詞。
     ///
-    /// - 完整音节：命中音节序列相同的词，以及以该序列为前缀的更长词。
-    /// - `last_is_partial` 为真时，最后一个音节按前缀匹配（如 `kai f` 命中 `kai fa`、`kai fang`）。
+    /// - 完整音節：命中音節序列相同的詞，以及以該序列為字首的更長詞。
+    /// - `last_is_partial` 為真時，最後一個音節按字首匹配（如 `kai f` 命中 `kai fa`、`kai fang`）。
     pub fn lookup(&self, syllables: &[&str], last_is_partial: bool) -> Vec<Match<'_>> {
         let count = syllables.len();
         let pattern: Vec<SyllablePattern<'_>> = syllables
@@ -370,18 +370,18 @@ impl Dictionary {
         self.lookup_pattern(&pattern)
     }
 
-    /// 按模式查词：每个位置可以是完整音节，也可以是前缀 / 声母（简拼）。
-    /// 命中音节数 ≥ 模式长度、逐位满足模式的词。
+    /// 按模式查詞：每個位置可以是完整音節，也可以是字首 / 聲母（簡拼）。
+    /// 命中音節數 ≥ 模式長度、逐位滿足模式的詞。
     pub fn lookup_pattern(&self, pattern: &[SyllablePattern<'_>]) -> Vec<Match<'_>> {
         let positions: Vec<&[SyllablePattern<'_>]> =
             pattern.iter().map(std::slice::from_ref).collect();
         self.lookup_positions(&positions, false)
     }
 
-    /// 每个位置给多种写法（模糊音：`zi` 也接受 `zhi`），命中音节数 ≥ 位置数、逐位满足其中一种写法的词。
+    /// 每個位置給多種寫法（模糊音：`zi` 也接受 `zhi`），命中音節數 ≥ 位置數、逐位滿足其中一種寫法的詞。
     ///
-    /// 同一位置的写法之间不能互相覆盖（前缀 `z` 已包含前缀 `zh`，两者不要同时给；同一写法不要重复），
-    /// 否则命中会重复出现。调用方按这个契约生成写法，这里不去重。
+    /// 同一位置的寫法之間不能互相覆蓋（字首 `z` 已包含字首 `zh`，兩者不要同時給；同一寫法不要重複），
+    /// 否則命中會重複出現。呼叫方按這個契約生成寫法，這裡不去重。
     pub fn lookup_pattern_alt<'p>(
         &self,
         positions: &[impl AsRef<[SyllablePattern<'p>]>],
@@ -389,7 +389,7 @@ impl Dictionary {
         self.lookup_positions(positions, false)
     }
 
-    /// [`Self::lookup_exact`] 的多写法版。
+    /// [`Self::lookup_exact`] 的多寫法版。
     pub fn lookup_exact_alt<'p>(
         &self,
         positions: &[impl AsRef<[SyllablePattern<'p>]>],
@@ -397,9 +397,9 @@ impl Dictionary {
         self.lookup_positions(positions, true)
     }
 
-    /// 键按字节序排好，所以「以某段前缀开头的键」总是一段连续区间：逐个音节位置用二分收窄区间，
-    /// 完整音节直接定位到 `前缀 + 音节 + 空格`，简拼位置按区间里出现的不同音节跳着扫（每个音节只看一条键就能算出它的子区间）。
-    /// 代价只和匹配到的音节组合数成正比，与首音节下有多少键无关；一个位置的多种写法逐个走，代价相加而不相乘。
+    /// 鍵按位元組序排好，所以「以某段字首開頭的鍵」總是一段連續區間：逐個音節位置用二分收窄區間，
+    /// 完整音節直接定位到 `字首 + 音節 + 空格`，簡拼位置按區間裡出現的不同音節跳著掃（每個音節只看一條鍵就能算出它的子區間）。
+    /// 代價只和匹配到的音節組合數成正比，與首音節下有多少鍵無關；一個位置的多種寫法逐個走，代價相加而不相乘。
     fn lookup_positions<'p>(
         &self,
         positions: &[impl AsRef<[SyllablePattern<'p>]>],
@@ -421,8 +421,8 @@ impl Dictionary {
         matches
     }
 
-    /// 在 `range`（其中的键都以 `prefix` 开头，`prefix` 为空或以空格结尾）里按 `positions[depth..]` 继续收窄。
-    /// `exact_only` 为真时只收音节数正好等于位置数的词。
+    /// 在 `range`（其中的鍵都以 `prefix` 開頭，`prefix` 為空或以空格結尾）裡按 `positions[depth..]` 繼續收窄。
+    /// `exact_only` 為真時只收音節數正好等於位置數的詞。
     fn narrow<'a, 'p>(
         &'a self,
         positions: &[impl AsRef<[SyllablePattern<'p>]>],
@@ -441,8 +441,8 @@ impl Dictionary {
             if sub.is_empty() {
                 continue;
             }
-            // 区间已经很小：直接逐键比对剩下的模式，比继续二分 + 递归便宜（全简拼时小块极多）。
-            // 当前位置只按这一种写法比（`an` 的区间里也有 `ang…`，那些留给 `ang` 那一轮，否则重复）
+            // 區間已經很小：直接逐鍵比對剩下的模式，比繼續二分 + 遞迴便宜（全簡拼時小塊極多）。
+            // 當前位置只按這一種寫法比（`an` 的區間裡也有 `ang…`，那些留給 `ang` 那一輪，否則重複）
             if sub.len() <= LINEAR_SCAN_LIMIT {
                 self.scan_range(
                     current,
@@ -455,7 +455,7 @@ impl Dictionary {
                 continue;
             }
             match (current.complete, last) {
-                // 完整且是最后一个：正好这个键的词精确命中，`键 + 空格` 开头的更长词也收
+                // 完整且是最後一個：正好這個鍵的詞精確命中，`鍵 + 空格` 開頭的更長詞也收
                 (true, true) => {
                     if let Some(entry) = self.index[sub.clone()]
                         .first()
@@ -475,15 +475,15 @@ impl Dictionary {
                     let deeper = self.prefix_range(prefix, sub);
                     self.narrow(positions, depth + 1, prefix, deeper, exact_only, out);
                 }
-                // 前缀且是最后一个、全都要：区间里全是命中，音节数正好等于位置数的才精确
+                // 字首且是最後一個、全都要：區間裡全是命中，音節數正好等於位置數的才精確
                 (false, true) if !exact_only => {
                     for entry in &self.index[sub] {
                         let exact = !self.key(entry)[base_len..].contains(' ');
                         self.push_matches(entry, exact, out);
                     }
                 }
-                // 前缀且后面还有（或只要精确的）：按区间里实际出现的音节逐块进入，
-                // 每块第一条键若正好到此为止就是该音节的精确词
+                // 字首且後面還有（或只要精確的）：按區間裡實際出現的音節逐塊進入，
+                // 每塊第一條鍵若正好到此為止就是該音節的精確詞
                 _ => {
                     let mut position = sub.start;
                     while position < sub.end {
@@ -503,7 +503,7 @@ impl Dictionary {
                             continue;
                         }
                         prefix.push(' ');
-                        // 这个音节名下的键：先是可能存在的「正好到此为止」的键，然后是 `音节 + 空格` 开头的一段
+                        // 這個音節名下的鍵：先是可能存在的「正好到此為止」的鍵，然後是 `音節 + 空格` 開頭的一段
                         let block = self.prefix_range(prefix, position..sub.end);
                         self.narrow(positions, depth + 1, prefix, block.clone(), exact_only, out);
                         position = block.end.max(position + 1);
@@ -514,7 +514,7 @@ impl Dictionary {
         prefix.truncate(base_len);
     }
 
-    /// 逐键比对：`range` 里每个键从字节偏移 `offset` 起，第一个音节满足 `first`、后面依次满足 `rest` 之一写法的才收。
+    /// 逐鍵比對：`range` 裡每個鍵從位元組偏移 `offset` 起，第一個音節滿足 `first`、後面依次滿足 `rest` 之一寫法的才收。
     fn scan_range<'a, 'p>(
         &'a self,
         first: &SyllablePattern<'p>,
@@ -541,7 +541,7 @@ impl Dictionary {
         }
     }
 
-    /// `range` 里以 `prefix` 开头的键所在的子区间（可能为空）。
+    /// `range` 裡以 `prefix` 開頭的鍵所在的子區間（可能為空）。
     fn prefix_range(&self, prefix: &str, range: Range<usize>) -> Range<usize> {
         let entries = &self.index[range.clone()];
         let start = range.start + entries.partition_point(|entry| self.key(entry) < prefix);
@@ -559,7 +559,7 @@ impl Dictionary {
         &self.texts[slot.text_start as usize..slot.text_start as usize + slot.text_len as usize]
     }
 
-    /// 把一个键下的全部词目追加为命中。
+    /// 把一個鍵下的全部詞目追加為命中。
     fn push_matches<'a>(&'a self, entry: &KeyIndex, exact: bool, out: &mut Vec<Match<'a>>) {
         let key = self.key(entry);
         let range =
@@ -574,7 +574,7 @@ impl Dictionary {
         }
     }
 
-    /// 线性扫描版，只做测试基准：与 [`Self::lookup_pattern_alt`] 结果必须一致。
+    /// 線性掃描版，只做測試基準：與 [`Self::lookup_pattern_alt`] 結果必須一致。
     #[cfg(test)]
     fn lookup_scan<'p>(&self, positions: &[Vec<SyllablePattern<'p>>]) -> Vec<Match<'_>> {
         let mut matches = Vec::new();

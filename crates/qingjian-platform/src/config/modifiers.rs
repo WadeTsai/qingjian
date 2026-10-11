@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// 一组修饰键。配置里写成 `shift+option` 这样的串（顺序随意，`alt` / `ctrl` / `cmd` 也认）。
+/// 一組修飾鍵。配置裡寫成 `shift+option` 這樣的串（順序隨意，`alt` / `ctrl` / `cmd` 也認）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct Modifiers {
@@ -42,7 +42,7 @@ impl Modifiers {
         command: false,
     };
 
-    /// ⌃ / Ctrl。Windows 上译词键的缺省（Alt 会被系统菜单截走）。
+    /// ⌃ / Ctrl。Windows 上譯詞鍵的預設（Alt 會被系統選單截走）。
     pub const CONTROL: Self = Self {
         option: false,
         shift: false,
@@ -62,7 +62,7 @@ impl Modifiers {
         !(self.option || self.shift || self.control || self.command)
     }
 
-    /// 配置文件里的写法，固定顺序 control+shift+option+command。
+    /// 配置檔案裡的寫法，固定順序 control+shift+option+command。
     pub fn key(&self) -> String {
         let mut parts = Vec::new();
         if self.control {
@@ -80,7 +80,7 @@ impl Modifiers {
         parts.join("+")
     }
 
-    /// 给人看的符号，按 macOS 的习惯顺序 ⌃⇧⌥⌘。
+    /// 給人看的符號，按 macOS 的習慣順序 ⌃⇧⌥⌘。
     pub fn label(&self) -> String {
         let mut out = String::new();
         if self.control {

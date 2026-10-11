@@ -1,4 +1,4 @@
-//! 字体选择器的状态：全部字族、过滤后可见的那些、控件引用，供回调独立读取。
+//! 字型選擇器的狀態：全部字族、過濾後可見的那些、控制元件引用，供回撥獨立讀取。
 
 use std::cell::{Cell, RefCell};
 
@@ -6,27 +6,27 @@ use objc2::rc::Retained;
 use objc2_app_kit::{NSPopUpButton, NSPopover, NSSearchField, NSTableView};
 
 pub(super) struct PickerState {
-    /// 系统全部字族名，按系统给的顺序。
+    /// 系統全部字族名，按系統給的順序。
     pub families: Vec<String>,
 
-    /// 过滤后显示的行：第 0 行永远是「系统默认」。
+    /// 過濾後顯示的行：第 0 行永遠是「系統預設」。
     pub visible: RefCell<Vec<String>>,
 
-    /// 配置里当前的字族名（空为系统字体）。
+    /// 配置裡當前的字族名（空為系統字型）。
     pub current: RefCell<String>,
 
-    /// 页面上的按钮，显示当前字体名。
+    /// 頁面上的按鈕，顯示當前字型名。
     pub button: RefCell<Option<Retained<NSPopUpButton>>>,
 
-    /// 下拉框里的搜索框。
+    /// 下拉框裡的搜尋框。
     pub search: RefCell<Option<Retained<NSSearchField>>>,
 
     /// 列表。
     pub table: RefCell<Option<Retained<NSTableView>>>,
 
-    /// 装着列表的下拉框。
+    /// 裝著列表的下拉框。
     pub popover: RefCell<Option<Retained<NSPopover>>>,
 
-    /// 程序在同步选中行时为 true，此时选中变化不当作用户操作。
+    /// 程式在同步選中行時為 true，此時選中變化不當作使用者操作。
     pub syncing: Cell<bool>,
 }

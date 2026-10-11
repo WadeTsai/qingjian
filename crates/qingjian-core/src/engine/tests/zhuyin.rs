@@ -14,7 +14,7 @@ fn zhuyin_decodes_keys_before_lookup_and_shows_zhuyin_symbols() {
     assert_eq!(query.marked_cursor(), 3);
     assert!(query.decoded_keys);
 
-    // 驗證候選詞裡面包含「不」（拼音為 bu）
+    // 驗證候選詞裡麵包含「不」（拼音為 bu）
     let has_bu = query.candidates.items.iter().any(|c| c.text == "不");
     assert!(has_bu, "Candidate '不' should be present");
 

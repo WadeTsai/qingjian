@@ -8,52 +8,52 @@ use crate::error::LmError;
 use crate::successor::Successor;
 use crate::word_entry::WordEntry;
 
-/// 句首标记，语料统计时每个句子的第一个词都跟在它后面。
+/// 句首標記，語料統計時每個句子的第一個詞都跟在它後面。
 pub const SENTENCE_START: &str = "<s>";
 
-/// 二元概率里 bigram 部分的权重，其余给一元概率。
+/// 二元機率裡 bigram 部分的權重，其餘給一元機率。
 const LAMBDA: f64 = 0.8;
 
-/// `.qj` 里的分节：词文本 arena、词表、词的哈希索引、CSR 的段偏移与后继。
+/// `.qj` 裡的分節：詞文本 arena、詞表、詞的雜湊索引、CSR 的段偏移與後繼。
 const WORDS_TAG: [u8; 4] = *b"WORD";
 const ENTRIES_TAG: [u8; 4] = *b"ENTR";
 const HASH_TAG: [u8; 4] = *b"HASH";
 const OFFSETS_TAG: [u8; 4] = *b"OFFS";
 const SUCCESSORS_TAG: [u8; 4] = *b"SUCC";
 
-/// 词级 bigram 模型。内存布局就是文件布局：
-/// 词表是 arena + 定长条目 + 开放寻址哈希索引（`qingjian_format::hash`），
-/// bigram 按前词分组成 CSR（前词 `v` 的后继在 `successors[offsets[v]..offsets[v+1]]`，段内按后词编号升序）。
-/// 整句转换每一步都要查它：扁平数组二分一次要跳二十来个缓存行，分组之后一段通常就几条，落在一两个缓存行里。
+/// 詞級 bigram 模型。記憶體佈局就是檔案佈局：
+/// 詞表是 arena + 定長條目 + 開放定址雜湊索引（`qingjian_format::hash`），
+/// bigram 按前詞分組成 CSR（前詞 `v` 的後繼在 `successors[offsets[v]..offsets[v+1]]`，段內按後詞編號升序）。
+/// 整句轉換每一步都要查它：扁平陣列二分一次要跳二十來個快取行，分組之後一段通常就幾條，落在一兩個快取行裡。
 #[derive(Debug, Default)]
 pub struct BigramModel {
-    /// 所有词首尾相接。
+    /// 所有詞首尾相接。
     words: Text,
 
-    /// 词表，下标即编号。
+    /// 詞表，下標即編號。
     entries: Table<WordEntry>,
 
-    /// 词 → 编号的哈希索引。
+    /// 詞 → 編號的雜湊索引。
     index: Table<u32>,
 
-    /// CSR 段偏移，长度 = 词数 + 1。
+    /// CSR 段偏移，長度 = 詞數 + 1。
     offsets: Table<u32>,
 
-    /// CSR 后继。
+    /// CSR 後繼。
     successors: Table<Successor>,
 
-    /// 一元计数总和（不含句首标记）。
+    /// 一元計數總和（不含句首標記）。
     total: f64,
 
-    /// 句首标记的编号。
+    /// 句首標記的編號。
     start: Option<u32>,
 
-    /// `.qj` 里的来历。
+    /// `.qj` 裡的來歷。
     metadata: Option<Metadata>,
 }
 
 impl BigramModel {
-    /// 从两个 TSV 解析。
+    /// 從兩個 TSV 解析。
     pub fn from_paths(unigram: &Path, bigram: &Path) -> Result<Self, LmError> {
         Self::parse(
             &std::fs::read_to_string(unigram)?,
@@ -61,7 +61,7 @@ impl BigramModel {
         )
     }
 
-    /// 打开 `.qj` 语言模型。
+    /// 開啟 `.qj` 語言模型。
     pub fn from_path(path: &Path) -> Result<Self, LmError> {
         let container = Container::open(path, Kind::LanguageModel)?;
         let words = container.text(WORDS_TAG)?;
@@ -113,7 +113,7 @@ impl BigramModel {
         Ok(model)
     }
 
-    /// 解析 TSV：一元表按出现顺序编号，二元表排序后分组成 CSR，词表建哈希索引。
+    /// 解析 TSV：一元表按出現順序編號，二元表排序後分組成 CSR，詞表建雜湊索引。
     pub fn parse(unigram: &str, bigram: &str) -> Result<Self, LmError> {
         let mut words = String::new();
         let mut entries: Vec<WordEntry> = Vec::new();
@@ -138,7 +138,7 @@ impl BigramModel {
                 line: index + 1,
                 reason: "word too long",
             })?;
-            // 重复的词只认第一次
+            // 重複的詞只認第一次
             if !seen.insert(word) {
                 continue;
             }
@@ -174,7 +174,7 @@ impl BigramModel {
                 line: line_number + 1,
                 reason: "count is not a number",
             })?;
-            // 一元表里没有的词直接跳过：没有 c(v) 也算不出条件概率
+            // 一元表裡沒有的詞直接跳過：沒有 c(v) 也算不出條件機率
             let (Some(first), Some(second)) = (lookup(first), lookup(second)) else {
                 continue;
             };
@@ -202,7 +202,7 @@ impl BigramModel {
         Ok(model)
     }
 
-    /// 写成 `.qj`。`metadata.entries` 会填成 bigram 对数。
+    /// 寫成 `.qj`。`metadata.entries` 會填成 bigram 對數。
     pub fn write_qj(&self, path: &Path, metadata: &Metadata) -> Result<(), LmError> {
         let metadata = Metadata {
             entries: self.successors.len() as u64,
@@ -218,7 +218,7 @@ impl BigramModel {
         Ok(())
     }
 
-    /// 四段数据就位后算派生量：总计数与句首编号。
+    /// 四段資料就位後算派生量：總計數與句首編號。
     fn finish(&mut self) {
         self.start = self.word_id(SENTENCE_START);
         self.total = self
@@ -239,7 +239,7 @@ impl BigramModel {
         self.successors.len()
     }
 
-    /// `.qj` 里的来历；TSV 解析的返回 `None`。
+    /// `.qj` 裡的來歷；TSV 解析的返回 `None`。
     pub fn metadata(&self) -> Option<&Metadata> {
         self.metadata.as_ref()
     }
@@ -261,7 +261,7 @@ impl BigramModel {
     }
 }
 
-/// 条目对应的词。
+/// 條目對應的詞。
 fn word_text<'a>(words: &'a str, entry: &WordEntry) -> &'a str {
     let start = entry.text_start as usize;
     &words[start..start + usize::from(entry.text_len)]
@@ -271,7 +271,7 @@ fn build_index(words: &str, entries: &[WordEntry]) -> Vec<u32> {
     hash::build(entries.len(), |id| word_text(words, &entries[id as usize]))
 }
 
-/// 把按 (前词, 后词) 排好的三元组分成每个前词一段。
+/// 把按 (前詞, 後詞) 排好的三元組分成每個前詞一段。
 fn group(pairs: &[(u32, u32, u32)], word_count: usize) -> (Vec<u32>, Vec<Successor>) {
     let mut offsets = vec![0u32; word_count + 1];
     let mut successors = Vec::with_capacity(pairs.len());
@@ -299,7 +299,7 @@ impl LanguageModel for BigramModel {
                 LAMBDA * pair / f64::from(self.entries[prev_id as usize].count)
                     + (1.0 - LAMBDA) * unigram
             }
-            // 前词不在模型里：只剩一元概率
+            // 前詞不在模型裡：只剩一元機率
             _ => unigram,
         };
         Some(probability.max(f64::MIN_POSITIVE).ln())
@@ -321,9 +321,9 @@ mod tests {
         let xiang = model.log_prob(Some("我"), "想").unwrap();
         let qu = model.log_prob(Some("我"), "去").unwrap();
         assert!(xiang > qu);
-        // 句首概率
+        // 句首機率
         assert!(model.log_prob(None, "我").unwrap() > model.log_prob(None, "去").unwrap());
-        // 前词未知只用一元
+        // 前詞未知只用一元
         let alone = model.log_prob(Some("火星"), "想").unwrap();
         assert!((alone - (30.0_f64 / 101.0).ln()).abs() < 1e-9);
         assert_eq!(model.log_prob(Some("我"), "火星"), None);

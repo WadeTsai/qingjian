@@ -1,4 +1,4 @@
-//! 设置里的字号（点）：0 或不是正数为「用主题的」，不限上限。包一层是为了让配置能整体比较（`f32` 不是 `Eq`）。
+//! 設定裡的字號（點）：0 或不是正數為「用主題的」，不限上限。包一層是為了讓配置能整體比較（`f32` 不是 `Eq`）。
 
 use serde::{Deserialize, Serialize};
 
@@ -7,18 +7,18 @@ use serde::{Deserialize, Serialize};
 pub struct FontSize(pub f32);
 
 impl FontSize {
-    /// 填了的字号；没填（0、负数、NaN）为 `None`。
+    /// 填了的字號；沒填（0、負數、NaN）為 `None`。
     pub fn get(self) -> Option<f32> {
         (self.0.is_finite() && self.0 > 0.0).then_some(self.0)
     }
 
-    /// 设置界面里填的数；清空、负数、NaN 都是「用主题的」。
+    /// 設定介面裡填的數；清空、負數、NaN 都是「用主題的」。
     pub fn from_input(size: Option<f64>) -> Self {
         Self(size.map_or(0.0, |size| size as f32))
     }
 
-    /// 字号框改成 `input` 后该写进配置的值；不用写时为 `None`。
-    /// 框里没设过时显示的是主题的字号 `theme`，原样交回来（失焦、初次显示也会发值）不算改，免得把主题字号钉进配置。
+    /// 字號框改成 `input` 後該寫進配置的值；不用寫時為 `None`。
+    /// 框裡沒設過時顯示的是主題的字號 `theme`，原樣交回來（失焦、初次顯示也會發值）不算改，免得把主題字號釘進配置。
     pub fn edited(self, input: Option<f64>, theme: Option<f32>) -> Option<Self> {
         let next = Self::from_input(input);
         let untouched = self.get().is_none() && next.get().is_some() && next.get() == theme;
@@ -27,7 +27,7 @@ impl FontSize {
 }
 
 impl From<FontSize> for toml_edit::Value {
-    /// 整数写成整数（`16` 而不是 `16.0`），配置文件里好读；没填写 0。
+    /// 整數寫成整數（`16` 而不是 `16.0`），配置檔案裡好讀；沒填寫 0。
     fn from(size: FontSize) -> Self {
         let size = size.get().map_or(0.0, f64::from);
         if size.fract() == 0.0 && size < i64::MAX as f64 {

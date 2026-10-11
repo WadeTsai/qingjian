@@ -1,4 +1,4 @@
-//! 可观测应用上屏与可重入 preedit 回调的真实 Fcitx 上下文。
+//! 可觀測應用上屏與可重入 preedit 回撥的真實 Fcitx 上下文。
 #pragma once
 #include <fcitx/inputcontext.h>
 #include <fcitx/inputpanel.h>

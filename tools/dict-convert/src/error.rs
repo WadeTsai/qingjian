@@ -20,30 +20,30 @@ pub enum ConvertError {
     #[error(transparent)]
     Neural(#[from] qingjian_neural::NeuralError),
 
-    /// `pack` 少了必填的元数据（只有 `codes` 有缺省值）。
+    /// `pack` 少了必填的後設資料（只有 `codes` 有預設值）。
     #[error("pack {kind} needs --name")]
     MissingName {
-        /// `pack` 的种类名。
+        /// `pack` 的種類名。
         kind: &'static str,
     },
 
-    /// 抽样对照出现白名单之外的不符。
+    /// 抽樣對照出現白名單之外的不符。
     #[error("stroke verification failed: {unmatched} character(s) differ outside the whitelist")]
     Verify {
-        /// 不符的字数。
+        /// 不符的字數。
         unmatched: usize,
     },
 
-    /// 文件不是预期格式。
+    /// 檔案不是預期格式。
     #[error("{path}:{line}: {reason}")]
     Format {
-        /// 出错的文件。
+        /// 出錯的檔案。
         path: PathBuf,
 
-        /// 从 1 开始的行号。
+        /// 從 1 開始的行號。
         line: usize,
 
-        /// 具体原因。
+        /// 具體原因。
         reason: String,
     },
 }

@@ -1,16 +1,16 @@
 use super::Unit;
 use crate::parser::{Segmentation, Syllable};
 
-/// 一段双拼键解码的结果：能解的单元 + 解不动的尾巴。
+/// 一段雙拼鍵解碼的結果：能解的單元 + 解不動的尾巴。
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Decoded {
-    /// 解出来的单元，按敲键顺序。
+    /// 解出來的單元，按敲鍵順序。
     units: Vec<Unit>,
 
-    /// 从第一个配不出音节的位置起的原始键，原样显示、不参与候选。
+    /// 從第一個配不出音節的位置起的原始鍵，原樣顯示、不參與候選。
     tail: String,
 
-    /// 单元的全拼用 `'` 连成的串（分隔符单元不占位置），直接喂给全拼切分。
+    /// 單元的全拼用 `'` 連成的串（分隔符單元不佔位置），直接餵給全拼切分。
     pinyin: String,
 }
 
@@ -34,22 +34,22 @@ impl Decoded {
         &self.units
     }
 
-    /// 解出来的全拼，音节之间是 `'`。
+    /// 解出來的全拼，音節之間是 `'`。
     pub fn pinyin(&self) -> &str {
         &self.pinyin
     }
 
-    /// 解不动的尾巴（原始键）。
+    /// 解不動的尾巴（原始鍵）。
     pub fn tail(&self) -> &str {
         &self.tail
     }
 
-    /// 全部键都解成了完整音节：没有尾巴、末尾没有落单的键。
+    /// 全部鍵都解成了完整音節：沒有尾巴、末尾沒有落單的鍵。
     pub fn is_complete(&self) -> bool {
         self.tail.is_empty() && self.units.iter().all(|u| u.complete || u.is_separator())
     }
 
-    /// 末尾是不是一个落单的声母键：这时敲 `;`（微软 / 搜狗的 ing）应该进缓冲区而不是当标点。
+    /// 末尾是不是一個落單的聲母鍵：這時敲 `;`（微軟 / 搜狗的 ing）應該進緩衝區而不是當標點。
     pub fn pending_initial(&self) -> bool {
         self.tail.is_empty()
             && self
@@ -58,8 +58,8 @@ impl Decoded {
                 .is_some_and(|u| !u.complete && !u.is_separator())
     }
 
-    /// 解出来的唯一切分：双拼两键一音节没有歧义，不必再走全拼切分（那会把 `zhong` 再拆出 `z… hong` 一类简拼切法）。
-    /// 落单的键是残缺音节。空的（一个单元都没解出）返回 `None`。
+    /// 解出來的唯一切分：雙拼兩鍵一音節沒有歧義，不必再走全拼切分（那會把 `zhong` 再拆出 `z… hong` 一類簡拼切法）。
+    /// 落單的鍵是殘缺音節。空的（一個單元都沒解出）返回 `None`。
     pub fn segmentation(&self) -> Option<Segmentation> {
         let syllables: Vec<Syllable> = self
             .units
@@ -76,7 +76,7 @@ impl Decoded {
         (!syllables.is_empty()).then_some(Segmentation { syllables })
     }
 
-    /// 显示形式：全拼接上尾巴（`ni'bl`）。
+    /// 顯示形式：全拼接上尾巴（`ni'bl`）。
     pub fn marked(&self) -> String {
         match (self.pinyin.is_empty(), self.tail.is_empty()) {
             (_, true) => self.pinyin.clone(),
@@ -85,7 +85,7 @@ impl Decoded {
         }
     }
 
-    /// [`Self::pinyin`] 开头 `pinyin_len` 个字节对应多少个键：整单元被盖住才算，紧跟其后的 `'` 一并算上。
+    /// [`Self::pinyin`] 開頭 `pinyin_len` 個位元組對應多少個鍵：整單元被蓋住才算，緊跟其後的 `'` 一併算上。
     pub fn keys_for(&self, pinyin_len: usize) -> usize {
         let mut keys = 0;
         let mut position = 0;
@@ -106,7 +106,7 @@ impl Decoded {
             position = end;
             first = false;
         }
-        // 消耗到末尾时，后面紧跟的 `'` 也一起吃掉
+        // 消耗到末尾時，後面緊跟的 `'` 也一起吃掉
         if keys > 0 {
             keys += pending_separators;
         }
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(decoded.keys_for(3), 2);
         assert_eq!(decoded.keys_for(6), 4);
         assert_eq!(decoded.keys_for(10), 6);
-        // 只盖住半个音节不算
+        // 只蓋住半個音節不算
         assert_eq!(decoded.keys_for(5), 2);
     }
 

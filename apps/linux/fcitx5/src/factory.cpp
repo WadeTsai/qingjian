@@ -1,4 +1,4 @@
-//! 青简 addon 工厂。
+//! 青簡 addon 工廠。
 #include "qingjian.h"
 namespace fcitx {
 class QingjianFactory final : public AddonFactory {

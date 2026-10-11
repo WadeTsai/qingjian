@@ -1,4 +1,4 @@
-//! 一个在播的过渡：哪个节点、从哪到哪、什么时候开始、多久、什么曲线。
+//! 一個在播的過渡：哪個節點、從哪到哪、什麼時候開始、多久、什麼曲線。
 
 use std::time::{Duration, Instant};
 
@@ -8,10 +8,10 @@ use super::{Easing, Placement};
 
 #[derive(Debug, Clone)]
 pub(crate) struct Transition {
-    /// 场景树里的节点（这一帧的）。
+    /// 場景樹裡的節點（這一幀的）。
     pub(crate) node: NodeId,
 
-    /// 配对用的 `id`（重复时带序号）。
+    /// 配對用的 `id`（重複時帶序號）。
     pub(crate) key: String,
 
     pub(crate) from: Placement,
@@ -26,13 +26,13 @@ pub(crate) struct Transition {
 }
 
 impl Transition {
-    /// `now` 时刻的位置。
+    /// `now` 時刻的位置。
     pub(crate) fn at(&self, now: Instant) -> Placement {
         self.from
             .lerp(self.to, self.easing.apply(self.progress(now)))
     }
 
-    /// 时间进度 0–1。
+    /// 時間進度 0–1。
     fn progress(&self, now: Instant) -> f32 {
         if self.duration.is_zero() {
             return 1.0;

@@ -1,7 +1,7 @@
-//! 场景图：一棵 Taffy 布局树，每个节点带一个 [`Visual`]。建树 → 布局（文字按实际整形量宽）→ 按树序画。
+//! 場景圖：一棵 Taffy 佈局樹，每個節點帶一個 [`Visual`]。建樹 → 佈局（文字按實際整形量寬）→ 按樹序畫。
 //!
-//! 节点的位置全由布局给出：流内节点按 flex / grid 排，高亮条、光标这类叠在别的节点上的用绝对定位。
-//! 单位是像素（主题的点数在建树时已乘倍数），布局不取整，保证与直接算坐标的结果一致。
+//! 節點的位置全由佈局給出：流內節點按 flex / grid 排，高亮條、游標這類疊在別的節點上的用絕對定位。
+//! 單位是畫素（主題的點數在建樹時已乘倍數），佈局不取整，保證與直接算座標的結果一致。
 
 mod animated;
 mod baseline;
@@ -43,29 +43,29 @@ pub(crate) use split::SplitMark;
 pub(crate) use visual::Visual;
 
 pub(crate) struct Scene {
-    /// 布局树，节点上下文是它画什么。
+    /// 佈局樹，節點上下文是它畫什麼。
     tree: TaffyTree<SceneNode>,
 
-    /// 算过的效果遮罩：动画帧重画时没动的节点直接复用（离屏图层里画的子树也用同一份，键里有画布大小）。
+    /// 算過的效果遮罩：動畫幀重畫時沒動的節點直接複用（離屏圖層裡畫的子樹也用同一份，鍵裡有畫布大小）。
     effect_cache: RefCell<HashMap<CacheKey, Option<EffectMask>>>,
 
-    /// 画好的图片填充框（九宫格窗口背景这类，每像素都要采样）：动画帧里没动就贴回去。
+    /// 畫好的圖片填充框（九宮格視窗背景這類，每畫素都要取樣）：動畫幀裡沒動就貼回去。
     visual_cache: RefCell<HashMap<CacheKey, CachedVisual>>,
 
-    /// 分段模式：只画画序编号落在这个范围里的节点（见 `split.rs`）；`None` 为正常画。
+    /// 分段模式：只畫畫序編號落在這個範圍裡的節點（見 `split.rs`）；`None` 為正常畫。
     split: RefCell<Option<std::ops::Range<usize>>>,
 
-    /// 分段模式下下一个节点的编号。
+    /// 分段模式下下一個節點的編號。
     order: std::cell::Cell<usize>,
 
-    /// 分段模式下跳过的动画节点。
+    /// 分段模式下跳過的動畫節點。
     marks: RefCell<Vec<SplitMark>>,
 
-    /// 表格的各行（不含横跨整行的格子），布局时按基线对齐。
+    /// 表格的各行（不含橫跨整行的格子），佈局時按基線對齊。
     table_rows: Vec<Vec<NodeId>>,
 }
 
-/// 缓存的一块画面：左上角在画布里的整数位置与位图。
+/// 快取的一塊畫面：左上角在畫布裡的整數位置與點陣圖。
 struct CachedVisual {
     left: i32,
 
@@ -89,7 +89,7 @@ impl Scene {
         }
     }
 
-    /// 加一个节点，`children` 按画的先后排。
+    /// 加一個節點，`children` 按畫的先後排。
     pub(crate) fn node(
         &mut self,
         style: Style,
@@ -112,21 +112,21 @@ impl Scene {
         Ok(node)
     }
 
-    /// 节点连同子节点的不透明度。
+    /// 節點連同子節點的不透明度。
     pub(crate) fn set_opacity(&mut self, node: NodeId, opacity: f32) {
         if let Some(context) = self.tree.get_node_context_mut(node) {
             context.opacity = opacity.clamp(0.0, 1.0);
         }
     }
 
-    /// 节点的投影、内阴影。
+    /// 節點的投影、內陰影。
     pub(crate) fn set_effects(&mut self, node: NodeId, effects: Vec<Effect>) {
         if let Some(context) = self.tree.get_node_context_mut(node) {
             context.effects = effects;
         }
     }
 
-    /// 把表格里的格子放到指定的行、列；`stretch` 时撑满所占的格子（横跨整行的高亮条）。
+    /// 把表格裡的格子放到指定的行、列；`stretch` 時撐滿所佔的格子（橫跨整行的高亮條）。
     pub(crate) fn place(
         &mut self,
         node: NodeId,
@@ -145,13 +145,13 @@ impl Scene {
         Ok(())
     }
 
-    /// 以 `root` 为根按内容撑开算布局，返回根节点的宽高。表格行里的格子基线没对齐时补上边距再算一遍。
+    /// 以 `root` 為根按內容撐開算佈局，返回根節點的寬高。表格行裡的格子基線沒對齊時補上邊距再算一遍。
     pub(crate) fn layout(
         &mut self,
         root: NodeId,
         text: &mut TextPainter,
     ) -> Result<(f32, f32), RenderError> {
-        // 布局会对同一个叶子按不同约束量好几次；单行文字的尺寸与约束无关，量一次记下来
+        // 佈局會對同一個葉子按不同約束量好幾次；單行文字的尺寸與約束無關，量一次記下來
         let mut measured: HashMap<NodeId, TextSize> = HashMap::new();
         self.compute(root, text, &mut measured)?;
         if self.align_baselines(&measured)? {

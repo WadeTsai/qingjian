@@ -1,6 +1,6 @@
 #!/bin/sh
-# 卸载青简：删掉输入法本体（系统级 /Library 与用户级 ~/Library 两处都看），加 --purge 连学习数据、配置、日志一起删。
-# 这个脚本会打进 .app 的 Resources 里，装了 pkg 的用户直接运行它。
+# 解除安裝青簡：刪掉輸入法本體（系統級 /Library 與使用者級 ~/Library 兩處都看），加 --purge 連學習資料、配置、日誌一起刪。
+# 這個指令碼會打進 .app 的 Resources 裡，裝了 pkg 的使用者直接執行它。
 set -u
 purge=0
 [ "${1:-}" = "--purge" ] && purge=1

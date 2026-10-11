@@ -5,31 +5,31 @@ use windows::Win32::UI::TextServices::{ITfComposition, ITfContext};
 
 use crate::com::service::SharedClient;
 
-/// `TextService`、编辑会话、组句 sink、轮询定时器之间共享的组句状态（STA 单线程，`Rc` 传递）。
+/// `TextService`、編輯會話、組句 sink、輪詢定時器之間共享的組句狀態（STA 單執行緒，`Rc` 傳遞）。
 pub(crate) struct Shared {
-    /// 当前活动的组句，跨按键存活。
+    /// 當前活動的組句，跨按鍵存活。
     composition: RefCell<Option<ITfComposition>>,
 
-    /// Server 上次回的帧非空；决定 `OnTestKeyDown` 要不要吃功能键。
+    /// Server 上次回的幀非空；決定 `OnTestKeyDown` 要不要吃功能鍵。
     composing: Cell<bool>,
 
-    /// 这一段的输入框状态（私密与否、光标前文）已经报给 Server 了。
-    /// 行内模式下靠「组句刚起」判断，`preedit = window` 模式应用里没有组句，得另记一个标记。
+    /// 這一段的輸入框狀態（私密與否、游標前文）已經報給 Server 了。
+    /// 行內模式下靠「組句剛起」判斷，`preedit = window` 模式應用裡沒有組句，得另記一個標記。
     context_reported: Cell<bool>,
 
-    /// 「翻译选中文字」评审进行中：所有键交给 Server 定接受 / 取消，轮询定时器照常拉云端译文。
+    /// 「翻譯選中文字」評審進行中：所有鍵交給 Server 定接受 / 取消，輪詢定時器照常拉雲端譯文。
     translating: Cell<bool>,
 
-    /// 最近一次收键的文档上下文；失焦 / 停用回调不带上下文，落定拼音要用它。
+    /// 最近一次收鍵的文件上下文；失焦 / 停用回撥不帶上下文，落定拼音要用它。
     last_context: RefCell<Option<ITfContext>>,
 
-    /// 组句被应用强行终止过：拼音已成普通文本，但 Server 的缓冲还在，下次说话前先让它清空。
+    /// 組句被應用強行終止過：拼音已成普通文本，但 Server 的緩衝還在，下次說話前先讓它清空。
     server_stale: Cell<bool>,
 
-    /// 本线程当前有键盘焦点（`OnSetFocus`）；轮询定时器只在前台时问状态条的切模式请求。
+    /// 本執行緒當前有鍵盤焦點（`OnSetFocus`）；輪詢定時器只在前臺時問狀態條的切模式請求。
     foreground: Cell<bool>,
 
-    /// 与 `TextService` 共用的引擎客户端；DLL 侧结束组句时要通知 Server 收候选窗口（它无从知晓）。
+    /// 與 `TextService` 共用的引擎客戶端；DLL 側結束組句時要通知 Server 收候選視窗（它無從知曉）。
     client: SharedClient,
 }
 
@@ -73,7 +73,7 @@ impl Shared {
 
     pub(crate) fn set_composing(&self, value: bool) {
         self.composing.set(value);
-        // 组句结束：下一段重新报输入框状态。
+        // 組句結束：下一段重新報輸入框狀態。
         if !value {
             self.context_reported.set(false);
         }
@@ -95,7 +95,7 @@ impl Shared {
         self.translating.set(value);
     }
 
-    /// 通知 Server 收起候选窗口。引擎正被别处借着或没连上时静默跳过。
+    /// 通知 Server 收起候選視窗。引擎正被別處藉著或沒連上時靜默跳過。
     pub(crate) fn hide_candidates(&self) {
         if let Ok(mut guard) = self.client.try_borrow_mut()
             && let Some(client) = guard.as_mut()
@@ -108,7 +108,7 @@ impl Shared {
         self.composition.borrow().is_some()
     }
 
-    /// clone 出来再用，别把 `borrow()` 挂在 match 上（分支里再 `borrow_mut` 会 panic）。
+    /// clone 出來再用，別把 `borrow()` 掛在 match 上（分支裡再 `borrow_mut` 會 panic）。
     pub(super) fn composition(&self) -> Option<ITfComposition> {
         self.composition.borrow().clone()
     }
@@ -121,21 +121,21 @@ impl Shared {
         self.composition.borrow_mut().take()
     }
 
-    /// 组句结束（应用终止组句 / 断线 / 失焦上屏）：不再当作在组句，并让 Server 收候选窗口。
+    /// 組句結束（應用終止組句 / 斷線 / 失焦上屏）：不再當作在組句，並讓 Server 收候選視窗。
     pub(crate) fn end_composing(&self) {
         self.composing.set(false);
         self.translating.set(false);
         self.hide_candidates();
     }
 
-    /// 清掉一切本地组句状态，不碰文档。
+    /// 清掉一切本地組句狀態，不碰文件。
     pub(crate) fn reset(&self) {
         self.set_composition(None);
         self.set_last_context(None);
         self.end_composing();
     }
 
-    /// 组句被应用强行终止：本地清掉，并记下 Server 的缓冲还没清。
+    /// 組句被應用強行終止：本地清掉，並記下 Server 的緩衝還沒清。
     pub(super) fn terminated(&self) {
         self.reset();
         self.server_stale.set(true);

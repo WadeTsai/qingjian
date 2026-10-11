@@ -1,6 +1,6 @@
-//! 实例化时的数据上下文：整帧，加上 `repeat` 展开中的那一项（候选，或状态条的一格）。显示条件（`when`）与绑定（`bind`）都在这里求值。
+//! 例項化時的資料上下文：整幀，加上 `repeat` 展開中的那一項（候選，或狀態條的一格）。顯示條件（`when`）與繫結（`bind`）都在這裡求值。
 //!
-//! 名字先在候选项里找，再在整帧里找；不认识的条件为假、不认识的绑定为空（节点不画）。
+//! 名字先在候選項裡找，再在整幀裡找；不認識的條件為假、不認識的繫結為空（節點不畫）。
 
 use super::cell::CellContext;
 use super::row::RowContext;
@@ -11,13 +11,13 @@ use crate::renderer::StatusCell;
 pub(super) struct Context<'a> {
     pub(super) frame: &'a Frame,
 
-    /// 在 `repeat` 里时绑定的那一项。
+    /// 在 `repeat` 裡時繫結的那一項。
     pub(super) row: Option<RowContext<'a>>,
 
-    /// 状态条的格子（`repeat` 绑定 `cells`）；画候选窗口时为空。
+    /// 狀態條的格子（`repeat` 繫結 `cells`）；畫候選視窗時為空。
     pub(super) cells: &'a [StatusCell],
 
-    /// 在 `repeat` 里时绑定的那一格。
+    /// 在 `repeat` 裡時繫結的那一格。
     pub(super) cell: Option<CellContext<'a>>,
 }
 
@@ -31,7 +31,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// 状态条：整帧只用到输入状态，格子供 `repeat` 展开。
+    /// 狀態條：整幀只用到輸入狀態，格子供 `repeat` 展開。
     pub(super) fn status(frame: &'a Frame, cells: &'a [StatusCell]) -> Self {
         Self {
             cells,
@@ -39,7 +39,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// 展开格子时每一格的上下文。
+    /// 展開格子時每一格的上下文。
     pub(super) fn with_cell(self, cell: &'a StatusCell, index: usize, count: usize) -> Self {
         Self {
             cell: Some(CellContext { cell, index, count }),
@@ -47,7 +47,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// 展开列表时每一项的上下文。
+    /// 展開列表時每一項的上下文。
     pub(super) fn with_row(self, row: &'a Row, index: usize, count: usize) -> Self {
         Self {
             row: Some(RowContext { row, index, count }),
@@ -115,7 +115,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// 文字绑定。
+    /// 文字繫結。
     pub(super) fn text(&self, name: &str) -> Option<&'a str> {
         if let Some(CellContext {
             cell: StatusCell::Text { text, .. },
@@ -141,7 +141,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// 译文片段绑定。
+    /// 譯文片段繫結。
     pub(super) fn annotation(&self, name: &str) -> Option<&'a [(String, Tone)]> {
         match (name, self.row) {
             ("annotation", Some(RowContext { row, .. })) => Some(&row.annotation),
@@ -152,7 +152,7 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// 列表绑定。
+    /// 列表繫結。
     pub(super) fn list(&self, name: &str) -> Option<&'a [Row]> {
         (name == "candidates").then_some(self.frame.rows.as_slice())
     }

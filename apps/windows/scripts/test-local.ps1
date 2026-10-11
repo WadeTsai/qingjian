@@ -1,39 +1,39 @@
-﻿# 本地联调：拿刚编出来的 Server 与 TSF DLL，配一份装着真实数据的安装目录跑起来。
+﻿# 本地聯調：拿剛編出來的 Server 與 TSF DLL，配一份裝著真實資料的安裝目錄跑起來。
 #
-# 为什么不直接在仓库里跑：`bundled_root()` 按 exe 位置找数据，`target\debug\` 下会落到仓库根，
-# 而 `data\generated\`（词库 / LM / 释义表）是 gitignore 的、本机多半没有，于是退回 `assets\sample\`
-# 样例。形码候选照样出得来（码表是独立的），但**译文几乎全空**，会让人误以为释义那条设计没生效。
-# 拷一份安装目录出来跑，`bundled_root()` 就落在它上，数据是真的。
+# 為什麼不直接在倉庫裡跑：`bundled_root()` 按 exe 位置找資料，`target\debug\` 下會落到倉庫根，
+# 而 `data\generated\`（詞庫 / LM / 釋義表）是 gitignore 的、本機多半沒有，於是退回 `assets\sample\`
+# 樣例。形碼候選照樣出得來（碼錶是獨立的），但**譯文幾乎全空**，會讓人誤以為釋義那條設計沒生效。
+# 拷一份安裝目錄出來跑，`bundled_root()` 就落在它上，資料是真的。
 #
-# 为什么要换 DLL：`qingjian_core::Candidate` 是线上格式的一部分（见 `protocol/mod.rs`），
-# Core 那边加一个 `CandidateKind` 变体，老 DLL 就解不出整条帧、把按键原样放行——表现是
-# 「输入法突然只出英文」。所以两边必须同一份源码编出来的。
+# 為什麼要換 DLL：`qingjian_core::Candidate` 是線上格式的一部分（見 `protocol/mod.rs`），
+# Core 那邊加一個 `CandidateKind` 變體，老 DLL 就解不出整條幀、把按鍵原樣放行——表現是
+# 「輸入法突然只出英文」。所以兩邊必須同一份原始碼編出來的。
 #
 # 用法：
 #   pwsh -File apps\windows\scripts\test-local.ps1
 #   pwsh -File apps\windows\scripts\test-local.ps1 -SkipBuild -SkipRegister
 #
-# 管理员不是必须的：注册 DLL 那一步脚本会自己判断，不是管理员就把命令打出来让你自己跑。
+# 管理員不是必須的：註冊 DLL 那一步指令碼會自己判斷，不是管理員就把命令打出來讓你自己跑。
 
 [CmdletBinding()]
 param(
-    # 已安装的目录（真实数据从这里拷）。
+    # 已安裝的目錄（真實資料從這裡拷）。
     [string]$InstallDir = "$env:ProgramFiles\Qingjian",
 
-    # 联调用的工作目录。**不要用 %TEMP%**：它在这台机器上是 8.3 短名（`C:\Users\TONYWU~1\...`），
-    # PowerShell 走不通，`cd` 会报「An object at the specified path ... does not exist」。
+    # 聯呼叫的工作目錄。**不要用 %TEMP%**：它在這臺機器上是 8.3 短名（`C:\Users\TONYWU~1\...`），
+    # PowerShell 走不通，`cd` 會報「An object at the specified path ... does not exist」。
     [string]$WorkDir = "$env:USERPROFILE\qingjian-devtest",
 
-    # 跳过编译（已经编好了）。
+    # 跳過編譯（已經編好了）。
     [switch]$SkipBuild,
 
-    # 跳过注册 DLL（只想换 Server）。
+    # 跳過註冊 DLL（只想換 Server）。
     [switch]$SkipRegister
 )
 
 $ErrorActionPreference = 'Stop'
 
-# apps\windows\scripts -> apps\windows -> apps -> 仓库根
+# apps\windows\scripts -> apps\windows -> apps -> 倉庫根
 $repo = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $table = Join-Path $repo 'assets\wubi\wubi86.tsv'
 $server = Join-Path $repo 'target\debug\qingjian-server.exe'
@@ -41,8 +41,8 @@ $dll = Join-Path $repo 'target\debug\qingjian_tsf.dll'
 $config = Join-Path $env:APPDATA 'Qingjian\config.toml'
 $logs = Join-Path $env:APPDATA 'Qingjian\logs'
 
-# 文本服务的 CLSID，与 `apps/windows/tsf/src/com/mod.rs` 的 `CLSID_QINGJIAN` 同步。
-# 注册完查这里指向哪儿——比 regsvr32 的退出码可靠（见下）。
+# 文本服務的 CLSID，與 `apps/windows/tsf/src/com/mod.rs` 的 `CLSID_QINGJIAN` 同步。
+# 註冊完查這裡指向哪兒——比 regsvr32 的退出碼可靠（見下）。
 $TsfClsid = '{4FDCA82D-E923-49BF-9E75-BB906B93B8BB}'
 
 function Assert-Path($path, $what) {
@@ -63,9 +63,9 @@ else {
 }
 
 if (-not $SkipBuild) {
-    # 旧的那次注册可能还指着 `target\debug`，TSF 会按需把 DLL 载进各个宿主（记事本、终端、资源管理器…）。
-    # 被载着时编译写不进去，cargo 报的是「failed to remove file ... 拒绝访问」，看着像代码坏了。
-    # 先查出来点名，别让人去猜。
+    # 舊的那次註冊可能還指著 `target\debug`，TSF 會按需把 DLL 載進各個宿主（記事本、終端、資源管理器…）。
+    # 被載著時編譯寫不進去，cargo 報的是「failed to remove file ... 拒絕訪問」，看著像程式碼壞了。
+    # 先查出來點名，別讓人去猜。
     $holders = @(
         tasklist /m qingjian_tsf.dll /NH 2>$null |
             Select-String -SimpleMatch 'qingjian_tsf.dll'
@@ -81,8 +81,8 @@ if (-not $SkipBuild) {
     }
 
     Write-Host '== 编译 Server 与 TSF DLL' -ForegroundColor Cyan
-    # uiAccess manifest 缺省是开的，没签名的 exe 带它会直接起不来（Permission denied）；
-    # 与 ci.yml 的 windows job 同一个开关
+    # uiAccess manifest 預設是開的，沒簽名的 exe 帶它會直接起不來（Permission denied）；
+    # 與 ci.yml 的 windows job 同一個開關
     $env:QINGJIAN_UIACCESS = '0'
     Push-Location $repo
     try {
@@ -97,7 +97,7 @@ if (-not $SkipBuild) {
 }
 
 Write-Host '== 停掉在跑的 Server' -ForegroundColor Cyan
-# 管道名只有一个，旧的占着不放，新起来的连不上——那是静默的二选一，会让人以为新代码没生效
+# 管道名只有一個，舊的佔著不放，新起來的連不上——那是靜默的二選一，會讓人以為新程式碼沒生效
 $running = Get-Process -Name qingjian-server -ErrorAction SilentlyContinue
 if ($running) {
     $running | Stop-Process -Force
@@ -108,15 +108,15 @@ else {
 }
 
 Write-Host "== 拷一份安装目录到 $WorkDir" -ForegroundColor Cyan
-# 不动 Program Files：不需要管理员，也不会把「装好的那份」搞成半新半旧
+# 不動 Program Files：不需要管理員，也不會把「裝好的那份」搞成半新半舊
 robocopy $InstallDir $WorkDir /MIR /NFL /NDL /NJH /NJS | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy 失败（exit $LASTEXITCODE）" }
 
 Copy-Item -LiteralPath $server -Destination $WorkDir -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $WorkDir 'assets\wubi') | Out-Null
 Copy-Item -LiteralPath $table -Destination (Join-Path $WorkDir 'assets\wubi') -Force
-# DLL 也拷过来再注册：从 `target\debug` 注册的话，那个文件会被加载它的进程锁住，
-# 之后 `cargo build` 写不进去（链接报 LNK1104，看着像代码坏了）
+# DLL 也拷過來再註冊：從 `target\debug` 註冊的話，那個檔案會被載入它的程序鎖住，
+# 之後 `cargo build` 寫不進去（連結報 LNK1104，看著像程式碼壞了）
 $workDll = Join-Path $WorkDir 'qingjian_tsf.dll'
 Copy-Item -LiteralPath $dll -Destination $workDll -Force
 Write-Host '   新 Server、TSF DLL 与五笔码表已就位'
@@ -130,9 +130,9 @@ if (-not $SkipRegister) {
     if ($elevated) {
         & regsvr32.exe /s $workDll
         $exit = $LASTEXITCODE
-        # regsvr32 的退出码不可信（实测注册成功仍返回 3），所以读注册表看结果。
-        # 读 HKLM 那一份：提权时 regsvr32 写的就是它。别读 HKCR——那是 HKLM + HKCU 的合并视图，
-        # 实测给过假警报，把一次成功的注册报成失败、白停一轮。
+        # regsvr32 的退出碼不可信（實測註冊成功仍返回 3），所以讀登錄檔看結果。
+        # 讀 HKLM 那一份：提權時 regsvr32 寫的就是它。別讀 HKCR——那是 HKLM + HKCU 的合併檢視，
+        # 實測給過假警報，把一次成功的註冊報成失敗、白停一輪。
         $registered = (
             Get-ItemProperty `
                 -LiteralPath "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\$TsfClsid\InprocServer32" `
@@ -142,7 +142,7 @@ if (-not $SkipRegister) {
             Write-Host "   已注册新 DLL（regsvr32 退出码 $exit，不代表失败）"
         }
         else {
-            # 只警告不中断：这个判据本身出过假警报，中断的代价是白跑一整轮
+            # 只警告不中斷：這個判據本身出過假警報，中斷的代價是白跑一整輪
             Write-Host "   ！注册可能没生效：InprocServer32 = «$registered»，期望 «$workDll»（regsvr32 退出码 $exit）" -ForegroundColor Yellow
             Write-Host '     先继续；输入法不出候选时再手工 regsvr32 一次。' -ForegroundColor Yellow
         }

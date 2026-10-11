@@ -1,19 +1,19 @@
-//! 输入状态机：拼音缓冲区与光标。
+//! 輸入狀態機：拼音緩衝區與游標。
 //!
-//! 只维护「用户已经敲了什么、光标在哪」，不理解拼音，也不知道候选。
-//! 缓冲区只含 ASCII 小写字母和 `'`（表达式模式下还有数字与运算符，见 `shortcut`；微软 / 搜狗双拼下还有 `;`），所以字节下标即字符下标。
-//! 中文模式下 Shift+字母按**小写**进缓冲区参与匹配（`Cpan` 与 `cpan` 一样出 C盘），
-//! 敲的是大写记在 `shifted` 里，原样上屏时用 [`Composition::typed_text`] 还原。
+//! 只維護「使用者已經敲了什麼、游標在哪」，不理解拼音，也不知道候選。
+//! 緩衝區只含 ASCII 小寫字母和 `'`（表示式模式下還有數字與運算子，見 `shortcut`；微軟 / 搜狗雙拼下還有 `;`），所以位元組下標即字元下標。
+//! 中文模式下 Shift+字母按**小寫**進緩衝區參與匹配（`Cpan` 與 `cpan` 一樣出 C盤），
+//! 敲的是大寫記在 `shifted` 裡，原樣上屏時用 [`Composition::typed_text`] 還原。
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Composition {
-    /// 用户已敲入、尚未上屏的拼音，匹配用的小写形式。
+    /// 使用者已敲入、尚未上屏的拼音，匹配用的小寫形式。
     buffer: String,
 
-    /// 与 `buffer` 的字符一一对应：该位是按住 Shift 敲的大写字母。
+    /// 與 `buffer` 的字元一一對應：該位是按住 Shift 敲的大寫字母。
     shifted: Vec<bool>,
 
-    /// 光标位置（字节下标，`0..=buffer.len()`），插入和退格都相对它。
+    /// 游標位置（位元組下標，`0..=buffer.len()`），插入和退格都相對它。
     cursor: usize,
 }
 
@@ -30,8 +30,8 @@ impl Composition {
         self.cursor
     }
 
-    /// 参与候选生成的那段拼音：光标停在中间时只算光标前的（`ni|hao` → `ni`），
-    /// 光标在开头或末尾时算整段。搜狗的行为：往回挪光标就是要先把前半段上屏。
+    /// 參與候選生成的那段拼音：游標停在中間時只算游標前的（`ni|hao` → `ni`），
+    /// 游標在開頭或末尾時算整段。搜狗的行為：往回挪游標就是要先把前半段上屏。
     pub fn scope(&self) -> &str {
         if self.cursor == 0 || self.cursor >= self.buffer.len() {
             &self.buffer
@@ -40,17 +40,17 @@ impl Composition {
         }
     }
 
-    /// 作用域之后剩下的拼音（`ni|hao` → `hao`），只用于显示。
+    /// 作用域之後剩下的拼音（`ni|hao` → `hao`），只用於顯示。
     pub fn rest(&self) -> &str {
         &self.buffer[self.scope().len()..]
     }
 
-    /// 字节位置 `byte`（须落在字符边界上）对应的字符下标。
+    /// 位元組位置 `byte`（須落在字元邊界上）對應的字元下標。
     fn char_index(&self, byte: usize) -> usize {
         self.buffer[..byte].chars().count()
     }
 
-    /// 在光标处插入一个字符，大小写原样保留。
+    /// 在游標處插入一個字元，大小寫原樣保留。
     pub fn push(&mut self, c: char) {
         let index = self.char_index(self.cursor);
         self.buffer.insert(self.cursor, c);
@@ -58,7 +58,7 @@ impl Composition {
         self.cursor += c.len_utf8();
     }
 
-    /// 中文模式下按住 Shift 敲的字母：按小写进缓冲区参与匹配，原样上屏时还原大写。
+    /// 中文模式下按住 Shift 敲的字母：按小寫進緩衝區參與匹配，原樣上屏時還原大寫。
     pub fn push_shifted(&mut self, c: char) {
         let index = self.char_index(self.cursor);
         self.push(c.to_ascii_lowercase());
@@ -67,22 +67,22 @@ impl Composition {
         }
     }
 
-    /// 缓冲区里有没有 Shift 敲的大写字母。
+    /// 緩衝區裡有沒有 Shift 敲的大寫字母。
     pub fn has_shifted(&self) -> bool {
         self.shifted.iter().any(|shifted| *shifted)
     }
 
-    /// 缓冲区原样（`shifted` 的位置还原大写），回车原样上屏用。
+    /// 緩衝區原樣（`shifted` 的位置還原大寫），回車原樣上屏用。
     pub fn typed_text(&self) -> String {
         self.typed(self.buffer.len())
     }
 
-    /// [`Self::scope`] 的原样形式。
+    /// [`Self::scope`] 的原樣形式。
     pub fn typed_scope(&self) -> String {
         self.typed(self.scope().len())
     }
 
-    /// 前 `len` 字节的原样形式。
+    /// 前 `len` 位元組的原樣形式。
     fn typed(&self, len: usize) -> String {
         if !self.has_shifted() {
             return self.buffer[..len].to_owned();
@@ -100,7 +100,7 @@ impl Composition {
             .collect()
     }
 
-    /// 删掉光标前一个字符。光标在开头时返回 `false`。
+    /// 刪掉游標前一個字元。游標在開頭時返回 `false`。
     pub fn backspace(&mut self) -> bool {
         if self.cursor == 0 {
             return false;
@@ -112,7 +112,7 @@ impl Composition {
         true
     }
 
-    /// 删掉光标后一个字符。光标在末尾时返回 `false`。
+    /// 刪掉游標後一個字元。游標在末尾時返回 `false`。
     pub fn delete_forward(&mut self) -> bool {
         if self.cursor >= self.buffer.len() {
             return false;
@@ -123,7 +123,7 @@ impl Composition {
         true
     }
 
-    /// 光标左移一格。已在开头时返回 `false`。
+    /// 游標左移一格。已在開頭時返回 `false`。
     pub fn move_left(&mut self) -> bool {
         if self.cursor == 0 {
             return false;
@@ -132,7 +132,7 @@ impl Composition {
         true
     }
 
-    /// 光标右移一格。已在末尾时返回 `false`。
+    /// 游標右移一格。已在末尾時返回 `false`。
     pub fn move_right(&mut self) -> bool {
         if self.cursor >= self.buffer.len() {
             return false;
@@ -141,7 +141,7 @@ impl Composition {
         true
     }
 
-    /// 删掉光标前 `len` 个字节（不够就删到开头）。光标在开头或 `len` 为零时返回 `false`。
+    /// 刪掉游標前 `len` 個位元組（不夠就刪到開頭）。游標在開頭或 `len` 為零時返回 `false`。
     pub fn delete_before_cursor(&mut self, len: usize) -> bool {
         let len = len.min(self.cursor);
         if len == 0 {
@@ -169,8 +169,8 @@ impl Composition {
         self.cursor = 0;
     }
 
-    /// 删掉开头 `len` 个字节（上屏消耗掉的拼音），光标随之前移；
-    /// 被吃掉的部分盖过了光标（`ni|hao` 上屏了 你）时光标落到末尾，接着组句就是往后打。
+    /// 刪掉開頭 `len` 個位元組（上屏消耗掉的拼音），游標隨之前移；
+    /// 被吃掉的部分蓋過了游標（`ni|hao` 上屏了 你）時游標落到末尾，接著組句就是往後打。
     pub fn drain_prefix(&mut self, len: usize) {
         let len = len.min(self.buffer.len());
         let removed = self.char_index(len);
@@ -183,7 +183,7 @@ impl Composition {
         };
     }
 
-    /// 吃掉整个作用域（云端词 / 英文词 / 整句对应的是整个作用域）。
+    /// 吃掉整個作用域（雲端詞 / 英文詞 / 整句對應的是整個作用域）。
     pub fn drain_scope(&mut self) {
         let len = self.scope().len();
         self.drain_prefix(len);
@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn push_and_backspace() {
         let mut composition = Composition::default();
-        // 原样保留大小写（英文直输段 `no-Way` 要用），中文模式下壳只会送小写
+        // 原樣保留大小寫（英文直輸段 `no-Way` 要用），中文模式下殼只會送小寫
         composition.push('K');
         composition.push('a');
         assert_eq!(composition.text(), "Ka");
@@ -223,13 +223,13 @@ mod tests {
         composition.push('p');
         composition.push('a');
         composition.push('n');
-        // 匹配用的小写形式
+        // 匹配用的小寫形式
         assert_eq!(composition.text(), "cpan");
         assert_eq!(composition.scope(), "cpan");
-        // 原样上屏用的大小写
+        // 原樣上屏用的大小寫
         assert_eq!(composition.typed_text(), "Cpan");
         assert_eq!(composition.typed_scope(), "Cpan");
-        // 退格把后面的小写删掉，大写那一位还留着
+        // 退格把後面的小寫刪掉，大寫那一位還留著
         for _ in 0..3 {
             composition.backspace();
         }

@@ -8,11 +8,11 @@ use qingjian_translate::GlossaryError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum HostError {
-    /// `.app` 里找不到 Resources 目录，说明不是通过 bundle.sh 打包的。
+    /// `.app` 裡找不到 Resources 目錄，說明不是通過 bundle.sh 打包的。
     #[error("bundle has no resource directory")]
     NoResources,
 
-    /// 词库文件缺失。
+    /// 詞庫檔案缺失。
     #[error("resource not found: {0}")]
     MissingResource(PathBuf),
 
@@ -31,7 +31,7 @@ pub enum HostError {
     #[error(transparent)]
     LanguageModel(#[from] LmError),
 
-    /// emoji 表读取或解析失败。
+    /// emoji 表讀取或解析失敗。
     #[error("emoji table: {0}")]
     Emoji(#[from] std::io::Error),
 }

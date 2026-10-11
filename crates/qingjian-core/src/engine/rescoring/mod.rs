@@ -1,10 +1,10 @@
-//! 神经重打分：整句转换的前几条路径交给字级模型（[`SentenceScorer`]）再排一次。
+//! 神經重打分：整句轉換的前幾條路徑交給字級模型（[`SentenceScorer`]）再排一次。
 //!
-//! 打分有两种接法：同步的（[`Engine::with_sentence_scorer`]，查询里当场打，CLI 评测用）和异步的
-//! （[`Engine::with_async_sentence_scorer`]，后台线程；壳里用）。两种都经过一张「前文 + 文本 → 神经分」的缓存
-//! （[`NeuralCache`]）：同步时缺的分当场补进去，异步时缺的先记下来，壳在用户停顿后调 [`Engine::request_rescoring`]
-//! 一次送去后台，[`Engine::poll_rescoring`] 收到结果后再查一次，这时全部路径的分都在缓存里，排序自然换成重排后的。
-//! 按键回调永远不等模型：先按词级模型出候选，模型的意见晚几十毫秒到。
+//! 打分有兩種接法：同步的（[`Engine::with_sentence_scorer`]，查詢裡當場打，CLI 評測用）和非同步的
+//! （[`Engine::with_async_sentence_scorer`]，後臺執行緒；殼裡用）。兩種都經過一張「前文 + 文本 → 神經分」的快取
+//! （[`NeuralCache`]）：同步時缺的分當場補進去，非同步時缺的先記下來，殼在使用者停頓後調 [`Engine::request_rescoring`]
+//! 一次送去後臺，[`Engine::poll_rescoring`] 收到結果後再查一次，這時全部路徑的分都在快取裡，排序自然換成重排後的。
+//! 按鍵回撥永遠不等模型：先按詞級模型出候選，模型的意見晚幾十毫秒到。
 
 mod cache;
 mod worker;
@@ -17,25 +17,25 @@ use super::*;
 pub(crate) use cache::NeuralCache;
 pub(crate) use worker::RescoreWorker;
 
-/// 直接生成整句时的 beam 宽度。5 是 2026-09-24 在冻结集上量的：beam 5 首选 51.9%、前五 73.5%，
-/// 再宽只换来零点几个点，延迟却线性涨。
+/// 直接生成整句時的 beam 寬度。5 是 2026-09-24 在凍結集上量的：beam 5 首選 51.9%、前五 73.5%，
+/// 再寬只換來零點幾個點，延遲卻線性漲。
 const GENERATE_BEAM: usize = 5;
 
-/// 生成长度上限（字）。超过这个长度的输入用户早就分段上屏了，放开只会让最坏情况的延迟没有上界。
+/// 生成長度上限（字）。超過這個長度的輸入使用者早就分段上屏了，放開只會讓最壞情況的延遲沒有上界。
 const GENERATE_MAX_CHARS: usize = 32;
 
-/// 生成出来的整句最多取几条当候选。
+/// 生成出來的整句最多取幾條當候選。
 const GENERATED_CANDIDATES: usize = 2;
 
 impl Engine {
-    /// 接了重打分器（同步或异步）。
+    /// 接了重打分器（同步或非同步）。
     pub fn has_sentence_scorer(&self) -> bool {
         self.sentence_scorer.is_some()
             || self.rescorer.as_ref().is_some_and(RescoreWorker::is_alive)
     }
 
-    /// 给模型看的前文：壳给了应用里的光标前文就用它（[`Self::set_rescoring_context`]），
-    /// 否则用本会话最近上屏的字符；长度按 `neural_context` 截。
+    /// 給模型看的前文：殼給了應用裡的游標前文就用它（[`Self::set_rescoring_context`]），
+    /// 否則用本會話最近上屏的字元；長度按 `neural_context` 截。
     pub(super) fn rescoring_context(&self) -> String {
         if self.neural_context == 0 {
             return String::new();
@@ -46,15 +46,15 @@ impl Engine {
         }
     }
 
-    /// 壳告知应用里光标前的文本（每次查询前给；应用给不出就 `None`，退回本会话历史）。
+    /// 殼告知應用裡游標前的文本（每次查詢前給；應用給不出就 `None`，退回本會話歷史）。
     pub fn set_rescoring_context(&mut self, before: Option<String>) {
         self.rescoring_before = before;
     }
 
-    /// 把几条整句路径按「路径分 + λ·(神经分 − 静态分)」重排。缓存里缺分的：同步打分器当场补，异步的先记下等壳来取；
-    /// 有任何一条没分就不动顺序（半截重排比不重排还糟）。
-    /// `keys` 是这批路径共同解释的那段用户按键（P2C 的条件）。
-    /// 只改顺序，每条路径的 `score` 原样不动（理由见下面的注释）。
+    /// 把幾條整句路徑按「路徑分 + λ·(神經分 − 靜態分)」重排。快取裡缺分的：同步打分器當場補，非同步的先記下等殼來取；
+    /// 有任何一條沒分就不動順序（半截重排比不重排還糟）。
+    /// `keys` 是這批路徑共同解釋的那段使用者按鍵（P2C 的條件）。
+    /// 只改順序，每條路徑的 `score` 原樣不動（理由見下面的註釋）。
     pub(super) fn rescore_paths(&self, paths: &mut [Conversion], keys: &str) {
         if paths.len() < 2 || !self.has_sentence_scorer() {
             return;
@@ -88,10 +88,10 @@ impl Engine {
                 }
             }
         }
-        // 神经分只决定名次，不写回 `score`：P2C 打的是 log P(汉字 | 拼音)，被拼音条件住，
-        // 比静态分高十几二十 nat，抬升还随句子长短与静态模型的偏好变化。写回去会污染跨读法的比较
-        // （拼写纠错的原样 vs 纠正、混输的头段 vs 整段），那两处的门槛都是按静态尺度定的：
-        // `woxiangxuexirust` 就是这么被「纠正」成 我想学习如斯 的。
+        // 神經分只決定名次，不寫回 `score`：P2C 打的是 log P(漢字 | 拼音)，被拼音條件住，
+        // 比靜態分高十幾二十 nat，抬升還隨句子長短與靜態模型的偏好變化。寫回去會汙染跨讀法的比較
+        // （拼寫糾錯的原樣 vs 糾正、混輸的頭段 vs 整段），那兩處的門檻都是按靜態尺度定的：
+        // `woxiangxuexirust` 就是這麼被「糾正」成 我想學習如斯 的。
         let lambda = self.neural_weight;
         let rescored = |path: &Conversion| {
             let neural = cache.get(&path.text).expect("filled above");
@@ -105,11 +105,11 @@ impl Engine {
         self.last_rescored.set(true);
     }
 
-    /// 不经词图，让模型直接按整段按键生成整句，最好的在前。
+    /// 不經詞圖，讓模型直接按整段按鍵生成整句，最好的在前。
     ///
-    /// 词图只会把按键读成拼音，中英混输（`yongdockerbushuhenfangbian`）与生词在它那里没有路径，
-    /// 出来的只能是把英文段硬读成拼音的结果（用的哦乘客仍不熟很方便）。这条路不受读法限制。
-    /// 同步打分器当场生成，异步的先记下、等壳在用户停顿后取（与重打分同一次请求）。
+    /// 詞圖只會把按鍵讀成拼音，中英混輸（`yongdockerbushuhenfangbian`）與生詞在它那裡沒有路徑，
+    /// 出來的只能是把英文段硬讀成拼音的結果（用的哦乘客仍不熟很方便）。這條路不受讀法限制。
+    /// 同步打分器當場生成，非同步的先記下、等殼在使用者停頓後取（與重打分同一次請求）。
     pub(super) fn generated_sentences(&self, keys: &str) -> Vec<String> {
         if keys.is_empty() || !self.has_sentence_scorer() {
             return Vec::new();
@@ -128,7 +128,7 @@ impl Engine {
         out
     }
 
-    /// 最近一次查询里有整句路径还没拿到神经分、或有整段还没生成：壳该在用户停顿后调 [`Self::request_rescoring`]。
+    /// 最近一次查詢裡有整句路徑還沒拿到神經分、或有整段還沒生成：殼該在使用者停頓後調 [`Self::request_rescoring`]。
     pub fn rescoring_pending(&self) -> bool {
         self.rescorer.is_some() && {
             let cache = self.neural_cache.borrow();
@@ -136,7 +136,7 @@ impl Engine {
         }
     }
 
-    /// 把攒着的文本送去后台打分。没接异步打分器或没什么要打的返回 `false`。
+    /// 把攢著的文本送去後臺打分。沒接非同步打分器或沒什麼要打的返回 `false`。
     pub fn request_rescoring(&mut self) -> bool {
         let Some(worker) = &self.rescorer else {
             return false;
@@ -161,7 +161,7 @@ impl Engine {
         true
     }
 
-    /// 收后台打好的分。有新分进了缓存返回 `true`，壳该重新 [`Self::query`] 一次；前文已经变了的结果丢掉。
+    /// 收後臺打好的分。有新分進了快取返回 `true`，殼該重新 [`Self::query`] 一次；前文已經變了的結果丟掉。
     pub fn poll_rescoring(&mut self) -> bool {
         let Some(worker) = &self.rescorer else {
             return false;
@@ -169,7 +169,7 @@ impl Engine {
         let mut updated = false;
         while let Some(scored) = worker.poll() {
             let mut cache = self.neural_cache.borrow_mut();
-            // 生成的结果自带按键、与前文无关，不跟着打分那边的条件一起作废
+            // 生成的結果自帶按鍵、與前文無關，不跟著打分那邊的條件一起作廢
             if let Some((keys, texts)) = scored.generated {
                 cache.insert_generated(&keys, texts);
                 updated = true;

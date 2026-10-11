@@ -1,4 +1,4 @@
-//! 组句拼音行（preedit）的分段模型：一段文本（[`PreeditSegment`]）加它的种类（[`PreeditKind`]）。
+//! 組句拼音行（preedit）的分段模型：一段文本（[`PreeditSegment`]）加它的種類（[`PreeditKind`]）。
 
 mod kind;
 mod segment;

@@ -4,22 +4,22 @@ use std::sync::Arc;
 use memmap2::Mmap;
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-/// 一段定长结构体数组：从 TSV 解析出来时是自己的 `Vec`，从 `.qj` 打开时是映射文件里的一段。
-/// 两者对外都是 `&[T]`（`Deref`），查询代码不区分。
+/// 一段定長結構體陣列：從 TSV 解析出來時是自己的 `Vec`，從 `.qj` 開啟時是對映檔案裡的一段。
+/// 兩者對外都是 `&[T]`（`Deref`），查詢程式碼不區分。
 #[derive(Debug)]
 pub enum Table<T> {
-    /// 内存里自己的。
+    /// 記憶體裡自己的。
     Owned(Vec<T>),
 
-    /// 映射文件里 `offset..offset + len` 的字节，打开时已校验对齐与长度。
+    /// 對映檔案裡 `offset..offset + len` 的位元組，開啟時已校驗對齊與長度。
     Mapped {
-        /// 整个文件的映射，多个分节共享。
+        /// 整個檔案的對映，多個分節共享。
         map: Arc<Mmap>,
 
         /// 正文起始偏移。
         offset: usize,
 
-        /// 正文字节数。
+        /// 正文位元組數。
         len: usize,
     },
 }
@@ -31,7 +31,7 @@ impl<T> Default for Table<T> {
 }
 
 impl<T: FromBytes + Immutable + KnownLayout> Table<T> {
-    /// 从映射里取一段，校验对齐与整除。
+    /// 從對映裡取一段，校驗對齊與整除。
     pub(crate) fn mapped(map: Arc<Mmap>, offset: usize, len: usize) -> Option<Self> {
         let bytes = map.get(offset..offset + len)?;
         <[T]>::ref_from_bytes(bytes).ok()?;
@@ -54,7 +54,7 @@ impl<T: FromBytes + Immutable + KnownLayout> Deref for Table<T> {
 }
 
 impl<T: FromBytes + IntoBytes + Immutable + KnownLayout> Table<T> {
-    /// 落盘用的字节形式。
+    /// 落盤用的位元組形式。
     pub fn as_bytes(&self) -> &[u8] {
         let items: &[T] = self;
         items.as_bytes()

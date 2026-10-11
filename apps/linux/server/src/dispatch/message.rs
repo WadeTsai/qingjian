@@ -1,4 +1,4 @@
-//! Linux 首版协议消息与 Engine 按键分派。
+//! Linux 首版協議訊息與 Engine 按鍵分派。
 use super::{Router, key::Effect, session::SessionInfo};
 use qingjian_platform::protocol::{ClientMessage, KeyOutcome, PROTOCOL_VERSION, ServerMessage};
 
@@ -41,7 +41,7 @@ impl Router {
                 })
             }
             ClientMessage::Poll { session } if self.sessions.contains_key(&session) => {
-                // 插件组句期间定时来问：顺带接模型、推进重排，回的帧就是最新顺序
+                // 外掛組句期間定時來問：順帶接模型、推進重排，回的幀就是最新順序
                 self.ensure_focus(session);
                 self.tick();
                 Some(ServerMessage::Update {

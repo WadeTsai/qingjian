@@ -1,4 +1,4 @@
-//! 候选窗口两种排布各自的根节点。
+//! 候選視窗兩種排布各自的根節點。
 
 use serde::Deserialize;
 
@@ -6,9 +6,9 @@ use super::node::NodeSpec;
 
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct Windows {
-    /// 竖排：一行一个候选。
+    /// 豎排：一行一個候選。
     pub(crate) vertical: NodeSpec,
 
-    /// 横排：候选排成一行。
+    /// 橫排：候選排成一行。
     pub(crate) horizontal: NodeSpec,
 }

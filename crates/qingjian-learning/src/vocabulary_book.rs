@@ -9,43 +9,43 @@ use qingjian_translate::LevelTable;
 
 use crate::error::LearningError;
 
-/// 「最近」算几天（含今天）。
+/// 「最近」算幾天（含今天）。
 const RECENT_DAYS: i64 = 7;
 
-/// 词汇记录的落盘：一个译词一行 `语言\t译词\t看到轮次\t上屏次数\t用过次数\t首见\t末见`，只写在本机数据目录里。
+/// 詞彙記錄的落盤：一個譯詞一行 `語言\t譯詞\t看到輪次\t上屏次數\t用過次數\t首見\t末見`，只寫在本機資料目錄裡。
 ///
-/// 文件坏了按行跳过，读不了就只在内存里记（记一次警告），输入不受影响。
+/// 檔案壞了按行跳過，讀不了就只在記憶體裡記（記一次警告），輸入不受影響。
 #[derive(Debug, Default)]
 pub struct VocabularyBook {
-    /// (语言代码, 译词) → 记录，按键排好。
+    /// (語言程式碼, 譯詞) → 記錄，按鍵排好。
     entries: BTreeMap<(String, String), Entry>,
 
-    /// 自上次保存后有没有新记录。
+    /// 自上次儲存後有沒有新記錄。
     dirty: bool,
 
-    /// [`VocabularyTracker::flush`] 时写回的路径；`None` 只在内存里记。
+    /// [`VocabularyTracker::flush`] 時寫回的路徑；`None` 只在記憶體裡記。
     path: Option<PathBuf>,
 
-    /// 各语言的等级表，汇总时按级数词；没有的语言不分级。
+    /// 各語言的等級表，彙總時按級數詞；沒有的語言不分級。
     levels: Vec<(Language, LevelTable)>,
 }
 
-/// 一条译词的记录。
+/// 一條譯詞的記錄。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Entry {
-    /// 上屏时在候选窗口里的轮次。
+    /// 上屏時在候選窗口裡的輪次。
     seen: u32,
 
-    /// 上屏过带它的候选几次。
+    /// 上屏過帶它的候選幾次。
     committed: u32,
 
-    /// 直接打出过几次。
+    /// 直接打出過幾次。
     used: u32,
 
-    /// 第一次记录的日期。
+    /// 第一次記錄的日期。
     first: Date,
 
-    /// 最近一次记录的日期。
+    /// 最近一次記錄的日期。
     last: Date,
 }
 
@@ -62,7 +62,7 @@ impl Entry {
 }
 
 impl VocabularyBook {
-    /// 从文件加载（不存在就从零开始，flush 时建）；读不了就退回只在内存里记。
+    /// 從檔案載入（不存在就從零開始，flush 時建）；讀不了就退回只在記憶體裡記。
     pub fn open(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         match read_text_lossy(&path) {
@@ -79,14 +79,14 @@ impl VocabularyBook {
         }
     }
 
-    /// 给某种语言配等级表（`levels-<语言>.tsv`），汇总里就有按级的数字。
+    /// 給某種語言配等級表（`levels-<語言>.tsv`），彙總裡就有按級的數字。
     pub fn with_levels(mut self, language: Language, table: LevelTable) -> Self {
         self.levels.retain(|(l, _)| *l != language);
         self.levels.push((language, table));
         self
     }
 
-    /// 记录的译词数（所有语言）。
+    /// 記錄的譯詞數（所有語言）。
     pub fn len(&self) -> usize {
         self.entries.len()
     }
@@ -105,19 +105,19 @@ impl VocabularyBook {
         entry
     }
 
-    /// 记一次看到（[`VocabularyTracker::record_exposure`] 记在今天）。
+    /// 記一次看到（[`VocabularyTracker::record_exposure`] 記在今天）。
     pub fn record_exposure_on(&mut self, language: Language, word: &str, date: Date) {
         self.entry(language, word, date).seen += 1;
     }
 
-    /// 记一次上屏（[`VocabularyTracker::record_commit`] 记在今天）。
+    /// 記一次上屏（[`VocabularyTracker::record_commit`] 記在今天）。
     pub fn record_commit_on(&mut self, language: Language, word: &str, used: bool, date: Date) {
         let entry = self.entry(language, word, date);
         entry.committed += 1;
         entry.used += u32::from(used);
     }
 
-    /// 以 `today` 为准的汇总（[`VocabularyTracker::summary`] 以本机今天为准）。
+    /// 以 `today` 為準的彙總（[`VocabularyTracker::summary`] 以本機今天為準）。
     pub fn summary_on(&self, language: Language, today: Date) -> VocabularySummary {
         let recent_from = today.saturating_sub(jiff::Span::new().days(RECENT_DAYS - 1));
         let table = self
@@ -158,7 +158,7 @@ impl VocabularyBook {
         summary
     }
 
-    /// 写回文件（没有新记录就什么都不做）。
+    /// 寫回檔案（沒有新記錄就什麼都不做）。
     pub fn save(&mut self) -> Result<(), LearningError> {
         let Some(path) = self.path.clone() else {
             return Ok(());
@@ -185,7 +185,7 @@ impl VocabularyBook {
     }
 }
 
-/// 按行解析；格式不对的行跳过（记警告），重复的键取后一条。
+/// 按行解析；格式不對的行跳過（記警告），重複的鍵取後一條。
 fn parse(text: &str) -> BTreeMap<(String, String), Entry> {
     let mut entries = BTreeMap::new();
     for (number, line) in text.lines().enumerate() {

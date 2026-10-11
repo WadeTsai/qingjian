@@ -1,14 +1,14 @@
-//! 各张表的路径、加载、保存与重建：用户词、按输入串的选择、个人英文词、个人敲错表、个人 n-gram。
+//! 各張表的路徑、載入、儲存與重建：使用者詞、按輸入串的選擇、個人英文詞、個人敲錯表、個人 n-gram。
 
 use super::*;
 
 impl FrequencyLearner {
-    /// 个人英文词表文件与词频文件同目录。
+    /// 個人英文詞表檔案與詞頻檔案同目錄。
     pub(super) fn english_path(frequency_path: &Path) -> PathBuf {
         frequency_path.with_file_name(USER_ENGLISH_FILE)
     }
 
-    /// 从 `词\t次数` 读个人英文词，返回跳过的坏行数。
+    /// 從 `詞\t次數` 讀個人英文詞，返回跳過的壞行數。
     pub(super) fn load_english(&mut self, source: &str) -> usize {
         let mut skipped = 0;
         for line in data_lines(source) {
@@ -28,7 +28,7 @@ impl FrequencyLearner {
         skipped
     }
 
-    /// 个人英文词很少，每次变化整个重建词表即可。次数当词频，补全时常用的在前。
+    /// 個人英文詞很少，每次變化整個重建詞表即可。次數當詞頻，補全時常用的在前。
     pub(super) fn rebuild_english(&mut self) {
         if self.english.is_empty() {
             self.english_list = None;
@@ -45,7 +45,7 @@ impl FrequencyLearner {
         }
     }
 
-    /// 个人英文词条数。
+    /// 個人英文詞條數。
     pub fn english_count(&self) -> usize {
         self.english.len()
     }
@@ -64,12 +64,12 @@ impl FrequencyLearner {
         Ok(())
     }
 
-    /// 按输入串记的选择文件与词频文件同目录。
+    /// 按輸入串記的選擇檔案與詞頻檔案同目錄。
     pub(super) fn choices_path(frequency_path: &Path) -> PathBuf {
         frequency_path.with_file_name(USER_CHOICES_FILE)
     }
 
-    /// 从 `输入串\t词\t次数` 读按输入串记的选择，返回跳过的坏行数。
+    /// 從 `輸入串\t詞\t次數` 讀按輸入串記的選擇，返回跳過的壞行數。
     pub(super) fn load_choices(&mut self, source: &str) -> usize {
         let mut skipped = 0;
         for line in data_lines(source) {
@@ -109,12 +109,12 @@ impl FrequencyLearner {
         Ok(())
     }
 
-    /// 个人敲错表与词频文件同目录。
+    /// 個人敲錯表與詞頻檔案同目錄。
     pub(super) fn typos_path(frequency_path: &Path) -> PathBuf {
         frequency_path.with_file_name(USER_TYPOS_FILE)
     }
 
-    /// 从 `敲的\t要的\t次数` 读个人敲错表，返回跳过的坏行数。
+    /// 從 `敲的\t要的\t次數` 讀個人敲錯表，返回跳過的壞行數。
     pub(super) fn load_typos(&mut self, source: &str) -> usize {
         let mut skipped = 0;
         for line in data_lines(source) {
@@ -158,17 +158,17 @@ impl FrequencyLearner {
         Ok(())
     }
 
-    /// 个人敲错表条数。
+    /// 個人敲錯表條數。
     pub fn typo_count_total(&self) -> usize {
         self.typos.values().map(HashMap::len).sum()
     }
 
-    /// 按输入串记的选择条数。
+    /// 按輸入串記的選擇條數。
     pub fn choice_count(&self) -> usize {
         self.choices.values().map(HashMap::len).sum()
     }
 
-    /// 所有按输入串记的计数减半，去掉减到零的。
+    /// 所有按輸入串記的計數減半，去掉減到零的。
     pub(super) fn decay_choices(&mut self) {
         for texts in self.choices.values_mut() {
             texts.retain(|_, count| {
@@ -179,17 +179,17 @@ impl FrequencyLearner {
         self.choices.retain(|_, texts| !texts.is_empty());
     }
 
-    /// 用户词文件与词频文件同目录。
+    /// 使用者詞檔案與詞頻檔案同目錄。
     pub(super) fn words_path(frequency_path: &Path) -> PathBuf {
         frequency_path.with_file_name(USER_WORDS_FILE)
     }
 
-    /// 个人 n-gram 文件与词频文件同目录。
+    /// 個人 n-gram 檔案與詞頻檔案同目錄。
     pub(super) fn ngram_path(frequency_path: &Path) -> PathBuf {
         frequency_path.with_file_name(USER_NGRAM_FILE)
     }
 
-    /// 个人 n-gram 里不同的转移条数（二元对 + 三元条）。
+    /// 個人 n-gram 裡不同的轉移條數（二元對 + 三元條）。
     pub fn ngram_transition_count(&self) -> usize {
         self.ngram.transition_count()
     }
@@ -204,7 +204,7 @@ impl FrequencyLearner {
         Ok(())
     }
 
-    /// 从主词库同款 TSV 读用户词，返回跳过的坏行数。
+    /// 從主詞庫同款 TSV 讀使用者詞，返回跳過的壞行數。
     pub(super) fn load_words(&mut self, source: &str) -> usize {
         let mut skipped = 0;
         for line in data_lines(source) {
@@ -223,7 +223,7 @@ impl FrequencyLearner {
         skipped
     }
 
-    /// 用户词很少，每次变化整个重建小词库即可。
+    /// 使用者詞很少，每次變化整個重建小詞庫即可。
     pub(super) fn rebuild_words(&mut self) {
         if self.words.is_empty() {
             self.user_dictionary = None;

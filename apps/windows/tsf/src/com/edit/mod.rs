@@ -1,5 +1,5 @@
-//! 编辑会话：TSF 不允许直接改文档，要经 `RequestEditSession` 申请、在回调里拿着 edit cookie 读写。
-//! 写组句 / 上屏在 [`update`]，读选区（翻译选中文字）在 [`selection`]，读光标前文与输入框私密判定（本地整句模型 / 密码框）在 [`surrounding`]，候选窗口的定位锚点在 [`anchor`]。
+//! 編輯會話：TSF 不允許直接改文件，要經 `RequestEditSession` 申請、在回撥裡拿著 edit cookie 讀寫。
+//! 寫組句 / 上屏在 [`update`]，讀選區（翻譯選中文字）在 [`selection`]，讀游標前文與輸入框私密判定（本地整句模型 / 密碼框）在 [`surrounding`]，候選視窗的定位錨點在 [`anchor`]。
 
 mod anchor;
 mod selection;

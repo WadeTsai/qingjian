@@ -1,56 +1,56 @@
-//! Linux 首版按键与候选配置。
+//! Linux 首版按鍵與候選配置。
 use qingjian_platform::protocol::KeyModifiers;
 use qingjian_platform::{Appearance, AppsConfig, Config, LayoutMode, PreeditMode};
 
-/// Router 要用的配置项，与 macOS 壳的 `Host` 字段对齐。
+/// Router 要用的配置項，與 macOS 殼的 `Host` 欄位對齊。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouterConfig {
-    /// 每页候选数（`[general] page_size`）。
+    /// 每頁候選數（`[general] page_size`）。
     pub page_size: usize,
 
-    /// 应用与窗口拼音显示位置。
+    /// 應用與視窗拼音顯示位置。
     pub preedit: PreeditMode,
 
-    /// 云端候选在第一页预留的格数（`[predict] slots`）。
+    /// 雲端候選在第一頁預留的格數（`[predict] slots`）。
     pub cloud_slots: usize,
 
-    /// 候选排布（`[general] layout`）。
+    /// 候選排布（`[general] layout`）。
     pub layout: LayoutMode,
 
-    /// 候选窗口外观（`[general] theme`）。
+    /// 候選視窗外觀（`[general] theme`）。
     pub appearance: Appearance,
 
-    /// 翻页键对（`[general] page_keys`，上一页 / 下一页）。
+    /// 翻頁鍵對（`[general] page_keys`，上一頁 / 下一頁）。
     pub page_keys: (char, char),
 
-    /// 英文模式给不给英文候选（`[general] english_candidates`）。
+    /// 英文模式給不給英文候選（`[general] english_candidates`）。
     pub english_candidates: bool,
 
-    /// Shift 大写字母是否加入中文组句。
+    /// Shift 大寫字母是否加入中文組句。
     pub shift_letter_compose: bool,
 
-    /// 中文模式下不在组句时的标点转全角（`[general] full_width_punctuation`）；状态条可切。
+    /// 中文模式下不在組句時的標點轉全形（`[general] full_width_punctuation`）；狀態條可切。
     pub full_width: bool,
 
     /// 英文模式的那一份（`[general] english_full_width_punctuation`）。
     pub english_full_width: bool,
 
-    /// 组句中敲会转全角的标点（`,` `.` `?` `!` 等，翻页键除外）先把高亮候选上屏、再补该标点
-    ///（`nihao,` 一气打完「你好，」）的开关（`[general] punct_commits`），缺省关。
+    /// 組句中敲會轉全形的標點（`,` `.` `?` `!` 等，翻頁鍵除外）先把高亮候選上屏、再補該標點
+    ///（`nihao,` 一氣打完「你好，」）的開關（`[general] punct_commits`），預設關。
     pub punct_commits: bool,
 
-    /// 按应用的设置（`[apps]`），按宿主 exe 名认。
+    /// 按應用的設定（`[apps]`），按宿主 exe 名認。
     pub apps: AppsConfig,
 
-    /// 上屏第一 / 第二个译词的修饰键（`[shortcut] translation` / `translation_second`）。
+    /// 上屏第一 / 第二個譯詞的修飾鍵（`[shortcut] translation` / `translation_second`）。
     pub translation_keys: (KeyModifiers, KeyModifiers),
 
-    /// 删候选的修饰键（`[shortcut] delete_candidate`）。
+    /// 刪候選的修飾鍵（`[shortcut] delete_candidate`）。
     pub delete_keys: KeyModifiers,
 }
 
 impl RouterConfig {
-    /// 全局开关开着，且应用在 `[apps] english_candidates_on` 白名单里；没报应用名按不给。
+    /// 全域性開關開著，且應用在 `[apps] english_candidates_on` 白名單裡；沒報應用名按不給。
     pub fn english_candidates_in(&self, app: Option<&str>) -> bool {
         self.english_candidates && self.apps.english_candidates_on(app)
     }

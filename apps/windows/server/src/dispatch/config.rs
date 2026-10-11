@@ -6,113 +6,113 @@ use qingjian_platform::{
 
 use super::RenderSettings;
 
-/// Router 要用的配置项，与 macOS 壳的 `Host` 字段对齐。
+/// Router 要用的配置項，與 macOS 殼的 `Host` 欄位對齊。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouterConfig {
-    /// 每页候选数（`[general] page_size`）。
+    /// 每頁候選數（`[general] page_size`）。
     pub page_size: usize,
 
-    /// 云端候选在第一页预留的格数（`[predict] slots`）。
+    /// 雲端候選在第一頁預留的格數（`[predict] slots`）。
     pub cloud_slots: usize,
 
-    /// 中文模式下 Shift+字母收进组句缓冲区（`[general] shift_letter = "compose"`）。
-    /// 关着（缺省）时壳把大写字母交给应用，与以前一致。
+    /// 中文模式下 Shift+字母收進組句緩衝區（`[general] shift_letter = "compose"`）。
+    /// 關著（預設）時殼把大寫字母交給應用，與以前一致。
     pub shift_letter_compose: bool,
 
-    /// 候选排布（`[general] layout`）。
+    /// 候選排布（`[general] layout`）。
     pub layout: LayoutMode,
 
-    /// 候选窗口外观（`[general] appearance`，兼容旧写法见 [`qingjian_platform::GeneralConfig::appearance`]）。
+    /// 候選視窗外觀（`[general] appearance`，相容舊寫法見 [`qingjian_platform::GeneralConfig::appearance`]）。
     pub appearance: Appearance,
 
-    /// 候选窗口 / 状态条由青简渲染器还是 GDI 画（`[general] renderer`）。
+    /// 候選視窗 / 狀態條由青簡渲染器還是 GDI 畫（`[general] renderer`）。
     pub renderer: CandidateRenderer,
 
-    /// 候选窗口字体的字族名（`[general] font`），空为系统字体；只对青简渲染器生效。
+    /// 候選視窗字型的字族名（`[general] font`），空為系統字型；只對青簡渲染器生效。
     pub font: String,
 
-    /// 候选窗口主题 id（`[general] theme`）；只对青简渲染器生效。
+    /// 候選視窗主題 id（`[general] theme`）；只對青簡渲染器生效。
     pub theme: String,
 
-    /// 候选字、译文字号（`[general] candidate_font_size` / `annotation_font_size`）。
+    /// 候選字、譯文字號（`[general] candidate_font_size` / `annotation_font_size`）。
     pub font_sizes: (FontSize, FontSize),
 
-    /// 过渡动画（`[general] animations`）。
+    /// 過渡動畫（`[general] animations`）。
     pub animations: bool,
 
-    /// 用户主题目录的戳，热加载轮询时更新；不来自配置文件，重读配置时沿用。
+    /// 使用者主題目錄的戳，熱載入輪詢時更新；不來自配置檔案，重讀配置時沿用。
     pub themes_stamp: u64,
 
-    /// 拼音显示位置（`[general] preedit`）。
+    /// 拼音顯示位置（`[general] preedit`）。
     pub preedit: PreeditMode,
 
-    /// 翻页键对（`[general] page_keys`，上一页 / 下一页）。
+    /// 翻頁鍵對（`[general] page_keys`，上一頁 / 下一頁）。
     pub page_keys: (char, char),
 
-    /// 英文模式给不给英文候选（`[general] english_candidates`）。
+    /// 英文模式給不給英文候選（`[general] english_candidates`）。
     pub english_candidates: bool,
 
-    /// 内置英文模式总开关（`[general] english_mode`）：关掉后状态条上的「中 / 英」不再切模式
-    /// （切换键与语言栏按钮由 DLL 按同一项拦住，见 `com::service::mode`）。
+    /// 內建英文模式總開關（`[general] english_mode`）：關掉後狀態條上的「中 / 英」不再切模式
+    /// （切換鍵與語言欄按鈕由 DLL 按同一項攔住，見 `com::service::mode`）。
     pub english_mode: bool,
 
-    /// 中英切换键（`[shortcut] switch_mode`）：由 Server 经协议下发给 DLL，由它认键。
+    /// 中英切換鍵（`[shortcut] switch_mode`）：由 Server 經協議下發給 DLL，由它認鍵。
     pub switch_mode: SwitchKeys,
 
-    /// 中文模式下不在组句时的标点转全角（`[general] full_width_punctuation`）；状态条可切。
+    /// 中文模式下不在組句時的標點轉全形（`[general] full_width_punctuation`）；狀態條可切。
     pub full_width: bool,
 
     /// 英文模式的那一份（`[general] english_full_width_punctuation`）。
     pub english_full_width: bool,
 
-    /// 组句中可转全角的标点先把高亮候选上屏再补标点（`[general] punct_commits`）；
-    /// 关掉恢复老行为：标点进英文直输段。缺省开。
+    /// 組句中可轉全形的標點先把高亮候選上屏再補標點（`[general] punct_commits`）；
+    /// 關掉恢復老行為：標點進英文直輸段。預設開。
     pub punct_commits: bool,
 
     /// 大千注音（[general] zhuyin）。
     pub zhuyin: bool,
 
-    /// 按应用的设置（`[apps]`），按宿主 exe 名认。
+    /// 按應用的設定（`[apps]`），按宿主 exe 名認。
     pub apps: AppsConfig,
 
-    /// 上屏第一 / 第二个译词的修饰键（`[shortcut] translation` / `translation_second`）。
+    /// 上屏第一 / 第二個譯詞的修飾鍵（`[shortcut] translation` / `translation_second`）。
     pub translation_keys: (KeyModifiers, KeyModifiers),
 
-    /// 删候选的修饰键（`[shortcut] delete_candidate`）。
+    /// 刪候選的修飾鍵（`[shortcut] delete_candidate`）。
     pub delete_keys: KeyModifiers,
 
-    /// 「翻译选中文字」快捷键（`[shortcut] translate_selection`）。
+    /// 「翻譯選中文字」快捷鍵（`[shortcut] translate_selection`）。
     pub translate_selection: KeyCombo,
 
-    /// 悬浮状态条开关（`[status_bar] enabled`）。
+    /// 懸浮狀態條開關（`[status_bar] enabled`）。
     pub status_enabled: bool,
 
-    /// 状态条记住的位置（`[status_bar] x` / `y`，内容左上角物理像素）。
+    /// 狀態條記住的位置（`[status_bar] x` / `y`，內容左上角物理畫素）。
     pub status_pos: Option<(i32, i32)>,
 
-    /// 拼音侧方案（`[general] scheme`）。
+    /// 拼音側方案（`[general] scheme`）。
     pub scheme: Scheme,
 
-    /// 形码侧开没开（`[general] wubi`）。与拼音同时开着就是混输。
+    /// 形碼側開沒開（`[general] wubi`）。與拼音同時開著就是混輸。
     pub wubi: bool,
 
-    /// 繁体输出（`[general] traditional`），给候选窗口主题显示简 / 繁。
+    /// 繁體輸出（`[general] traditional`），給候選視窗主題顯示簡 / 繁。
     pub traditional: bool,
 
-    /// 辅码触发键（`[general] aux_code_key`，缺省 `;`）；非法值退回缺省。
+    /// 輔碼觸發鍵（`[general] aux_code_key`，預設 `;`）；非法值退回預設。
     pub aux_code_key: char,
 
-    /// 候选上是否显示辅码（`[general] aux_code_show`）。随帧下发给候选窗。
+    /// 候選上是否顯示輔碼（`[general] aux_code_show`）。隨幀下發給候選窗。
     pub aux_code_show: bool,
 }
 
 impl RouterConfig {
-    /// 全局开关开着，且应用在 `[apps] english_candidates_on` 白名单里；没报应用名按不给。
+    /// 全域性開關開著，且應用在 `[apps] english_candidates_on` 白名單裡；沒報應用名按不給。
     pub fn english_candidates_in(&self, app: Option<&str>) -> bool {
         self.english_candidates && self.apps.english_candidates_on(app)
     }
 
-    /// 交给 UI 线程的画法。
+    /// 交給 UI 執行緒的畫法。
     pub fn render_settings(&self) -> RenderSettings {
         RenderSettings {
             renderer: self.renderer,

@@ -1,21 +1,21 @@
-//! 拼音侧的候选生成：切分、拼写纠错、词级查找与排序，再补上整句、英文、快捷与 emoji 候选。
+//! 拼音側的候選生成：切分、拼寫糾錯、詞級查詢與排序，再補上整句、英文、快捷與 emoji 候選。
 
 use super::*;
 
 impl Engine {
-    /// 拼音侧（全拼 / 双拼 / 注音）的候选生成：整段作用域是一串读音。
+    /// 拼音側（全拼 / 雙拼 / 注音）的候選生成：整段作用域是一串讀音。
     pub(super) fn query_phonetic(
         &self,
         keys: &str,
         rest: String,
         start: Instant,
     ) -> Result<Query, ParseError> {
-        // 双拼先解成全拼（音节间已用 `'` 连好，切分没有歧义），之后与全拼同路；解不动的键当尾巴
+        // 雙拼先解成全拼（音節間已用 `'` 連好，切分沒有歧義），之後與全拼同路；解不動的鍵當尾巴
         let decoded = self.decode(keys);
         let scope: &str = decoded.as_ref().map_or(keys, |d| d.pinyin());
-        // 末尾是英文词（`woxiangxuehaorust`）：拼音候选与整句只按头段算，尾段整个跟在整句后面。
-        // 整段也能读成拼音时（`database`、`…rust` 当简拼）两种读法比分，英文赢了才按头段算，
-        // 输了整段按拼音读、英文读法排在拼音整句后面
+        // 末尾是英文詞（`woxiangxuehaorust`）：拼音候選與整句只按頭段算，尾段整個跟在整句後面。
+        // 整段也能讀成拼音時（`database`、`…rust` 當簡拼）兩種讀法比分，英文贏了才按頭段算，
+        // 輸了整段按拼音讀、英文讀法排在拼音整句後面
         let english_tail = if decoded.is_none() {
             self.split_english_tail(keys)
         } else {
@@ -34,7 +34,7 @@ impl Engine {
             }
             _ => segment_longest_prefix(keys),
         };
-        // 连第一个字母都切不动（`impor`）：拼音这边没戏，但英文词 / 补全、快捷候选还可以有
+        // 連第一個字母都切不動（`impor`）：拼音這邊沒戲，但英文詞 / 補全、快捷候選還可以有
         let (segmentations, tail) = match parsed {
             Ok(parsed) => parsed,
             Err(error) => {
@@ -64,7 +64,7 @@ impl Engine {
                 });
             }
         };
-        // 拼音「不像话」时试拼写纠错；纠正生效则按纠正后的切分查词，原串只用来记学习与显示
+        // 拼音「不像話」時試拼寫糾錯；糾正生效則按糾正後的切分查詞，原串只用來記學習與顯示
         let unlikely = correction::unlikely_pinyin(segmentations.first(), tail)
             || correction::trailing_single_letter(segmentations.first());
         let correction = if unlikely {
@@ -80,22 +80,22 @@ impl Engine {
 
         let start = Instant::now();
         let mut scored = Vec::new();
-        // 不同切分共享很多前缀（`zh g d o…` 的各种切法前几段一样），同一次查询里同一个模式只查一遍
+        // 不同切分共享很多字首（`zh g d o…` 的各種切法前幾段一樣），同一次查詢裡同一個模式只查一遍
         let mut memo: HashMap<String, Vec<Match<'_>>> = HashMap::new();
         for segmentation in &segmentations {
             let mut patterns = segmentation.patterns();
             let count = patterns.len();
             let last = &segmentation.syllables[count - 1];
-            // 最后一个音节即使打完了也可能还没打完（`xia` 可能是 `xiang` 的前缀），按前缀查；双拼两键就是定局
+            // 最後一個音節即使打完了也可能還沒打完（`xia` 可能是 `xiang` 的字首），按字首查；雙拼兩鍵就是定局
             if last.complete && decoded.is_none() && parser::is_syllable_prefix(&last.text) {
                 patterns[count - 1].complete = false;
             }
-            // 词级候选只按敲的原样与模糊音查，敲错变体只进整句词图（它的候选从那边插进来）：
-            // 词级排序把音节数对得上的排最前，敲错命中的词（`kaif` → 咖啡）会把更长的原样词挤到后面
+            // 詞級候選只按敲的原樣與模糊音查，敲錯變體只進整句詞圖（它的候選從那邊插進來）：
+            // 詞級排序把音節數對得上的排最前，敲錯命中的詞（`kaif` → 咖啡）會把更長的原樣詞擠到後面
             let expanded = self.fuzzy.expand(&patterns);
             let positions = expanded.positions();
             let abbreviated = abbreviated_count(&patterns);
-            // 没有替代写法时每条命中都是敲的原音节，`penalty` 直接给 0（单字母简拼能命中几万条）
+            // 沒有替代寫法時每條命中都是敲的原音節，`penalty` 直接給 0（單字母簡拼能命中幾萬條）
             let hits = self.lookup_all(&positions);
             scored.reserve(hits.len());
             for hit in hits {
@@ -110,9 +110,9 @@ impl Engine {
                     penalty: expanded.penalty(hit.syllables()),
                 });
             }
-            // 输入的前缀也出候选（`kaifazhe` → 开发、开），否则长句没法逐词上屏。
-            // 只收音节数正好等于前缀长度的词，更长的词会与输入后面的音节冲突。
-            // 前缀不含最后一个位置，因此可复用上面的扩展结果。
+            // 輸入的字首也出候選（`kaifazhe` → 開發、開），否則長句沒法逐詞上屏。
+            // 只收音節數正好等於字首長度的詞，更長的詞會與輸入後面的音節衝突。
+            // 字首不含最後一個位置，因此可複用上面的擴充套件結果。
             for prefix_len in (1..count).rev() {
                 let prefix = &patterns[..prefix_len];
                 let prefix_letters: usize = prefix.iter().map(|p| p.text.len()).sum();
@@ -122,7 +122,7 @@ impl Engine {
                 let abbreviated = abbreviated_count(prefix);
                 for hit in hits.iter().copied() {
                     scored.push(Scored {
-                        // 对整个输入来说它不是精确命中，只是覆盖了前面一部分
+                        // 對整個輸入來說它不是精確命中，只是覆蓋了前面一部分
                         hit: Match {
                             exact: false,
                             ..hit
@@ -139,14 +139,14 @@ impl Engine {
         let lookup = start.elapsed();
 
         let start = Instant::now();
-        // 再往后翻也翻不到的候选不必再造：单字母简拼能命中两万个词，排完序只留前面这些。
-        // 同输入串（候选覆盖的那段字母）下选过的优先；上下文是上一个上屏的词（句首为 None）：
-        // `ba` 在「做了」后面出 吧、句首出 把
+        // 再往後翻也翻不到的候選不必再造：單字母簡拼能命中兩萬個詞，排完序只留前面這些。
+        // 同輸入串（候選覆蓋的那段字母）下選過的優先；上下文是上一個上屏的詞（句首為 None）：
+        // `ba` 在「做了」後面出 吧、句首出 把
         let log_total = (self.total_frequency() as f64).max(1.0).ln();
         let letters = choice_key(scope, scope.len());
         ranking::rank(&mut scored, MAX_CANDIDATES, |item| {
             let hit = &item.hit;
-            // 纠错生效时覆盖的是纠正后的字母，换算回原串再查「这个输入串下选过什么」
+            // 糾錯生效時覆蓋的是糾正後的字母，換算回原串再查「這個輸入串下選過什麼」
             let covered = correction
                 .as_ref()
                 .map_or(item.coverage, |c| c.edit.to_original(item.coverage));
@@ -162,13 +162,13 @@ impl Engine {
             );
             (choice, log_prob)
         });
-        // 辅码态：词库候选按码段**反向**过滤（逐个问「有没有以码段开头的码」），无码词直接隐藏；
-        // 命中的按「完全匹配码 > 码长降序 > 原词频序」重排（stable sort 保住 rank 排好的原序）。
-        // 码段为空（刚敲下触发键）时不过滤，候选与纯拼音态一模一样。
+        // 輔碼態：詞庫候選按碼段**反向**過濾（逐個問「有沒有以碼段開頭的碼」），無碼詞直接隱藏；
+        // 命中的按「完全匹配碼 > 碼長降序 > 原詞頻序」重排（stable sort 保住 rank 排好的原序）。
+        // 碼段為空（剛敲下觸發鍵）時不過濾，候選與純拼音態一模一樣。
         let aux_code = self.aux_filter();
         let mut items: Vec<Candidate> = Vec::with_capacity(scored.len());
         match aux_code {
-            // 没在筛码：首条码只在显示开关开着或已在辅码态时挂，否则不逐候选查码
+            // 沒在篩碼：首條碼只在顯示開關開著或已在輔碼態時掛，否則不逐候選查碼
             None => items.extend(scored.into_iter().map(|item| {
                 let first = if self.aux_show || self.aux_code.is_some() {
                     self.matching_code(item.hit.text, "")
@@ -197,9 +197,9 @@ impl Engine {
                 );
             }
         }
-        // 附加候选（英文尾段与补全、快捷、整句、emoji）都没有码：辅码筛词时一律不出
+        // 附加候選（英文尾段與補全、快捷、整句、emoji）都沒有碼：輔碼篩詞時一律不出
         if aux_code.is_none() {
-            // 中文优先：整句先进去占第一，英文词紧跟其后（第二）；关掉时英文词先进、整句排在开头的英文后面
+            // 中文優先：整句先進去佔第一，英文詞緊跟其後（第二）；關掉時英文詞先進、整句排在開頭的英文後面
             if self.chinese_first {
                 self.insert_sentence(
                     &mut items,
@@ -219,19 +219,19 @@ impl Engine {
                     head_wins,
                 );
             }
-            // 快捷候选按敲的键认（`rq` 日期），双拼下也是
+            // 快捷候選按敲的鍵認（`rq` 日期），雙拼下也是
             self.insert_shortcuts(&mut items, keys);
             self.insert_emoji(&mut items);
         }
         let rank = start.elapsed();
 
-        // 按头段算时英文尾段不参与拼音候选，显示上跟在切分后面：`wo'xiang'xue'hao'rust`
+        // 按頭段算時英文尾段不參與拼音候選，顯示上跟在切分後面：`wo'xiang'xue'hao'rust`
         let tail = english_tail
             .as_ref()
             .filter(|_| head_wins)
             .map_or(tail, |t| &keys[t.head_len..]);
         let typed_display = decoded.as_ref().map(|d| d.marked()).or_else(|| {
-            // 中文模式下 Shift 敲的大写：匹配按小写算，拼音行仍按敲的样子显示（`Cpan`）
+            // 中文模式下 Shift 敲的大寫：匹配按小寫算，拼音行仍按敲的樣子顯示（`Cpan`）
             (correction.is_none() && self.composition.has_shifted())
                 .then(|| join_marked_typed(&self.composition.typed_scope(), &segmentations, tail))
         });

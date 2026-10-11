@@ -1,14 +1,14 @@
-//! 开发期对照数据：从 hanzi-writer-data（Make Me a Hanzi，大陆规范字形）生成 `stroke --verify`
-//! 用的两张对照表。
+//! 開發期對照資料：從 hanzi-writer-data（Make Me a Hanzi，大陸規範字形）生成 `stroke --verify`
+//! 用的兩張對照表。
 //!
-//! 数据许可是 Arphic Public License，与仓库的 GPL-3.0 不兼容：只作开发期对照，**不进仓库、不随包**，
-//! 产物写在 `data/mmh/`（gitignore），`--verify` 找不到哪张就跳过哪张对照。两个产物：
+//! 資料許可是 Arphic Public License，與倉庫的 GPL-3.0 不相容：只作開發期對照，**不進倉庫、不隨包**，
+//! 產物寫在 `data/mmh/`（gitignore），`--verify` 找不到哪張就跳過哪張對照。兩個產物：
 //!
-//! - `prc-counts-l1.tsv`：字<TAB>大陆笔画数（每字 medians 的笔画条数）；
-//! - `prc-first-strokes-l1.tsv`：字<TAB>首笔几何类别，类别见 `first_class`。
+//! - `prc-counts-l1.tsv`：字<TAB>大陸筆畫數（每字 medians 的筆畫條數）；
+//! - `prc-first-strokes-l1.tsv`：字<TAB>首筆幾何類別，類別見 `first_class`。
 //!
-//! 首笔类别是首笔中点折线的几何近似，只用来**找**不一致：带尖角转折的记 z、竖撇的走向记 s 这类，
-//! 都以规范裁定量为准，不是规范口径本身；规范依据与白名单见 `assets/stroke/README.md`。
+//! 首筆類別是首筆中點折線的幾何近似，只用來**找**不一致：帶尖角轉折的記 z、豎撇的走向記 s 這類，
+//! 都以規範裁定量為準，不是規範口徑本身；規範依據與白名單見 `assets/stroke/README.md`。
 
 mod options;
 
@@ -25,13 +25,13 @@ use std::path::Path;
 use crate::error::ConvertError;
 use crate::stroke::{malformed, single_char};
 
-/// 笔画数对照的文件名。
+/// 筆畫數對照的檔名。
 const COUNTS_FILE: &str = "prc-counts-l1.tsv";
 
-/// 首笔对照的文件名。
+/// 首筆對照的檔名。
 const FIRSTS_FILE: &str = "prc-first-strokes-l1.tsv";
 
-/// 生成两张对照表。
+/// 生成兩張對照表。
 pub fn generate(options: &MmhReferenceOptions) -> Result<(), ConvertError> {
     let chars = read_filter(&options.filter)?;
     tracing::info!(chars = chars.len(), path = %options.filter.display(), "已读字表");
@@ -89,10 +89,10 @@ pub fn generate(options: &MmhReferenceOptions) -> Result<(), ConvertError> {
     Ok(())
 }
 
-/// 一个字的中点折线：每笔一条折线，点对是 1024 见方里的 x / y（y 向上）。
+/// 一個字的中點折線：每筆一條折線，點對是 1024 見方里的 x / y（y 向上）。
 type Medians = Vec<Vec<[f64; 2]>>;
 
-/// 读一个字的字形数据；文件不存在返回 None（对照源不必覆盖全字表）。
+/// 讀一個字的字形資料；檔案不存在返回 None（對照源不必覆蓋全字表）。
 fn read_char(dir: &Path, ch: char) -> Result<Option<Medians>, ConvertError> {
     let path = dir.join(format!("{ch}.json"));
     if !path.is_file() {
@@ -117,7 +117,7 @@ fn read_char(dir: &Path, ch: char) -> Result<Option<Medians>, ConvertError> {
     Ok(Some(parsed))
 }
 
-/// 读折线上的一对坐标。
+/// 讀折線上的一對座標。
 fn read_point(
     path: &Path,
     line: usize,
@@ -138,12 +138,12 @@ fn read_point(
     Ok([x, y])
 }
 
-/// 首笔的几何类别：首笔中点折线（1024 见方，y 向上）分类成 h / s / p / n / z / ?。
+/// 首筆的幾何類別：首筆中點折線（1024 見方，y 向上）分類成 h / s / p / n / z / ?。
 ///
-/// 只为「找不一致」服务：前半程与后半程的平均方向夹角超过 55° 的是折（横折、竖提、撇点这类
-/// 一处大拐弯记 z；撇是渐弯的，前后半程方向差到不了 55°，不会误成 z）。没有转折的按走向分：
-/// 向右或右上记 h（横、提），向左下记 p（撇，含浅的平撇），近竖直向下记 s（竖撇的走向也在这里，
-/// 对照时按近似对接受），向右下记 n（捺）；太短分不出走向的记 n（点），退化到没有方向的记 ?。
+/// 只為「找不一致」服務：前半程與後半程的平均方向夾角超過 55° 的是折（橫折、豎提、撇點這類
+/// 一處大拐彎記 z；撇是漸彎的，前後半程方向差到不了 55°，不會誤成 z）。沒有轉折的按走向分：
+/// 向右或右上記 h（橫、提），向左下記 p（撇，含淺的平撇），近豎直向下記 s（豎撇的走向也在這裡，
+/// 對照時按近似對接受），向右下記 n（捺）；太短分不出走向的記 n（點），退化到沒有方向的記 ?。
 pub(super) fn first_class(median: &[[f64; 2]]) -> char {
     if median.len() < 2 {
         return '?';
@@ -175,7 +175,7 @@ pub(super) fn first_class(median: &[[f64; 2]]) -> char {
     'n'
 }
 
-/// 前半程与后半程的平均方向夹角（度）。按路径长度取中点，退化时给 0（没有转折证据）。
+/// 前半程與後半程的平均方向夾角（度）。按路徑長度取中點，退化時給 0（沒有轉折證據）。
 fn half_angle(median: &[[f64; 2]], scale: f64) -> f64 {
     if median.len() < 3 {
         return 0.0;
@@ -187,7 +187,7 @@ fn half_angle(median: &[[f64; 2]], scale: f64) -> f64 {
     if total <= 0.0 {
         return 0.0;
     }
-    // 中点落在第 split 段之后：前半程到 median[split] 为止；夹在首尾之间，两半都有内容
+    // 中點落在第 split 段之後：前半程到 median[split] 為止；夾在首尾之間，兩半都有內容
     let mut acc = 0.0;
     let mut split = median.len() - 2;
     for (index, pair) in median.windows(2).enumerate() {
@@ -209,7 +209,7 @@ fn half_angle(median: &[[f64; 2]], scale: f64) -> f64 {
     dot.clamp(-1.0, 1.0).acos().to_degrees()
 }
 
-/// 读字表：一行一个字（第一列），表序即输出序。
+/// 讀字表：一行一個字（第一列），表序即輸出序。
 fn read_filter(path: &Path) -> Result<Vec<char>, ConvertError> {
     let mut chars = Vec::new();
     let mut seen = HashSet::new();

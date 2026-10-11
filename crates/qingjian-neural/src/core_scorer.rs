@@ -2,7 +2,7 @@ use qingjian_core::sentence::SentenceScorer;
 
 use crate::{CharScorer, P2c};
 
-/// 字级模型：条件是光标前文，忽略按键。
+/// 字級模型：條件是游標前文，忽略按鍵。
 impl SentenceScorer for CharScorer {
     fn score(&self, context: &str, _keys: &str, texts: &[&str]) -> Vec<f64> {
         match CharScorer::score(self, context, texts) {
@@ -15,15 +15,15 @@ impl SentenceScorer for CharScorer {
     }
 }
 
-/// P2C 模型：条件是用户敲的那段按键，忽略前文。
+/// P2C 模型：條件是使用者敲的那段按鍵，忽略前文。
 ///
-/// 冻结集 8322 句上比字级模型的重排高 0.69 个点（41.80% → 42.49%，配对 McNemar p=0.003），
-/// 延迟也低（中位 18.5 对 22.0 ms），而且同一个模型还能造词——所以整句重排换成它。
-/// 留出验证过 λ 没有过拟合：0.5 / 0.75 / 1.0 在两半上都赢，只有 0.25 会输。
+/// 凍結集 8322 句上比字級模型的重排高 0.69 個點（41.80% → 42.49%，配對 McNemar p=0.003），
+/// 延遲也低（中位 18.5 對 22.0 ms），而且同一個模型還能造詞——所以整句重排換成它。
+/// 留出驗證過 λ 沒有過擬合：0.5 / 0.75 / 1.0 在兩半上都贏，只有 0.25 會輸。
 pub struct P2cScorer(pub CharScorer);
 
 impl P2cScorer {
-    /// 字表里没有 `<sep>` 的不是 P2C 模型，建不出来。
+    /// 字表裡沒有 `<sep>` 的不是 P2C 模型，建不出來。
     pub fn new(scorer: CharScorer) -> Option<Self> {
         scorer.vocab().sep()?;
         Some(Self(scorer))

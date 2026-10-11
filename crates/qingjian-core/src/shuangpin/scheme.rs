@@ -8,34 +8,34 @@ use super::table::Table;
 use super::{Decoded, Unit, table};
 use crate::parser;
 
-/// 双拼方案。
+/// 雙拼方案。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Scheme {
-    /// 小鹤双拼。
+    /// 小鶴雙拼。
     Xiaohe,
 
-    /// 自然码。
+    /// 自然碼。
     Ziranma,
 
-    /// 微软双拼。
+    /// 微軟雙拼。
     Microsoft,
 
-    /// 搜狗双拼。
+    /// 搜狗雙拼。
     Sogou,
 
-    /// 智能 ABC。
+    /// 智慧 ABC。
     Abc,
 
-    /// 小浪双拼。
+    /// 小浪雙拼。
     Xiaolang,
 
-    /// 首道双拼。
+    /// 首道雙拼。
     Shoudao,
 }
 
 impl Scheme {
-    /// 全部方案，设置界面按这个顺序列出。
+    /// 全部方案，設定介面按這個順序列出。
     pub const ALL: [Self; 7] = [
         Self::Xiaohe,
         Self::Ziranma,
@@ -46,7 +46,7 @@ impl Scheme {
         Self::Shoudao,
     ];
 
-    /// 配置文件里的写法。`const`：设置界面要按方案列表建常量表（见 `qingjian_platform::Scheme`）。
+    /// 配置檔案裡的寫法。`const`：設定介面要按方案列表建常量表（見 `qingjian_platform::Scheme`）。
     pub const fn key(self) -> &'static str {
         match self {
             Self::Xiaohe => "xiaohe",
@@ -59,7 +59,7 @@ impl Scheme {
         }
     }
 
-    /// 界面上的名字。`const` 的理由同上。
+    /// 介面上的名字。`const` 的理由同上。
     pub const fn label(self) -> &'static str {
         match self {
             Self::Xiaohe => "小鹤双拼",
@@ -84,17 +84,17 @@ impl Scheme {
         }
     }
 
-    /// 这套方案是否用到 `;` 键。
+    /// 這套方案是否用到 `;` 鍵。
     pub fn uses_semicolon(self) -> bool {
         self.table().semicolon
     }
 
-    /// `c` 是不是这套方案的键：小写字母，微软 / 搜狗再加 `;`。
+    /// `c` 是不是這套方案的鍵：小寫字母，微軟 / 搜狗再加 `;`。
     pub fn is_key(self, c: char) -> bool {
         c.is_ascii_lowercase() || (c == ';' && self.uses_semicolon())
     }
 
-    /// 键 `key` 当声母时是什么：翘舌声母按方案映射，其他辅音（含 y w）是自己，元音键与 `;` 不是声母。
+    /// 鍵 `key` 當聲母時是什麼：翹舌聲母按方案對映，其他子音（含 y w）是自己，母音鍵與 `;` 不是聲母。
     pub fn initial(self, key: char) -> Option<&'static str> {
         if let Some((_, initial)) = self
             .table()
@@ -110,7 +110,7 @@ impl Scheme {
             .find(|initial| initial.len() == 1 && initial.starts_with(key))
     }
 
-    /// 键 `key` 当韵母时的候选韵母（按优先级）。
+    /// 鍵 `key` 當韻母時的候選韻母（按優先順序）。
     pub fn finals(self, key: char) -> &'static [&'static str] {
         self.table()
             .finals
@@ -119,7 +119,7 @@ impl Scheme {
             .map_or(&[], |(_, finals)| finals)
     }
 
-    /// 两个键拼成的音节；拼不出合法音节时为 `None`。
+    /// 兩個鍵拼成的音節；拼不出合法音節時為 `None`。
     pub fn syllable(self, first: char, second: char) -> Option<String> {
         let pair = [first, second];
         for (syllable, spellings) in self.table().zero_initials {
@@ -131,18 +131,18 @@ impl Scheme {
         self.finals(second)
             .iter()
             .find_map(|final_| {
-                // jv / qv 这类全拼键盘别名也是合法音节，解码结果统一成词库写法
+                // jv / qv 這類全拼鍵盤別名也是合法音節，解碼結果統一成詞庫寫法
                 let syllable = format!("{initial}{final_}");
                 parser::is_syllable(&syllable).then(|| canonical_syllable(&syllable).to_owned())
             })
             .or_else(|| {
-                // ü 在 j / q / x / y 后写作 u；同键已有的合法音节仍优先。
+                // ü 在 j / q / x / y 後寫作 u；同鍵已有的合法音節仍優先。
                 (matches!(initial, "j" | "q" | "x" | "y") && self.finals(second).contains(&"v"))
                     .then(|| format!("{initial}u"))
             })
     }
 
-    /// 一个全拼音节的主写法（两个键）。测试与文档用；拆成声母 + 韵母后查表，零声母查零声母表。
+    /// 一個全拼音節的主寫法（兩個鍵）。測試與文件用；拆成聲母 + 韻母后查表，零聲母查零聲母表。
     pub fn encode(self, syllable: &str) -> Option<[char; 2]> {
         let table = self.table();
         if let Some((_, spellings)) = table.zero_initials.iter().find(|(s, _)| *s == syllable) {
@@ -168,8 +168,8 @@ impl Scheme {
         Some([first, second])
     }
 
-    /// 把敲的键翻成全拼。两键一组从左到右配对；配不出合法音节的位置起全部原样留作尾巴；
-    /// 末尾落单的一键当声母（或元音）前缀；用户自己敲的 `'` 结束当前配对。
+    /// 把敲的鍵翻成全拼。兩鍵一組從左到右配對；配不出合法音節的位置起全部原樣留作尾巴；
+    /// 末尾落單的一鍵當聲母（或母音）字首；使用者自己敲的 `'` 結束當前配對。
     pub fn decode(self, keys: &str) -> Decoded {
         let chars: Vec<char> = keys.chars().collect();
         let mut units = Vec::with_capacity(chars.len() / 2 + 1);
@@ -203,13 +203,13 @@ impl Scheme {
         Decoded::new(units, chars[index..].iter().collect())
     }
 
-    /// 落单的一键代表的前缀：声母键是声母，元音键是元音本身（`a` 后面可能是 ai / an / ang / ao）。
+    /// 落單的一鍵代表的字首：聲母鍵是聲母，母音鍵是母音本身（`a` 後面可能是 ai / an / ang / ao）。
     fn partial(self, key: char) -> Option<String> {
         if let Some(initial) = self.initial(key) {
             return Some(initial.to_owned());
         }
         match self {
-            // 小浪与首道的 `e` 键是翘舌声母，零声母 e 一族改用 `u` 引导
+            // 小浪與首道的 `e` 鍵是翹舌聲母，零聲母 e 一族改用 `u` 引導
             Self::Xiaolang | Self::Shoudao => match key {
                 'a' => Some("a".to_owned()),
                 'o' => Some("o".to_owned()),
@@ -242,8 +242,8 @@ impl fmt::Display for Scheme {
 mod tests {
     use super::*;
 
-    /// 每套方案：全部音节都能编成两键、再解回来是同一个音节。
-    /// 只有 `lue` / `nue`（与 `lve` / `nve` 同键）和 `lo`（与 `luo` 同键）解回来是另一个写法。
+    /// 每套方案：全部音節都能編成兩鍵、再解回來是同一個音節。
+    /// 只有 `lue` / `nue`（與 `lve` / `nve` 同鍵）和 `lo`（與 `luo` 同鍵）解回來是另一個寫法。
     #[test]
     fn every_syllable_round_trips() {
         for scheme in Scheme::ALL {
@@ -255,15 +255,15 @@ mod tests {
                     .syllable(keys[0], keys[1])
                     .unwrap_or_else(|| panic!("{scheme}: {syllable} → {keys:?} 解不回"));
                 let expected = match *syllable {
-                    // 首道的 ue 与 üe 分在两个键：lue / nue 按 ue 键编出来撞上 lai / nai
+                    // 首道的 ue 與 üe 分在兩個鍵：lue / nue 按 ue 鍵編出來撞上 lai / nai
                     "lue" if scheme == Scheme::Shoudao => "lai",
                     "nue" if scheme == Scheme::Shoudao => "nai",
-                    // 方案自带的同码：`dk` 是 den / dia，取键位图上排在前面的 en
+                    // 方案自帶的同碼：`dk` 是 den / dia，取鍵點陣圖上排在前面的 en
                     "dia" if scheme == Scheme::Shoudao => "den",
                     "lue" => "lve",
                     "nue" => "nve",
                     "lo" => "luo",
-                    // 全拼的键盘别名，双拼解成词库写法
+                    // 全拼的鍵盤別名，雙拼解成詞庫寫法
                     "jv" => "ju",
                     "qv" => "qu",
                     "xv" => "xu",
@@ -279,14 +279,14 @@ mod tests {
         }
     }
 
-    /// 两键组合最多对应一个音节：解码不会有歧义。
+    /// 兩鍵組合最多對應一個音節：解碼不會有歧義。
     #[test]
     fn every_key_pair_is_unambiguous() {
         for scheme in Scheme::ALL {
             let keys: Vec<char> = "abcdefghijklmnopqrstuvwxyz;".chars().collect();
             for first in &keys {
                 for second in &keys {
-                    // `syllable` 本身就是确定的；这里确认零声母写法与「声母 + 韵母」不撞车
+                    // `syllable` 本身就是確定的；這裡確認零聲母寫法與「聲母 + 韻母」不撞車
                     let zero = scheme
                         .table()
                         .zero_initials
@@ -306,7 +306,7 @@ mod tests {
                         "{scheme}: {first}{second} 对应多个零声母音节"
                     );
                     if zero >= 1 {
-                        // 首道的 `en` `er` 以 sh 键开头，但 sh 配不出 ian / ie，仍然不撞
+                        // 首道的 `en` `er` 以 sh 鍵開頭，但 sh 配不出 ian / ie，仍然不撞
                         let clash = scheme.initial(*first).is_some_and(|initial| {
                             scheme
                                 .finals(*second)
@@ -382,10 +382,10 @@ mod tests {
         // 搜狗的 v 不兼作 üe
         assert_eq!(Scheme::Sogou.decode("lv").pinyin(), "");
         assert_eq!(Scheme::Sogou.decode("lv").tail(), "lv");
-        // 小浪中 x 为 ü，v 为 sh 或 uai/ing
+        // 小浪中 x 為 ü，v 為 sh 或 uai/ing
         assert_eq!(Scheme::Xiaolang.decode("lx").pinyin(), "lv");
         assert_eq!(Scheme::Xiaolang.decode("lv").pinyin(), "ling");
-        // 智能 ABC 的翘舌声母在 a / e / v；零声母只认 o 前缀，`aa` / `ee` 是 zha / che
+        // 智慧 ABC 的翹舌聲母在 a / e / v；零聲母只認 o 字首，`aa` / `ee` 是 zha / che
         assert_eq!(Scheme::Abc.decode("ai").pinyin(), "zhi");
         assert_eq!(Scheme::Abc.decode("ei").pinyin(), "chi");
         assert_eq!(Scheme::Abc.decode("vi").pinyin(), "shi");
@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(Scheme::Abc.decode("oe").pinyin(), "e");
         assert_eq!(Scheme::Abc.decode("aa").pinyin(), "zha");
         assert_eq!(Scheme::Abc.decode("ee").pinyin(), "che");
-        // 首道的 sh 在 e：e / ei / eng 用 u 引导，en / er 照全拼敲，ang 是 ay
+        // 首道的 sh 在 e：e / ei / eng 用 u 引導，en / er 照全拼敲，ang 是 ay
         assert_eq!(Scheme::Shoudao.decode("ue").pinyin(), "e");
         assert_eq!(Scheme::Shoudao.decode("ui").pinyin(), "ei");
         assert_eq!(Scheme::Shoudao.decode("uf").pinyin(), "eng");
@@ -423,7 +423,7 @@ mod tests {
         assert_eq!(Scheme::Abc.decode("o").pinyin(), "o");
         assert_eq!(Scheme::Shoudao.decode("e").pinyin(), "sh");
         assert_eq!(Scheme::Shoudao.decode("u").pinyin(), "e");
-        // `;` 落单不是任何东西
+        // `;` 落單不是任何東西
         assert_eq!(Scheme::Microsoft.decode(";").pinyin(), "");
         assert_eq!(Scheme::Microsoft.decode(";").tail(), ";");
     }

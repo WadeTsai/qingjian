@@ -1,4 +1,4 @@
-//! 渲染器留住的上一帧：场景树、画布几何、各配对节点的位置与在播的过渡。下一帧拿它找过渡起点，动画帧拿它重画。
+//! 渲染器留住的上一幀：場景樹、畫布幾何、各配對節點的位置與在播的過渡。下一幀拿它找過渡起點，動畫幀拿它重畫。
 
 use std::collections::HashMap;
 use std::time::Instant;
@@ -17,39 +17,39 @@ pub(super) struct Retained {
 
     pub(super) root: NodeId,
 
-    /// 画这一帧用的排布与倍数；变了就不跟新帧配对（位置不可比）。
+    /// 畫這一幀用的排布與倍數；變了就不跟新幀配對（位置不可比）。
     pub(super) layout: Layout,
 
     pub(super) scale: f32,
 
-    /// 位图宽高（像素），动画期间不变。
+    /// 點陣圖寬高（畫素），動畫期間不變。
     pub(super) size: (u32, u32),
 
-    /// 根节点左上角在位图里的位置（像素，整数）。
+    /// 根節點左上角在位圖裡的位置（畫素，整數）。
     pub(super) origin: (f32, f32),
 
-    /// 内容区宽高（像素，已取整）。
+    /// 內容區寬高（畫素，已取整）。
     pub(super) content: (f32, f32),
 
-    /// 带过渡的节点布局给的位置（相对根节点），按配对名。
+    /// 帶過渡的節點佈局給的位置（相對根節點），按配對名。
     pub(super) placements: HashMap<String, Placement>,
 
-    /// 在播的过渡。
+    /// 在播的過渡。
     pub(super) transitions: Vec<Transition>,
 
-    /// 带循环动画的节点与关键帧。
+    /// 帶迴圈動畫的節點與關鍵幀。
     pub(super) animated: Vec<(NodeId, Keyframes)>,
 
-    /// 循环动画局部重画的缓存；整张重画后作废。
+    /// 迴圈動畫區域性重畫的快取；整張重畫後作廢。
     pub(super) partial: Option<Partial>,
 
-    /// 候选与译词的点击区域，动画帧照抄（布局不变）。
+    /// 候選與譯詞的點選區域，動畫幀照抄（佈局不變）。
     pub(super) hits: Vec<HitRegion>,
 }
 
 impl Retained {
-    /// `now` 时刻屏幕上各配对节点的实际位置：在播的取插值，其余取布局位置。新一帧的过渡从这里出发，
-    /// 所以过渡没播完又来一帧时从半路接着走，不会跳回起点。
+    /// `now` 時刻螢幕上各配對節點的實際位置：在播的取插值，其餘取佈局位置。新一幀的過渡從這裡出發，
+    /// 所以過渡沒播完又來一幀時從半路接著走，不會跳回起點。
     pub(super) fn shown(&self, now: Instant) -> HashMap<String, Placement> {
         let mut shown = self.placements.clone();
         for transition in &self.transitions {

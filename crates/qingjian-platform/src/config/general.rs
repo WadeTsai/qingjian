@@ -6,142 +6,142 @@ use super::{
     Appearance, CandidateRenderer, FontSize, LayoutMode, LogLevel, PreeditMode, ShiftLetter,
 };
 
-/// 每页最多几个候选：数字键只有 1–9。
+/// 每頁最多幾個候選：數字鍵只有 1–9。
 pub const MAX_PAGE_SIZE: usize = 9;
 
-/// 翻页键对的可选值，第一项是缺省：第一个键向前、第二个向后。
-/// 缺省不用 `,` `.`：组句中敲逗号句号应该把首选上屏再补一个全角标点（`nihao,zaima` 一气打完），
-/// 拿它们翻页就得先按空格再敲标点。选 `-` `=` 时组句中的 `-` 是翻页，不再进英文直输段（#43）。
+/// 翻頁鍵對的可選值，第一項是預設：第一個鍵向前、第二個向後。
+/// 預設不用 `,` `.`：組句中敲逗號句號應該把首選上屏再補一個全形標點（`nihao,zaima` 一氣打完），
+/// 拿它們翻頁就得先按空格再敲標點。選 `-` `=` 時組句中的 `-` 是翻頁，不再進英文直輸段（#43）。
 pub const PAGE_KEY_OPTIONS: [&str; 3] = ["[]", ",.", "-="];
 
-/// 内置主题的 id。`system` / `light` / `dark` 是外观的写法，不能当主题 id（旧配置里 `theme` 写的是它们）。
+/// 內建主題的 id。`system` / `light` / `dark` 是外觀的寫法，不能當主題 id（舊配置裡 `theme` 寫的是它們）。
 pub const DEFAULT_THEME: &str = "qingjian";
 
-/// 缺省翻页键对，与 [`PAGE_KEY_OPTIONS`] 第一项一致。
+/// 預設翻頁鍵對，與 [`PAGE_KEY_OPTIONS`] 第一項一致。
 pub const DEFAULT_PAGE_KEYS: (char, char) = ('[', ']');
 
-/// `[general]` 分节：与具体功能无关的常规项。
-/// `learning_language` 写这个值表示不显示译文。
+/// `[general]` 分節：與具體功能無關的常規項。
+/// `learning_language` 寫這個值表示不顯示譯文。
 pub const LEARNING_LANGUAGE_OFF: &str = "off";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GeneralConfig {
-    /// 学习语言（ISO 639-1，`en` / `ja` / `es` / `vi`；`off` 不显示译文）：候选旁显示哪种语言的译文。要有对应的释义表文件才生效。
+    /// 學習語言（ISO 639-1，`en` / `ja` / `es` / `vi`；`off` 不顯示譯文）：候選旁顯示哪種語言的譯文。要有對應的釋義表文件才生效。
     pub learning_language: String,
 
-    /// 每页候选数，1–9。
+    /// 每頁候選數，1–9。
     pub page_size: usize,
 
-    /// 翻页键对，两个字符：前一个上一页、后一个下一页。
+    /// 翻頁鍵對，兩個字元：前一個上一頁、後一個下一頁。
     pub page_keys: String,
 
-    /// 候选窗口外观，读用 [`Self::appearance`]。文件里没写时为 `None`（字段级缺省），好认出旧写法：
-    /// 2026-09-18 之前外观写在 `theme` 里（`theme = "dark"`）。
+    /// 候選視窗外觀，讀用 [`Self::appearance`]。檔案裡沒寫時為 `None`（欄位級預設），好認出舊寫法：
+    /// 2026-09-18 之前外觀寫在 `theme` 裡（`theme = "dark"`）。
     #[serde(default)]
     pub appearance: Option<Appearance>,
 
-    /// 候选窗口主题 id（主题目录名），读用 [`Self::theme_id`]。旧写法里这一项是外观，见上。
+    /// 候選視窗主題 id（主題目錄名），讀用 [`Self::theme_id`]。舊寫法裡這一項是外觀，見上。
     pub theme: String,
 
-    /// 候选窗口竖排 / 横排。
+    /// 候選視窗豎排 / 橫排。
     pub layout: LayoutMode,
 
-    /// 横排时上 / 下键把单行展开成多行矩阵（左 / 右键改为移动候选高亮，Esc 第一下先收回）。缺省关：横排下的按键与以前一样。只有 macOS 用。
+    /// 橫排時上 / 下鍵把單行展開成多行矩陣（左 / 右鍵改為移動候選高亮，Esc 第一下先收回）。預設關：橫排下的按鍵與以前一樣。只有 macOS 用。
     pub horizontal_grid: bool,
 
-    /// 候选窗口由青简渲染器还是系统原生绘制。
+    /// 候選視窗由青簡渲染器還是系統原生繪製。
     pub renderer: CandidateRenderer,
 
-    /// 候选窗口字体的字族名；空为系统字体。只对青简渲染器生效，没装这个字体时回到系统字体。
+    /// 候選視窗字型的字族名；空為系統字型。只對青簡渲染器生效，沒裝這個字型時回到系統字型。
     pub font: String,
 
-    /// 候选字字号（点），盖过主题的；0 用主题的。不限范围，不是正数的当 0。只对青简渲染器生效。
+    /// 候選字字號（點），蓋過主題的；0 用主題的。不限範圍，不是正數的當 0。只對青簡渲染器生效。
     pub candidate_font_size: FontSize,
 
-    /// 译文字号（点），同上。
+    /// 譯文字號（點），同上。
     pub annotation_font_size: FontSize,
 
-    /// 候选窗口的过渡与循环动画。关掉与系统「减弱动态效果」一样：高亮直接跳过去，循环动画停在第一帧。
+    /// 候選視窗的過渡與迴圈動畫。關掉與系統「減弱動態效果」一樣：高亮直接跳過去，迴圈動畫停在第一幀。
     pub animations: bool,
 
-    /// 组句中的拼音显示在行内、候选窗口还是两处都显示。
+    /// 組句中的拼音顯示在行內、候選視窗還是兩處都顯示。
     pub preedit: PreeditMode,
 
-    /// 英文模式（Caps Lock 亮着）是否给英文候选（补全与拼错纠正）。关掉就是纯直通。
+    /// 英文模式（Caps Lock 亮著）是否給英文候選（補全與拼錯糾正）。關掉就是純直通。
     pub english_candidates: bool,
 
-    /// 繁体输出模式。
+    /// 繁體輸出模式。
     pub traditional: bool,
-    /// 中文模式下中英混输时中文候选总排在英文词前面。缺省关：拼音不像话的输入（`hello`）英文词排第一，
-    /// 常在中文模式里打英文词的人不受影响；想要中文永远在前的自己打开。
+    /// 中文模式下中英混輸時中文候選總排在英文詞前面。預設關：拼音不像話的輸入（`hello`）英文詞排第一，
+    /// 常在中文模式裡打英文詞的人不受影響；想要中文永遠在前的自己開啟。
     pub chinese_first: bool,
 
-    /// 中文模式下整段是英文词或英文词的开头时给英文候选与补全（`hello`、`compa` → company）。关掉中文模式只出中文，英文模式照旧。
+    /// 中文模式下整段是英文詞或英文詞的開頭時給英文候選與補全（`hello`、`compa` → company）。關掉中文模式只出中文，英文模式照舊。
     pub english_in_chinese: bool,
 
-    /// 候选后面配 emoji（`kaixin` → 开心 😄）。关掉候选里就只有字词。
+    /// 候選後面配 emoji（`kaixin` → 開心 😄）。關掉候選裡就只有字詞。
     pub emoji: bool,
 
-    /// 中文模式下按住 Shift 敲的字母：交给应用（缺省）还是收进组句缓冲区参与匹配。
-    /// 收进组句才能打出「C盘」这类混杂词（`Cpan` 与 `cpan` 一样匹配）。
+    /// 中文模式下按住 Shift 敲的字母：交給應用（預設）還是收進組句緩衝區參與匹配。
+    /// 收進組句才能打出「C盤」這類混雜詞（`Cpan` 與 `cpan` 一樣匹配）。
     pub shift_letter: ShiftLetter,
-    /// 内置英文模式：开着时单击切换键（`[shortcut] switch_mode`）或按 Caps Lock 能进英文模式。
-    /// 关掉后青简保持中文模式，切换键与语言栏按钮都不再切过去；要打英文请用系统快捷键切到别的输入法。
+    /// 內建英文模式：開著時單擊切換鍵（`[shortcut] switch_mode`）或按 Caps Lock 能進英文模式。
+    /// 關掉後青簡保持中文模式，切換鍵與語言欄按鈕都不再切過去；要打英文請用系統快捷鍵切到別的輸入法。
     pub english_mode: bool,
 
-    /// 中文模式下不在组句时敲的标点转成全角（`，。？！` 等，数字后的 `.` 保持半角）。
-    /// Windows 悬浮状态条上可点切换；macOS 在偏好设置中选择默认模式。
+    /// 中文模式下不在組句時敲的標點轉成全形（`，。？！` 等，數字後的 `.` 保持半形）。
+    /// Windows 懸浮狀態條上可點切換；macOS 在偏好設定中選擇預設模式。
     pub full_width_punctuation: bool,
 
-    /// 英文模式下的同一件事，中英各记一份；缺省半角。只有 Windows 用（macOS 英文模式一律半角）。
+    /// 英文模式下的同一件事，中英各記一份；預設半形。只有 Windows 用（macOS 英文模式一律半形）。
     pub english_full_width_punctuation: bool,
 
-    /// 组句中敲会转全角的标点（`,` `.` `?` `!` 等，翻页键除外）先把高亮候选上屏、再补该标点
-    ///（`nihao,` 一气打完「你好，」）。缺省关：标点进英文直输段整段原样上屏，与以前一致。
+    /// 組句中敲會轉全形的標點（`,` `.` `?` `!` 等，翻頁鍵除外）先把高亮候選上屏、再補該標點
+    ///（`nihao,` 一氣打完「你好，」）。預設關：標點進英文直輸段整段原樣上屏，與以前一致。
     pub punct_commits: bool,
 
-    /// 辅码触发键：拼音打完之后敲它进辅码态，缺省 `;`。校验 = 单字符、ASCII 可打印、
-    /// 非字母数字、非翻页键（见 [`qingjian_core::is_valid_aux_code_key`]）。
+    /// 輔碼觸發鍵：拼音打完之後敲它進輔碼態，預設 `;`。校驗 = 單字元、ASCII 可列印、
+    /// 非字母數字、非翻頁鍵（見 [`qingjian_core::is_valid_aux_code_key`]）。
     pub aux_code_key: String,
 
-    /// 候选上是否显示码（与译文拼成一条注记）。缺省关：竖排会挤、横排更难放下。
+    /// 候選上是否顯示碼（與譯文拼成一條註記）。預設關：豎排會擠、橫排更難放下。
     pub aux_code_show: bool,
 
-    /// 码段删空后是否留在辅码态：开（缺省）时 `;` 仍在、候选全部回来，空码段再按一次退格才退出；
-    /// 关则删空即回纯拼音态。
+    /// 碼段刪空後是否留在輔碼態：開（預設）時 `;` 仍在、候選全部回來，空碼段再按一次退格才退出；
+    /// 關則刪空即回純拼音態。
     pub aux_code_keep_empty: bool,
 
-    /// 拼音侧方案：`pinyin`（全拼，缺省）/ `xiaohe` / `ziranma` / `microsoft` / `sogou` / `abc` / `xiaolang` / `shoudao` / `zhuyin`
-    /// / `none`（关，只用形码），见 [`Scheme`]。用不认识的写法时按全拼并警告。
-    /// 缺省是空串：文件里没写这一项时要去看旧键，见 [`Self::scheme`]。
+    /// 拼音側方案：`pinyin`（全拼，預設）/ `xiaohe` / `ziranma` / `microsoft` / `sogou` / `abc` / `xiaolang` / `shoudao` / `zhuyin`
+    /// / `none`（關，只用形碼），見 [`Scheme`]。用不認識的寫法時按全拼並警告。
+    /// 預設是空串：檔案裡沒寫這一項時要去看舊鍵，見 [`Self::scheme`]。
     pub scheme: String,
 
-    /// 双拼方案下 preedit 显示原始按键字母（如 `ljse`）还是展开成全拼音节（`lan'se`）。
-    /// 缺省关（展开成全拼音节）；常在双拼中打英文词或需要核对按键的人可打开。
+    /// 雙拼方案下 preedit 顯示原始按鍵字母（如 `ljse`）還是展開成全拼音節（`lan'se`）。
+    /// 預設關（展開成全拼音節）；常在雙拼中打英文詞或需要核對按鍵的人可開啟。
     pub shuangpin_raw_preedit: bool,
 
-    /// 形码侧方案：空串为关，`wubi86` 为五笔（86 版）。**与拼音同时开着就是混输**，见 [`Self::mixed`]。
+    /// 形碼側方案：空串為關，`wubi86` 為五筆（86 版）。**與拼音同時開著就是混輸**，見 [`Self::mixed`]。
     pub wubi: String,
 
-    /// 旧键（2026-09-16 之前是 `[general] shuangpin`，空串为全拼）：只在 [`Self::scheme`] 里用来推断方案，
-    /// 不再写出去；`scheme` 写了值就不看它。当时 `shuangpin` 与 `zhuyin` 是两个字段表达同一个维度。
+    /// 舊鍵（2026-09-16 之前是 `[general] shuangpin`，空串為全拼）：只在 [`Self::scheme`] 裡用來推斷方案，
+    /// 不再寫出去；`scheme` 寫了值就不看它。當時 `shuangpin` 與 `zhuyin` 是兩個欄位表達同一個維度。
     pub shuangpin: Option<String>,
 
-    /// 旧键（同上的 `[general] zhuyin`）：同上。
+    /// 舊鍵（同上的 `[general] zhuyin`）：同上。
     pub zhuyin: Option<bool>,
 
-    /// 日志级别，缺省 info（不含用户敲的内容）。
+    /// 日誌級別，預設 info（不含使用者敲的內容）。
     pub log_level: LogLevel,
 
-    /// 输入日志：每次上屏记一行到数据目录的 `input-log.jsonl`（敲的键、看到的候选、选了什么），只写本机，
-    /// 给离线回归评测与个人模型用。缺省开；关掉就不记，「高级」页可清空。
+    /// 輸入日誌：每次上屏記一行到資料目錄的 `input-log.jsonl`（敲的鍵、看到的候選、選了什麼），只寫本機，
+    /// 給離線迴歸評測與個人模型用。預設開；關掉就不記，「進階」頁可清空。
     pub input_log: bool,
 
-    /// 学习输入习惯：按选择调整候选顺序、记新词与敲错纠正。关掉后不再记，已学的仍参与排序。
+    /// 學習輸入習慣：按選擇調整候選順序、記新詞與敲錯糾正。關掉後不再記，已學的仍參與排序。
     pub learning: bool,
 
-    /// 把系统的文本替换（macOS「键盘 → 文本替换」）并进自定义短语：输入码敲全后短语占该码最靠前的空位。只有 macOS 用。
+    /// 把系統的文本替換（macOS「鍵盤 → 文本替換」）並進自定義短語：輸入碼敲全後短語佔該碼最靠前的空位。只有 macOS 用。
     pub system_text_replacements: bool,
 }
 
@@ -188,14 +188,14 @@ impl Default for GeneralConfig {
 }
 
 impl GeneralConfig {
-    /// 候选窗口外观。`appearance` 没写时看旧写法（`theme` 写的是 system / light / dark），都没有就跟随系统。
+    /// 候選視窗外觀。`appearance` 沒寫時看舊寫法（`theme` 寫的是 system / light / dark），都沒有就跟隨系統。
     pub fn appearance(&self) -> Appearance {
         self.appearance
             .or_else(|| Appearance::from_key(self.theme.trim()))
             .unwrap_or_default()
     }
 
-    /// 候选窗口主题 id。没写、空串或旧写法（外观词）都是内置主题。
+    /// 候選視窗主題 id。沒寫、空串或舊寫法（外觀詞）都是內建主題。
     pub fn theme_id(&self) -> &str {
         let id = self.theme.trim();
         if id.is_empty() || Appearance::from_key(id).is_some() {
@@ -205,7 +205,7 @@ impl GeneralConfig {
         }
     }
 
-    /// 拼音侧方案。`scheme` 没写时用旧键（`shuangpin` / `zhuyin`）推，都没有就是全拼。
+    /// 拼音側方案。`scheme` 沒寫時用舊鍵（`shuangpin` / `zhuyin`）推，都沒有就是全拼。
     pub fn scheme(&self) -> Scheme {
         let key = self.scheme.trim();
         if !key.is_empty() {
@@ -244,26 +244,26 @@ impl GeneralConfig {
         }
     }
 
-    /// 学习语言关着（`learning_language = "off"`）：候选旁不显示译文，生词标记与释义兜底也停。
+    /// 學習語言關著（`learning_language = "off"`）：候選旁不顯示譯文，生詞標記與釋義兜底也停。
     pub fn learning_language_off(&self) -> bool {
         self.learning_language
             .trim()
             .eq_ignore_ascii_case(LEARNING_LANGUAGE_OFF)
     }
 
-    /// 当前方案是双拼时是哪一套；不是双拼时为 `None`。
+    /// 當前方案是雙拼時是哪一套；不是雙拼時為 `None`。
     pub fn shuangpin(&self) -> Option<ShuangpinScheme> {
         self.scheme().shuangpin()
     }
 
-    /// 当前方案是不是大千注音。
+    /// 當前方案是不是大千注音。
     pub fn is_zhuyin(&self) -> bool {
         self.scheme() == Scheme::Zhuyin
     }
 
-    /// 形码侧（五笔）开没开。`wubi` 认 `wubi86`；认不出来时警告并按关。
-    /// 旧配置把五笔写在 `scheme` 里（`wubi86`），那时等价于「拼音关 + 五笔开」，[`Self::scheme`] 会解成
-    /// [`Scheme::Off`]，这里跟着认下来，免得老配置升级后两个轴都关着、一个候选都不出。
+    /// 形碼側（五筆）開沒開。`wubi` 認 `wubi86`；認不出來時警告並按關。
+    /// 舊配置把五筆寫在 `scheme` 裡（`wubi86`），那時等價於「拼音關 + 五筆開」，[`Self::scheme`] 會解成
+    /// [`Scheme::Off`]，這裡跟著認下來，免得老配置升級後兩個軸都關著、一個候選都不出。
     pub fn wubi(&self) -> bool {
         let key = self.wubi.trim();
         if key.is_empty() || key == "off" || key == "none" {
@@ -276,17 +276,17 @@ impl GeneralConfig {
         false
     }
 
-    /// 拼音与形码同时开着 = 混输：两边都出候选，编码打全的形码词在前。
+    /// 拼音與形碼同時開著 = 混輸：兩邊都出候選，編碼打全的形碼詞在前。
     pub fn mixed(&self) -> bool {
         self.scheme().is_on() && self.wubi()
     }
 
-    /// 状态条上显示的输入方案名；见 [`scheme_label`]。
+    /// 狀態條上顯示的輸入方案名；見 [`scheme_label`]。
     pub fn scheme_label(&self) -> String {
         scheme_label(self.scheme(), self.wubi())
     }
 
-    /// 辅码触发键；写得不对（不是单个合法字符，或撞上当前翻页键 / 拼音隔音符 `'`）时退回缺省 `;`。
+    /// 輔碼觸發鍵；寫得不對（不是單個合法字元，或撞上當前翻頁鍵 / 拼音隔音符 `'`）時退回預設 `;`。
     pub fn aux_code_key(&self) -> char {
         let mut chars = self.aux_code_key.chars();
         match (chars.next(), chars.next()) {
@@ -295,12 +295,12 @@ impl GeneralConfig {
         }
     }
 
-    /// 夹到合法范围的每页候选数。
+    /// 夾到合法範圍的每頁候選數。
     pub fn page_size(&self) -> usize {
         self.page_size.clamp(1, MAX_PAGE_SIZE)
     }
 
-    /// 翻页键对；写得不对（不是两个不同的 ASCII 可见字符）时退回缺省。
+    /// 翻頁鍵對；寫得不對（不是兩個不同的 ASCII 可見字元）時退回預設。
     pub fn page_keys(&self) -> (char, char) {
         let mut chars = self.page_keys.chars();
         match (chars.next(), chars.next(), chars.next()) {
@@ -348,7 +348,7 @@ mod tests {
         assert_eq!(general.page_keys(), ('[', ']'));
     }
 
-    /// 组句中标点先上屏候选缺省关（`[general] punct_commits`），保持标点进英文直输段的老行为。
+    /// 組句中標點先上屏候選預設關（`[general] punct_commits`），保持標點進英文直輸段的老行為。
     #[test]
     fn punct_commits_defaults_off() {
         assert!(!GeneralConfig::default().punct_commits);
@@ -369,7 +369,7 @@ mod tests {
         }
     }
 
-    /// 码删空保持辅码态的开关缺省开（`[general] aux_code_keep_empty`）。
+    /// 碼刪空保持輔碼態的開關預設開（`[general] aux_code_keep_empty`）。
     #[test]
     fn aux_code_keep_empty_defaults_on() {
         assert!(GeneralConfig::default().aux_code_keep_empty);
@@ -395,23 +395,23 @@ mod tests {
     #[test]
     fn the_two_axes_are_independent_and_their_combination_is_mixed_input() {
         let mut general = GeneralConfig::default();
-        // 缺省：全拼，不开形码
+        // 預設：全拼，不開形碼
         assert_eq!(general.scheme(), Scheme::Pinyin);
         assert!(!general.wubi());
         assert!(!general.mixed());
 
-        // 双拼 alone
+        // 雙拼 alone
         general.scheme = "xiaohe".to_owned();
         assert!(!general.mixed());
-        // 五笔 alone：拼音侧关掉
+        // 五筆 alone：拼音側關掉
         general.scheme = "none".to_owned();
         general.wubi = "wubi86".to_owned();
         assert!(general.wubi());
         assert!(!general.mixed());
-        // 组合：两边都开 = 混输
+        // 組合：兩邊都開 = 混輸
         general.scheme = "xiaohe".to_owned();
         assert!(general.mixed());
-        // 形码写得不认识：按关，且不影响拼音侧
+        // 形碼寫得不認識：按關，且不影響拼音側
         general.wubi = "wubi98".to_owned();
         assert!(!general.wubi());
         assert_eq!(general.scheme(), Scheme::Shuangpin(ShuangpinScheme::Xiaohe));
@@ -419,8 +419,8 @@ mod tests {
 
     #[test]
     fn the_old_wubi_scheme_spelling_still_turns_wubi_on() {
-        // 2026-09-16 之前五笔是 `scheme = "wubi86"`（单选）。升级后两个轴都得跟上，
-        // 否则老配置会变成「拼音关 + 形码关」，一个字都打不出来。
+        // 2026-09-16 之前五筆是 `scheme = "wubi86"`（單選）。升級後兩個軸都得跟上，
+        // 否則老配置會變成「拼音關 + 形碼關」，一個字都打不出來。
         let general = GeneralConfig {
             scheme: "wubi86".to_owned(),
             ..GeneralConfig::default()
@@ -440,7 +440,7 @@ mod tests {
         assert_eq!(parse("zhuyin = true\n"), Scheme::Zhuyin);
         assert_eq!(parse("shuangpin = \"\"\nzhuyin = false\n"), Scheme::Pinyin);
         assert_eq!(parse(""), Scheme::Pinyin);
-        // 新键写了就以它为准
+        // 新鍵寫了就以它為準
         assert_eq!(
             parse("scheme = \"pinyin\"\nshuangpin = \"xiaohe\"\n"),
             Scheme::Pinyin
@@ -459,7 +459,7 @@ mod tests {
         general.zhuyin = Some(true);
         assert_eq!(general.scheme(), Scheme::Zhuyin);
         assert!(general.is_zhuyin());
-        // 旧配置里两个都写是不合法的，新键写了就不看它们
+        // 舊配置裡兩個都寫是不合法的，新鍵寫了就不看它們
         general.scheme = "pinyin".to_owned();
         assert_eq!(general.scheme(), Scheme::Pinyin);
         assert!(!general.is_zhuyin());

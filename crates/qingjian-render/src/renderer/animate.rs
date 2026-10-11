@@ -1,4 +1,4 @@
-//! 过渡：新一帧按配对名找上一帧同名节点，位置不同就从旧位置插值过去。壳按 [`Rendered::next_frame`] 定时调 [`Renderer::tick_at`]。
+//! 過渡：新一幀按配對名找上一幀同名節點，位置不同就從舊位置插值過去。殼按 [`Rendered::next_frame`] 定時調 [`Renderer::tick_at`]。
 
 use std::time::{Duration, Instant};
 
@@ -10,23 +10,23 @@ use crate::error::RenderError;
 use crate::scene::Keyed;
 
 impl Renderer {
-    /// 跟随系统的「减少动态效果」：开着时过渡直接跳到终点。
+    /// 跟隨系統的「減少動態效果」：開著時過渡直接跳到終點。
     pub fn set_reduce_motion(&mut self, reduce: bool) {
         self.reduce_motion = reduce;
     }
 
-    /// 不播动画：系统减少动态效果，或设置里关了。
+    /// 不播動畫：系統減少動態效果，或設定裡關了。
     pub(super) fn still(&self) -> bool {
         self.reduce_motion || self.animations_off
     }
 
-    /// 忘掉上一帧（窗口隐藏时调）：下次显示不从旧位置过渡，循环动画从头播。
+    /// 忘掉上一幀（視窗隱藏時調）：下次顯示不從舊位置過渡，迴圈動畫從頭播。
     pub fn forget(&mut self) {
         self.last = None;
         self.clock = None;
     }
 
-    /// 有过渡在播时，按 `now` 重画一帧（不重建树、不排版）；没有在播的返回 `None`。
+    /// 有過渡在播時，按 `now` 重畫一幀（不重建樹、不排版）；沒有在播的返回 `None`。
     pub fn tick_at(&mut self, now: Instant) -> Result<Option<Rendered>, RenderError> {
         let Some(mut retained) = self.last.take() else {
             return Ok(None);
@@ -44,12 +44,12 @@ impl Renderer {
         rendered.map(Some)
     }
 
-    /// 同 [`Self::tick_at`]，用当前时间。
+    /// 同 [`Self::tick_at`]，用當前時間。
     pub fn tick(&mut self) -> Result<Option<Rendered>, RenderError> {
         self.tick_at(Instant::now())
     }
 
-    /// 与上一帧配对，算出要播的过渡。
+    /// 與上一幀配對，算出要播的過渡。
     pub(super) fn transitions(
         &self,
         keyed: &[Keyed],
@@ -85,7 +85,7 @@ impl Renderer {
             .collect()
     }
 
-    /// 按 `now` 把过渡中的节点摆到插值位置，画整张；播完的过渡清掉（最后一帧就是布局位置）。
+    /// 按 `now` 把過渡中的節點擺到插值位置，畫整張；播完的過渡清掉（最後一幀就是佈局位置）。
     pub(super) fn paint_retained(
         &mut self,
         retained: &mut Retained,
@@ -111,7 +111,7 @@ impl Renderer {
             .clock
             .map_or(Duration::ZERO, |clock| now.saturating_duration_since(clock));
         for (node, keyframes) in &retained.animated {
-            // 减少动态效果：停在开头那一帧
+            // 減少動態效果：停在開頭那一幀
             let at = if self.still() {
                 Duration::ZERO
             } else {
@@ -141,7 +141,7 @@ impl Renderer {
         })
     }
 
-    /// 还有循环动画要接着播（减少动态效果时不播）。
+    /// 還有迴圈動畫要接著播（減少動態效果時不播）。
     pub(super) fn loops_running(&self, retained: &Retained, now: Instant) -> bool {
         if self.still() {
             return false;

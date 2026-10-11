@@ -1,4 +1,4 @@
-//! 真 Unix socket 回环：连接编号隔离、握手失败、重启与文件权限。
+//! 真 Unix socket 迴環：連線編號隔離、握手失敗、重啟與檔案許可權。
 #![cfg(target_os = "linux")]
 use qingjian_linux_server::ipc::bind_socket;
 use qingjian_platform::protocol::{
@@ -198,7 +198,7 @@ fn linux_ui_negotiates_after_legacy_open_and_binds_ack_to_connection() {
         &json!({"DisplayAcknowledged": {"session": 1, "identity": identity, "senses": []}}),
     )
     .unwrap();
-    assert_eq!(commit(&mut stream), None); // 旧回执不破坏此连接上的会话。
+    assert_eq!(commit(&mut stream), None); // 舊回執不破壞此連線上的會話。
     drop(server);
     std::fs::remove_dir_all(directory).unwrap();
 }

@@ -1,22 +1,22 @@
-//! 把数据源转换成青简的 TSV 格式，或打包成 `.qj`。
+//! 把資料來源轉換成青簡的 TSV 格式，或打包成 `.qj`。
 //!
-//! - `lexicon`：青简基础词库，「输入法字词库_分类整理版」数据包（规范字 / 常用词 / THUOCL 领域词）+ Unihan 读音 + LLM 多音字标注 → `dict.tsv`
-//! - `wubi`：Rime 形码码表（极点 86 五笔，Apache-2.0）→ `wubi86.tsv`（`词\t编码\t词频`，词频由青简词库按词面回填）
-//! - `cedict`：CC-CEDICT（CC BY-SA 4.0）→ `glossary-en.tsv`（释义表的备用来源，现在用 gloss-gen 的 LLM 表）
-//! - `english`：`词\t编码` 英文词表（数据包的 `05_english`，ESDB / CSpell，MIT）→ `english.tsv`
-//! - `emoji`：Unicode CLDR annotations（Unicode License v3，`--language zh|en`）→ `emoji-<语言>.tsv`（可发布，放 `assets/emoji/`）
-//! - `bigram`：纯文本语料（如 `tools/corpus/parquet_to_text.py` 转出的中文维基 CC BY-SA 4.0、LCCC 对话 MIT）→ `lm-unigram.tsv` + `lm-bigram.tsv`
-//! - `mine`：语料里分词落成连续单字的段 → `oov-candidates.tsv`（词库没收的高频词，标音后用 `lexicon --extra-words` 并入）
-//! - `phrases`：bigram 表的相邻两词 + 语料的相邻三词 → `phrases.tsv`（我的 / 不知道 这类短语层，读音由成分词拼出，同样用 `lexicon --extra-words` 并入）
-//! - `stroke`：CNS11643 全字庫「筆順資料」+ 大陆序覆盖表（`assets/stroke/prc-rules.tsv`）→ `codes/stroke.tsv`（随包笔画码表的源数据，`--verify` 抽样对照大陆笔画数）
-//! - `mmh-reference`：hanzi-writer-data（Make Me a Hanzi；Arphic 许可，不进仓库）→ `data/mmh/` 的两张开发期对照表
-//!   （笔画数、首笔几何类别），`stroke --verify` 找不到哪张就跳过哪张对照
-//! - `pack codes`：笔画表（`stroke` 的产物，`字\t序列`）+ 词库 → `codes/stroke.qj`（随包原生辅码表：单字前 4 笔 + 末笔、
-//!   词组每字首笔；缺字的词跳过并计入统计，见 `codes` 模块）
-//! - `pack dict|lm|glossary|model`：TSV → `.qj` 容器（`dict.qj` / `lm.qj`），带名称 / 许可证 / 署名元数据，输入法与 CLI 优先加载它；
-//!   `model` 把本地整句模型的三件套目录打成一个 `.qjm` 文件
+//! - `lexicon`：青簡基礎詞庫，「輸入法字詞庫_分類整理版」資料包（規範字 / 常用詞 / THUOCL 領域詞）+ Unihan 讀音 + LLM 多音字標註 → `dict.tsv`
+//! - `wubi`：Rime 形碼碼錶（極點 86 五筆，Apache-2.0）→ `wubi86.tsv`（`詞\t編碼\t詞頻`，詞頻由青簡詞庫按詞面回填）
+//! - `cedict`：CC-CEDICT（CC BY-SA 4.0）→ `glossary-en.tsv`（釋義表的備用來源，現在用 gloss-gen 的 LLM 表）
+//! - `english`：`詞\t編碼` 英文詞表（資料包的 `05_english`，ESDB / CSpell，MIT）→ `english.tsv`
+//! - `emoji`：Unicode CLDR annotations（Unicode License v3，`--language zh|en`）→ `emoji-<語言>.tsv`（可釋出，放 `assets/emoji/`）
+//! - `bigram`：純文本語料（如 `tools/corpus/parquet_to_text.py` 轉出的中文維基 CC BY-SA 4.0、LCCC 對話 MIT）→ `lm-unigram.tsv` + `lm-bigram.tsv`
+//! - `mine`：語料裡分詞落成連續單字的段 → `oov-candidates.tsv`（詞庫沒收的高頻詞，標音後用 `lexicon --extra-words` 併入）
+//! - `phrases`：bigram 表的相鄰兩詞 + 語料的相鄰三詞 → `phrases.tsv`（我的 / 不知道 這類短語層，讀音由成分詞拼出，同樣用 `lexicon --extra-words` 併入）
+//! - `stroke`：CNS11643 全字型檔「筆順資料」+ 大陸序覆蓋表（`assets/stroke/prc-rules.tsv`）→ `codes/stroke.tsv`（隨包筆畫碼錶的源資料，`--verify` 抽樣對照大陸筆畫數）
+//! - `mmh-reference`：hanzi-writer-data（Make Me a Hanzi；Arphic 許可，不進倉庫）→ `data/mmh/` 的兩張開發期對照表
+//!   （筆畫數、首筆幾何類別），`stroke --verify` 找不到哪張就跳過哪張對照
+//! - `pack codes`：筆畫表（`stroke` 的產物，`字\t序列`）+ 詞庫 → `codes/stroke.qj`（隨包原生輔碼錶：單字前 4 筆 + 末筆、
+//!   片語每字首筆；缺字的詞跳過並計入統計，見 `codes` 模組）
+//! - `pack dict|lm|glossary|model`：TSV → `.qj` 容器（`dict.qj` / `lm.qj`），帶名稱 / 許可證 / 署名後設資料，輸入法與 CLI 優先載入它；
+//!   `model` 把本地整句模型的三件套目錄打成一個 `.qjm` 檔案
 //!
-//! 输出默认写到仓库根目录 `data/generated/`（gitignore）。
+//! 輸出預設寫到倉庫根目錄 `data/generated/`（gitignore）。
 
 mod args;
 mod bigram;

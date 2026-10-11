@@ -1,4 +1,4 @@
-//! 真实连接处理器与 Router 的资源回收；不增加产品诊断消息。
+//! 真實連線處理器與 Router 的資源回收；不增加產品診斷訊息。
 use super::{Request, connection::serve_connection};
 use crate::dispatch::{Router, RouterConfig};
 use qingjian_core::Engine;
@@ -54,7 +54,7 @@ fn close_and_disconnect_reclaim_every_router_session() {
     for id in 1..=128 {
         write_message(&mut client, &json!({"CloseSession": {"session": id}})).unwrap();
     }
-    open(&mut client, 129); // 所有无回包通知已完成的顺序屏障。
+    open(&mut client, 129); // 所有無回包通知已完成的順序屏障。
     assert_eq!(count.load(Ordering::SeqCst), 1);
     for id in 130..=256 {
         open(&mut client, id);

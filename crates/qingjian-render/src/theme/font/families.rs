@@ -1,5 +1,5 @@
-//! 主题的字族表：缺省字族与各命名样式的回退链去重后排成一张表，样式里存序号（[`FamilyId`]），文字样式因此仍可按值复制。
-//! 加载主题时建一次；渲染器按序号查链、挑第一个装了的字族。
+//! 主題的字族表：預設字族與各命名樣式的回退鏈去重後排成一張表，樣式裡存序號（[`FamilyId`]），文字樣式因此仍可按值複製。
+//! 載入主題時建一次；渲染器按序號查鏈、挑第一個裝了的字族。
 
 use std::collections::HashMap;
 
@@ -8,17 +8,17 @@ use crate::theme::file::{FamilyList, FontStyle, TextSettings};
 
 #[derive(Debug, Default)]
 pub(crate) struct FontFamilies {
-    /// 回退链，序号就是 [`FamilyId`]；第 0 条是缺省字族。
+    /// 回退鏈，序號就是 [`FamilyId`]；第 0 條是預設字族。
     chains: Vec<FamilyList>,
 
-    /// 命名样式（点），字族已换成序号。
+    /// 命名樣式（點），字族已換成序號。
     styles: HashMap<String, FontSpec>,
 }
 
 impl FontFamilies {
     pub(crate) fn new(text: &TextSettings) -> Self {
         let mut chains = vec![text.family.clone().unwrap_or_else(FamilyList::system)];
-        // 按样式名排，字族表的顺序（也是壳查字体的顺序）每次加载都一样
+        // 按樣式名排，字族表的順序（也是殼查字型的順序）每次載入都一樣
         let mut named: Vec<_> = text.styles.iter().collect();
         named.sort_by(|a, b| a.0.cmp(b.0));
         let styles = named
@@ -45,12 +45,12 @@ impl FontFamilies {
         self.styles.get(name).copied()
     }
 
-    /// 全部回退链，按序号排。
+    /// 全部回退鏈，按序號排。
     pub(crate) fn chains(&self) -> &[FamilyList] {
         &self.chains
     }
 
-    /// 链里写到的字族名（不含 `system`），去重；壳按名字查字体文件交给渲染器加载。
+    /// 鏈裡寫到的字族名（不含 `system`），去重；殼按名字查字型檔案交給渲染器載入。
     pub(crate) fn names(&self) -> Vec<String> {
         let mut names: Vec<String> = Vec::new();
         for name in self.chains.iter().flat_map(|chain| &chain.0) {
@@ -136,7 +136,7 @@ mod tests {
         for theme in Theme::builtins() {
             let families = theme.font_families();
             match theme.id() {
-                // 候选宋体（mac / Windows 各一个名字），标语 Georgia 斜体
+                // 候選宋體（mac / Windows 各一個名字），標語 Georgia 斜體
                 "sakura" => assert_eq!(families, ["Songti SC", "SimSun", "Georgia"]),
                 id => assert!(families.is_empty(), "{id}"),
             }

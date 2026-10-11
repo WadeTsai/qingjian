@@ -1,4 +1,4 @@
-//! 传输错误在有界时间内使整条连接失效，已发送事件不重放。
+//! 傳輸錯誤在有界時間內使整條連線失效，已傳送事件不重放。
 #include "qingjian.h"
 #include "support/input.h"
 #include "support/wire.h"
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
                 assert(send(connection, bad, sizeof(bad), MSG_NOSIGNAL) == sizeof(bad));
             } else writeMessage(connection, {{"KeyResult", {{"session", 999}, {"outcome", "Consumed"}, {"commit", "不可上屏"}, {"identity", identity}, {"frame", Json::object()}}}});
         }
-        char byte; assert(recv(connection, &byte, 1, 0) == 0); // 失败后关闭，无键重放。
+        char byte; assert(recv(connection, &byte, 1, 0) == 0); // 失敗後關閉，無鍵重放。
         close(connection);
     });
     char program[] = "qingjian-transport"; char disable[] = "--disable=all"; char *arguments[] = {program, disable, nullptr};

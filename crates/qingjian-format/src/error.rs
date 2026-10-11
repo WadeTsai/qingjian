@@ -15,10 +15,10 @@ pub enum FormatError {
 
     #[error("wrong data kind: expected {expected:?}, found {found}")]
     WrongKind {
-        /// 调用方要打开的种类。
+        /// 呼叫方要開啟的種類。
         expected: crate::Kind,
 
-        /// 文件头里的种类编号。
+        /// 檔案頭裡的種類編號。
         found: u16,
     },
 
@@ -30,7 +30,7 @@ pub enum FormatError {
 
     #[error("malformed section {}: {reason}", tag_str(.tag))]
     Malformed {
-        /// 出问题的分节。
+        /// 出問題的分節。
         tag: [u8; 4],
 
         /// 原因。

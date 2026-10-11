@@ -1,25 +1,25 @@
 use serde::{Deserialize, Serialize};
 
-/// 组句中的拼音（preedit）显示在哪里。
+/// 組句中的拼音（preedit）顯示在哪裡。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PreeditMode {
-    /// 行内 marked text 与候选窗口顶部都显示。
+    /// 行內 marked text 與候選視窗頂部都顯示。
     #[default]
     Both,
 
-    /// 只在行内（应用里的 marked text），候选窗口不带拼音行。
+    /// 只在行內（應用裡的 marked text），候選視窗不帶拼音行。
     Inline,
 
-    /// 只在候选窗口顶部，应用里不放 marked text（终端、部分 Electron 应用画不好行内拼音时用）。
+    /// 只在候選視窗頂部，應用裡不放 marked text（終端、部分 Electron 應用畫不好行內拼音時用）。
     Window,
 }
 
 impl PreeditMode {
-    /// 全部取值，设置界面按这个顺序列出。
+    /// 全部取值，設定介面按這個順序列出。
     pub const ALL: [Self; 3] = [Self::Both, Self::Inline, Self::Window];
 
-    /// 配置文件里的写法。
+    /// 配置檔案裡的寫法。
     pub fn key(self) -> &'static str {
         match self {
             Self::Both => "both",
@@ -28,7 +28,7 @@ impl PreeditMode {
         }
     }
 
-    /// 界面上的名字。
+    /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
             Self::Both => "行内 + 候选窗口",
@@ -37,12 +37,12 @@ impl PreeditMode {
         }
     }
 
-    /// 要不要往应用里放 marked text。
+    /// 要不要往應用裡放 marked text。
     pub fn inline(self) -> bool {
         !matches!(self, Self::Window)
     }
 
-    /// 候选窗口顶部要不要画拼音行。
+    /// 候選視窗頂部要不要畫拼音行。
     pub fn in_window(self) -> bool {
         !matches!(self, Self::Inline)
     }

@@ -1,12 +1,12 @@
 [package]
 name = "qingjian-windows-tsf"
-description = "Windows 输入法的 TSF 文本服务 DLL：加载进每个应用进程，把系统按键经 IPC 交给 Server 进程（../server）"
+description = "Windows 輸入法的 TSF 文本服務 DLL：載入進每個應用程序，把系統按鍵經 IPC 交給 Server 程序（../server）"
 version = "0.2.1-dev"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# cdylib 是产物 qingjian_tsf.dll（regsvr32 与安装脚本都认这个名字）；rlib 给端到端协议测试 `use qingjian_tsf`。
+# cdylib 是產物 qingjian_tsf.dll（regsvr32 與安裝指令碼都認這個名字）；rlib 給端到端協議測試 `use qingjian_tsf`。
 [lib]
 name = "qingjian_tsf"
 crate-type = ["cdylib", "rlib"]
@@ -24,7 +24,7 @@ workspace = true
 
 [target."cfg(windows)".dependencies]
 windows-registry.workspace = true
-# `#[implement]` 宏展开引用 `::windows_core`，要直接依赖
+# `#[implement]` 巨集展開引用 `::windows_core`，要直接依賴
 windows-core = "0.62.2"
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",

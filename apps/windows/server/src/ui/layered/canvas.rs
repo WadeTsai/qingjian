@@ -1,4 +1,4 @@
-//! 合成用的位图：一张 top-down 32bpp DIB 与内存 DC。
+//! 合成用的點陣圖：一張 top-down 32bpp DIB 與記憶體 DC。
 
 use windows::Win32::Foundation::E_FAIL;
 use windows::Win32::Graphics::Gdi::{
@@ -7,8 +7,8 @@ use windows::Win32::Graphics::Gdi::{
 };
 use windows::core::{Error, Result};
 
-/// 一张 top-down 32bpp DIB 与选进了它的内存 DC。像素只能经 [`Self::pixels`]（`&mut self`）访问，
-/// 保证 GDI 在画的时候没有 Rust 侧切片指着同一块内存。
+/// 一張 top-down 32bpp DIB 與選進了它的記憶體 DC。畫素只能經 [`Self::pixels`]（`&mut self`）訪問，
+/// 保證 GDI 在畫的時候沒有 Rust 側切片指著同一塊記憶體。
 pub(super) struct Canvas {
     dib: HBITMAP,
     memdc: HDC,
@@ -22,7 +22,7 @@ impl Canvas {
         let header = BITMAPINFOHEADER {
             biSize: core::mem::size_of::<BITMAPINFOHEADER>() as u32,
             biWidth: w,
-            biHeight: -h, // 负高 = top-down
+            biHeight: -h, // 負高 = top-down
             biPlanes: 1,
             biBitCount: 32,
             biCompression: BI_RGB.0,
@@ -58,9 +58,9 @@ impl Canvas {
         self.memdc
     }
 
-    /// 像素（BGRA，top-down）。先 `GdiFlush` 把批量的 GDI 调用落到位图上。
+    /// 畫素（BGRA，top-down）。先 `GdiFlush` 把批次的 GDI 呼叫落到點陣圖上。
     pub(super) fn pixels(&mut self) -> &mut [u8] {
-        // SAFETY: 缓冲由 CreateDIBSection 分配、w*h*4 字节连续、随 dib 存活；`&mut self` 保证独占。
+        // SAFETY: 緩衝由 CreateDIBSection 分配、w*h*4 位元組連續、隨 dib 存活；`&mut self` 保證獨佔。
         unsafe {
             let _ = GdiFlush();
             std::slice::from_raw_parts_mut(self.bits, self.len)

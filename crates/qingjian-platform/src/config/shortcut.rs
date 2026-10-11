@@ -5,33 +5,33 @@ use super::key_combo::KeyCombo;
 use super::modifiers::Modifiers;
 use super::switch_key::SwitchKeys;
 
-/// 配置文件 `[shortcut]` 分节：前缀模式键（Core 的 [`ModeKeys`]）加壳层的修饰键组合。
+/// 配置檔案 `[shortcut]` 分節：字首模式鍵（Core 的 [`ModeKeys`]）加殼層的修飾鍵組合。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ShortcutConfig {
-    /// 表达式 / 问字模式键，键名与以前一样直接在分节下（`expression` / `question`）。
+    /// 表示式 / 問字模式鍵，鍵名與以前一樣直接在分節下（`expression` / `question`）。
     #[serde(flatten)]
     pub mode: ModeKeys,
 
-    /// 中 / 英切换键（Windows 用），可多选：`["shift", "control", "ctrl+alt+space"]`。详见 [`SwitchKeys`]。
+    /// 中 / 英切換鍵（Windows 用），可多選：`["shift", "control", "ctrl+alt+space"]`。詳見 [`SwitchKeys`]。
     pub switch_mode: SwitchKeys,
 
-    /// 数字键配这些修饰键：上屏候选的第一个译词。
+    /// 數字鍵配這些修飾鍵：上屏候選的第一個譯詞。
     pub translation: Modifiers,
 
-    /// 数字键配这些修饰键：上屏候选的第二个译词（候选右侧有两个译词时）。
+    /// 數字鍵配這些修飾鍵：上屏候選的第二個譯詞（候選右側有兩個譯詞時）。
     pub translation_second: Modifiers,
 
-    /// 把应用里选中的文字译成学习语言（需要云服务开着）。
+    /// 把應用裡選中的文字譯成學習語言（需要雲服務開著）。
     pub translate_selection: KeyCombo,
 
-    /// 数字键配这些修饰键：删掉候选（用户词整个删掉，词库词清掉对它的学习）。
+    /// 數字鍵配這些修飾鍵：刪掉候選（使用者詞整個刪掉，詞庫詞清掉對它的學習）。
     pub delete_candidate: Modifiers,
 }
 
 impl Default for ShortcutConfig {
     fn default() -> Self {
-        // Windows 上 Alt+数字被系统当菜单快捷键截走（TSF 收不到），译词键缺省用 Ctrl；macOS 用 Option。
+        // Windows 上 Alt+數字被系統當選單快捷鍵截走（TSF 收不到），譯詞鍵預設用 Ctrl；macOS 用 Option。
         #[cfg(windows)]
         let (translation, translation_second) = (Modifiers::CONTROL, Modifiers::SHIFT_CONTROL);
         #[cfg(not(windows))]
@@ -48,7 +48,7 @@ impl Default for ShortcutConfig {
 }
 
 impl ShortcutConfig {
-    /// 删候选的修饰键；为空或与任一组译词键撞了就退回缺省。
+    /// 刪候選的修飾鍵；為空或與任一組譯詞鍵撞了就退回預設。
     pub fn delete_keys(&self) -> Modifiers {
         let (first, second) = self.translation_keys();
         if self.delete_candidate.is_empty()
@@ -61,7 +61,7 @@ impl ShortcutConfig {
         }
     }
 
-    /// 两组译词修饰键；两组相同或有一组为空时整个退回缺省，不做一半。
+    /// 兩組譯詞修飾鍵；兩組相同或有一組為空時整個退回預設，不做一半。
     pub fn translation_keys(&self) -> (Modifiers, Modifiers) {
         if self.translation == self.translation_second
             || self.translation.is_empty()
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn old_files_without_modifier_keys_still_parse_and_get_defaults() {
-        // 缺省值分平台（Windows 用 Ctrl 系、其余用 Option 系），断言跟着平台的 Default 走
+        // 預設值分平臺（Windows 用 Ctrl 系、其餘用 Option 系），斷言跟著平臺的 Default 走
         let default = ShortcutConfig::default();
         let parsed: ShortcutConfig = toml::from_str("expression = \"i\"\n").unwrap();
         assert_eq!(parsed.mode.expression, 'i');
@@ -107,14 +107,14 @@ mod tests {
         let default = ShortcutConfig::default();
         let parsed: ShortcutConfig = toml::from_str("").unwrap();
         assert_eq!(parsed.delete_keys(), default.delete_candidate);
-        // 与平台缺省的译词键撞上才算「冲突」，两边平台都成立
+        // 與平臺預設的譯詞鍵撞上才算「衝突」，兩邊平臺都成立
         let clash: ShortcutConfig = toml::from_str(&format!(
             "delete_candidate = \"{}\"\n",
             default.translation.key()
         ))
         .unwrap();
         assert_eq!(clash.delete_keys(), default.delete_candidate);
-        // 不与任何一组译词键冲突的修饰键：平台上取一个，断言它原样生效
+        // 不與任何一組譯詞鍵衝突的修飾鍵：平臺上取一個，斷言它原樣生效
         let free = [Modifiers::OPTION, Modifiers::CONTROL, Modifiers::SHIFT]
             .into_iter()
             .find(|m| *m != default.translation && *m != default.translation_second)

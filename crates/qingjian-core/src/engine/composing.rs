@@ -1,4 +1,4 @@
-//! 缓冲区与模式：按键进出、光标移动、表达式 / 英文直输 / 问字等模式判断、标点与上屏链。
+//! 緩衝區與模式：按鍵進出、游標移動、表示式 / 英文直輸 / 問字等模式判斷、標點與上屏鏈。
 
 use super::commit::LastCommit;
 use super::input_log::{INPUT_LOG_VERSION, InputLogEntry, InputLogger, InputSource};
@@ -9,13 +9,13 @@ use crate::composition::Composition;
 use crate::shortcut;
 use std::time::Instant;
 
-/// 直通字符攒到这么多就先写一条，免得长时间纯英文输入时一条攒得没边。
+/// 直通字元攢到這麼多就先寫一條，免得長時間純英文輸入時一條攢得沒邊。
 const MAX_PENDING_PASSTHROUGH: usize = 200;
 
 impl Engine {
-    /// 中文模式下把半角字符转成全角标点；不需要转换返回 `None`。
+    /// 中文模式下把半形字元轉成全形標點；不需要轉換返回 `None`。
     pub fn punctuate(&mut self, c: char) -> Option<&'static str> {
-        // 组句外敲的标点：辅码态到此结束（壳已经把高亮候选上屏了）
+        // 組句外敲的標點：輔碼態到此結束（殼已經把高亮候選上屏了）
         self.aux_code = None;
         let converted = if self.full_width_punctuation {
             self.punctuation.convert(c)
@@ -25,7 +25,7 @@ impl Engine {
         if let Some(text) = converted {
             self.history.record(text);
             self.remember_commit(LastCommit::plain(text));
-            // 全角标点也是文本流的一部分，与直通字符攒在一起
+            // 全形標點也是文本流的一部分，與直通字元攢在一起
             self.passthrough_pending.push_str(text);
         } else {
             self.recent_commits.clear();
@@ -34,7 +34,7 @@ impl Engine {
         converted
     }
 
-    /// 壳把字符原样透传给应用后告知，用于「数字后的点保持半角」，也记入输入历史与输入日志（攒成一条 `passthrough`）。
+    /// 殼把字元原樣透傳給應用後告知，用於「數字後的點保持半形」，也記入輸入歷史與輸入日誌（攢成一條 `passthrough`）。
     pub fn note_passthrough(&mut self, c: char) {
         self.punctuation.note_passthrough(c);
         let text = c.encode_utf8(&mut [0; 4]).to_owned();
@@ -47,7 +47,7 @@ impl Engine {
         }
     }
 
-    /// 把攒着的直通字符写成一条输入日志。上屏、上文断开、会话记录前都调，保证日志里的顺序与真实顺序一致。
+    /// 把攢著的直通字元寫成一條輸入日誌。上屏、上文斷開、會話記錄前都調，保證日誌裡的順序與真實順序一致。
     pub(super) fn flush_passthrough(&mut self) {
         if self.passthrough_pending.is_empty() {
             return;
@@ -56,8 +56,8 @@ impl Engine {
         self.logger.record(InputLogEntry::Passthrough { text });
     }
 
-    /// 壳告知光标离开了刚才上屏的位置（切换应用、点了别处、停用输入法）：之后上屏的词按句首记。
-    /// 上次断开之后有过上屏才往输入日志记一条 `break`，连着失焦几次只记一次。
+    /// 殼告知游標離開了剛才上屏的位置（切換應用、點了別處、停用輸入法）：之後上屏的詞按句首記。
+    /// 上次斷開之後有過上屏才往輸入日誌記一條 `break`，連著失焦幾次只記一次。
     pub fn break_chain(&mut self) {
         self.chain.reset();
         self.recent_commits.clear();
@@ -70,7 +70,7 @@ impl Engine {
         }
     }
 
-    /// 壳告知正在输入的应用（macOS bundle identifier / Windows exe 名），写进输入日志；不知道就给 `None`。
+    /// 殼告知正在輸入的應用（macOS bundle identifier / Windows exe 名），寫進輸入日誌；不知道就給 `None`。
     pub fn set_application(&mut self, app: Option<String>) {
         self.application = app;
     }
@@ -79,12 +79,12 @@ impl Engine {
         self.application.as_deref()
     }
 
-    /// 壳翻了一页候选：记进这段组句的翻页数（写进输入日志，候选质量的隐式信号）。
+    /// 殼翻了一頁候選：記進這段組句的翻頁數（寫進輸入日誌，候選質量的隱式訊號）。
     pub fn note_page_turn(&mut self) {
         self.page_turns = self.page_turns.saturating_add(1);
     }
 
-    /// 往输入日志记一条会话信息（版本、平台、本地模型开没开）。壳在启动和打开日志时调。
+    /// 往輸入日誌記一條會話資訊（版本、平臺、本地模型開沒開）。殼在啟動和開啟日誌時調。
     pub fn log_session(&mut self, version: &str, platform: &str) {
         self.flush_passthrough();
         self.logger.record(InputLogEntry::Session {
@@ -96,11 +96,11 @@ impl Engine {
         });
     }
 
-    /// 键盘方案的键，输入日志用。全拼为空串（老日志里没有这个字段就是全拼），双拼是 `xiaohe` 这类，
-    /// 注音是 `zhuyin`，只用形码是 `wubi`，**混输是 `<拼音侧>+wubi`**（`pinyin+wubi` / `xiaohe+wubi`）。
+    /// 鍵盤方案的鍵，輸入日誌用。全拼為空串（老日誌裡沒有這個欄位就是全拼），雙拼是 `xiaohe` 這類，
+    /// 注音是 `zhuyin`，只用形碼是 `wubi`，**混輸是 `<拼音側>+wubi`**（`pinyin+wubi` / `xiaohe+wubi`）。
     ///
-    /// 日志里必须能分辨这几种：形码那些行的「拼音」列其实是编码，回放要照着它装配引擎，
-    /// 混输的行两边都要装配。`wubi` 单独出现是「只用形码」，不是「全拼 + 五笔」。
+    /// 日誌裡必須能分辨這幾種：形碼那些行的「拼音」列其實是編碼，回放要照著它裝配引擎，
+    /// 混輸的行兩邊都要裝配。`wubi` 單獨出現是「只用形碼」，不是「全拼 + 五筆」。
     pub(super) fn scheme_key(&self) -> String {
         let phonetic = if self.zhuyin {
             "zhuyin".to_owned()
@@ -122,16 +122,16 @@ impl Engine {
         format!("{base}+wubi")
     }
 
-    /// 组句里要删东西了：第一次删之前把缓冲区留个快照，上屏时对比最终键串，不同就是一次重打（`retype`）。
+    /// 組句裡要刪東西了：第一次刪之前把緩衝區留個快照，上屏時對比最終鍵串，不同就是一次重打（`retype`）。
     fn note_edit(&mut self) {
         if self.retype_snapshot.is_none() && !self.composition.is_empty() {
             self.retype_snapshot = Some(self.composition.text().to_owned());
         }
     }
 
-    /// 壳告知：不在组句时按了退格，删的是应用里刚上屏的文字。从最近一次上屏往前数，一次上屏的字删光了就是「可能选错了」的信号：
-    /// 接着重打那段拼音选了别的词，那次记的学习就退回去（见 [`Self::apply_retraction`]）。
-    /// 删得比记着的几次上屏加起来还多说明在改别处，全忘掉。
+    /// 殼告知：不在組句時按了退格，刪的是應用裡剛上屏的文字。從最近一次上屏往前數，一次上屏的字刪光了就是「可能選錯了」的訊號：
+    /// 接著重打那段拼音選了別的詞，那次記的學習就退回去（見 [`Self::apply_retraction`]）。
+    /// 刪得比記著的幾次上屏加起來還多說明在改別處，全忘掉。
     pub fn note_backspace(&mut self) {
         let Some(commit) = self
             .recent_commits
@@ -145,12 +145,12 @@ impl Engine {
         };
         commit.erased += 1;
         if commit.is_erased() {
-            // 刚上屏的词没了，它不再是下一个词的上文
+            // 剛上屏的詞沒了，它不再是下一個詞的上文
             self.chain.reset();
         }
     }
 
-    /// 记一次上屏到最近上屏列表，超出条数丢最早的。
+    /// 記一次上屏到最近上屏列表，超出條數丟最早的。
     pub(super) fn remember_commit(&mut self, commit: LastCommit) {
         if commit.chars == 0 {
             return;
@@ -167,17 +167,17 @@ impl Engine {
 
     pub fn push(&mut self, c: char) {
         if self.composition.is_empty() {
-            // 新一段组句：从这一键起算耗时、翻页与重打
+            // 新一段組句：從這一鍵起算耗時、翻頁與重打
             self.composition_started = Some(Instant::now());
             self.page_turns = 0;
             self.retype_snapshot = None;
         }
-        // 进缓冲区的字符也更新「上一个字符是不是数字」：直通了 `3` 再接着打拼音，
-        // 后面的 `.` 不该仍按小数点保持半角（组句中标点会先把候选上屏，见壳的 apply_printable）
+        // 進緩衝區的字元也更新「上一個字元是不是數字」：直通了 `3` 再接著打拼音，
+        // 後面的 `.` 不該仍按小數點保持半形（組句中標點會先把候選上屏，見殼的 apply_printable）
         self.punctuation.note_passthrough(c);
-        // 中文模式下 Shift+字母（配置 `shift_letter = "compose"` 时才收）：按小写进缓冲区参与匹配
-        // （`Cpan` 与 `cpan` 一样出 C盘），原样上屏（回车 / 无候选）时再还原大写。
-        // 缺省关：壳把大写字母直接交给应用，根本进不到这里；英文模式与英文直输段（`no-Way`）始终保留原样。
+        // 中文模式下 Shift+字母（配置 `shift_letter = "compose"` 時才收）：按小寫進緩衝區參與匹配
+        // （`Cpan` 與 `cpan` 一樣出 C盤），原樣上屏（回車 / 無候選）時再還原大寫。
+        // 預設關：殼把大寫字母直接交給應用，根本進不到這裡；英文模式與英文直輸段（`no-Way`）始終保留原樣。
         if self.shift_letter_compose
             && c.is_ascii_uppercase()
             && !self.english_mode
@@ -189,9 +189,9 @@ impl Engine {
         }
     }
 
-    /// 退格。辅码态里删的是码段：删掉最后一个码字母；删空时按「码删空后留在辅码态」开关分岔——
-    /// 开（缺省）停在辅码态（`;` 仍在、无码词也回来），关则回拼音态。码段本来就空（刚触发，或删空停住）
-    /// 时按退格 = 退出辅码态、拼音一个字符都不动。每次退格候选都当场重筛。
+    /// 退格。輔碼態裡刪的是碼段：刪掉最後一個碼字母；刪空時按「碼刪空後留在輔碼態」開關分岔——
+    /// 開（預設）停在輔碼態（`;` 仍在、無碼詞也回來），關則回拼音態。碼段本來就空（剛觸發，或刪空停住）
+    /// 時按退格 = 退出輔碼態、拼音一個字元都不動。每次退格候選都當場重篩。
     pub fn backspace(&mut self) -> bool {
         if let Some(code) = self.aux_code.take() {
             if code.len() > 1 {
@@ -209,7 +209,7 @@ impl Engine {
         self.composition.clear();
         self.aux_code = None;
         self.chain.leave_buffer();
-        // 壳给的光标前文只对这段组句有效，下一段第一键再读
+        // 殼給的游標前文只對這段組句有效，下一段第一鍵再讀
         self.rescoring_before = None;
         self.retype_snapshot = None;
         self.composition_started = None;
@@ -222,9 +222,9 @@ impl Engine {
         self.composition.delete_forward()
     }
 
-    /// 删掉光标前的一个音节（壳里 ⌥⌫）：全拼按最优切分的最后一个音节连同它后面的 `'`，切不动的尾巴整个删；
-    /// 双拼两键一音节，落单的一键单删；英文直输段 / 表达式 / 问字里删最后一段字母或数字，标点一次删一个。
-    /// 光标在开头时返回 `false`。
+    /// 刪掉游標前的一個音節（殼裡 ⌥⌫）：全拼按最優切分的最後一個音節連同它後面的 `'`，切不動的尾巴整個刪；
+    /// 雙拼兩鍵一音節，落單的一鍵單刪；英文直輸段 / 表示式 / 問字裡刪最後一段字母或數字，標點一次刪一個。
+    /// 游標在開頭時返回 `false`。
     pub fn delete_syllable_backward(&mut self) -> bool {
         self.note_edit();
         let cursor = self.composition.cursor();
@@ -235,7 +235,7 @@ impl Engine {
         self.composition.delete_before_cursor(len)
     }
 
-    /// 光标向左跳过一个音节，遇 `'` 连它一起跳过。光标在开头时返回 `false`。
+    /// 游標向左跳過一個音節，遇 `'` 連它一起跳過。游標在開頭時返回 `false`。
     pub fn move_cursor_syllable_left(&mut self) -> bool {
         let cursor = self.composition.cursor();
         let before = &self.composition.text()[..cursor];
@@ -245,7 +245,7 @@ impl Engine {
         len > 0 && (0..len).all(|_| self.composition.move_left())
     }
 
-    /// 光标向右跳过一个音节，遇 `'` 连它一起跳过。光标在末尾时返回 `false`。
+    /// 游標向右跳過一個音節，遇 `'` 連它一起跳過。游標在末尾時返回 `false`。
     pub fn move_cursor_syllable_right(&mut self) -> bool {
         let cursor = self.composition.cursor();
         let after = &self.composition.text()[cursor..];
@@ -255,7 +255,7 @@ impl Engine {
         len > 0 && (0..len).all(|_| self.composition.move_right())
     }
 
-    /// 删掉光标前的全部拼音（壳里 ⌘⌫），光标后的留着。光标在开头时返回 `false`。
+    /// 刪掉游標前的全部拼音（殼裡 ⌘⌫），游標後的留著。游標在開頭時返回 `false`。
     pub fn delete_to_start(&mut self) -> bool {
         self.note_edit();
         let cursor = self.composition.cursor();
@@ -278,7 +278,7 @@ impl Engine {
         self.composition.move_end();
     }
 
-    /// 是否处在表达式模式（缓冲区以表达式键、缺省 `v` 开头）。此时壳应把数字和运算符也交给 [`Self::push`]，而不是当选词键。
+    /// 是否處在表示式模式（緩衝區以表示式鍵、預設 `v` 開頭）。此時殼應把數字和運算子也交給 [`Self::push`]，而不是當選詞鍵。
     pub fn expression_mode(&self) -> bool {
         !self.has_custom_phrase()
             && self
@@ -286,8 +286,8 @@ impl Engine {
                 .is_expression(self.composition.text(), self.zhuyin)
     }
 
-    /// 英文直输段：缓冲区里有拼音以外的字符（`no-way`），整段原样上屏、不解析拼音。
-    /// 表达式模式与问字模式优先于它。
+    /// 英文直輸段：緩衝區裡有拼音以外的字元（`no-way`），整段原樣上屏、不解析拼音。
+    /// 表示式模式與問字模式優先於它。
     pub fn raw_mode(&self) -> bool {
         is_raw(
             self.composition.text(),
@@ -297,7 +297,7 @@ impl Engine {
         )
     }
 
-    /// 是否处在问字模式（缓冲区以问字键、缺省 `u`，或 `?` 开头）：拼音问题由云端答，十六进制码点本地答。
+    /// 是否處在問字模式（緩衝區以問字鍵、預設 `u`，或 `?` 開頭）：拼音問題由雲端答，十六進位制碼點本地答。
     pub fn question_mode(&self) -> bool {
         !self.has_custom_phrase()
             && self
@@ -305,21 +305,21 @@ impl Engine {
                 .is_question(self.composition.text(), self.zhuyin)
     }
 
-    /// 问字模式下正在敲的还可能是 Unicode 码点（前缀后为空，或到目前为止全是十六进制 / 开头 `+`）：
-    /// 此时壳应把数字交给 [`Self::push`] 而不是当选词键。
+    /// 問字模式下正在敲的還可能是 Unicode 碼點（字首後為空，或到目前為止全是十六進位制 / 開頭 `+`）：
+    /// 此時殼應把數字交給 [`Self::push`] 而不是當選詞鍵。
     pub fn unicode_entry(&self) -> bool {
         let text = self.composition.text();
         self.modes().is_question(text, self.zhuyin)
             && shortcut::could_be_unicode(self.modes().question_body(text, self.zhuyin))
     }
 
-    /// 缓冲区里只有一个 `?`：还没决定是问字还是标点。壳在确认标点时调用 [`Self::restore_bare_question`]。
+    /// 緩衝區裡只有一個 `?`：還沒決定是問字還是標點。殼在確認標點時呼叫 [`Self::restore_bare_question`]。
     pub fn bare_question(&self) -> bool {
         self.composition.text() == QUESTION_PREFIX.to_string()
     }
 
-    /// 确认单独的问号并清空缓冲区；中文遵循标点设置，英文原样输出。
-    /// 不是单独的问号时返回 `None`，不改变组句；壳负责取消联想界面并插入返回的文本。
+    /// 確認單獨的問號並清空緩衝區；中文遵循標點設定，英文原樣輸出。
+    /// 不是單獨的問號時返回 `None`，不改變組句；殼負責取消聯想介面並插入返回的文本。
     pub fn restore_bare_question(&mut self, english: bool) -> Option<String> {
         if !self.bare_question() {
             return None;
@@ -332,7 +332,7 @@ impl Engine {
         Some(QUESTION_PREFIX.to_string())
     }
 
-    /// 用一段完整拼音替换当前缓冲区，供 CLI 和测试一次性喂入。
+    /// 用一段完整拼音替換當前緩衝區，供 CLI 和測試一次性喂入。
     pub fn set_input(&mut self, input: &str) {
         self.composition.clear();
         for c in input.chars() {
@@ -340,29 +340,29 @@ impl Engine {
         }
     }
 
-    /// 放弃当前拼音，原样返回给壳（通常是用户按回车要上屏字母本身）。
+    /// 放棄當前拼音，原樣返回給殼（通常是使用者按回車要上屏字母本身）。
     pub fn take_raw(&mut self) -> String {
-        // 回车原样上屏拼音段：码段（没上屏的码）到此结束
+        // 回車原樣上屏拼音段：碼段（沒上屏的碼）到此結束
         self.aux_code = None;
-        // 纠错生效时用户仍按了回车：这个串就是要原样打的，记下来以后不再纠它
+        // 糾錯生效時使用者仍按了回車：這個串就是要原樣打的，記下來以後不再糾它
         let scope = self.composition.scope().to_owned();
         if !self.english_mode && self.active_correction(&scope).is_some() {
             self.learner.record_raw(&scope);
-            // 缓存里还是「要纠」，清掉让下次重算
+            // 快取裡還是「要糾」，清掉讓下次重算
             *self.correction_cache.borrow_mut() = None;
         }
         let raw = self.raw_preedit().text;
         if raw.is_empty() {
-            // 壳在回车 / 失焦时不管有没有在组句都会来一趟：空的不记日志、不计统计
+            // 殼在回車 / 失焦時不管有沒有在組句都會來一趟：空的不記日誌、不計統計
             self.clear();
             self.chain.reset();
             return raw;
         }
         self.log_commit(&raw, &raw, InputSource::Raw);
-        // 原样上屏的是个英文词（`gist`）：记进个人英文词表，下次直接出候选。
-        // 双拼下全部键都能解成完整音节的（`nihc`）不是英文，是用户要原样打出双拼键。
-        // 整段能读成「拼音头 + 英文尾」的（`woxiangxuexirust`）不学：那是我们没给对候选、用户放弃了，
-        // 把整串学成英文词会反过来堵掉混输那条路
+        // 原樣上屏的是個英文詞（`gist`）：記進個人英文詞表，下次直接出候選。
+        // 雙拼下全部鍵都能解成完整音節的（`nihc`）不是英文，是使用者要原樣打出雙拼鍵。
+        // 整段能讀成「拼音頭 + 英文尾」的（`woxiangxuexirust`）不學：那是我們沒給對候選、使用者放棄了，
+        // 把整串學成英文詞會反過來堵掉混輸那條路
         let english_word = looks_like_english_word(&raw, self.english_mode)
             && (self.english_mode || self.decode(&raw).is_none_or(|d| !d.is_complete()))
             && (self.english_mode || self.split_english_tail(&raw).is_none());
@@ -380,7 +380,7 @@ impl Engine {
     }
 }
 
-/// 光标后的第一个「单位」占几个字节：先跳过紧跟的 `'`，再算一个音节；规则同 [`unit_len_before`]。
+/// 游標後的第一個「單位」佔幾個位元組：先跳過緊跟的 `'`，再算一個音節；規則同 [`unit_len_before`]。
 fn unit_len_after(after: &str, shuangpin: bool, plain: bool) -> usize {
     let trimmed = after.trim_start_matches('\'');
     let separators = after.len() - trimmed.len();
@@ -416,14 +416,14 @@ fn unit_len_after(after: &str, shuangpin: bool, plain: bool) -> usize {
     separators + syllable
 }
 
-/// 光标前的最后一个「单位」占几个字节：拼音里是一个音节（连同它后面的 `'`），见 [`Engine::delete_syllable_backward`]。
+/// 游標前的最後一個「單位」佔幾個位元組：拼音裡是一個音節（連同它後面的 `'`），見 [`Engine::delete_syllable_backward`]。
 fn unit_len_before(before: &str, shuangpin: bool, plain: bool) -> usize {
     let trimmed = before.trim_end_matches('\'');
     let separators = before.len() - trimmed.len();
     let Some(last) = trimmed.chars().last() else {
         return separators;
     };
-    // 直输段 / 表达式 / 问字，或末尾不是字母：字母数字连成一段删，其他字符一次一个
+    // 直輸段 / 表示式 / 問字，或末尾不是字母：字母數字連成一段刪，其他字元一次一個
     if plain || !last.is_ascii_lowercase() {
         let run = if last.is_ascii_alphanumeric() {
             trimmed
@@ -438,7 +438,7 @@ fn unit_len_before(before: &str, shuangpin: bool, plain: bool) -> usize {
         return separators + run;
     }
     if shuangpin {
-        // 两键一音节：连着的键数是奇数说明末尾落单一键
+        // 兩鍵一音節：連著的鍵數是奇數說明末尾落單一鍵
         let run = trimmed
             .chars()
             .rev()

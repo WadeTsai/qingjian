@@ -1,4 +1,4 @@
-//! 过渡用的节点登记：带配对名的节点、它们在窗口里的位置，以及动画中盖过布局的位置。
+//! 過渡用的節點登記：帶配對名的節點、它們在窗口裡的位置，以及動畫中蓋過佈局的位置。
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -9,7 +9,7 @@ use super::{Scene, Visual};
 use crate::animation::{Easing, Placement};
 use crate::error::RenderError;
 
-/// 一个带过渡的节点：配对名（同一帧重复的已加序号）、过渡参数、布局给的位置（相对根节点）。
+/// 一個帶過渡的節點：配對名（同一幀重複的已加序號）、過渡引數、佈局給的位置（相對根節點）。
 pub(crate) struct Keyed {
     pub(crate) node: NodeId,
 
@@ -23,7 +23,7 @@ pub(crate) struct Keyed {
 }
 
 impl Scene {
-    /// 节点要过渡：配对名与参数。
+    /// 節點要過渡：配對名與引數。
     pub(crate) fn set_transition(
         &mut self,
         node: NodeId,
@@ -36,8 +36,8 @@ impl Scene {
         }
     }
 
-    /// 动画中的位置（画布像素）；`None` 回到布局算的。
-    /// 自己不画东西的上级容器拿子节点当阴影形状，它们缓存的遮罩跟着作废；自己有画面的上级不受影响。
+    /// 動畫中的位置（畫布畫素）；`None` 回到佈局算的。
+    /// 自己不畫東西的上級容器拿子節點當陰影形狀，它們快取的遮罩跟著作廢；自己有畫面的上級不受影響。
     pub(crate) fn set_placed(&mut self, node: NodeId, placed: Option<Placement>) {
         if let Some(context) = self.tree.get_node_context_mut(node) {
             context.placed = placed;
@@ -60,7 +60,7 @@ impl Scene {
             .retain(|key, _| !ancestors.contains(&key.node()));
     }
 
-    /// 以 `root` 为根、带过渡的节点，按树序；同一帧里同名出现多次的按出现顺序加 `#序号`。要在布局之后调。
+    /// 以 `root` 為根、帶過渡的節點，按樹序；同一幀裡同名出現多次的按出現順序加 `#序號`。要在佈局之後調。
     pub(crate) fn keyed(&self, root: NodeId) -> Result<Vec<Keyed>, RenderError> {
         let mut found = Vec::new();
         self.collect(root, 0.0, 0.0, &mut found)?;

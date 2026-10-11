@@ -1,4 +1,4 @@
-//! 字体列表的数据源与代理：管下拉框的开合、按搜索框过滤、每行用它自己的字体画名字、用户选中一行就写配置并收起。
+//! 字型列表的資料來源與代理：管下拉框的開合、按搜尋框過濾、每行用它自己的字型畫名字、使用者選中一行就寫配置並收起。
 
 use std::cell::{Cell, RefCell};
 
@@ -21,11 +21,11 @@ use crate::preferences::setting::{Setting, SettingValue};
 /// 行高。
 pub(super) const ROW: f64 = 22.0;
 
-/// NSFontManager 的常规字重（0–15 档，5 是 regular）。
+/// NSFontManager 的常規字重（0–15 檔，5 是 regular）。
 const REGULAR_WEIGHT: NSInteger = 5;
 
 define_class!(
-    // SAFETY: 仅在主线程访问 AppKit 控件；回调里只读自己的快照。
+    // SAFETY: 僅在主執行緒訪問 AppKit 控制元件；回撥裡只讀自己的快照。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = PickerState]
@@ -64,7 +64,7 @@ define_class!(
         }
     }
     impl FontListSource {
-        /// 搜索框每敲一个字（输入法上屏也算）都来一次：按内容过滤。
+        /// 搜尋框每敲一個字（輸入法上屏也算）都來一次：按內容過濾。
         #[unsafe(method(filterChanged:))]
         fn filter_changed(&self, sender: &NSSearchField) {
             let keep = self.selected_name();
@@ -104,14 +104,14 @@ impl FontListSource {
         *self.ivars().popover.borrow_mut() = Some(popover);
     }
 
-    /// 配置变了：记下当前字体，搜索框显示它的名字，列表选中它。
+    /// 配置變了：記下當前字型，搜尋框顯示它的名字，列表選中它。
     pub(super) fn set_current(&self, font: &str) {
         *self.ivars().current.borrow_mut() = font.trim().to_owned();
         self.show_current(font);
         self.select((!font.trim().is_empty()).then_some(font.trim()));
     }
 
-    /// 用户点了按钮：清空过滤、选中当前字体、弹出列表、焦点给搜索框。
+    /// 使用者點了按鈕：清空過濾、選中當前字型、彈出列表、焦點給搜尋框。
     pub(super) fn open(&self) {
         let state = self.ivars();
         let (Some(button), Some(search), Some(popover)) = (
@@ -142,7 +142,7 @@ impl FontListSource {
         }
     }
 
-    /// 按钮上显示当前字体名（空为「系统默认」）：按钮的菜单只有这一项，只当显示用。
+    /// 按鈕上顯示當前字型名（空為「系統預設」）：按鈕的菜單隻有這一項，只當顯示用。
     fn show_current(&self, font: &str) {
         let font = font.trim();
         let label = if font.is_empty() {
@@ -157,7 +157,7 @@ impl FontListSource {
         }
     }
 
-    /// 选中某个字族（`None` 或没在列表里就选「系统默认」），不触发写配置。
+    /// 選中某個字族（`None` 或沒在列表裡就選「系統預設」），不觸發寫配置。
     fn select(&self, name: Option<&str>) {
         let state = self.ivars();
         let Some(table) = state.table.borrow().clone() else {
@@ -178,7 +178,7 @@ impl FontListSource {
         state.syncing.set(false);
     }
 
-    /// 大小写不敏感的子串过滤；「系统默认」永远在第 0 行。
+    /// 大小寫不敏感的子串過濾；「系統預設」永遠在第 0 行。
     fn apply_filter(&self, text: &str) {
         let state = self.ivars();
         let needle = text.trim().to_lowercase();
@@ -227,7 +227,7 @@ impl FontListSource {
             NSPoint::new(5.0, 2.0),
             NSSize::new(column.width() - 10.0, ROW - 4.0),
         ));
-        // 每行用自己的字体画名字，一眼能看出长什么样；「系统默认」与拿不到字体的用系统字体
+        // 每行用自己的字型畫名字，一眼能看出長什麼樣；「系統預設」與拿不到字型的用系統字型
         let font = (name != DEFAULT_FONT_LABEL)
             .then(|| {
                 NSFontManager::sharedFontManager(mtm).fontWithFamily_traits_weight_size(

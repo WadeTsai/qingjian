@@ -1,12 +1,12 @@
 use super::kind::MarkedKind;
 
-/// preedit（marked text）的一段。整段 preedit 是若干段按顺序拼起来，光标位置按拼接后的字符数算。
+/// preedit（marked text）的一段。整段 preedit 是若干段按順序拼起來，游標位置按拼接後的字元數算。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MarkedSegment {
     /// 文本。
     pub text: String,
 
-    /// 种类，决定样式。
+    /// 種類，決定樣式。
     pub kind: MarkedKind,
 }
 

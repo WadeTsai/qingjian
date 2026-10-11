@@ -1,4 +1,4 @@
-//! 画一个盒子：填充（纯色 / 渐变 / 图片 / SVG）再画内侧边框。
+//! 畫一個盒子：填充（純色 / 漸變 / 圖片 / SVG）再畫內側邊框。
 
 use tiny_skia::{
     FilterQuality, GradientStop, LinearGradient, Mask, Pattern, Point, RadialGradient, Rect,
@@ -9,7 +9,7 @@ use crate::canvas::{Canvas, round_rect};
 use crate::color::Color;
 use crate::scene::{BoxPaint, Fill};
 
-/// 在 `(x, y, width, height)`（像素）画 `paint`。
+/// 在 `(x, y, width, height)`（畫素）畫 `paint`。
 pub(in crate::scene) fn draw_box(
     canvas: &mut Canvas,
     rect: (f32, f32, f32, f32),
@@ -58,7 +58,7 @@ pub(in crate::scene) fn draw_box(
         }) => {
             let mask = corner_mask(canvas, rect, radius);
             match slice {
-                // 九宫格按原始尺寸栅格，四角按倍数原样贴；切边从 SVG 单位换成栅格像素
+                // 九宮格按原始尺寸柵格，四角按倍數原樣貼；切邊從 SVG 單位換成柵格畫素
                 Some(slice) => {
                     let (svg_width, svg_height) = image.size();
                     let raster = image.raster(
@@ -71,7 +71,7 @@ pub(in crate::scene) fn draw_box(
                         nine_slice(canvas, rect, &pixmap, slice, 1.0, mask.as_ref());
                     }
                 }
-                // 拉伸直接按盒子的像素尺寸栅格，不经过位图缩放
+                // 拉伸直接按盒子的畫素尺寸柵格，不經過點陣圖縮放
                 None => {
                     if let Some(pixmap) = image.raster(width.round() as u32, height.round() as u32)
                     {
@@ -103,7 +103,7 @@ fn gradient_stops(stops: &[(Color, f32)]) -> Vec<GradientStop> {
         .collect()
 }
 
-/// CSS 式线性渐变：渐变线过盒子中心，长度让两端正好碰到对角。
+/// CSS 式線性漸變：漸變線過盒子中心，長度讓兩端正好碰到對角。
 fn linear(
     rect: (f32, f32, f32, f32),
     angle: f32,
@@ -123,7 +123,7 @@ fn linear(
     )
 }
 
-/// 径向渐变：圆心按比例，半径到最远的角。
+/// 徑向漸變：圓心按比例，半徑到最遠的角。
 fn radial(
     rect: (f32, f32, f32, f32),
     center: [f32; 2],
@@ -152,7 +152,7 @@ fn radial(
     )
 }
 
-/// 圆角框裁图片用的遮罩；没有圆角为 `None`。
+/// 圓角框裁圖片用的遮罩；沒有圓角為 `None`。
 fn corner_mask(canvas: &Canvas, rect: (f32, f32, f32, f32), radius: f32) -> Option<Mask> {
     let (x, y, width, height) = rect;
     (radius > 0.0)
@@ -161,7 +161,7 @@ fn corner_mask(canvas: &Canvas, rect: (f32, f32, f32, f32), radius: f32) -> Opti
         .and_then(|path| canvas.mask(&path))
 }
 
-/// 整张图拉伸到盒子。
+/// 整張圖拉伸到盒子。
 fn stretch(
     canvas: &mut Canvas,
     rect: (f32, f32, f32, f32),
@@ -174,7 +174,7 @@ fn stretch(
     fill_cell(canvas, (x, y, width, height), pixmap, transform, mask);
 }
 
-/// 九宫格：四角原样（按倍数缩放），四边沿一个方向拉伸，中间两个方向拉伸。
+/// 九宮格：四角原樣（按倍數縮放），四邊沿一個方向拉伸，中間兩個方向拉伸。
 fn nine_slice(
     canvas: &mut Canvas,
     rect: (f32, f32, f32, f32),
@@ -187,8 +187,8 @@ fn nine_slice(
     let (image_width, image_height) = (pixmap.width() as f32, pixmap.height() as f32);
     let [top, right, bottom, left] = slice;
     let per = pixels_per_px.max(f32::EPSILON);
-    // 源（图片像素）与目标（画布像素）的四条分割线；目标四角按倍数，放不下时压缩到盒子里。
-    // 内部两条目标分割线取整像素：相邻两块各自抗锯齿会在接缝留一道 alpha 不满的缝，底下有投影就透出来
+    // 源（圖片畫素）與目標（畫布畫素）的四條分割線；目標四角按倍數，放不下時壓縮到盒子裡。
+    // 內部兩條目標分割線取整畫素：相鄰兩塊各自抗鋸齒會在接縫留一道 alpha 不滿的縫，底下有投影就透出來
     let source_x = [0.0, left, image_width - right, image_width];
     let source_y = [0.0, top, image_height - bottom, image_height];
     let shrink_x = ((left + right) / per / width).max(1.0);
@@ -214,7 +214,7 @@ fn nine_slice(
             if sx1 <= sx0 || sy1 <= sy0 || tx1 <= tx0 || ty1 <= ty0 {
                 continue;
             }
-            // 这一格在原图里是单一颜色（Skia 画九宫格时的「固定颜色格」）：纯色填，不做图片采样
+            // 這一格在原圖裡是單一顏色（Skia 畫九宮格時的「固定顏色格」）：純色填，不做圖片取樣
             if let Some(color) = uniform_color(pixmap, (sx0, sy0, sx1, sy1)) {
                 if let Some(rect) = Rect::from_xywh(tx0, ty0, tx1 - tx0, ty1 - ty0) {
                     let path = tiny_skia::PathBuilder::from_rect(rect);
@@ -248,7 +248,7 @@ fn nine_slice(
     }
 }
 
-/// 原图 `(x0, y0, x1, y1)` 这块（图片像素，取整到整像素）所有像素同色时返回那个颜色。
+/// 原圖 `(x0, y0, x1, y1)` 這塊（圖片畫素，取整到整畫素）所有畫素同色時返回那個顏色。
 fn uniform_color(
     pixmap: &tiny_skia::Pixmap,
     (x0, y0, x1, y1): (f32, f32, f32, f32),
@@ -275,7 +275,7 @@ fn uniform_color(
     })
 }
 
-/// 用图片图案填一块矩形。
+/// 用圖片圖案填一塊矩形。
 fn fill_cell(
     canvas: &mut Canvas,
     cell: (f32, f32, f32, f32),

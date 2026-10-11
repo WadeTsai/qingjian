@@ -1,21 +1,21 @@
 use serde::{Deserialize, Serialize};
 
-/// 屏幕坐标系里的一个矩形（像素）。DLL 在编辑会话里量到组句范围的屏幕位置后，用
-/// [`super::ClientMessage::PositionCandidates`] 发给 Server；Server 据此把候选窗口摆到光标下方。
+/// 螢幕座標系裡的一個矩形（畫素）。DLL 在編輯會話裡量到組句範圍的螢幕位置後，用
+/// [`super::ClientMessage::PositionCandidates`] 發給 Server；Server 據此把候選視窗擺到游標下方。
 ///
-/// 对应 Win32 的 `RECT`，但不依赖 `windows` crate、可 serde，两端共用（候选窗口自绘搬到了 Server 进程，
-/// 才能盖过微软商店 / 任务栏搜索这些高 z-band 宿主）。
+/// 對應 Win32 的 `RECT`，但不依賴 `windows` crate、可 serde，兩端共用（候選視窗自繪搬到了 Server 程序，
+/// 才能蓋過微軟商店 / 工作列搜尋這些高 z-band 宿主）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ScreenRect {
-    /// 左边界。
+    /// 左邊界。
     pub left: i32,
 
-    /// 上边界。
+    /// 上邊界。
     pub top: i32,
 
-    /// 右边界。
+    /// 右邊界。
     pub right: i32,
 
-    /// 下边界。
+    /// 下邊界。
     pub bottom: i32,
 }

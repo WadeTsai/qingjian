@@ -1,4 +1,4 @@
-//! 实际启动 Server 读取 TOML 配置，关闭辅助语言不应回落英文释义。
+//! 實際啟動 Server 讀取 TOML 配置，關閉輔助語言不應回落英文釋義。
 #![cfg(target_os = "linux")]
 #[path = "support/server.rs"]
 mod server;

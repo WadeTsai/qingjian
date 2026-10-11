@@ -1,10 +1,10 @@
-//! 拼音以外的几种查询：表达式（`v`）、原样字母、英文模式、问字（`?`）。
+//! 拼音以外的幾種查詢：表示式（`v`）、原樣字母、英文模式、問字（`?`）。
 
 use super::*;
 
 impl Engine {
-    /// 表达式模式（`v` 开头）：不解析拼音，候选是算式结果 / 中文数字，再加上整段是英文词的情况（`very`）。
-    /// preedit 原样显示输入。
+    /// 表示式模式（`v` 開頭）：不解析拼音，候選是算式結果 / 中文數字，再加上整段是英文詞的情況（`very`）。
+    /// preedit 原樣顯示輸入。
     pub(in crate::engine) fn query_expression(
         &self,
         scope: &str,
@@ -42,7 +42,7 @@ impl Engine {
         }
     }
 
-    /// 英文直输段：唯一候选就是原文（`no-way`），空格 / 回车都上屏它；preedit 原样显示。
+    /// 英文直輸段：唯一候選就是原文（`no-way`），空格 / 回車都上屏它；preedit 原樣顯示。
     pub(in crate::engine) fn query_raw(&self, scope: &str, rest: String, start: Instant) -> Query {
         let items = vec![Candidate {
             text: scope.to_owned(),
@@ -72,8 +72,8 @@ impl Engine {
         }
     }
 
-    /// 英文模式：敲的字母原样显示，候选是英文词表的精确词、前缀补全与拼错纠正（见 [`english::suggest`]），
-    /// 词表没装就没有候选。emoji 照配，但排在所有词后面：选词靠上下键，emoji 夹在词中间会挡路。
+    /// 英文模式：敲的字母原樣顯示，候選是英文詞表的精確詞、字首補全與拼錯糾正（見 [`english::suggest`]），
+    /// 詞表沒裝就沒有候選。emoji 照配，但排在所有詞後面：選詞靠上下鍵，emoji 夾在詞中間會擋路。
     pub(in crate::engine) fn query_english(
         &self,
         scope: &str,
@@ -118,8 +118,8 @@ impl Engine {
         }
     }
 
-    /// 问字模式（问字键或 `?` 开头）：拼音问题本地没有候选，preedit 显示前缀加切分好的问题拼音，答案等云端；
-    /// 十六进制码点（`u4e00`、`u+1f600`）本地直接给出那个字符。
+    /// 問字模式（問字鍵或 `?` 開頭）：拼音問題本地沒有候選，preedit 顯示字首加切分好的問題拼音，答案等雲端；
+    /// 十六進位制碼點（`u4e00`、`u+1f600`）本地直接給出那個字元。
     pub(in crate::engine) fn query_question(
         &self,
         scope: &str,

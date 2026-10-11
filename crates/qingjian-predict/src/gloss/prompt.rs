@@ -1,21 +1,21 @@
-//! 释义兜底的提示词与回复解析。
+//! 釋義兜底的提示詞與回覆解析。
 
 use qingjian_core::{FilledGloss, Language, PartOfSpeech, Sense, Translation};
 use serde::{Deserialize, Serialize};
 
-/// 每个词最多留几条译词。
+/// 每個詞最多留幾條譯詞。
 const MAX_SENSES: usize = Translation::MAX_SENSES;
 
-/// 单条英文译词最长几个字节：再长就是解释不是译词。
+/// 單條英文譯詞最長几個位元組：再長就是解釋不是譯詞。
 const MAX_ENGLISH_BYTES: usize = 40;
 
-/// 单条日文译词最多几个字符。
+/// 單條日文譯詞最多幾個字元。
 const MAX_JAPANESE_CHARS: usize = 16;
 
-/// 单条西班牙文译词最多几个字符：西语词比英文长（`restablecimiento`），放宽一点。
+/// 單條西班牙文譯詞最多幾個字元：西語詞比英文長（`restablecimiento`），放寬一點。
 const MAX_SPANISH_CHARS: usize = 32;
 
-/// 单条越南文译词最多几个字符：越语短语常有空格分词。
+/// 單條越南文譯詞最多幾個字元：越語短語常有空格分詞。
 const MAX_VIETNAMESE_CHARS: usize = 36;
 
 pub const ENGLISH_SYSTEM_PROMPT: &str = "你是汉英词典编纂者。给每个中文词写最简短的英文对应词，供拼音输入法在候选词旁边一行显示，所以只要词、不要解释。\n\
@@ -50,7 +50,7 @@ pub const VIETNAMESE_SYSTEM_PROMPT: &str = "你是汉越词典编纂者。给每
 输出严格的 JSON：{\"items\":[{\"w\":\"开发\",\"pos\":\"v.\",\"senses\":[{\"t\":\"phát triển\"},{\"t\":\"khai thác\"}]}]}。\n\
 items 与输入的词一一对应、顺序一致、每个词恰好一项，w 必须原样照抄输入的词。";
 
-/// 学习语言对应的系统提示；中文没有（不会请求）。
+/// 學習語言對應的系統提示；中文沒有（不會請求）。
 pub fn system_prompt(language: Language) -> &'static str {
     match language {
         Language::Japanese => JAPANESE_SYSTEM_PROMPT,
@@ -94,7 +94,7 @@ struct RawSense {
     r: Option<String>,
 }
 
-/// 解析回复：只收请求过的词，每个词一条（重复取第一条），译词逐条清洗，一条都没有的丢掉。解析不了返回空。
+/// 解析回覆：只收請求過的詞，每個詞一條（重複取第一條），譯詞逐條清洗，一條都沒有的丟掉。解析不了返回空。
 pub fn parse_reply(content: &str, language: Language, words: &[String]) -> Vec<FilledGloss> {
     let Ok(reply) = serde_json::from_str::<RawReply>(content.trim()) else {
         return Vec::new();
@@ -141,7 +141,7 @@ pub fn parse_reply(content: &str, language: Language, words: &[String]) -> Vec<F
     out
 }
 
-/// 译词清洗：去首尾标点，太长、含括号的当解释丢掉。
+/// 譯詞清洗：去首尾標點，太長、含括號的當解釋丟掉。
 fn clean_text(raw: &str, language: Language) -> Option<String> {
     let text = raw
         .trim()
@@ -176,15 +176,15 @@ fn clean_text(raw: &str, language: Language) -> Option<String> {
     ok.then(|| text.to_owned())
 }
 
-/// 拉丁文字译词认得的字符：ASCII 字母数字加拉丁扩展字母（西语、越语变音等）。
-/// 只认拉丁字母，避免把汉字或西里尔字母当成译词收进来。
+/// 拉丁文字譯詞認得的字元：ASCII 字母數字加拉丁擴充套件字母（西語、越語變音等）。
+/// 只認拉丁字母，避免把漢字或西里爾字母當成譯詞收進來。
 fn is_latin_word_char(c: char) -> bool {
     c.is_ascii_alphanumeric()
         || matches!(c, ' ' | '-' | '\'' | '.' | '/')
         || (matches!(c as u32, 0x00C0..=0x024F | 0x1E00..=0x1EFF) && c.is_alphabetic())
 }
 
-/// 全是假名（含长音、中点）。
+/// 全是假名（含長音、中點）。
 fn is_kana(text: &str) -> bool {
     !text.is_empty()
         && text

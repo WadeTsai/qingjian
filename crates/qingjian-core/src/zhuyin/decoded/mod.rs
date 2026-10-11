@@ -1,4 +1,4 @@
-//! 注音解码与结果；保留既有公开路径。
+//! 注音解碼與結果；保留既有公開路徑。
 mod cursor;
 mod parse;
 mod result;

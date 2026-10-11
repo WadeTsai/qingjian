@@ -1,4 +1,4 @@
-//! 字族回退链：`"Songti SC"` 或 `["Songti SC", "STSong", "system"]`，按顺序用第一个装了的；`system` 是界面字体（用户在设置里选的字体，没选就是系统字体）。
+//! 字族回退鏈：`"Songti SC"` 或 `["Songti SC", "STSong", "system"]`，按順序用第一個裝了的；`system` 是介面字型（使用者在設定裡選的字型，沒選就是系統字型）。
 
 use serde::Deserialize;
 
@@ -24,15 +24,15 @@ impl From<Raw> for FamilyList {
 }
 
 impl FamilyList {
-    /// 链里代表界面字体的名字。
+    /// 鏈裡代表介面字型的名字。
     pub(crate) const SYSTEM: &str = "system";
 
-    /// 只有界面字体。
+    /// 只有介面字型。
     pub(crate) fn system() -> Self {
         Self(vec![Self::SYSTEM.to_owned()])
     }
 
-    /// 是不是界面字体这个名字。
+    /// 是不是介面字型這個名字。
     pub(crate) fn is_system(name: &str) -> bool {
         name.eq_ignore_ascii_case(Self::SYSTEM)
     }

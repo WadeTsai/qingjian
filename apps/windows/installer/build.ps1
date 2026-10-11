@@ -22,11 +22,11 @@ param([switch]$SkipBuild, [switch]$Sign)
 
 $ErrorActionPreference = 'Stop'
 
-# 仓库根：本脚本在 apps\windows\installer 下，往上三层是 ime\。
+# 倉庫根：本指令碼在 apps\windows\installer 下，往上三層是 ime\。
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 $Iss  = Join-Path $PSScriptRoot 'qingjian.iss'
 
-# uiAccess 跟着 -Sign 走（server\build.rs 读这个变量，改了会自动重编 Server）；理由见 -Sign 的说明。
+# uiAccess 跟著 -Sign 走（server\build.rs 讀這個變數，改了會自動重編 Server）；理由見 -Sign 的說明。
 $env:QINGJIAN_UIACCESS = if ($Sign) { '1' } else { '0' }
 if ($Sign) {
     Write-Host 'uiAccess=1（-Sign：仅本机真机测，别用于对外分发）' -ForegroundColor Yellow
@@ -34,7 +34,7 @@ if ($Sign) {
     Write-Host 'uiAccess=0（对外分发：Server 任何机器都能起；候选窗在商店 / 任务栏搜索里可能被盖）' -ForegroundColor Cyan
 }
 
-# 1) 构建三个产物。
+# 1) 構建三個產物。
 if (-not $SkipBuild) {
     Write-Host '构建 release 产物…' -ForegroundColor Cyan
     Push-Location $Repo
@@ -46,7 +46,7 @@ if (-not $SkipBuild) {
     } finally { Pop-Location }
 }
 
-# 缺一个产物就早报错。
+# 缺一個產物就早報錯。
 $targets = @(
     'release\qingjian_tsf.dll',
     'i686-pc-windows-msvc\release\qingjian_tsf.dll',
@@ -58,12 +58,12 @@ foreach ($t in $targets) {
     if (-not (Test-Path $p)) { throw "缺产物 $p，先跑一次不带 -SkipBuild 的构建" }
 }
 
-# 1.2) 自包含 Windows App Runtime：设置程序不再依赖机器上装的框架包（Windows 10 上框架依赖的引导用不了，
-#      见 apps\windows\settings\build.rs）。cargo 构建时 windows-reactor-setup 已按清单把运行时铺到
-#      target\release\，这里挑进暂存目录；target\release 里还有 deps\ 之类的中间产物，不能整个目录装。
+# 1.2) 自包含 Windows App Runtime：設定程式不再依賴機器上裝的框架包（Windows 10 上框架依賴的引導用不了，
+#      見 apps\windows\settings\build.rs）。cargo 構建時 windows-reactor-setup 已按清單把執行時鋪到
+#      target\release\，這裡挑進暫存目錄；target\release 裡還有 deps\ 之類的中間產物，不能整個目錄裝。
 $runtimeStage = Join-Path $Repo 'target\installer\settings-runtime'
 $runtimeList  = Join-Path $PSScriptRoot 'settings-runtime.txt'
-# 清单是 UTF-8 且带中文注释：不指定编码时 PowerShell 5.1 按 GBK 读，注释末尾的字节会吞掉换行，紧跟其后的一项被当成注释漏掉。
+# 清單是 UTF-8 且帶中文註釋：不指定編碼時 PowerShell 5.1 按 GBK 讀，註釋末尾的位元組會吞掉換行，緊跟其後的一項被當成註釋漏掉。
 $wanted = Get-Content $runtimeList -Encoding UTF8 | Where-Object { $_ -and -not $_.StartsWith('#') } | ForEach-Object { $_.Trim() }
 if (Test-Path $runtimeStage) { Remove-Item $runtimeStage -Recurse -Force }
 New-Item -ItemType Directory -Path $runtimeStage -Force | Out-Null
@@ -76,23 +76,23 @@ foreach ($name in $wanted) {
         $missing += $name
     }
 }
-# 缺文件说明自包含运行时没铺成功（build.rs 下载 NuGet 或解 MSIX 失败），早报错，别打出个跑不起来的包。
+# 缺檔案說明自包含執行時沒鋪成功（build.rs 下載 NuGet 或解 MSIX 失敗），早報錯，別打出個跑不起來的包。
 if ($missing.Count -gt 0) { throw "自包含 Windows App Runtime 缺 $($missing.Count) 项：$($missing -join ', ')" }
 Write-Host "自包含运行时 $($wanted.Count) 项 → target\installer\settings-runtime" -ForegroundColor Cyan
 
-# 1.5) 签名（必须在 iscc 打包前：Inno 把已签的文件原样拷进安装包）。
+# 1.5) 簽名（必須在 iscc 打包前：Inno 把已籤的檔案原樣拷進安裝包）。
 if ($Sign) {
     Write-Host '自签产物（uiAccess 要求 Server 代码签名）…' -ForegroundColor Cyan
     $binaries = $targets | ForEach-Object { Join-Path $Repo "target\$_" }
     & (Join-Path $PSScriptRoot 'sign-local.ps1') -Path $binaries
 }
 
-# 2) 从 server 的 Cargo.toml 读版本（apps\* 各自写死版本，不跟 workspace）。
+# 2) 從 server 的 Cargo.toml 讀版本（apps\* 各自寫死版本，不跟 workspace）。
 $cargoToml = Get-Content (Join-Path $Repo 'apps\windows\server\Cargo.toml')
 $verLine = $cargoToml | Where-Object { $_ -match '^\s*version\s*=\s*"(.+)"' } | Select-Object -First 1
 if (-not ($verLine -match '"(.+)"')) { throw '在 server\Cargo.toml 里没找到 version' }
 $Version = $Matches[1]
-# 开发版接 git 短哈希（0.1.3-dev-1a2b3c4，脏加 +），有 bug 能定位到哪次改动；发版提交去掉 -dev 就不接。
+# 開發版接 git 短雜湊（0.1.3-dev-1a2b3c4，髒加 +），有 bug 能定位到哪次改動；發版提交去掉 -dev 就不接。
 if ($Version.EndsWith('-dev')) {
     Push-Location $Repo
     try {
@@ -103,12 +103,12 @@ if ($Version.EndsWith('-dev')) {
         }
     } finally { Pop-Location }
 }
-# Inno 的 VersionInfoVersion 只认数字：去掉 -alpha.1 这类预发布后缀。
+# Inno 的 VersionInfoVersion 只認數字：去掉 -alpha.1 這類預釋出字尾。
 $VersionNumeric = $Version -replace '-.*$', ''
 Write-Host "版本 $Version" -ForegroundColor Cyan
 
-# 3) 找 ISCC.exe：先 Program Files 里的 7（与开发机同版本；CI 镜像 PATH 上自带 Chocolatey 的 6，不带简中翻译，不能让它抢先），
-#    再 PATH，最后 6。QINGJIAN_ISCC 环境变量可直接指定。
+# 3) 找 ISCC.exe：先 Program Files 裡的 7（與開發機同版本；CI 映象 PATH 上自帶 Chocolatey 的 6，不帶簡中翻譯，不能讓它搶先），
+#    再 PATH，最後 6。QINGJIAN_ISCC 環境變數可直接指定。
 $iscc = $env:QINGJIAN_ISCC
 if (-not $iscc) {
     $candidates = @(
@@ -128,7 +128,7 @@ if (-not $iscc) {
 if (-not $iscc) { throw '找不到 ISCC.exe：装 Inno Setup 7 或用 QINGJIAN_ISCC 指定' }
 Write-Host "用 $iscc" -ForegroundColor Cyan
 
-# 4) 编安装包。
+# 4) 編安裝包。
 & $iscc "/DAppVersion=$Version" "/DAppVersionNumeric=$VersionNumeric" $Iss
 if ($LASTEXITCODE -ne 0) { throw "iscc 失败（退出码 $LASTEXITCODE）" }
 

@@ -1,39 +1,39 @@
 use super::Transition;
 
-/// 最近一次上屏记了哪些学习：用户把它退格删掉、再打同一段拼音换选别的词时，把这些记录退回去。
-/// 没记学习的上屏（英文词、标点、原样上屏）也留一条只有长度的记录，退格数过它才能数到更早的词。
+/// 最近一次上屏記了哪些學習：使用者把它退格刪掉、再打同一段拼音換選別的詞時，把這些記錄退回去。
+/// 沒記學習的上屏（英文詞、標點、原樣上屏）也留一條只有長度的記錄，退格數過它才能數到更早的詞。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LastCommit {
     /// 上屏的文本。
     pub text: String,
 
-    /// 文本的字符数：退格这么多次就算整个删掉了。
+    /// 文本的字元數：退格這麼多次就算整個刪掉了。
     pub chars: usize,
 
-    /// 消耗掉的那段拼音（按输入串记选择用的键）。
+    /// 消耗掉的那段拼音（按輸入串記選擇用的鍵）。
     pub input: String,
 
-    /// 记过一次选择次数（`Learner::record`）与输入串选择（`record_choice`）的词；整句上屏没有。
+    /// 記過一次選擇次數（`Learner::record`）與輸入串選擇（`record_choice`）的詞；整句上屏沒有。
     pub chosen: Option<String>,
 
-    /// 记过的词转移（含上文与份数）。
+    /// 記過的詞轉移（含上文與份數）。
     pub transitions: Vec<Transition>,
 
-    /// 记进个人敲错表的 (敲的, 要的) 音节对。
+    /// 記進個人敲錯表的 (敲的, 要的) 音節對。
     pub typos: Vec<(String, String)>,
 
-    /// 上屏之后已经退格了几个字符。
+    /// 上屏之後已經退格了幾個字元。
     pub erased: usize,
 
-    /// 输入日志里这次上屏的序号，撤销时指回去。
+    /// 輸入日誌裡這次上屏的序號，撤銷時指回去。
     pub log_id: u64,
 
-    /// 整段拼音分几次选完时记的「整段 → 合成词」选择（学习键, 合成词），撤销时一并退回。
+    /// 整段拼音分幾次選完時記的「整段 → 合成詞」選擇（學習鍵, 合成詞），撤銷時一併退回。
     pub phrase: Option<(String, String)>,
 }
 
 impl LastCommit {
-    /// 没记任何学习的上屏：只记文本长度。
+    /// 沒記任何學習的上屏：只記文本長度。
     pub fn plain(text: &str) -> Self {
         Self {
             text: text.to_owned(),
@@ -48,12 +48,12 @@ impl LastCommit {
         }
     }
 
-    /// 已经整个删掉了。
+    /// 已經整個刪掉了。
     pub fn is_erased(&self) -> bool {
         self.chars > 0 && self.erased == self.chars
     }
 
-    /// 再打的这段拼音是不是同一段：完全相同，或是它的前缀（重打后只选了前面一个短词）。
+    /// 再打的這段拼音是不是同一段：完全相同，或是它的字首（重打後只選了前面一個短詞）。
     pub fn same_input(&self, input: &str) -> bool {
         !input.is_empty() && self.input.starts_with(input)
     }

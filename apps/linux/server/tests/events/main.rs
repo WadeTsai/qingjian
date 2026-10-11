@@ -1,4 +1,4 @@
-//! 能力优先级、焦点边界和薄插件事件的业务决策。
+//! 能力優先順序、焦點邊界和薄外掛事件的業務決策。
 mod support;
 use self::support::{caps, compose, event, key, router};
 use serde_json::json;

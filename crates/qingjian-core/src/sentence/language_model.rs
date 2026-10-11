@@ -1,11 +1,11 @@
-/// 整句转换的打分来源：词级语言模型。实现放兄弟 crate（`qingjian-lm`），Core 只认这个 trait。
+/// 整句轉換的打分來源：詞級語言模型。實現放兄弟 crate（`qingjian-lm`），Core 只認這個 trait。
 pub trait LanguageModel: Send {
-    /// `log P(word | previous)`；`previous` 为 `None` 表示句首。模型不认识 `word` 时返回 `None`，
-    /// 由 Core 用词库词频兜底。
+    /// `log P(word | previous)`；`previous` 為 `None` 表示句首。模型不認識 `word` 時返回 `None`，
+    /// 由 Core 用詞庫詞頻兜底。
     fn log_prob(&self, previous: Option<&str>, word: &str) -> Option<f64>;
 }
 
-/// 没接语言模型：一律兜底，整句转换退化为一元词频。
+/// 沒接語言模型：一律兜底，整句轉換退化為一元詞頻。
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NoLanguageModel;
 

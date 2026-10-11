@@ -1,4 +1,4 @@
-//! 上屏：高亮候选、指定候选、拼音原样。
+//! 上屏：高亮候選、指定候選、拼音原樣。
 
 use super::*;
 
@@ -8,7 +8,7 @@ impl QingjianInputController {
         self.commit_index(index, client)
     }
 
-    /// 上屏第 `index` 个候选；没有候选时上屏拼音本身。上屏后剩余拼音继续组句。
+    /// 上屏第 `index` 個候選；沒有候選時上屏拼音本身。上屏後剩餘拼音繼續組句。
     pub(super) fn commit_index(&self, index: usize, client: TextClient<'_>) -> bool {
         let candidate = host::with(|h| h.session.candidate(index)).flatten();
         let Some(candidate) = candidate else {
@@ -26,7 +26,7 @@ impl QingjianInputController {
         true
     }
 
-    /// 把拼音原样上屏并清空。缓冲区为空时返回 false。
+    /// 把拼音原樣上屏並清空。緩衝區為空時返回 false。
     pub(super) fn commit_raw(&self, client: TextClient<'_>) -> bool {
         let Some(raw) = host::with(|h| h.engine.take_raw()) else {
             return false;

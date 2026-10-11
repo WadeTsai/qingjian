@@ -3,26 +3,26 @@ use crate::parser::Segmentation;
 
 use super::edit::Edit;
 
-/// 一次拼写纠正：用户敲的串、纠正后的串、那一处编辑，以及纠正后串的完整音节切分。
+/// 一次拼寫糾正：使用者敲的串、糾正後的串、那一處編輯，以及糾正後串的完整音節切分。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Correction {
-    /// 用户敲的（作用域里的拼音，不含 `'`）。
+    /// 使用者敲的（作用域裡的拼音，不含 `'`）。
     pub original: String,
 
-    /// 纠正后的拼音。
+    /// 糾正後的拼音。
     pub corrected: String,
 
-    /// 从原串到纠正后串的那一处编辑。
+    /// 從原串到糾正後串的那一處編輯。
     pub edit: Edit,
 
-    /// 纠正后串的切分：每个音节都完整，或（相邻换位时）只有末尾一个还没敲完。
+    /// 糾正後串的切分：每個音節都完整，或（相鄰換位時）只有末尾一個還沒敲完。
     pub segmentation: Segmentation,
 }
 
 impl Correction {
-    /// 这处编辑落在纠正后哪个音节里：返回 (敲的那段字母, 纠正后的音节)，给个人敲错表记（敲的那段多半不是合法音节）；
-    /// 多敲的字母算在它前面那个音节上（与 [`Edit::to_original`] 一致）。编辑处不在任何音节里时返回 `None`。
-    /// `consumed` 是上屏消耗掉的纠正后字母数：没吃到编辑处的上屏不算接受了纠正。
+    /// 這處編輯落在糾正後哪個音節裡：返回 (敲的那段字母, 糾正後的音節)，給個人敲錯表記（敲的那段多半不是合法音節）；
+    /// 多敲的字母算在它前面那個音節上（與 [`Edit::to_original`] 一致）。編輯處不在任何音節裡時返回 `None`。
+    /// `consumed` 是上屏消耗掉的糾正後字母數：沒吃到編輯處的上屏不算接受了糾正。
     pub fn typo_pair(&self, consumed: usize) -> Option<(String, String)> {
         let at = match self.edit {
             Edit::Substitute { index, .. }
@@ -37,7 +37,7 @@ impl Correction {
         for syllable in &self.segmentation.syllables {
             let end = start + syllable.text.len();
             if at < end {
-                // 编辑落在还没敲完的末尾音节里：还不知道用户要的是哪个音节，不记
+                // 編輯落在還沒敲完的末尾音節裡：還不知道使用者要的是哪個音節，不記
                 if !syllable.complete {
                     return None;
                 }
@@ -52,14 +52,14 @@ impl Correction {
         None
     }
 
-    /// preedit 的分段：纠正后的切分拼音（`'` 连接），被改掉的原字母以 [`MarkedKind::Corrected`] 插在它原来的位置。
+    /// preedit 的分段：糾正後的切分拼音（`'` 連線），被改掉的原字母以 [`MarkedKind::Corrected`] 插在它原來的位置。
     /// `nihooma` → `ni'h` + ~~o~~ + `ao'ma`。
     pub fn marked_segments(&self) -> Vec<MarkedSegment> {
         let display = self.segmentation.joined("'");
         let Some((at, struck)) = self.edit.struck() else {
             return vec![MarkedSegment::new(display, MarkedKind::Typed)];
         };
-        // 纠正后串的字母下标 → 显示串（含 `'`）的下标
+        // 糾正後串的字母下標 → 顯示串（含 `'`）的下標
         let mut letters = 0;
         let mut split = display.len();
         for (i, c) in display.char_indices() {
@@ -135,7 +135,7 @@ mod tests {
             correction.typo_pair(7),
             Some(("hoo".to_owned(), "hao".to_owned()))
         );
-        // 只吃到 ni 就上屏：没接受纠正
+        // 只吃到 ni 就上屏：沒接受糾正
         assert_eq!(correction.typo_pair(2), None);
         let correction = Correction {
             original: "meiganxi".into(),
@@ -156,12 +156,12 @@ mod tests {
             },
             segmentation: segmentation(&["zhe", "ge"]),
         };
-        // 多敲的 g 算在前一个音节上
+        // 多敲的 g 算在前一個音節上
         assert_eq!(
             correction.typo_pair(5),
             Some(("zheg".to_owned(), "zhe".to_owned()))
         );
-        // 换位落在没敲完的末尾音节里：不记
+        // 換位落在沒敲完的末尾音節裡：不記
         let correction = Correction {
             original: "mingita".into(),
             corrected: "mingtia".into(),

@@ -1,11 +1,11 @@
-//! 词级查找：每个位置展开成多种写法，再按这些写法查主词库与用户词。
+//! 詞級查詢：每個位置展開成多種寫法，再按這些寫法查主詞庫與使用者詞。
 
 use super::*;
 
 impl Engine {
-    /// 每个位置的写法：敲的原样、模糊音，再加音节级敲错变体（`correction::typo`）当带代价的边，
-    /// 代价按类别定、按个人敲错表打折。太短的输入（不到 [`correction::MIN_LETTERS`]）、双拼、非末尾带简拼的切分不加敲错变体：
-    /// 短串一处编辑几乎总能凑出别的词，双拼敲错一键换掉的是整个声母 / 韵母。不完整的位置（简拼、前缀）本来就按前缀查，不加。
+    /// 每個位置的寫法：敲的原樣、模糊音，再加音節級敲錯變體（`correction::typo`）當帶代價的邊，
+    /// 代價按類別定、按個人敲錯表打折。太短的輸入（不到 [`correction::MIN_LETTERS`]）、雙拼、非末尾帶簡拼的切分不加敲錯變體：
+    /// 短串一處編輯幾乎總能湊出別的詞，雙拼敲錯一鍵換掉的是整個聲母 / 韻母。不完整的位置（簡拼、字首）本來就按字首查，不加。
     pub(in crate::engine) fn expand_positions(
         &self,
         patterns: &[qingjian_dictionary::SyllablePattern<'_>],
@@ -16,7 +16,7 @@ impl Engine {
             return expanded;
         }
         let letters: usize = patterns.iter().map(|p| p.text.len()).sum();
-        // 非末尾有简拼 / 残缺音节的切分（`kai f a`）本来就不是用户敲的原话，不在它上面再猜敲错
+        // 非末尾有簡拼 / 殘缺音節的切分（`kai f a`）本來就不是使用者敲的原話，不在它上面再猜敲錯
         let inner_abbreviated = patterns
             .iter()
             .take(patterns.len().saturating_sub(1))
@@ -36,7 +36,7 @@ impl Engine {
         expanded
     }
 
-    /// 本地整句转换把最优切分转成的汉字，给云端当参考（问字模式里就是问题的汉字形式）；转不出或有占位音节为空。
+    /// 本地整句轉換把最優切分轉成的漢字，給雲端當參考（問字模式裡就是問題的漢字形式）；轉不出或有佔位音節為空。
     pub(in crate::engine) fn local_guess(&self, segmentations: &[Segmentation]) -> String {
         segmentations
             .first()
@@ -46,7 +46,7 @@ impl Engine {
             .unwrap_or_default()
     }
 
-    /// 主词库与用户词一起查（每个位置多种写法）。用户词是用户自己选过的（云联想接受的词等），排序上靠 weight 自然靠前。
+    /// 主詞庫與使用者詞一起查（每個位置多種寫法）。使用者詞是使用者自己選過的（雲聯想接受的詞等），排序上靠 weight 自然靠前。
     pub(in crate::engine) fn lookup_all(
         &self,
         positions: &[Vec<qingjian_dictionary::SyllablePattern<'_>>],
@@ -58,7 +58,7 @@ impl Engine {
         hits
     }
 
-    /// 只要音节数正好等于位置数的词，主词库与用户词一起查。
+    /// 只要音節數正好等於位置數的詞，主詞庫與使用者詞一起查。
     pub(in crate::engine) fn lookup_exact_all(
         &self,
         positions: &[Vec<qingjian_dictionary::SyllablePattern<'_>>],

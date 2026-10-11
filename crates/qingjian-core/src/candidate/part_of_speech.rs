@@ -3,43 +3,43 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// 词性。缩写沿用英文词典惯例，各平台按学习语言决定显示文案。
+/// 詞性。縮寫沿用英文詞典慣例，各平臺按學習語言決定顯示文案。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PartOfSpeech {
-    /// 名词 n.
+    /// 名詞 n.
     Noun,
 
-    /// 动词 v.
+    /// 動詞 v.
     Verb,
 
-    /// 形容词 adj.
+    /// 形容詞 adj.
     Adjective,
 
-    /// 副词 adv.
+    /// 副詞 adv.
     Adverb,
 
-    /// 代词 pron.
+    /// 代詞 pron.
     Pronoun,
 
-    /// 介词 prep.
+    /// 介詞 prep.
     Preposition,
 
-    /// 连词 conj.
+    /// 連詞 conj.
     Conjunction,
 
-    /// 数词 num.
+    /// 數詞 num.
     Numeral,
 
-    /// 量词 m.
+    /// 量詞 m.
     Measure,
 
-    /// 助词 part.
+    /// 助詞 part.
     Particle,
 
-    /// 叹词 int.
+    /// 嘆詞 int.
     Interjection,
 
-    /// 短语 phr.
+    /// 短語 phr.
     Phrase,
 }
 

@@ -1,12 +1,12 @@
-/// 一条待写出的词条。
+/// 一條待寫出的詞條。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LexiconEntry {
-    /// 词。
+    /// 詞。
     pub text: String,
 
-    /// 音节，不带声调，ü 写 v。
+    /// 音節，不帶聲調，ü 寫 v。
     pub syllables: Vec<String>,
 
-    /// 词频。
+    /// 詞頻。
     pub frequency: u32,
 }

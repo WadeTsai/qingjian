@@ -1,9 +1,9 @@
-//! P2C 解码延迟 spike：用现有字级模型模拟「拼音 → 汉字」解码器的 beam search，量一次整句重解码要多久。
+//! P2C 解碼延遲 spike：用現有字級模型模擬「拼音 → 漢字」解碼器的 beam search，量一次整句重解碼要多久。
 //!
-//! 现有模型不带拼音条件，但 P2C 解码的成本主导项是「beam 条并成一批、逐字推进的前向 + 每步取回 CPU 挑 top-k」，
-//! 与条件从哪来无关，所以拿它当代理量级是成立的（见报告里的偏差说明）。
+//! 現有模型不帶拼音條件，但 P2C 解碼的成本主導項是「beam 條併成一批、逐字推進的前向 + 每步取回 CPU 挑 top-k」，
+//! 與條件從哪來無關，所以拿它當代理量級是成立的（見報告裡的偏差說明）。
 //!
-//! 用法：`cargo run --release -p qingjian-neural --example p2c_bench --features metal -- [模型路径]`
+//! 用法：`cargo run --release -p qingjian-neural --example p2c_bench --features metal -- [模型路徑]`
 
 use std::path::PathBuf;
 use std::time::Instant;
@@ -11,7 +11,7 @@ use std::time::Instant;
 use candle_core::Tensor;
 use qingjian_neural::{CharLm, CharScorer};
 
-/// 前文取样文本，按需截断到指定字数。
+/// 前文取樣文本，按需截斷到指定字數。
 const CONTEXT: &str = "这个方案的问题在于每敲一键都要把整句重新解码一遍，候选窗要等模型算完才能出，\
 所以延迟不是体验好坏的问题而是能不能用的问题，必须先量清楚再决定要不要换架构，不然训练白训。";
 
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         scorer.vocab().encode(&text)
     };
 
-    // 基线：现在线上的重排（前文 64 字，8 条候选各自打分）
+    // 基線：現在線上的重排（前文 64 字，8 條候選各自打分）
     let ctx: String = chars.iter().take(64).collect();
     let texts = [
         "候选生成",
@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (med, p95) = bench(20, || {
         scorer.score(&ctx, &texts).unwrap();
     });
-    // 对拍：改动过 attention 的返回值，这几个分数应与 README 记的基线一致
+    // 對拍：改動過 attention 的返回值，這幾個分數應與 README 記的基線一致
     let probe = ["上海", "伤害", "参数", "残数", "错误", "措施"];
     let a = scorer.score("我今天想去", &probe[..2])?;
     let b = scorer.score("这个接口的", &probe[2..4])?;
@@ -110,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// 跑 `runs` 次取中位数与 p95（毫秒），前面另跑 3 次热身（Metal 首次要编译内核）。
+/// 跑 `runs` 次取中位數與 p95（毫秒），前面另跑 3 次熱身（Metal 首次要編譯核心）。
 fn bench(runs: usize, mut f: impl FnMut()) -> (f64, f64) {
     for _ in 0..3 {
         f();
@@ -127,7 +127,7 @@ fn bench(runs: usize, mut f: impl FnMut()) -> (f64, f64) {
     (ms[runs / 2], p95)
 }
 
-/// 一次完整的 beam search 解码：前文最后一个 token 起手，逐字推进 `steps` 步。
+/// 一次完整的 beam search 解碼：前文最後一個 token 起手，逐字推進 `steps` 步。
 fn decode(
     model: &CharLm,
     prefix: &[u32],
@@ -140,7 +140,7 @@ fn decode(
     let cache = model.prefix_cache(head)?;
     let idx = Tensor::from_vec(tail.to_vec(), (1, 1), device)?;
 
-    // 第一步只有一条，挑出 beam 个起点后把缓存复制成 beam 行
+    // 第一步只有一條，挑出 beam 個起點後把快取複製成 beam 行
     let (log_probs, cache) = model.step(&cache, &idx)?;
     let row = log_probs.to_vec2::<f32>()?;
     let picked = merge_top(&row, &[0.0], beam);
@@ -162,8 +162,8 @@ fn decode(
     Ok(())
 }
 
-/// 在 `beam × vocab` 个延长里挑分数最高的 `k` 个，返回（累计分, token, 来自第几条）。
-/// 线性扫描 + 小数组插入，不给中间结果分配大向量——真实解码器也该这么写。
+/// 在 `beam × vocab` 個延長裡挑分數最高的 `k` 個，返回（累計分, token, 來自第幾條）。
+/// 線性掃描 + 小陣列插入，不給中間結果分配大向量——真實解碼器也該這麼寫。
 fn merge_top(rows: &[Vec<f32>], base: &[f32], k: usize) -> Vec<(f32, u32, u32)> {
     let mut best: Vec<(f32, u32, u32)> = Vec::with_capacity(k + 1);
     for (b, row) in rows.iter().enumerate() {
@@ -181,8 +181,8 @@ fn merge_top(rows: &[Vec<f32>], base: &[f32], k: usize) -> Vec<(f32, u32, u32)> 
     best
 }
 
-/// 同一条解码路径的三档成本：`stage` 0 只做前向、1 再把 logits 取回 CPU、2 是完整的挑 top-k 加重排缓存。
-/// 0 和 1 都在最后取一次值强制同步，免得 Metal 的异步队列把时间藏起来。
+/// 同一條解碼路徑的三檔成本：`stage` 0 只做前向、1 再把 logits 取回 CPU、2 是完整的挑 top-k 加重排快取。
+/// 0 和 1 都在最後取一次值強制同步，免得 Metal 的非同步佇列把時間藏起來。
 fn decode_stage(
     model: &CharLm,
     prefix: &[u32],

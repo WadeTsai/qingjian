@@ -1,22 +1,22 @@
-//! 「辅码」页触发键录制的状态，挂在 [`Settings`](super::Settings) 上：点「录制」后等用户按一个键。
+//! 「輔碼」頁觸發鍵錄製的狀態，掛在 [`Settings`](super::Settings) 上：點「錄製」後等使用者按一個鍵。
 
-/// 触发键录制状态。
+/// 觸發鍵錄製狀態。
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(crate) enum Recorder {
-    /// 没在录，控件显示当前触发键。
+    /// 沒在錄，控制元件顯示當前觸發鍵。
     #[default]
     Idle,
 
-    /// 在等用户按下一个键。
+    /// 在等使用者按下一個鍵。
     Waiting {
-        /// 第几轮等待，从 1 起：录制框拿它当 `KeyedView` 标识，一轮一代新框——
-        /// 上一轮敲进来的字符不会被 Reactor 重写回声明值，只能靠重建清掉。
+        /// 第幾輪等待，從 1 起：錄製框拿它當 `KeyedView` 標識，一輪一代新框——
+        /// 上一輪敲進來的字元不會被 Reactor 重寫回宣告值，只能靠重建清掉。
         attempt: u64,
     },
 }
 
 impl Recorder {
-    /// 进入下一轮等待（录制框跟着换代）。
+    /// 進入下一輪等待（錄製框跟著換代）。
     pub(crate) fn waiting(self) -> Self {
         let attempt = match self {
             Self::Idle => 0,

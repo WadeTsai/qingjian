@@ -1,9 +1,9 @@
-//! 拼写纠错 / 敲错边 / 模糊音。
+//! 拼寫糾錯 / 敲錯邊 / 模糊音。
 
 use super::*;
 
-/// 每个音节都合法、整句却不通的输入（`meiganxi`）：词图里的敲错边把 没关系 读出来，作为词候选插到最前；
-/// 上屏按敲的字母消耗、记个人敲错表，退格重选时退回；原样说得通（`meiganxie` 没感谢）时不改。
+/// 每個音節都合法、整句卻不通的輸入（`meiganxi`）：詞圖裡的敲錯邊把 沒關係 讀出來，作為詞候選插到最前；
+/// 上屏按敲的字母消耗、記個人敲錯表，退格重選時退回；原樣說得通（`meiganxie` 沒感謝）時不改。
 #[test]
 fn typo_edges_in_the_lattice_correct_legal_but_unlikely_pinyin() {
     let dictionary = Dictionary::parse(
@@ -20,13 +20,13 @@ fn typo_edges_in_the_lattice_correct_legal_but_unlikely_pinyin() {
     assert_eq!(first.text, "没关系");
     assert_eq!(first.kind, CandidateKind::Chinese);
     assert_eq!(first.syllables, ["mei", "guan", "xi"]);
-    // 词级候选不带敲错变体：原样的 美感 还在后面
+    // 詞級候選不帶敲錯變體：原樣的 美感 還在後面
     assert!(query.candidates.items.iter().any(|c| c.text == "美感"));
     assert_eq!(engine.commit(&first), "没关系");
     assert!(engine.composition().is_empty());
     assert_eq!(engine.learner().typo_count("gan", "guan"), 1);
     assert_eq!(engine.learner().choice_weight("meiganxi", "没关系"), 1);
-    // 整个删掉、同一段拼音改选 美感：敲错的记录退回
+    // 整個刪掉、同一段拼音改選 美感：敲錯的記錄退回
     for _ in 0..3 {
         engine.note_backspace();
     }
@@ -42,15 +42,15 @@ fn typo_edges_in_the_lattice_correct_legal_but_unlikely_pinyin() {
     engine.commit(&meigan);
     assert_eq!(engine.learner().typo_count("gan", "guan"), 0);
     assert_eq!(engine.composition().text(), "xi");
-    // 原样读得通：没 + 感谢 是正常整句，不动
+    // 原樣讀得通：沒 + 感謝 是正常整句，不動
     engine.set_input("meiganxie");
     let query = engine.query().unwrap();
     assert_eq!(query.candidates.items[0].text, "没感谢");
     assert_eq!(query.candidates.items[0].kind, CandidateKind::Sentence);
-    // 两个音节也纠：ganxi → 关系
+    // 兩個音節也糾：ganxi → 關係
     engine.set_input("ganxi");
     assert_eq!(engine.query().unwrap().candidates.items[0].text, "关系");
-    // 太短不纠（不到 4 个字母）
+    // 太短不糾（不到 4 個字母）
     engine.set_input("gan");
     assert!(
         engine
@@ -61,8 +61,8 @@ fn typo_edges_in_the_lattice_correct_legal_but_unlikely_pinyin() {
             .iter()
             .all(|c| c.text != "关系")
     );
-    // 敲的拼音本身正好是一个词（按另一种切分）：不许敲错边压过它。jineng 最优切分是 jin eng，词图里读出 近藤，
-    // 但 技能 的音节正好拼成整段输入
+    // 敲的拼音本身正好是一個詞（按另一種切分）：不許敲錯邊壓過它。jineng 最優切分是 jin eng，詞圖裡讀出 近藤，
+    // 但 技能 的音節正好拼成整段輸入
     let dictionary = Dictionary::parse(
         "技能\tji neng\t300000\n近藤\tjin teng\t900000\n近\tjin\t500000\n\
              机\tji\t400000\n能\tneng\t600000\n",
@@ -74,8 +74,8 @@ fn typo_edges_in_the_lattice_correct_legal_but_unlikely_pinyin() {
     assert_eq!(query.segmentations[0].joined("'"), "jin'eng");
     assert_eq!(query.candidates.items[0].text, "技能");
     assert!(query.candidates.items.iter().all(|c| c.text != "近藤"));
-    // 退回原样的路径时原样的整句照出：shude 词图里 是的（shu → shi 相邻键）赢，但 树德 正好拼成 shude，
-    // 于是整句退回 属的
+    // 退回原樣的路徑時原樣的整句照出：shude 詞圖裡 是的（shu → shi 相鄰鍵）贏，但 樹德 正好拼成 shude，
+    // 於是整句退回 屬的
     let dictionary = Dictionary::parse(
             "树德\tshu de\t500\n是的\tshi de\t5000000\n属\tshu\t100000\n的\tde\t8000000\n是\tshi\t7000000\n",
         )
@@ -88,7 +88,7 @@ fn typo_edges_in_the_lattice_correct_legal_but_unlikely_pinyin() {
     assert!(query.candidates.items.iter().all(|c| c.text != "是的"));
 }
 
-/// 模糊音命中的词按敲的字母消耗拼音（`zi` 对 `zhi`），不算敲错。
+/// 模糊音命中的詞按敲的字母消耗拼音（`zi` 對 `zhi`），不算敲錯。
 #[test]
 fn fuzzy_hits_consume_the_typed_syllables() {
     let dictionary =
@@ -113,7 +113,7 @@ fn fuzzy_hits_consume_the_typed_syllables() {
     assert_eq!(engine.learner().typo_count("zi", "zhi"), 0);
 }
 
-/// 接受整段一处编辑的纠正也记个人敲错表：敲的那段字母对纠正后的音节。
+/// 接受整段一處編輯的糾正也記個人敲錯表：敲的那段字母對糾正後的音節。
 #[test]
 fn accepted_whole_string_correction_feeds_the_typo_table() {
     let dictionary = Dictionary::parse(
@@ -128,7 +128,7 @@ fn accepted_whole_string_correction_feeds_the_typo_table() {
     let first = query.candidates.items[0].clone();
     engine.commit(&first);
     assert_eq!(engine.learner().typo_count("hoo", "hao"), 1);
-    // 只选到 你 就上屏：没吃到编辑处，不算接受
+    // 只選到 你 就上屏：沒吃到編輯處，不算接受
     engine.set_input("nihooma");
     let ni = engine
         .query()
@@ -152,7 +152,7 @@ fn spelling_correction_fixes_one_edit_and_learns_from_enter() {
     let mut engine = Engine::new(dictionary)
         .with_english(WordList::parse("hello\n").unwrap())
         .with_learner(Box::new(CountingLearner(HashMap::new())));
-    // 换错一个字母：nihooma → nihaoma，候选来自纠正后的拼音，拼音行画出被改掉的 o
+    // 換錯一個字母：nihooma → nihaoma，候選來自糾正後的拼音，拼音行畫出被改掉的 o
     engine.set_input("nihooma");
     let query = engine.query().unwrap();
     let correction = query.correction.clone().expect("corrected");
@@ -172,17 +172,17 @@ fn spelling_correction_fixes_one_edit_and_learns_from_enter() {
         ]
     );
     assert_eq!(query.marked_cursor(), 10);
-    // 选纠正后的词吃掉整段原串，并按原输入串记选择
+    // 選糾正後的詞吃掉整段原串，並按原輸入串記選擇
     let first = query.candidates.items[0].clone();
     assert_eq!(engine.commit(&first), "你好吗");
     assert!(engine.composition().is_empty());
     engine.set_input("nihooma");
     assert_eq!(engine.query().unwrap().candidates.items[0].text, "你好吗");
-    // 相邻换位
+    // 相鄰換位
     engine.set_input("nihoama");
     let query = engine.query().unwrap();
     assert_eq!(query.correction.as_ref().unwrap().corrected, "nihaoma");
-    // 选前缀词 你好 只吃到 nihoa 之后：换位不改长度，剩 ma
+    // 選字首詞 你好 只吃到 nihoa 之後：換位不改長度，剩 ma
     let nihao = query
         .candidates
         .items
@@ -192,22 +192,22 @@ fn spelling_correction_fixes_one_edit_and_learns_from_enter() {
         .unwrap();
     engine.commit(&nihao);
     assert_eq!(engine.composition().text(), "ma");
-    // 整段是英文词的不纠（hello 不会变成 和咯）
+    // 整段是英文詞的不糾（hello 不會變成 和咯）
     engine.set_input("hello");
     assert!(engine.query().unwrap().correction.is_none());
-    // 原样已经说得通的合法简拼不纠：nhao 是 你好 的简拼，纠成 nihao 得分一样、扣掉编辑代价就输了
+    // 原樣已經說得通的合法簡拼不糾：nhao 是 你好 的簡拼，糾成 nihao 得分一樣、扣掉編輯代價就輸了
     engine.set_input("nhao");
     assert!(engine.query().unwrap().correction.is_none());
-    // 末尾单字母只试相邻换位：nihoa → nihao
+    // 末尾單字母只試相鄰換位：nihoa → nihao
     engine.set_input("nihoa");
     assert_eq!(
         engine.query().unwrap().correction.unwrap().corrected,
         "nihao"
     );
-    // 短串不纠
+    // 短串不糾
     engine.set_input("nih");
     assert!(engine.query().unwrap().correction.is_none());
-    // 回车原样上屏过的串以后不纠
+    // 回車原樣上屏過的串以後不糾
     engine.set_input("nihooma");
     assert!(engine.query().unwrap().correction.is_some());
     assert_eq!(engine.take_raw(), "nihooma");
@@ -223,7 +223,7 @@ fn transposition_is_corrected_while_the_last_syllable_is_still_unfinished() {
     )
     .unwrap();
     let mut engine = Engine::new(dictionary);
-    // 敲反了 gn 之后还在往下敲：mignt → ming't，候选按前缀出 明天，拼音行划掉 gn
+    // 敲反了 gn 之後還在往下敲：mignt → ming't，候選按前綴出 明天，拼音行劃掉 gn
     engine.set_input("mignt");
     let query = engine.query().unwrap();
     let correction = query.correction.clone().expect("corrected");
@@ -243,7 +243,7 @@ fn transposition_is_corrected_while_the_last_syllable_is_still_unfinished() {
         ]
     );
     assert_eq!(query.candidates.items[0].text, "明天");
-    // 再敲两键：migntia → ming'tia…，仍是 明天；选它吃掉整段原串
+    // 再敲兩鍵：migntia → ming'tia…，仍是 明天；選它吃掉整段原串
     engine.set_input("migntia");
     let query = engine.query().unwrap();
     assert_eq!(query.correction.as_ref().unwrap().corrected, "mingtia");
@@ -251,7 +251,7 @@ fn transposition_is_corrected_while_the_last_syllable_is_still_unfinished() {
     assert_eq!(first.text, "明天");
     assert_eq!(engine.commit(&first), "明天");
     assert!(engine.composition().is_empty());
-    // 敲完整个词：migntian → ming'tian
+    // 敲完整個詞：migntian → ming'tian
     engine.set_input("migntian");
     assert_eq!(engine.query().unwrap().candidates.items[0].text, "明天");
 }
@@ -261,11 +261,11 @@ fn commit_alignment_backtracks_over_typo_variants() {
     let engine = engine();
     let syllables =
         |list: &[&str]| -> Vec<String> { list.iter().map(|s| (*s).to_owned()).collect() };
-    // pingyin 上屏 拼音：pin 原样只吃三个字母会剩 gyin，退回来按敲错变体 ping → pin 吃四个，整段吃光并记敲错
+    // pingyin 上屏 拼音：pin 原樣只吃三個字母會剩 gyin，退回來按敲錯變體 ping → pin 吃四個，整段吃光並記敲錯
     let alignment = engine.align("pingyin", &syllables(&["pin", "yin"]));
     assert_eq!(alignment.consumed, 7);
     assert_eq!(alignment.typos, [("ping".to_owned(), "pin".to_owned())]);
-    // 原样、没打完的前缀、前缀词、带 ' 的输入照旧
+    // 原樣、沒打完的字首、字首詞、帶 ' 的輸入照舊
     assert_eq!(
         engine.align("nihao", &syllables(&["ni", "hao"])).consumed,
         5
@@ -284,7 +284,7 @@ fn commit_alignment_backtracks_over_typo_variants() {
         engine.align("ni'hao", &syllables(&["ni", "hao"])).consumed,
         6
     );
-    // 对不上的候选还是贪心对到哪算哪
+    // 對不上的候選還是貪心對到哪算哪
     assert_eq!(engine.align("nihao", &syllables(&["ni", "ma"])).consumed, 2);
 }
 
@@ -293,7 +293,7 @@ fn unfinished_last_syllable_is_not_recorded_as_a_typo() {
     let engine = engine();
     let syllables =
         |list: &[&str]| -> Vec<String> { list.iter().map(|s| (*s).to_owned()).collect() };
-    // shijia 选 时间 是 jian 没敲完：jia 虽是 jian 的敲错变体，也不进个人敲错表
+    // shijia 選 時間 是 jian 沒敲完：jia 雖是 jian 的敲錯變體，也不進個人敲錯表
     for (input, list) in [
         ("shijia", ["shi", "jian"]),
         ("zhegua", ["zhe", "guan"]),
@@ -307,8 +307,8 @@ fn unfinished_last_syllable_is_not_recorded_as_a_typo() {
 
 #[test]
 fn fuzzy_rules_add_homophones_behind_exact_hits() {
-    // 词库里只有 kai fa 系列加一个 哈；敲 kaiha 没开 f/h 时只有前缀词 开（开哈 原样读得通，词图的敲错边翻不过它），
-    // 开了就出 开发（模糊命中）且覆盖更多字母排第一
+    // 詞庫裡只有 kai fa 系列加一個 哈；敲 kaiha 沒開 f/h 時只有字首詞 開（開哈 原樣讀得通，詞圖的敲錯邊翻不過它），
+    // 開了就出 開發（模糊命中）且覆蓋更多字母排第一
     let mut engine = Engine::new(Dictionary::parse(&format!("{SAMPLE}哈\tha\t50000\n")).unwrap());
     engine.set_input("kaiha");
     let before = texts_of(&engine);
@@ -319,16 +319,16 @@ fn fuzzy_rules_add_homophones_behind_exact_hits() {
         ..FuzzyRules::default()
     });
     let after = texts_of(&engine);
-    // ha 是前缀，换成 fa 前缀后 开放（词频更高）与 开发 都出，覆盖更多字母排在 开 前面
+    // ha 是字首，換成 fa 字首後 開放（詞頻更高）與 開發 都出，覆蓋更多字母排在 開 前面
     assert_eq!(after[0], "开放");
     assert!(after.contains(&"开发".to_owned()));
     assert!(after.contains(&"开".to_owned()));
-    // 整句转换走同一套写法：xiangkaiha → 想开发
+    // 整句轉換走同一套寫法：xiangkaiha → 想開發
     engine.set_input("xiangkaiha");
     let query = engine.query().unwrap();
     assert_eq!(query.candidates.items[0].text, "想开发");
     assert_eq!(query.candidates.items[0].kind, CandidateKind::Sentence);
-    // 敲对的仍然优先：kaifa 第一位还是 开发，且不重复
+    // 敲對的仍然優先：kaifa 第一位還是 開發，且不重複
     engine.set_input("kaifa");
     let all = texts_of(&engine);
     assert_eq!(all[0], "开发");

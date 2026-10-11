@@ -1,4 +1,4 @@
-//! 显示器工作区查询，候选窗口与状态条共用。
+//! 顯示器工作區查詢，候選視窗與狀態條共用。
 
 use windows::Win32::Foundation::{POINT, RECT};
 use windows::Win32::Graphics::Gdi::{
@@ -7,17 +7,17 @@ use windows::Win32::Graphics::Gdi::{
 };
 use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
 
-/// `point` 所在（最近）显示器的工作区。
+/// `point` 所在（最近）顯示器的工作區。
 pub(super) fn work_area_near(point: POINT) -> RECT {
     work_area(point, MONITOR_DEFAULTTONEAREST)
 }
 
-/// 主显示器的工作区。
+/// 主顯示器的工作區。
 pub(super) fn primary_work_area() -> RECT {
     work_area(POINT::default(), MONITOR_DEFAULTTOPRIMARY)
 }
 
-/// 拿不到时给个大范围，至少别把窗口夹没。
+/// 拿不到時給個大範圍，至少別把視窗夾沒。
 fn work_area(point: POINT, flags: MONITOR_FROM_FLAGS) -> RECT {
     let mut info = MONITORINFO {
         cbSize: core::mem::size_of::<MONITORINFO>() as u32,
@@ -39,7 +39,7 @@ fn work_area(point: POINT, flags: MONITOR_FROM_FLAGS) -> RECT {
     }
 }
 
-/// `point` 所在（最近）显示器的有效 DPI；取不到为 `None`。
+/// `point` 所在（最近）顯示器的有效 DPI；取不到為 `None`。
 pub(super) fn dpi_near(point: POINT) -> Option<u32> {
     let (mut x, mut y) = (0, 0);
     unsafe {

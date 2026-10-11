@@ -1,46 +1,46 @@
 use qingjian_core::PredictionPolicy;
 use serde::{Deserialize, Serialize};
 
-/// 云联想配置。默认**关闭**，开启后光标附近的文本会发往 `base_url`。
+/// 雲聯想配置。預設**關閉**，開啟後游標附近的文本會發往 `base_url`。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PredictConfig {
-    /// 是否启用。
+    /// 是否啟用。
     pub enabled: bool,
 
-    /// OpenAI 兼容接口地址（不含 `/chat/completions`）。
+    /// OpenAI 相容介面地址（不含 `/chat/completions`）。
     pub base_url: String,
 
     /// 模型名。
     pub model: String,
 
-    /// 密钥。留空则读 `api_key_env` 指定的环境变量。
+    /// 金鑰。留空則讀 `api_key_env` 指定的環境變數。
     pub api_key: Option<String>,
 
-    /// 存放密钥的环境变量名。
+    /// 存放金鑰的環境變數名。
     pub api_key_env: String,
 
-    /// 单次请求超时（毫秒），超时即丢。
+    /// 單次請求超時（毫秒），超時即丟。
     pub timeout_ms: u64,
 
-    /// 防抖：停止敲键多久之后才真正发请求（毫秒）。
+    /// 防抖：停止敲鍵多久之後才真正發請求（毫秒）。
     pub debounce_ms: u64,
 
-    /// 光标前最多发多少个字符。
+    /// 游標前最多發多少個字元。
     pub lookback: usize,
 
-    /// 光标后最多发多少个字符。
+    /// 游標後最多發多少個字元。
     pub lookahead: usize,
 
-    /// 云端词最多补进候选窗口第一页末尾几格；0 表示不要云端词，只要整句补全。
+    /// 雲端詞最多補進候選視窗第一頁末尾幾格；0 表示不要雲端詞，只要整句補全。
     pub slots: usize,
 
-    /// 组句中要不要整句补全。
+    /// 組句中要不要整句補全。
     pub sentence: bool,
 
-    /// 推理强度，随请求发 `reasoning_effort`：`none` 关掉模型的思考（联想要的是快，不是想），
-    /// 其余 minimal / low / medium / high / xhigh 照传；留空则不发（给不认这个参数的接口）。
-    /// DeepSeek V4 这类默认带思考的模型不关会把 token 预算全花在思考上，正文为空。
+    /// 推理強度，隨請求發 `reasoning_effort`：`none` 關掉模型的思考（聯想要的是快，不是想），
+    /// 其餘 minimal / low / medium / high / xhigh 照傳；留空則不發（給不認這個引數的介面）。
+    /// DeepSeek V4 這類預設帶思考的模型不關會把 token 預算全花在思考上，正文為空。
     pub reasoning_effort: String,
 }
 
@@ -64,7 +64,7 @@ impl Default for PredictConfig {
 }
 
 impl PredictConfig {
-    /// 配置里的密钥优先，其次环境变量；两边都没有返回 `None`。
+    /// 配置裡的金鑰優先，其次環境變數；兩邊都沒有返回 `None`。
     pub fn resolve_api_key(&self) -> Option<String> {
         self.api_key
             .as_deref()
@@ -80,7 +80,7 @@ impl PredictConfig {
             before: self.lookback,
             after: self.lookahead,
             slots: self.slots,
-            // 比槽位多要两条，与本地候选重复的去掉后还能填满；问字模式的答案也按这个数要
+            // 比槽位多要兩條，與本地候選重複的去掉後還能填滿；問字模式的答案也按這個數要
             max_items: self.slots.max(1) + 2,
             sentence: self.sentence,
         }

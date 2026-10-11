@@ -52,7 +52,11 @@
 
 ## 三、執行優先級 (Action Items)
 
-1. **[優先] 完成 PR 3 (Core Traditional Output)**：
-   - 滿足上游開源專案需求，為拼音用戶提供穩定的繁簡轉換功能。
-2. **[後續] 實作 Rust 原生的台灣注音資料打包工具 (`qingjian-dict-convert`)**：
+1. **[已完成] PR 3 (Core Traditional Output)**：
+   - `[general] traditional` 開關，Core 以 `ferrous-opencc`（s2tw）在出候選與上屏邊界轉換，內部仍按簡體（見 `docs/user/settings/preferences.md`「繁体输出」）。
+2. **[已完成] Windows 登記在「中文(台灣)」語言下**：
+   - TSF DLL 同時登記「中文(简体)」0x0804 的「青简」與「中文(台灣)」0x0404 的「青簡」兩個語言 profile（`apps/windows/tsf/src/com/profile/language.rs`），
+     繁體中文系統的使用者在自己的語言下就能加入；「青簡」下不用開開關就輸出繁體（DLL 以 `ClientMessage::Profile` 報給 Server，按會話生效）。
+   - 安裝程式隨系統語言顯示簡體或繁體介面（Inno Setup 7.0.2 起自帶兩份翻譯）。
+3. **[後續] 實作 Rust 原生的台灣注音資料打包工具 (`qingjian-dict-convert`)**：
    - 將原有的 Python 腳本雛形，用 Rust 改寫並整合進 `tools/dict-convert` 中，釋出官方的「台灣注音資料包」與生成工具。

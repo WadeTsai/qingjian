@@ -1,4 +1,4 @@
-//! 当前中 / 英模式与语言栏更新回调，文本服务与语言栏按钮（[`super::ModeButton`]）共享。
+//! 當前中 / 英模式與語言欄更新回撥，文本服務與語言欄按鈕（[`super::ModeButton`]）共享。
 
 use core::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -7,18 +7,18 @@ use windows::Win32::UI::TextServices::{ITfLangBarItemSink, TF_LBI_ICON, TF_LBI_S
 
 use qingjian_platform::SwitchKeys;
 
-/// 当前中英模式 + 语言栏更新回调，文本服务与语言栏按钮共享（STA 单线程）。
+/// 當前中英模式 + 語言欄更新回撥，文本服務與語言欄按鈕共享（STA 單執行緒）。
 pub(crate) struct ModeState {
     /// `true` 是英文模式。
     english: Cell<bool>,
 
-    /// 内置英文模式开关（`[general] english_mode`）：关掉后谁都不许切到英文。
+    /// 內建英文模式開關（`[general] english_mode`）：關掉後誰都不許切到英文。
     enabled: Cell<bool>,
 
-    /// 勾着的中英切换键（`[shortcut] switch_mode`），单击判定与语言栏提示用。
+    /// 勾著的中英切換鍵（`[shortcut] switch_mode`），單擊判定與語言欄提示用。
     switch_keys: Cell<SwitchKeys>,
 
-    /// 系统登记进来的语言栏更新回调；由 [`super::ModeButton`] 的 `ITfSource` 登记 / 撤销。
+    /// 系統登記進來的語言欄更新回撥；由 [`super::ModeButton`] 的 `ITfSource` 登記 / 撤銷。
     pub(super) sink: RefCell<Option<ITfLangBarItemSink>>,
 }
 
@@ -40,7 +40,7 @@ impl ModeState {
         self.english.set(english);
     }
 
-    /// 内置英文模式是否可用。
+    /// 內建英文模式是否可用。
     pub(crate) fn enabled(&self) -> bool {
         self.enabled.get()
     }
@@ -49,13 +49,13 @@ impl ModeState {
         self.switch_keys.get()
     }
 
-    /// 激活时按配置设一次。
+    /// 啟用時按配置設一次。
     pub(crate) fn set_settings(&self, enabled: bool, switch_keys: SwitchKeys) {
         self.enabled.set(enabled);
         self.switch_keys.set(switch_keys);
     }
 
-    /// 通知系统重取图标 / 文字。
+    /// 通知系統重取圖示 / 文字。
     pub(crate) fn notify(&self) {
         if let Some(sink) = self.sink.borrow().as_ref() {
             let _ = unsafe { sink.OnUpdate(TF_LBI_ICON | TF_LBI_STATUS) };

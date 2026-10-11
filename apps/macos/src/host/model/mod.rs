@@ -1,7 +1,7 @@
-//! 本地整句模型：后台加载、停顿后请求重排、结果到了重画当前页。
+//! 本地整句模型：後臺載入、停頓後請求重排、結果到了重畫當前頁。
 //!
-//! 按键回调里永远只跑词级模型；模型的意见在停键 80 毫秒后请求、二三十毫秒后到，只换候选窗口里的整句候选，
-//! 用户翻过页或动过高亮就不打扰。前文优先用应用里光标前的文字（`refresh` 每次查询前给 Engine），应用给不出退回本会话历史。
+//! 按鍵回撥裡永遠只跑詞級模型；模型的意見在停鍵 80 毫秒後請求、二三十毫秒後到，只換候選窗口裡的整句候選，
+//! 使用者翻過頁或動過高亮就不打擾。前文優先用應用裡游標前的文字（`refresh` 每次查詢前給 Engine），應用給不出退回本會話歷史。
 
 use std::sync::mpsc::{TryRecvError, channel};
 
@@ -15,13 +15,13 @@ pub(super) use rescore_monitor::RescoreMonitor;
 use super::*;
 
 impl Host {
-    /// 在后台线程加载模型并预热（第一次前向要编译 Metal 内核，几百毫秒），加载完由 [`Self::attach_loaded_model`] 接上。
-    /// 没有模型文件就什么都不做。
+    /// 在後臺執行緒載入模型並預熱（第一次前向要編譯 Metal 核心，幾百毫秒），載入完由 [`Self::attach_loaded_model`] 接上。
+    /// 沒有模型檔案就什麼都不做。
     pub(super) fn load_local_model(&mut self) {
         if self.model_loader.is_some() || self.engine.has_sentence_scorer() {
             return;
         }
-        // P2C 优先：冻结集 8322 句上比字级模型的重排高 0.69 个点、延迟还低（docs/notes/model-eval.md）
+        // P2C 優先：凍結集 8322 句上比字級模型的重排高 0.69 個點、延遲還低（docs/notes/model-eval.md）
         let (path, p2c) = match paths::p2c_model_path() {
             Some(path) => (path, true),
             None => match paths::model_path() {
@@ -37,7 +37,7 @@ impl Host {
             .name("qingjian-model-load".to_owned())
             .spawn(move || {
                 let started = std::time::Instant::now();
-                // 预热要走各自真正的前向：第一次前向要编译 Metal 内核，几百毫秒
+                // 預熱要走各自真正的前向：第一次前向要編譯 Metal 核心，幾百毫秒
                 let loaded = CharScorer::load(&path).and_then(|scorer| {
                     if p2c {
                         let scorer = P2cScorer::new(scorer)
@@ -68,7 +68,7 @@ impl Host {
         }
     }
 
-    /// 加载线程有结果了就接到 Engine 上；每次查询和加载定时器都会看一眼，不阻塞。
+    /// 載入執行緒有結果了就接到 Engine 上；每次查詢和載入定時器都會看一眼，不阻塞。
     pub fn attach_loaded_model(&mut self) {
         let Some(rx) = &self.model_loader else {
             self.rescore.stop_watching();
@@ -79,7 +79,7 @@ impl Host {
                 self.engine.set_async_sentence_scorer(Some(scorer));
                 self.model_loader = None;
                 self.rescore.stop_watching();
-                // 模型上线了：日志里补一条会话信息，之后的条目知道重排开着
+                // 模型上線了：日誌裡補一條會話資訊，之後的條目知道重排開著
                 let version = self.version.clone();
                 self.engine.log_session(&version, "macos");
                 self.rescore_current_round();
@@ -97,8 +97,8 @@ impl Host {
         }
     }
 
-    /// 模型接上时用户正在组句：这一轮的查询从没见过打分器，不补查一次就永远错过重排。
-    /// 补查只为攒下整句路径、起防抖，不动画面；用户已翻页或动过高亮就不打扰。
+    /// 模型接上時使用者正在組句：這一輪的查詢從沒見過打分器，不補查一次就永遠錯過重排。
+    /// 補查只為攢下整句路徑、起防抖，不動畫面；使用者已翻頁或動過高亮就不打擾。
     fn rescore_current_round(&mut self) {
         if self.engine.composition().is_empty()
             || self.translation.is_some()
@@ -113,12 +113,12 @@ impl Host {
         }
     }
 
-    /// 模型还在后台加载。
+    /// 模型還在後臺載入。
     pub fn model_loading(&self) -> bool {
         self.model_loader.is_some()
     }
 
-    /// 卸掉模型（配置关掉）。
+    /// 卸掉模型（配置關掉）。
     pub(super) fn unload_local_model(&mut self) {
         self.model_loader = None;
         self.engine.set_async_sentence_scorer(None);
@@ -126,14 +126,14 @@ impl Host {
         self.rescore.stop();
     }
 
-    /// 每次查询之后：有整句路径等着打分就起防抖计时。
+    /// 每次查詢之後：有整句路徑等著打分就起防抖計時。
     pub fn schedule_rescoring(&mut self) {
         if self.engine.rescoring_pending() {
             self.rescore.schedule();
         }
     }
 
-    /// 防抖到点：把攒着的整句路径送去后台，开始轮询。
+    /// 防抖到點：把攢著的整句路徑送去後臺，開始輪詢。
     pub fn start_rescoring(&mut self) {
         if self.engine.composition().is_empty() {
             self.rescore.stop();
@@ -144,14 +144,14 @@ impl Host {
         }
     }
 
-    /// 轮询到点：分回来了就重查一次、重画当前页；用户已翻页或动过高亮就只留着分不动画面。
+    /// 輪詢到點：分回來了就重查一次、重畫當前頁；使用者已翻頁或動過高亮就只留著分不動畫面。
     pub fn poll_rescoring(&mut self) {
         if self.engine.composition().is_empty() || self.translation.is_some() {
             self.rescore.stop();
             return;
         }
         if !self.engine.poll_rescoring() {
-            // 等太久多半是前文变了（上屏后接着打下一段）、结果作废；真卡住也只是这轮不重排
+            // 等太久多半是前文變了（上屏後接著打下一段）、結果作廢；真卡住也只是這輪不重排
             if self.rescore.expired() {
                 tracing::debug!("等本地整句模型超时，本轮不重排");
                 self.rescore.stop();

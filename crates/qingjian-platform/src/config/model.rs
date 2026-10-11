@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-/// 配置文件 `[model]` 分节：本地整句模型的开关。
+/// 配置檔案 `[model]` 分節：本地整句模型的開關。
 ///
-/// 随包的字级小模型在本机给整句候选重新排序，全程离线、不联网，与云联想互不影响（本地先出、云端到了另占它自己的格）。
-/// 模型文件不在包里（或用户目录 `model/` 里）时开关无效。
+/// 隨包的字級小模型在本機給整句候選重新排序，全程離線、不聯網，與雲聯想互不影響（本地先出、雲端到了另佔它自己的格）。
+/// 模型檔案不在包裡（或使用者目錄 `model/` 裡）時開關無效。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct LocalModelConfig {
-    /// 开着就加载模型、给整句重排。
+    /// 開著就載入模型、給整句重排。
     pub enabled: bool,
 }
 

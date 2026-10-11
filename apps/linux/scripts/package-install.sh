@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# //! 预编译包的安装脚本（package.sh 放到包根目录的 install.sh）：解开产品数据，装到用户目录；Server 由用户手动启动。
+# //! 預編譯包的安裝指令碼（package.sh 放到包根目錄的 install.sh）：解開產品資料，裝到使用者目錄；Server 由使用者手動啟動。
 set -euo pipefail
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 install_prefix="$HOME/.local"
@@ -22,7 +22,7 @@ if ((${#missing[@]})); then
 fi
 install_prefix=$(realpath -m -- "$install_prefix")
 mkdir -p "$here/data"
-# 数据包在 macOS 上打，带 LIBARCHIVE.xattr 扩展头，GNU tar 会逐个警告
+# 資料包在 macOS 上打，帶 LIBARCHIVE.xattr 擴充套件頭，GNU tar 會逐個警告
 tar --warning=no-unknown-keyword -xzf "$here/target/release-data/qingjian-data.tar.gz" -C "$here"
 python3 "$here/files.py" install "$install_prefix" "$here" "$here/bin/qingjian-linux-server" "$here/lib/qingjian.so" false
 printf '已安装。手动启动：%s/bin/qingjian-linux-server\n重启 Fcitx5，在配置工具取消“仅显示当前语言”后添加“青简”。\n' "$install_prefix"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# //! 用户目录安装默认面板链路；Server 由用户手动启动。
+# //! 使用者目錄安裝預設面板鏈路；Server 由使用者手動啟動。
 set -euo pipefail
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)
 install_prefix="$HOME/.local"
@@ -16,7 +16,7 @@ while (($#)); do
   esac
 done
 [[ "$install_prefix" = /* && "$install_prefix" != / ]] || { echo '需要非根绝对安装路径' >&2; exit 2; }
-# 缺依赖先说清楚，别等编译到一半才报一长串错。
+# 缺依賴先說清楚，別等編譯到一半才報一長串錯。
 missing=()
 for tool in cargo cmake c++ pkg-config python3; do
   command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")

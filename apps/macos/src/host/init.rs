@@ -1,13 +1,13 @@
-//! 启动：加载词库 / 语言模型 / 释义表 / 学习数据，建 Engine 与候选窗口，装进线程局部的 HOST。
+//! 啟動：載入詞庫 / 語言模型 / 釋義表 / 學習資料，建 Engine 與候選視窗，裝進執行緒區域性的 HOST。
 
 use super::*;
 
-/// 加载数据并建立单例。必须在主线程、在 IMKServer 建立之前调用。版本显示在菜单末行与「关于」页。
+/// 載入資料並建立單例。必須在主執行緒、在 IMKServer 建立之前呼叫。版本顯示在選單末行與「關於」頁。
 pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
     let version = info.version.as_str();
     let settings = Settings::load();
     let started = std::time::Instant::now();
-    // 打包过的 .qj 直接映射；没有就解析 TSV（样例词库）
+    // 打包過的 .qj 直接對映；沒有就解析 TSV（樣例詞庫）
     let dictionary = Dictionary::from_path(
         paths::resource("dict.qj").or_else(|_| paths::resource("dict.tsv"))?,
     )?;
@@ -16,7 +16,7 @@ pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
         .into_iter()
         .filter(|language| glossary_path(*language).is_ok())
         .collect();
-    // 写 off 就关；配置里的学习语言没有对应释义表时退回第一种有的，一种都没有也当关
+    // 寫 off 就關；配置裡的學習語言沒有對應釋義表時退回第一種有的，一種都沒有也當關
     let general = &settings.config().general;
     let learning_language = if general.learning_language_off() {
         None
@@ -33,7 +33,7 @@ pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
         Some(dir) => load_learner(&dir),
         None => FrequencyLearner::default(),
     };
-    // 英文词表可选：没有就不出英文候选
+    // 英文詞表可選：沒有就不出英文候選
     let english = paths::resource("english.tsv")
         .ok()
         .map(WordList::from_path)
@@ -50,9 +50,9 @@ pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
     if let Some(glossary) = glossary {
         engine = engine.with_translator(Box::new(glossary));
     }
-    // 输入统计（打了多少字）：与学习数据同目录；没有数据目录就只在内存里数
+    // 輸入統計（打了多少字）：與學習資料同目錄；沒有資料目錄就只在記憶體裡數
     if let Some(dir) = paths::user_data_dir() {
-        // 词汇等级表（levels-en.tsv / levels-ja.tsv）随包可选：有就按级统计
+        // 詞彙等級表（levels-en.tsv / levels-ja.tsv）隨包可選：有就按級統計
         let mut vocabulary = VocabularyBook::open(dir.join(VOCABULARY_FILE));
         for language in GLOSSARY_LANGUAGES {
             let Ok(path) = paths::resource(&format!("levels-{}.tsv", language.code())) else {
@@ -69,13 +69,13 @@ pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
             .with_usage_meter(Box::new(UsageStats::open(dir.join(USAGE_FILE))))
             .with_vocabulary_tracker(Box::new(vocabulary));
     }
-    // 附加词库：随包的领域词库 + 用户目录 dicts/ 下的文件
+    // 附加詞庫：隨包的領域詞庫 + 使用者目錄 dicts/ 下的檔案
     engine.set_extra_dictionaries(extra_dictionaries::load(
         paths::bundled_dicts_dir().as_deref(),
         paths::dicts_dir().as_deref(),
         &settings.config().dictionaries,
     ));
-    // 英文候选的中文释义（英→中）可选：没有这张表英文候选右侧就留空
+    // 英文候選的中文釋義（英→中）可選：沒有這張表英文候選右側就留空
     if let Ok(path) =
         paths::resource("glossary-zh.qj").or_else(|_| paths::resource("glossary-zh.tsv"))
     {
@@ -94,7 +94,7 @@ pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
         tracing::info!(words = table.len(), "emoji 表已加载");
         engine = engine.with_emoji(table);
     }
-    // 语言模型可选：没有就退化成一元词频整句；打包过的 lm.qj 优先
+    // 語言模型可選：沒有就退化成一元詞頻整句；打包過的 lm.qj 優先
     let model = if let Ok(packed) = paths::resource("lm.qj") {
         Some(BigramModel::from_path(&packed)?)
     } else if let (Ok(unigram), Ok(bigram)) = (
@@ -171,13 +171,13 @@ pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {
             anchor: NSRect::ZERO,
         })
     });
-    // 配置里的开关走和菜单 / 设置窗口 / 热加载同一条通路
+    // 配置裡的開關走和選單 / 設定視窗 / 熱載入同一條通路
     with(|host| host.apply_config(false));
     Ok(())
 }
 
-/// 读用户的学习数据。格式坏掉的行学习 crate 自己跳过；真读不了（权限、坏盘）就退回只在内存里学，
-/// 输入法照常启动，也不会拿空表覆盖用户的文件。学习数据出问题不能让输入法起不来。
+/// 讀使用者的學習資料。格式壞掉的行學習 crate 自己跳過；真讀不了（許可權、壞盤）就退回只在記憶體裡學，
+/// 輸入法照常啟動，也不會拿空表覆蓋使用者的檔案。學習資料出問題不能讓輸入法起不來。
 pub(super) fn load_learner(dir: &std::path::Path) -> FrequencyLearner {
     let path = dir.join("user.tsv");
     match FrequencyLearner::from_path(&path) {
@@ -189,7 +189,7 @@ pub(super) fn load_learner(dir: &std::path::Path) -> FrequencyLearner {
     }
 }
 
-/// 读一本词库的显示信息；文件坏了标 `broken`。
+/// 讀一本詞庫的顯示資訊；檔案壞了標 `broken`。
 pub(super) fn dictionary_info(
     stem: String,
     path: PathBuf,
@@ -224,7 +224,7 @@ pub(super) fn dictionary_info(
     }
 }
 
-/// 把 `stem` 加进（`present` 为真）或移出字符串列表；没变化返回 `None`。
+/// 把 `stem` 加進（`present` 為真）或移出字串列表；沒變化返回 `None`。
 pub(super) fn toggle_membership(
     mut list: Vec<String>,
     stem: &str,
@@ -245,7 +245,7 @@ pub(super) fn string_array(items: &[String]) -> toml_edit::Array {
     items.iter().map(String::as_str).collect()
 }
 
-/// 把包里有的 emoji 表（中文、英文）合成一张；一张都没有返回 `None`，坏了的只记日志跳过。
+/// 把包裡有的 emoji 表（中文、英文）合成一張；一張都沒有返回 `None`，壞了的只記日誌跳過。
 pub(super) fn load_emoji_tables(names: &[&str]) -> Option<EmojiTable> {
     let mut merged: Option<EmojiTable> = None;
     for name in names {
@@ -268,7 +268,7 @@ pub(super) fn glossary_path(language: Language) -> Result<PathBuf, HostError> {
         .or_else(|_| paths::resource(&format!("glossary-{}.tsv", language.code())))
 }
 
-/// 随包释义表叠上用户目录的个人释义表（`user-glossary-<语言>.tsv`，释义兜底写入、可手改）。
+/// 隨包釋義表疊上使用者目錄的個人釋義表（`user-glossary-<語言>.tsv`，釋義兜底寫入、可手改）。
 pub(super) fn load_glossary(language: Language) -> Result<LayeredTranslator, HostError> {
     let bundled = Glossary::from_path(language, glossary_path(language)?)?;
     let personal = match paths::user_data_dir() {

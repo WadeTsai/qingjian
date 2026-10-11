@@ -1,4 +1,4 @@
-//! 真实 Linux Server 子进程与独立资源目录。
+//! 真實 Linux Server 子程序與獨立資源目錄。
 use std::os::unix::fs::PermissionsExt;
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;

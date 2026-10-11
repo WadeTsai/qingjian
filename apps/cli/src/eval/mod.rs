@@ -1,10 +1,10 @@
-//! 整句评测：拿用户自己写的中文文本，转成他会敲的全拼，冷启动喂给引擎，看整句转换能不能把原句还原出来。
+//! 整句評測：拿使用者自己寫的中文文本，轉成他會敲的全拼，冷啟動餵給引擎，看整句轉換能不能把原句還原出來。
 //!
-//! 与 `--replay` 不同，这把尺子不依赖输入日志里「当时选了什么」（那多半是当时的引擎自己的输出），
-//! 只看原文；整句排序、语言模型的改动先在同一份句子集上比过再合。
-//! 输入既可以是原始文本（一行一段，按标点切句、汉字转拼音），也可以是之前 `--eval-save` 冻结下来的
-//! `句子\t拼音\t上文` 三列文件；后者保证不同时间、不同分支比的是同一份句子。
-//! 每句独立：不上屏、不学习，只把这句在原文里的上文写进输入历史给整句转换用。
+//! 與 `--replay` 不同，這把尺子不依賴輸入日誌裡「當時選了什麼」（那多半是當時的引擎自己的輸出），
+//! 只看原文；整句排序、語言模型的改動先在同一份句子集上比過再合。
+//! 輸入既可以是原始文本（一行一段，按標點切句、漢字轉拼音），也可以是之前 `--eval-save` 凍結下來的
+//! `句子\t拼音\t上文` 三列檔案；後者保證不同時間、不同分支比的是同一份句子。
+//! 每句獨立：不上屏、不學習，只把這句在原文裡的上文寫進輸入歷史給整句轉換用。
 
 pub mod coverage;
 mod extract;
@@ -26,7 +26,7 @@ pub use report::Report;
 use pair::Pair;
 use transcribe::Transcriber;
 
-/// 跑一遍评测集，返回报告；`save` 给了就把用到的句子集写成三列文件。
+/// 跑一遍評測集，返回報告；`save` 給了就把用到的句子集寫成三列檔案。
 pub fn run(
     engine: &mut Engine,
     paths: &[PathBuf],
@@ -34,7 +34,7 @@ pub fn run(
     show_misses: usize,
     details: Option<&Path>,
 ) -> Result<Report, EvalError> {
-    // 码表覆盖率与句子集无关，装了码表就先算（词库按词频两段口径）
+    // 碼錶覆蓋率與句子集無關，裝了碼錶就先算（詞庫按詞頻兩段口徑）
     let mut report = Report {
         coverage: coverage::measure(engine),
         ..Report::default()
@@ -86,7 +86,7 @@ pub fn run(
     Ok(report)
 }
 
-/// 读全部文件，得到去重后的句子集：有制表符的文件按冻结格式读，其余当原始文本抽句、转拼音。
+/// 讀全部檔案，得到去重後的句子集：有製表符的檔案按凍結格式讀，其餘當原始文本抽句、轉拼音。
 pub(super) fn collect(
     engine: &Engine,
     paths: &[PathBuf],
@@ -135,7 +135,7 @@ pub(super) fn collect(
     Ok(pairs)
 }
 
-/// 评一句：清空引擎状态、写入上文、喂拼音、看候选。
+/// 評一句：清空引擎狀態、寫入上文、喂拼音、看候選。
 fn evaluate(
     engine: &mut Engine,
     pair: &Pair,
@@ -157,7 +157,7 @@ fn evaluate(
             return serde_json::json!({"text": pair.text, "pinyin": pair.pinyin, "error": error.to_string()});
         }
     };
-    // 异步重打分：像壳一样停顿后请求、等结果、再查一次；等的时间也算进查询耗时
+    // 非同步重打分：像殼一樣停頓後請求、等結果、再查一次；等的時間也算進查詢耗時
     let query = if crate::rescoring::settle(engine) {
         engine.query().unwrap_or(query)
     } else {
@@ -175,7 +175,7 @@ fn evaluate(
         report.top3 += usize::from(rank < 3);
         report.top5 += usize::from(rank < 5);
     }
-    // 第一个盖住全部拼音的候选就是整句转换的答案（整句本身是个词时也可能是词库词）
+    // 第一個蓋住全部拼音的候選就是整句轉換的答案（整句本身是個詞時也可能是詞庫詞）
     let length = pair.text.chars().count();
     let sentence = items.iter().find(|c| c.text.chars().count() == length);
     report.chars_total += length;
@@ -215,7 +215,7 @@ fn evaluate(
     row
 }
 
-/// 整句评测的错误。
+/// 整句評測的錯誤。
 #[derive(Debug, thiserror::Error)]
 pub enum EvalError {
     #[error("cannot read evaluation text {path}: {source}")]

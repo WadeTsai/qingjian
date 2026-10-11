@@ -1,4 +1,4 @@
-//! Linux 输入行为与会话隔离回归测试。
+//! Linux 輸入行為與會話隔離迴歸測試。
 use qingjian_core::{CustomPhrase, Engine, Learner};
 use qingjian_dictionary::Dictionary;
 use qingjian_learning::FrequencyLearner;

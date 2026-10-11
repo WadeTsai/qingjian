@@ -1,5 +1,5 @@
-//! 中 / 英输入模式指示器：Win11 托盘品牌图标左边的模式图标。按微软 IME 的做法经 `GUID_LBI_INPUTMODE`
-//! 语言栏按钮把图标交给系统（转换模式 compartment 不走这条通道，光写它不显示）。Caps Lock 亮着显示「A」。
+//! 中 / 英輸入模式指示器：Win11 托盤品牌圖示左邊的模式圖示。按微軟 IME 的做法經 `GUID_LBI_INPUTMODE`
+//! 語言欄按鈕把圖示交給系統（轉換模式 compartment 不走這條通道，光寫它不顯示）。Caps Lock 亮著顯示「A」。
 
 use std::rc::Rc;
 
@@ -19,7 +19,7 @@ use super::icon::{self, Glyph};
 use crate::com::CLSID_QINGJIAN;
 use crate::com::key::event::caps_lock_on;
 
-/// `GUID_LBI_INPUTMODE` 语言栏按钮：图标随 [`ModeState`] 显示中 / 英，点它切模式。
+/// `GUID_LBI_INPUTMODE` 語言欄按鈕：圖示隨 [`ModeState`] 顯示中 / 英，點它切模式。
 #[implement(ITfLangBarItemButton, ITfSource)]
 pub(crate) struct ModeButton {
     state: Rc<ModeState>,
@@ -38,7 +38,7 @@ impl ITfLangBarItem_Impl for ModeButton_Impl {
         info.guidItem = GUID_LBI_INPUTMODE;
         info.dwStyle = TF_LBI_STYLE_BTN_BUTTON;
         info.ulSort = 0;
-        let desc: Vec<u16> = "青简中英模式".encode_utf16().collect();
+        let desc: Vec<u16> = "青簡中英模式".encode_utf16().collect();
         let n = desc.len().min(info.szDescription.len());
         info.szDescription[..n].copy_from_slice(&desc[..n]);
         Ok(())
@@ -55,18 +55,18 @@ impl ITfLangBarItem_Impl for ModeButton_Impl {
     fn GetTooltipString(&self) -> Result<BSTR> {
         let keys = self.state.switch_keys();
         let text = if !self.state.enabled() {
-            "中 / 英（内置英文模式已关闭）".to_owned()
+            "中 / 英（內建英文模式已關閉）".to_owned()
         } else if keys == SwitchKeys::NONE {
-            "中 / 英（未设切换键，点这里切换）".to_owned()
+            "中 / 英（未設切換鍵，點這裡切換）".to_owned()
         } else {
-            format!("中 / 英（{}切换）", keys.describe())
+            format!("中 / 英（{}切換）", keys.describe())
         };
         Ok(BSTR::from(text))
     }
 }
 
 impl ITfLangBarItemButton_Impl for ModeButton_Impl {
-    /// 左键切中英，右键弹菜单（中 / 英、全角标点、悬浮状态条、设置）。
+    /// 左鍵切中英，右鍵彈選單（中 / 英、全形標點、懸浮狀態條、設定）。
     fn OnClick(&self, click: TfLBIClick, pt: &POINT, _prcarea: *const RECT) -> Result<()> {
         if click == TF_LBI_CLK_RIGHT {
             crate::com::service::show_indicator_menu(*pt);
@@ -98,7 +98,7 @@ impl ITfLangBarItemButton_Impl for ModeButton_Impl {
 }
 
 impl ModeButton_Impl {
-    /// Caps 亮着无论中英模式都直接出大写英文，所以它优先。
+    /// Caps 亮著無論中英模式都直接出大寫英文，所以它優先。
     fn glyph(&self) -> Glyph {
         if caps_lock_on() {
             Glyph::CapsLock
@@ -117,7 +117,7 @@ impl ITfSource_Impl for ModeButton_Impl {
         }
         let sink: ITfLangBarItemSink = punk.ok()?.cast()?;
         *self.state.sink.borrow_mut() = Some(sink);
-        Ok(1) // 只支持一个回调，cookie 固定
+        Ok(1) // 只支援一個回撥，cookie 固定
     }
 
     fn UnadviseSink(&self, _dwcookie: u32) -> Result<()> {

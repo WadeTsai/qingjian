@@ -1,7 +1,7 @@
-//! 编辑会话：TSF 不允许直接改文档，要经 `RequestEditSession` 申请，在回调里拿着 edit cookie 写。
+//! 編輯會話：TSF 不允許直接改文件，要經 `RequestEditSession` 申請，在回撥裡拿著 edit cookie 寫。
 //!
-//! 必须用异步会话（不带 `TF_ES_SYNC`）：沉浸式应用（Win11 新记事本等）的文本存区隔着进程边界，
-//! 同步读写会让 `textinputframework.dll` 访问违例把宿主整个搞崩。回调可能在 `OnKeyDown` 返回之后才跑。
+//! 必須用非同步會話（不帶 `TF_ES_SYNC`）：沉浸式應用（Win11 新記事本等）的文本存區隔著程序邊界，
+//! 同步讀寫會讓 `textinputframework.dll` 訪問違例把宿主整個搞崩。回撥可能在 `OnKeyDown` 返回之後才跑。
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::rc::Rc;
@@ -16,28 +16,28 @@ use crate::com::composition::{Shared, apply};
 use crate::com::log::log;
 use crate::com::service::SharedClient;
 
-/// 一次性的读写会话：把本次按键的组句更新写进 `context`。
+/// 一次性的讀寫會話：把本次按鍵的組句更新寫進 `context`。
 #[implement(ITfEditSession)]
 pub(crate) struct UpdateSession {
-    /// 目标文档上下文。
+    /// 目標文件上下文。
     context: ITfContext,
 
-    /// 引擎层：量到光标矩形后报给 Server 摆候选窗口。
+    /// 引擎層：量到游標矩形後報給 Server 擺候選視窗。
     engine: SharedClient,
 
-    /// 组句状态。
+    /// 組句狀態。
     shared: Rc<Shared>,
 
     /// 本次要落定上屏的文本。
     commit: Option<String>,
 
-    /// 本次组句拼音行；空串表示收起组句。
+    /// 本次組句拼音行；空串表示收起組句。
     preedit: String,
 }
 
 impl ITfEditSession_Impl for UpdateSession_Impl {
     fn DoEditSession(&self, ec: u32) -> Result<()> {
-        // 从框架的 C++ 调进来：panic 不能越过 FFI。
+        // 從框架的 C++ 調進來：panic 不能越過 FFI。
         let result = catch_unwind(AssertUnwindSafe(|| {
             apply(
                 &self.shared,
@@ -51,18 +51,18 @@ impl ITfEditSession_Impl for UpdateSession_Impl {
         match result {
             Ok(Ok(())) => Ok(()),
             Ok(Err(error)) => {
-                log(&format!("组句更新失败: {error}"));
+                log(&format!("組句更新失敗: {error}"));
                 Err(error)
             }
             Err(_) => {
-                log("组句更新回调 panic（已兜住）");
+                log("組句更新回撥 panic（已兜住）");
                 Err(Error::from(E_FAIL))
             }
         }
     }
 }
 
-/// 请求一个异步读写会话。`Ok` 只说明已受理，写入结果在回调里记日志。
+/// 請求一個非同步讀寫會話。`Ok` 只說明已受理，寫入結果在回撥裡記日誌。
 pub(crate) fn request_update(
     context: &ITfContext,
     client_id: u32,
@@ -81,7 +81,7 @@ pub(crate) fn request_update(
     request(context, client_id, session.into(), TF_ES_READWRITE)
 }
 
-/// 异步提交一个编辑会话；会话对象由框架持有到回调跑完。
+/// 非同步提交一個編輯會話；會話物件由框架持有到回撥跑完。
 pub(super) fn request(
     context: &ITfContext,
     client_id: u32,

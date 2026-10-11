@@ -8,27 +8,27 @@ use qingjian_core::{Language, Sense, Translation};
 use crate::GlossaryError;
 use crate::glossary::parse_sense;
 
-/// 个人释义表：释义兜底从云端写来的释义，一种学习语言一个文件（`user-glossary-<语言>.tsv`），
-/// 格式与随包释义表相同（`词\t[词性. ]译词[|读音]…`），用户可以手改。
+/// 個人釋義表：釋義兜底從雲端寫來的釋義，一種學習語言一個檔案（`user-glossary-<語言>.tsv`），
+/// 格式與隨包釋義表相同（`詞\t[詞性. ]譯詞[|讀音]…`），使用者可以手改。
 ///
-/// 加载按行容错（坏行警告跳过），读不了就只在内存里记；落盘走原子写。
+/// 載入按行容錯（壞行警告跳過），讀不了就只在記憶體裡記；落盤走原子寫。
 #[derive(Debug)]
 pub struct PersonalGlossary {
-    /// 学习语言。
+    /// 學習語言。
     language: Language,
 
-    /// 词 → 译词。
+    /// 詞 → 譯詞。
     entries: HashMap<String, Translation>,
 
-    /// 落盘路径；`None` 只在内存里记。
+    /// 落盤路徑；`None` 只在記憶體裡記。
     path: Option<PathBuf>,
 
-    /// 自上次保存后有没有新条目。
+    /// 自上次儲存後有沒有新條目。
     dirty: bool,
 }
 
 impl PersonalGlossary {
-    /// 只在内存里记。
+    /// 只在記憶體裡記。
     pub fn in_memory(language: Language) -> Self {
         Self {
             language,
@@ -38,7 +38,7 @@ impl PersonalGlossary {
         }
     }
 
-    /// 从文件加载（不存在就从空开始，flush 时建）；读不了就退回只在内存里记。
+    /// 從檔案載入（不存在就從空開始，flush 時建）；讀不了就退回只在記憶體裡記。
     pub fn open(language: Language, path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         match read_text_lossy(&path) {
@@ -65,7 +65,7 @@ impl PersonalGlossary {
         self.entries.get(word).cloned()
     }
 
-    /// 记一条（同词覆盖）；语言对不上的不收。
+    /// 記一條（同詞覆蓋）；語言對不上的不收。
     pub fn insert(&mut self, word: &str, translation: Translation) {
         if translation.language != self.language || translation.senses().is_empty() {
             return;
@@ -82,7 +82,7 @@ impl PersonalGlossary {
         self.entries.is_empty()
     }
 
-    /// 写回文件（没有新条目就什么都不做）。
+    /// 寫回檔案（沒有新條目就什麼都不做）。
     pub fn save(&mut self) -> Result<(), GlossaryError> {
         let Some(path) = self.path.clone() else {
             return Ok(());
@@ -115,7 +115,7 @@ impl PersonalGlossary {
     }
 }
 
-/// `词性. 译词|读音`，与 [`parse_sense`] 互逆。
+/// `詞性. 譯詞|讀音`，與 [`parse_sense`] 互逆。
 fn format_sense(sense: &Sense) -> String {
     let mut out = String::new();
     if let Some(pos) = sense.part_of_speech {
@@ -128,7 +128,7 @@ fn format_sense(sense: &Sense) -> String {
     out
 }
 
-/// 按行解析，坏行跳过。
+/// 按行解析，壞行跳過。
 fn parse(language: Language, text: &str) -> HashMap<String, Translation> {
     let mut entries = HashMap::new();
     for (number, raw) in text.lines().enumerate() {
@@ -197,7 +197,7 @@ mod tests {
                 Some("かいはつする"),
             ),
         );
-        // 语言不对的不收
+        // 語言不對的不收
         glossary.insert("测试", translation(Language::English, None, "test", None));
         assert_eq!(glossary.len(), 2);
         glossary.save().unwrap();

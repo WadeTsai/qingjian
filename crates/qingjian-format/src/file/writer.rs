@@ -9,12 +9,12 @@ use crate::{
     SectionEntry,
 };
 
-/// 攒分节、写文件。分节按加入顺序落盘，`META` 自动排第一。
+/// 攢分節、寫檔案。分節按加入順序落盤，`META` 自動排第一。
 pub struct Writer {
-    /// 数据种类。
+    /// 資料種類。
     kind: Kind,
 
-    /// (标签, 正文)。
+    /// (標籤, 正文)。
     sections: Vec<([u8; 4], Vec<u8>)>,
 }
 
@@ -26,7 +26,7 @@ impl Writer {
         })
     }
 
-    /// 加一节。标签在同一文件里不能重复。
+    /// 加一節。標籤在同一檔案裡不能重複。
     pub fn section(mut self, tag: [u8; 4], bytes: &[u8]) -> Self {
         debug_assert!(
             !self.sections.iter().any(|(t, _)| *t == tag),
@@ -36,7 +36,7 @@ impl Writer {
         self
     }
 
-    /// 写到 `path`：先写同目录临时文件再改名，读的一方永远看不到半个文件。
+    /// 寫到 `path`：先寫同目錄臨時檔案再改名，讀的一方永遠看不到半個檔案。
     pub fn write_to(self, path: &Path) -> Result<(), FormatError> {
         let temp = path.with_extension("qj.tmp");
         {
@@ -50,7 +50,7 @@ impl Writer {
         Ok(())
     }
 
-    /// 写到任意输出。
+    /// 寫到任意輸出。
     pub fn write(self, out: &mut impl Write) -> Result<(), FormatError> {
         let count = self.sections.len();
         let header = Header {
@@ -89,7 +89,7 @@ impl Writer {
     }
 }
 
-/// 向上对齐到 [`SECTION_ALIGN`]。
+/// 向上對齊到 [`SECTION_ALIGN`]。
 pub(crate) fn align_up(offset: usize) -> usize {
     offset.div_ceil(SECTION_ALIGN) * SECTION_ALIGN
 }

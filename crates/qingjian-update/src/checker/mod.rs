@@ -13,17 +13,17 @@ use qingjian_platform::{UpdateChannel, UpdateConfig};
 use crate::index::fetch_index;
 use crate::{Target, UpdateError, Version};
 
-/// 查成功后隔多久再查。
+/// 查成功後隔多久再查。
 const CHECK_INTERVAL_SECS: u64 = 24 * 60 * 60;
 
-/// 查失败（断网、验签不过）后隔多久再试。
+/// 查失敗（斷網、驗籤不過）後隔多久再試。
 const RETRY_INTERVAL_SECS: u64 = 60 * 60;
 
-/// 检查更新的调度：壳在自己的定时器里调 [`poll`](Self::poll)，到点了起一个一次性线程去查，不占调用线程。
+/// 檢查更新的排程：殼在自己的定時器裡調 [`poll`](Self::poll)，到點了起一個一次性執行緒去查，不佔呼叫執行緒。
 pub struct Checker {
     state_path: PathBuf,
 
-    /// 当前版本原文（进 User-Agent）与解析结果；解析不了或是 `-dev` 本地包就什么都不查。
+    /// 當前版本原文（進 User-Agent）與解析結果；解析不了或是 `-dev` 本地包就什麼都不查。
     current: String,
     version: Option<Version>,
 
@@ -34,7 +34,7 @@ pub struct Checker {
 }
 
 impl Checker {
-    /// `current` 是壳的版本号，经 [`Self::effective_version`] 可被环境变量顶替。
+    /// `current` 是殼的版本號，經 [`Self::effective_version`] 可被環境變數頂替。
     pub fn new(state_path: PathBuf, current: &str) -> Self {
         let current = Self::effective_version(current);
         let version = Version::parse(&current).filter(|version| !version.is_dev());
@@ -49,7 +49,7 @@ impl Checker {
         }
     }
 
-    /// 到点就查：开关开着、上次成功超过一天（或换了渠道）、上次尝试超过一小时、没有正在查的。
+    /// 到點就查：開關開著、上次成功超過一天（或換了渠道）、上次嘗試超過一小時、沒有正在查的。
     pub fn poll(&self, config: &UpdateConfig) {
         if !config.check {
             return;
@@ -67,7 +67,7 @@ impl Checker {
         }
     }
 
-    /// 立刻查一次（「检查更新」按钮），不看间隔；已有正在查的就不重复起。
+    /// 立刻查一次（「檢查更新」按鈕），不看間隔；已有正在查的就不重複起。
     pub fn check_now(&self, config: &UpdateConfig) {
         let Some(version) = self.version.clone() else {
             return;
@@ -96,24 +96,24 @@ impl Checker {
         });
     }
 
-    /// 要提示的新版本：开关开着、渠道里看得到、比当前新（装完新版后旧结果自然失效）。
+    /// 要提示的新版本：開關開著、渠道里看得到、比當前新（裝完新版後舊結果自然失效）。
     pub fn available(&self, config: &UpdateConfig) -> Option<Available> {
         let version = self.version.as_ref()?;
         let state = self.lock();
         Self::relevant(&state, version, config).cloned()
     }
 
-    /// 参与比较的版本号：`QINGJIAN_UPDATE_VERSION` 可以顶替壳的版本号（拿 `-dev` 包测提示用）。
+    /// 參與比較的版本號：`QINGJIAN_UPDATE_VERSION` 可以頂替殼的版本號（拿 `-dev` 包測提示用）。
     pub fn effective_version(current: &str) -> String {
         std::env::var("QINGJIAN_UPDATE_VERSION").unwrap_or_else(|_| current.to_owned())
     }
 
-    /// `current` 是不是本地开发包（或版本号读不懂），这种不检查；已按 [`Self::effective_version`] 顶替。
+    /// `current` 是不是本地開發包（或版本號讀不懂），這種不檢查；已按 [`Self::effective_version`] 頂替。
     pub fn is_dev_version(current: &str) -> bool {
         Version::parse(&Self::effective_version(current)).is_none_or(|version| version.is_dev())
     }
 
-    /// 本地开发包（或版本号读不懂）：什么都不查。
+    /// 本地開發包（或版本號讀不懂）：什麼都不查。
     pub fn is_dev_build(&self) -> bool {
         self.version.is_none()
     }
@@ -123,12 +123,12 @@ impl Checker {
         self.in_flight.load(Ordering::Acquire)
     }
 
-    /// 上次查成功的时间（Unix 秒），0 = 还没查过。
+    /// 上次查成功的時間（Unix 秒），0 = 還沒查過。
     pub fn checked_at(&self) -> u64 {
         self.lock().checked_at
     }
 
-    /// 当场查一次并落盘，阻塞到查完（Windows 设置程序的「立即检查」在后台线程里调）；本地开发包返回 `None`。
+    /// 當場查一次並落盤，阻塞到查完（Windows 設定程式的「立即檢查」在後臺執行緒裡調）；本地開發包返回 `None`。
     pub fn check_blocking(
         state_path: &Path,
         current: &str,
@@ -145,7 +145,7 @@ impl Checker {
         ))
     }
 
-    /// 不经调度、只看落盘结果（Windows 设置程序用）：`state` 里有没有该提示 `current` 的新版本。
+    /// 不經排程、只看落盤結果（Windows 設定程式用）：`state` 裡有沒有該提示 `current` 的新版本。
     pub fn available_in(
         state: &UpdateState,
         current: &str,
@@ -177,7 +177,7 @@ impl Checker {
     }
 }
 
-/// 下载、验签、挑版本、写 `update.json`。
+/// 下載、驗籤、挑版本、寫 `update.json`。
 fn check_once(
     state_path: &Path,
     current: &str,

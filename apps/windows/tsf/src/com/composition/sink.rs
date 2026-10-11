@@ -8,8 +8,8 @@ use windows::core::{Ref, Result, implement};
 use super::Shared;
 use crate::com::log::log;
 
-/// 应用强行结束我们的组句（如点到别处）时框架回调。拼音已被框架定成普通文本，
-/// 只清本地状态、记下 Server 缓冲要清，绝不能再把 Server 交出的文本插一次。
+/// 應用強行結束我們的組句（如點到別處）時框架回調。拼音已被框架定成普通文本，
+/// 只清本地狀態、記下 Server 緩衝要清，絕不能再把 Server 交出的文本插一次。
 #[implement(ITfCompositionSink)]
 pub(super) struct CompositionSink {
     shared: Rc<Shared>,
@@ -27,7 +27,7 @@ impl ITfCompositionSink_Impl for CompositionSink_Impl {
         _ecwrite: u32,
         _composition: Ref<ITfComposition>,
     ) -> Result<()> {
-        log("组句被应用终止，清本地状态");
+        log("組句被應用終止，清本地狀態");
         self.shared.terminated();
         Ok(())
     }

@@ -1,4 +1,4 @@
-//! 数据文件位置：只读数据在 `.app/Contents/Resources/`，用户数据在 `~/Library/Application Support/Qingjian/`。
+//! 資料檔案位置：只讀資料在 `.app/Contents/Resources/`，使用者資料在 `~/Library/Application Support/Qingjian/`。
 
 use std::path::PathBuf;
 
@@ -6,7 +6,7 @@ use objc2_foundation::NSBundle;
 
 use crate::error::HostError;
 
-/// 主 bundle 的 Resources 目录。
+/// 主 bundle 的 Resources 目錄。
 pub fn resources_dir() -> Result<PathBuf, HostError> {
     NSBundle::mainBundle()
         .resourcePath()
@@ -14,7 +14,7 @@ pub fn resources_dir() -> Result<PathBuf, HostError> {
         .ok_or(HostError::NoResources)
 }
 
-/// 某个资源文件的完整路径，不存在时报错而不是等到读取时才炸。
+/// 某個資原始檔的完整路徑，不存在時報錯而不是等到讀取時才炸。
 pub fn resource(name: &str) -> Result<PathBuf, HostError> {
     let path = resources_dir()?.join(name);
     if path.is_file() {
@@ -24,14 +24,14 @@ pub fn resource(name: &str) -> Result<PathBuf, HostError> {
     }
 }
 
-/// 随包的领域词库目录：`.app/Contents/Resources/dicts/`；包里没有就是 `None`。
+/// 隨包的領域詞庫目錄：`.app/Contents/Resources/dicts/`；包裡沒有就是 `None`。
 pub fn bundled_dicts_dir() -> Option<PathBuf> {
     let dir = resources_dir().ok()?.join("dicts");
     dir.is_dir().then_some(dir)
 }
 
-/// 形码码表（五笔）：用户目录 `wubi/wubi86.tsv` 里有就用它（自己换的表），
-/// 否则用包里的 `Resources/wubi/wubi86.tsv`；都没有是 `None`。
+/// 形碼碼錶（五筆）：使用者目錄 `wubi/wubi86.tsv` 裡有就用它（自己換的表），
+/// 否則用包裡的 `Resources/wubi/wubi86.tsv`；都沒有是 `None`。
 pub fn code_table_path() -> Option<PathBuf> {
     let user = user_data_dir()?.join("wubi/wubi86.tsv");
     if user.is_file() {
@@ -41,34 +41,34 @@ pub fn code_table_path() -> Option<PathBuf> {
     bundled.is_file().then_some(bundled)
 }
 
-/// 配置文件：`~/Library/Application Support/Qingjian/config.toml`。
+/// 配置檔案：`~/Library/Application Support/Qingjian/config.toml`。
 pub fn config_file() -> Option<PathBuf> {
     user_data_dir().map(|dir| dir.join("config.toml"))
 }
 
-/// 用户数据目录，不存在则创建。
+/// 使用者資料目錄，不存在則建立。
 pub fn user_data_dir() -> Option<PathBuf> {
     let dir = PathBuf::from(std::env::var_os("HOME")?).join("Library/Application Support/Qingjian");
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir)
 }
 
-/// 用户主题目录：`~/Library/Application Support/Qingjian/themes/`，一个主题一个子目录（`<id>/theme.json`），不存在则创建。
+/// 使用者主題目錄：`~/Library/Application Support/Qingjian/themes/`，一個主題一個子目錄（`<id>/theme.json`），不存在則建立。
 pub fn themes_dir() -> Option<PathBuf> {
     let dir = user_data_dir()?.join("themes");
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir)
 }
 
-/// 附加词库目录：`~/Library/Application Support/Qingjian/dicts/`，不存在则创建。
+/// 附加詞庫目錄：`~/Library/Application Support/Qingjian/dicts/`，不存在則建立。
 pub fn dicts_dir() -> Option<PathBuf> {
     let dir = user_data_dir()?.join("dicts");
     std::fs::create_dir_all(&dir).ok()?;
     Some(dir)
 }
 
-/// 含章·知微（`.qjm` 单文件，或开发时的三件套目录）：
-/// 用户目录 `models/hanzhang-zhiwei/` 优先，兼容旧 `model/`；否则用包里的同名目录。
+/// 含章·知微（`.qjm` 單檔案，或開發時的三件套目錄）：
+/// 使用者目錄 `models/hanzhang-zhiwei/` 優先，相容舊 `model/`；否則用包裡的同名目錄。
 pub fn model_path() -> Option<PathBuf> {
     let user = user_data_dir()?;
     for dir in ["models/hanzhang-zhiwei", "model"] {
@@ -79,7 +79,7 @@ pub fn model_path() -> Option<PathBuf> {
     qingjian_neural::find_model(&resources_dir().ok()?.join("models/hanzhang-zhiwei"))
 }
 
-/// 含章·通变（P2C，带噪拼音 → 汉字）：用户新目录优先，兼容旧 `model-p2c/`。
+/// 含章·通變（P2C，帶噪拼音 → 漢字）：使用者新目錄優先，相容舊 `model-p2c/`。
 pub fn p2c_model_path() -> Option<PathBuf> {
     let user = user_data_dir()?;
     for dir in ["models/hanzhang-tongbian", "model-p2c"] {

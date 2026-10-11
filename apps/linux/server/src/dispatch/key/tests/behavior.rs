@@ -1,4 +1,4 @@
-//! 数字缺席、直输、英文候选与小键盘的实际上屏结果。
+//! 數字缺席、直輸、英文候選與小鍵盤的實際上屏結果。
 use super::support::{compose, key, router};
 use qingjian_platform::protocol::{KeyModifiers, KeyOutcome};
 
@@ -13,7 +13,7 @@ fn absent_slot_keeps_digit_in_buffer_and_raw_submission() {
     assert_eq!(key(&mut router, 13, None, normal).1.as_deref(), Some("ni6"));
     compose(&mut router, "qq", normal);
     key(&mut router, 9, None, normal);
-    // 末页只有四项，第五个数字不能误选或丢失。
+    // 末頁只有四項，第五個數字不能誤選或丟失。
     key(&mut router, 0x35, Some('5'), normal);
     assert_eq!(key(&mut router, 13, None, normal).1.as_deref(), Some("qq5"));
 }
@@ -77,7 +77,7 @@ fn keypad_punctuation_is_half_width_and_regular_punctuation_is_full_width() {
         Some("。")
     );
 }
-/// 关掉 `[general] punct_commits`：组句中的标点回到老行为——进英文直输段，不再上屏候选；开回来恢复。
+/// 關掉 `[general] punct_commits`：組句中的標點回到老行為——進英文直輸段，不再上屏候選；開回來恢復。
 #[test]
 fn punct_commits_off_keeps_punctuation_in_raw_segment() {
     let mut router = router(5);

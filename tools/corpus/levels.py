@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""把词汇等级表转成青简的 `levels-<语言>.tsv`（`词\t等级`，`# levels` 行给出等级从易到难的顺序）。
+"""把词汇等级表转成青简的 `levels-<语言>.tsv`（`词\t等级`，`# levels` 行給出等級從易到難的順序）。
 
 英文：CEFR-J Wordlist 1.5（A1–B2）+ Octanove Vocabulary Profile（C1/C2），`headword,pos,CEFR,…`，
       斜杠分隔的拼写变体各算一条，同一个词多个词性取最低等级。
@@ -27,15 +27,15 @@ EN_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"]
 JA_LEVELS = ["N5", "N4", "N3", "N2", "N1"]
 
 EN_HEADER = [
-    "# 英文词汇等级（CEFR）。来源：The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies,",
-    "# retrieved from http://www.cefr-j.org/download.html（A1–B2，研究与商业用途免费，须署名）；",
+    "# 英文詞彙等級（CEFR）。來源：The CEFR-J Wordlist Version 1.5, compiled by Yukio Tono, Tokyo University of Foreign Studies,",
+    "# retrieved from http://www.cefr-j.org/download.html（A1–B2，研究與商業用途免費，須署名）；",
     "# Octanove Vocabulary Profile C1/C2 1.0（CC BY-SA 4.0，https://github.com/openlanguageprofiles/olp-en-cefrj）。",
-    "# 由 tools/corpus/levels.py 生成。格式：词\\t等级；`# levels` 行是等级从易到难的顺序。",
+    "# 由 tools/corpus/levels.py 生成。格式：詞\\t等級；`# levels` 行是等級從易到難的順序。",
 ]
 JA_HEADER = [
-    "# 日文词汇等级（JLPT）。来源：tanos.co.uk 的 JLPT 词表（Jonathan Waller，CC BY），",
-    "# 经 elzup/jlpt-word-list（MIT，https://github.com/elzup/jlpt-word-list）整理为 CSV。",
-    "# 由 tools/corpus/levels.py 生成。格式：词\\t等级；`# levels` 行是等级从易到难的顺序。",
+    "# 日文詞彙等級（JLPT）。來源：tanos.co.uk 的 JLPT 詞表（Jonathan Waller，CC BY），",
+    "# 經 elzup/jlpt-word-list（MIT，https://github.com/elzup/jlpt-word-list）整理為 CSV。",
+    "# 由 tools/corpus/levels.py 生成。格式：詞\\t等級；`# levels` 行是等級從易到難的順序。",
 ]
 
 
@@ -75,7 +75,7 @@ def convert(language: str, sources: list[Path]) -> tuple[list[str], dict[str, in
                     words = clean_english(row["headword"])
                 else:
                     tags = row["tags"].split()
-                    # 文件名定级（n5.csv 里的就是 N5），tags 只用来兜底
+                    # 檔名定級（n5.csv 裡的就是 N5），tags 只用來兜底
                     match = re.search(r"n([1-5])", source.stem)
                     level = f"N{match.group(1)}" if match else next(
                         (t.replace("JLPT_N", "N") for t in tags if t.startswith("JLPT_N")), ""

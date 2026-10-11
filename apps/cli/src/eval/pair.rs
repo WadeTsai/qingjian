@@ -1,21 +1,21 @@
-/// 评测集里的一条：一句汉字、它的全拼、句子前面的真实上文。
+/// 評測集裡的一條：一句漢字、它的全拼、句子前面的真實上文。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pair {
-    /// 要还原的句子（纯汉字）。
+    /// 要還原的句子（純漢字）。
     pub text: String,
 
-    /// 无分隔的全拼，和用户真敲的形态一致。
+    /// 無分隔的全拼，和使用者真敲的形態一致。
     pub pinyin: String,
 
-    /// 同一段落里这句之前的真实文本（含标点），最多 [`MAX_CONTEXT_CHARS`] 个字符；给整句转换当上文。
+    /// 同一段落裡這句之前的真實文本（含標點），最多 [`MAX_CONTEXT_CHARS`] 個字元；給整句轉換當上文。
     pub context: String,
 }
 
-/// 上文最多留几个字符。
+/// 上文最多留幾個字元。
 pub const MAX_CONTEXT_CHARS: usize = 64;
 
 impl Pair {
-    /// 冻结文件里的一行：`句子\t拼音\t上文`（上文可空）。
+    /// 凍結檔案裡的一行：`句子\t拼音\t上文`（上文可空）。
     pub fn parse(line: &str) -> Option<Self> {
         let mut fields = line.split('\t');
         let text = fields.next()?.trim();

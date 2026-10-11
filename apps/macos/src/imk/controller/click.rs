@@ -1,6 +1,6 @@
-//! 鼠标点候选窗口：点候选与按它的数字键一样上屏，点译词与按译词键一样上屏它的那条译词。
+//! 滑鼠點候選視窗：點候選與按它的數字鍵一樣上屏，點譯詞與按譯詞鍵一樣上屏它的那條譯詞。
 //!
-//! 候选窗口不知道是哪个会话，所以在 `activateServer:` 时记下当前控制器，点击时用它的客户端上屏。
+//! 候選視窗不知道是哪個會話，所以在 `activateServer:` 時記下當前控制器，點選時用它的客戶端上屏。
 
 use std::cell::RefCell;
 
@@ -10,11 +10,11 @@ use qingjian_render::HitTarget;
 use super::*;
 
 thread_local! {
-    /// 最近激活的会话；`deactivateServer:` 时清掉。
+    /// 最近啟用的會話；`deactivateServer:` 時清掉。
     static ACTIVE: RefCell<Option<Retained<QingjianInputController>>> = const { RefCell::new(None) };
 }
 
-/// 候选窗口的点击回调（host 建窗口时注册）。
+/// 候選視窗的點選回撥（host 建視窗時註冊）。
 pub fn click(target: HitTarget) {
     let Some(controller) = ACTIVE.with(|active| active.borrow().clone()) else {
         tracing::debug!("没有激活的会话，点击不处理");
@@ -43,7 +43,7 @@ impl QingjianInputController {
     }
 
     fn click(&self, target: HitTarget) {
-        // SAFETY: IMKInputController 的 `client` 返回当前会话的文本客户端（实现 IMKTextInput 的代理），可能为 nil
+        // SAFETY: IMKInputController 的 `client` 返回當前會話的文本客戶端（實現 IMKTextInput 的代理），可能為 nil
         let client: Option<Retained<AnyObject>> = unsafe { msg_send![self, client] };
         let Some(client) = client else {
             return;

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 提交信息按 Conventional Commits：`<类型>(<范围>): <说明>`，类型与范围是英文小写，说明用中文。
-# 启用：git config core.hooksPath .githooks；跳过：git commit --no-verify（revert / fixup 自动生成的信息放行）。
-# 合并提交也要合格式：git merge --no-ff -m "feat: …"，默认的「Merge branch '…'」会被拦。
+# 提交資訊按 Conventional Commits：`<型別>(<範圍>): <說明>`，型別與範圍是英文小寫，說明用中文。
+# 啟用：git config core.hooksPath .githooks；跳過：git commit --no-verify（revert / fixup 自動生成的資訊放行）。
+# 合併提交也要合格式：git merge --no-ff -m "feat: …"，預設的「Merge branch '…'」會被攔。
 set -euo pipefail
 file="$1"
 subject="$(sed -n '1p' "$file")"
 
-# 还原、fixup / squash（rebase 自动挤压）的信息不检查
+# 還原、fixup / squash（rebase 自動擠壓）的資訊不檢查
 if [[ "$subject" =~ ^(Revert|fixup!|squash!|amend!) ]]; then
   exit 0
 fi

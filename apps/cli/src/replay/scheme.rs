@@ -1,20 +1,20 @@
-//! 回放期间按日志里记的方案装配引擎。
+//! 回放期間按日誌裡記的方案裝配引擎。
 //!
-//! 每条上屏的 `scheme` 字段写着当时用的是哪套方案（双拼的键、`zhuyin`、形码的 `wubi`、全拼为空），
-//! 回放要照着还原，否则拿拼音的读法去喂形码的键、或者反过来，算出来的命中率没有意义。
-//! 整份日志通常只有一套方案，所以只在方案串变化时才动码表——`Engine::set_code_table` 收所有权，
-//! 换一次要克隆一份 8.9 万条的码表。
+//! 每條上屏的 `scheme` 欄位寫著當時用的是哪套方案（雙拼的鍵、`zhuyin`、形碼的 `wubi`、全拼為空），
+//! 回放要照著還原，否則拿拼音的讀法去喂形碼的鍵、或者反過來，算出來的命中率沒有意義。
+//! 整份日誌通常只有一套方案，所以只在方案串變化時才動碼錶——`Engine::set_code_table` 收所有權，
+//! 換一次要克隆一份 8.9 萬條的碼錶。
 
 use qingjian_core::Engine;
 use qingjian_dictionary::CodeTable;
 use qingjian_platform::Scheme;
 
-/// 按日志里的方案串装配引擎，并记住当前装的是哪套。
+/// 按日誌裡的方案串裝配引擎，並記住當前裝的是哪套。
 pub struct SchemeSwitcher {
-    /// 当前已装配的方案串；没装过是 `None`。
+    /// 當前已裝配的方案串；沒裝過是 `None`。
     current: Option<String>,
 
-    /// 日志里出现形码时用的码表；没给 `--wubi` 就是 `None`，那部分日志回放不了。
+    /// 日誌裡出現形碼時用的碼錶；沒給 `--wubi` 就是 `None`，那部分日誌回放不了。
     table: Option<CodeTable>,
 }
 
@@ -26,12 +26,12 @@ impl SchemeSwitcher {
         }
     }
 
-    /// 这条日志能不能回放：带形码的要有码表，别的方案都行。
+    /// 這條日誌能不能回放：帶形碼的要有碼錶，別的方案都行。
     pub fn can_replay(&self, key: &str) -> bool {
         !split(key).1 || self.table.is_some()
     }
 
-    /// 按 `key` 装配引擎。双拼与注音的开关每次都设（便宜）；码表只在方案串变了时换。
+    /// 按 `key` 裝配引擎。雙拼與注音的開關每次都設（便宜）；碼錶只在方案串變了時換。
     pub fn apply(&mut self, engine: &mut Engine, key: &str) {
         let (pinyin, wubi) = split(key);
         engine.set_shuangpin(pinyin.shuangpin());
@@ -45,9 +45,9 @@ impl SchemeSwitcher {
     }
 }
 
-/// 日志里的方案串拆成「拼音侧方案 + 形码开没开」：
-/// `"xiaohe+wubi"` → 小鹤 + 开；`"wubi"` → 拼音关 + 开；`""` → 全拼 + 关。
-/// 空串与认不出来的写法都按全拼（老日志里没有这个字段）。
+/// 日誌裡的方案串拆成「拼音側方案 + 形碼開沒開」：
+/// `"xiaohe+wubi"` → 小鶴 + 開；`"wubi"` → 拼音關 + 開；`""` → 全拼 + 關。
+/// 空串與認不出來的寫法都按全拼（老日誌裡沒有這個欄位）。
 fn split(key: &str) -> (Scheme, bool) {
     if let Some(pinyin) = key.strip_suffix("+wubi") {
         return (pinyin.parse().unwrap_or_default(), true);
@@ -87,7 +87,7 @@ mod tests {
         engine.set_input("ggll");
         assert_eq!(engine.query().unwrap().candidates.items[0].text, "一");
 
-        // 切回全拼：码表卸掉，同一串编码不再出中文候选
+        // 切回全拼：碼錶卸掉，同一串編碼不再出中文候選
         switcher.apply(&mut engine, "");
         engine.set_input("ggll");
         let texts: Vec<String> = engine
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn scheme_strings_split_into_the_two_axes() {
-        // 老日志没有 scheme 字段，解出来是全拼、不开形码
+        // 老日誌沒有 scheme 欄位，解出來是全拼、不開形碼
         assert_eq!(split(""), (Scheme::Pinyin, false));
         assert_eq!(split("没见过的写法"), (Scheme::Pinyin, false));
         assert_eq!(
@@ -109,9 +109,9 @@ mod tests {
                 false
             )
         );
-        // 只用形码
+        // 只用形碼
         assert_eq!(split("wubi"), (Scheme::Off, true));
-        // 混输：拼音侧那部分照解，形码跟着开
+        // 混輸：拼音側那部分照解，形碼跟著開
         assert_eq!(
             split("xiaohe+wubi"),
             (

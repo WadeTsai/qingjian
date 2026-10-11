@@ -1,7 +1,7 @@
-//! 候选窗口的位图绘制：一帧交给 `qingjian-render` 画成位图，`drawRect:` 里贴上去。
+//! 候選視窗的點陣圖繪製：一幀交給 `qingjian-render` 畫成點陣圖，`drawRect:` 裡貼上去。
 //!
-//! 与自绘 NSView 的旧路径并存：配置 `[general] renderer = "system"` 走旧路（过渡期退路）。
-//! 阴影由主题定义、渲染器画进位图（位图四周留边），面板关掉系统阴影，与 Windows 一致。
+//! 與自繪 NSView 的舊路徑並存：配置 `[general] renderer = "system"` 走舊路（過渡期退路）。
+//! 陰影由主題定義、渲染器畫進點陣圖（點陣圖四周留邊），面板關掉系統陰影，與 Windows 一致。
 
 mod convert;
 mod font_files;
@@ -19,42 +19,42 @@ use super::bounds::ViewBounds;
 use super::frame::Frame;
 
 pub struct BitmapPainter {
-    /// 渲染器（字体库随它）。
+    /// 渲染器（字型庫隨它）。
     renderer: Renderer,
 
-    /// 最近一帧的位图，`None` 表示还没画过。
+    /// 最近一幀的點陣圖，`None` 表示還沒畫過。
     image: Option<Retained<NSImage>>,
 
-    /// 最近一帧（外观变了要重画）。
+    /// 最近一幀（外觀變了要重畫）。
     frame: qingjian_render::Frame,
 
-    /// 最近一帧的排布。
+    /// 最近一幀的排布。
     layout: Layout,
 
-    /// 最近一帧按深色画的。
+    /// 最近一幀按深色畫的。
     dark: bool,
 
-    /// 最近一帧的倍数。
+    /// 最近一幀的倍數。
     scale: f32,
 
-    /// 最近一帧的尺寸（点）与其中的内容区。
+    /// 最近一幀的尺寸（點）與其中的內容區。
     bounds: ViewBounds,
 
-    /// 主题（浅色那一份，画的时候按外观取深浅）。
+    /// 主題（淺色那一份，畫的時候按外觀取深淺）。
     theme: Theme,
 
-    /// 最近一帧还有动画在播：隔多久要调 [`Self::tick`]。
+    /// 最近一幀還有動畫在播：隔多久要調 [`Self::tick`]。
     next_frame: Option<std::time::Duration>,
 
-    /// 最近一帧里候选与译词的点击区域（内容区像素）。
+    /// 最近一幀裡候選與譯詞的點選區域（內容區畫素）。
     hits: Vec<HitRegion>,
 
-    /// 内容区左上角在视图里的位置（点，左上为原点）：位图四周留了投影的边。
+    /// 內容區左上角在視圖裡的位置（點，左上為原點）：點陣圖四周留了投影的邊。
     content_origin: NSPoint,
 }
 
 impl BitmapPainter {
-    /// `font` 是用户选的字族名，空为系统字体；没装就回到系统字体。字体库加载失败返回 `None`，调用方退回旧路径。
+    /// `font` 是使用者選的字族名，空為系統字型；沒裝就回到系統字型。字型庫載入失敗返回 `None`，呼叫方退回舊路徑。
     pub fn new(font: &str) -> Option<Self> {
         let started = std::time::Instant::now();
         let font = font.trim();
@@ -94,7 +94,7 @@ impl BitmapPainter {
         })
     }
 
-    /// 换主题（浅色那一份）：加载它要的字体，用最近一帧当场重画。
+    /// 換主題（淺色那一份）：載入它要的字型，用最近一幀當場重畫。
     pub fn set_theme(&mut self, theme: Theme) {
         self.renderer
             .load_theme_fonts(&theme, font_files::family_files);
@@ -102,7 +102,7 @@ impl BitmapPainter {
         self.repaint();
     }
 
-    /// 记下新一帧并画好，返回视图该有的尺寸与内容区（点）。
+    /// 記下新一幀並畫好，返回檢視該有的尺寸與內容區（點）。
     pub fn set_frame(
         &mut self,
         frame: &Frame,
@@ -122,7 +122,7 @@ impl BitmapPainter {
         self.bounds
     }
 
-    /// 外观或倍数变了就重画一遍再贴。
+    /// 外觀或倍數變了就重畫一遍再貼。
     pub fn draw(&mut self, dark: bool, scale: f32) {
         if dark != self.dark || scale != self.scale {
             self.dark = dark;
@@ -133,7 +133,7 @@ impl BitmapPainter {
             return;
         };
         let rect = NSRect::new(NSPoint::ZERO, self.bounds.size);
-        // SAFETY: hints 传 None，其余参数都是普通值；在 drawRect: 内调用，有当前图形上下文。
+        // SAFETY: hints 傳 None，其餘引數都是普通值；在 drawRect: 內呼叫，有當前圖形上下文。
         unsafe {
             image.drawInRect_fromRect_operation_fraction_respectFlipped_hints(
                 rect,
@@ -146,7 +146,7 @@ impl BitmapPainter {
         }
     }
 
-    /// 视图里一点（点，左上为原点）点中了哪个候选或哪条译词。
+    /// 視圖裡一點（點，左上為原點）點中了哪個候選或哪條譯詞。
     pub fn hit(&self, point: NSPoint) -> Option<HitTarget> {
         let scale = f64::from(self.scale);
         let x = ((point.x - self.content_origin.x) * scale) as f32;
@@ -157,12 +157,12 @@ impl BitmapPainter {
             .map(|region| region.target)
     }
 
-    /// 有动画在播时隔多久要下一帧。
+    /// 有動畫在播時隔多久要下一幀。
     pub fn next_frame(&self) -> Option<std::time::Duration> {
         self.next_frame
     }
 
-    /// 动画的下一帧：换上新位图（尺寸不变）；返回隔多久再要，`None` 为播完。
+    /// 動畫的下一幀：換上新點陣圖（尺寸不變）；返回隔多久再要，`None` 為播完。
     pub fn tick(&mut self) -> Option<std::time::Duration> {
         match self.renderer.tick() {
             Ok(Some(rendered)) => {
@@ -178,7 +178,7 @@ impl BitmapPainter {
         self.next_frame
     }
 
-    /// 窗口收起：停动画、忘掉上一帧，下次显示不从旧位置过渡。
+    /// 視窗收起：停動畫、忘掉上一幀，下次顯示不從舊位置過渡。
     pub fn forget(&mut self) {
         self.renderer.forget();
         self.next_frame = None;
@@ -212,12 +212,12 @@ impl BitmapPainter {
     }
 }
 
-/// 系统辅助功能里开了「减少动态效果」。
+/// 系統輔助功能裡開了「減少動態效果」。
 fn reduce_motion() -> bool {
     objc2_app_kit::NSWorkspace::sharedWorkspace().accessibilityDisplayShouldReduceMotion()
 }
 
-/// 位图与内容区换成点；内容区原点换成左下角起算。
+/// 點陣圖與內容區換成點；內容區原點換成左下角起算。
 fn bounds(rendered: &qingjian_render::Rendered) -> ViewBounds {
     let points = |pixels: u32| f64::from(pixels) / f64::from(rendered.scale);
     let (width, height) = (rendered.pixmap.width(), rendered.pixmap.height());
@@ -234,11 +234,11 @@ fn bounds(rendered: &qingjian_render::Rendered) -> ViewBounds {
     }
 }
 
-/// 预乘 RGBA 位图 → NSImage（尺寸按点，位图按像素，Retina 自然对上）。
+/// 預乘 RGBA 點陣圖 → NSImage（尺寸按點，點陣圖按畫素，Retina 自然對上）。
 fn to_image(pixmap: &qingjian_render::Pixmap, size: NSSize) -> Option<Retained<NSImage>> {
     let (width, height) = (pixmap.width(), pixmap.height());
-    // SAFETY: planes 传空让 AppKit 自己分配；参数描述的是 8 位 × 4 通道、预乘 alpha 在后的连续 RGBA，
-    // 与 tiny-skia 的内存布局一致；随后按 bytesPerRow 逐行拷进去，不越界。
+    // SAFETY: planes 傳空讓 AppKit 自己分配；引數描述的是 8 位 × 4 通道、預乘 alpha 在後的連續 RGBA，
+    // 與 tiny-skia 的記憶體佈局一致；隨後按 bytesPerRow 逐行拷進去，不越界。
     let rep = unsafe {
         let rep = NSBitmapImageRep::initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bytesPerRow_bitsPerPixel(
             NSBitmapImageRep::alloc(),

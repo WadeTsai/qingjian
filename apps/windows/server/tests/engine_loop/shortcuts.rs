@@ -1,4 +1,4 @@
-//! 组句中「修饰键 + 数字」：译词上屏与删候选。
+//! 組句中「修飾鍵 + 數字」：譯詞上屏與刪候選。
 
 use crate::support::*;
 
@@ -7,7 +7,7 @@ fn alt_digit_commits_first_translation() {
     let mut router = router();
     let (_, _, frame) = type_letters(&mut router, "nihao");
     let slot = slot_of(&frame, "你好");
-    // 缺省译词键（mac ⌥ / Windows Ctrl）+ 数字：上屏那个候选的第一个译词，组句结束。
+    // 預設譯詞鍵（mac ⌥ / Windows Ctrl）+ 數字：上屏那個候選的第一個譯詞，組句結束。
     let (outcome, commit, after) = press(&mut router, digit_with(slot, TRANSLATE));
     assert_eq!(
         (outcome, commit.as_deref()),
@@ -21,7 +21,7 @@ fn second_translation_key_without_second_sense_is_swallowed() {
     let mut router = router();
     let (_, _, frame) = type_letters(&mut router, "nihao");
     let slot = slot_of(&frame, "你好");
-    // 样例释义表里「你好」只有一条译文：第二个译词键（Shift+译词键）+ 数字吞掉不动，组句还在。
+    // 樣例釋義表裡「你好」只有一條譯文：第二個譯詞鍵（Shift+譯詞鍵）+ 數字吞掉不動，組句還在。
     let (outcome, commit, after) = press(&mut router, digit_with(slot, TRANSLATE_SECOND));
     assert_eq!((outcome, commit), (KeyOutcome::Consumed, None));
     assert_eq!(preedit(&after), "ni'hao");
@@ -32,7 +32,7 @@ fn shift_digit_forgets_candidate_and_requeries() {
     let mut router = router();
     let (_, _, frame) = type_letters(&mut router, "nihao");
     let slot = slot_of(&frame, "你好");
-    // 缺省 Shift + 数字：删候选（词库词只清学习记录），重新查一遍，组句不变。
+    // 預設 Shift + 數字：刪候選（詞庫詞只清學習記錄），重新查一遍，組句不變。
     let (outcome, commit, after) = press(&mut router, digit_with(slot, SHIFT));
     assert_eq!((outcome, commit), (KeyOutcome::Consumed, None));
     assert_eq!(preedit(&after), "ni'hao");
@@ -41,13 +41,13 @@ fn shift_digit_forgets_candidate_and_requeries() {
 
 #[test]
 fn unconfigured_modifier_digit_is_not_a_selection() {
-    // 删候选改成 Ctrl+Shift：Shift+4 就是普通的 `$`；Win+1 没配到快捷键，归应用。
+    // 刪候選改成 Ctrl+Shift：Shift+4 就是普通的 `$`；Win+1 沒配到快捷鍵，歸應用。
     let mut router = router_with(RouterConfig {
         delete_keys: KeyModifiers {
             shift: true,
             ..CTRL
         },
-        // 组句中标点进直输段的老行为（`punct_commits` 关），`$` 才会留在拼音行里
+        // 組句中標點進直輸段的老行為（`punct_commits` 關），`$` 才會留在拼音行裡
         punct_commits: false,
         ..RouterConfig::default()
     });
@@ -65,7 +65,7 @@ fn deleting_a_candidate_shows_a_notice_until_next_key() {
     let (_, _, frame) = type_letters(&mut router, "nihao");
     let slot = slot_of(&frame, "你好");
 
-    // 「你好」是词库词且没学习记录，删不掉，但提示照样给出。
+    // 「你好」是詞庫詞且沒學習記錄，刪不掉，但提示照樣給出。
     let (outcome, _, after) = press(&mut router, digit_with(slot, SHIFT));
     assert_eq!(outcome, KeyOutcome::Consumed);
     assert!(!after.is_empty(), "删候选后仍在组句");

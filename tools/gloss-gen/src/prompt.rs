@@ -1,20 +1,20 @@
-//! 提示词与回复解析。
+//! 提示詞與回覆解析。
 
 use qingjian_core::PartOfSpeech;
 use serde::Deserialize;
 
 use crate::entry::{GlossEntry, JapaneseSense};
 
-/// 每种语言最多留几个译词。
+/// 每種語言最多留幾個譯詞。
 const MAX_SENSES: usize = 2;
 
-/// 单个英文译词最长几个字节：再长就是解释不是译词。
+/// 單個英文譯詞最長几個位元組：再長就是解釋不是譯詞。
 const MAX_ENGLISH_BYTES: usize = 40;
 
-/// 单个日文译词最多几个字符。
+/// 單個日文譯詞最多幾個字元。
 const MAX_JAPANESE_CHARS: usize = 16;
 
-/// 单个越南文译词最多几个字符。
+/// 單個越南文譯詞最多幾個字元。
 const MAX_VIETNAMESE_CHARS: usize = 36;
 
 pub const SYSTEM_PROMPT: &str = "你是多语词典编纂者。给每个中文词写最简短的英文、日文和越南文对应词，供拼音输入法在候选词旁边一行显示，所以只要词、不要解释。\n\
@@ -35,7 +35,7 @@ pub const VIETNAMESE_ONLY_SYSTEM_PROMPT: &str = "你是汉越词典编纂者。�
 输出严格的 JSON：{\"items\":[{\"w\":\"开发\",\"pos\":\"v.\",\"vi\":[\"phát triển\",\"khai thác\"]}]}。\n\
 items 与输入的词一一对应、顺序一致、每个词恰好一项，w 必须原样照抄输入的词。";
 
-/// 本次生成的学习语言集合。
+/// 本次生成的學習語言集合。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GlossLanguages {
     en: bool,
@@ -103,7 +103,7 @@ pub fn system_prompt(languages: GlossLanguages) -> &'static str {
     }
 }
 
-/// 用户消息：一行一个词。
+/// 使用者訊息：一行一個詞。
 pub fn user_prompt(words: &[String]) -> String {
     let mut text = String::from("词：\n");
     for word in words {
@@ -144,7 +144,7 @@ struct RawJapanese {
     r: Option<String>,
 }
 
-/// 解析回复：只收请求过的词，每个词一条（重复取第一条），译词逐个校验、清洗；两种语言都空的丢掉。
+/// 解析回覆：只收請求過的詞，每個詞一條（重複取第一條），譯詞逐個校驗、清洗；兩種語言都空的丟掉。
 pub fn parse_reply_for_languages(
     content: &str,
     words: &[String],
@@ -210,7 +210,7 @@ fn is_latin_word_char(c: char) -> bool {
         || (matches!(c as u32, 0x00C0..=0x024F | 0x1E00..=0x1EFF) && c.is_alphabetic())
 }
 
-/// 词性统一成 Core 认得的缩写。
+/// 詞性統一成 Core 認得的縮寫。
 pub fn normalize_pos(raw: &str) -> Option<String> {
     raw.parse::<PartOfSpeech>()
         .ok()
@@ -264,7 +264,7 @@ fn clean_japanese(raw: Vec<RawJapanese>) -> Vec<JapaneseSense> {
     out
 }
 
-/// 平假名、片假名（含长音、中点）与表示接续的波浪线。
+/// 平假名、片假名（含長音、中點）與表示接續的波浪線。
 pub fn is_kana(c: char) -> bool {
     matches!(c, '\u{3041}'..='\u{309f}' | '\u{30a0}'..='\u{30ff}' | '〜' | '～' | ' ')
 }

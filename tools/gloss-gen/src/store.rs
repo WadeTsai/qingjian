@@ -1,4 +1,4 @@
-//! JSONL 结果文件：逐行追加、启动时读回已完成的词、导出成释义表。
+//! JSONL 結果檔案：逐行追加、啟動時讀回已完成的詞、匯出成釋義表。
 
 use std::collections::{BTreeMap, HashSet};
 use std::fs::{File, OpenOptions};
@@ -13,9 +13,9 @@ use serde::de::DeserializeOwned;
 use crate::entry::{EnglishGlossEntry, GlossEntry, PinyinEntry};
 use crate::error::GlossError;
 
-/// JSONL 里的一行：按词去重续跑。
+/// JSONL 裡的一行：按詞去重續跑。
 pub trait Keyed: Serialize + DeserializeOwned {
-    /// 这条结果对应的词。
+    /// 這條結果對應的詞。
     fn key(&self) -> &str;
 }
 
@@ -37,20 +37,20 @@ impl Keyed for EnglishGlossEntry {
     }
 }
 
-/// 打开着的结果文件。
+/// 開啟著的結果檔案。
 pub struct Store<T> {
-    /// 已有的词。
+    /// 已有的詞。
     done: HashSet<String>,
 
-    /// 追加写入端。
+    /// 追加寫入端。
     file: Mutex<File>,
 
-    /// 条目类型。
+    /// 條目型別。
     _entry: PhantomData<T>,
 }
 
 impl<T: Keyed> Store<T> {
-    /// 打开（没有就建）并读回已有的条目。
+    /// 開啟（沒有就建）並讀回已有的條目。
     pub fn open(path: &Path) -> Result<Self, GlossError> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -79,7 +79,7 @@ impl<T: Keyed> Store<T> {
         self.done.len()
     }
 
-    /// 追加一批条目并落盘。
+    /// 追加一批條目並落盤。
     pub fn append(&self, entries: &[T]) -> Result<(), GlossError> {
         let mut file = self.file.lock().unwrap_or_else(|e| e.into_inner());
         for entry in entries {
@@ -91,7 +91,7 @@ impl<T: Keyed> Store<T> {
     }
 }
 
-/// 读全部条目，坏行跳过并记一条警告。
+/// 讀全部條目，壞行跳過並記一條警告。
 pub fn read_entries<T: Keyed>(path: &Path) -> Result<Vec<T>, GlossError> {
     let reader = BufReader::new(File::open(path)?);
     let mut entries = Vec::new();
@@ -108,7 +108,7 @@ pub fn read_entries<T: Keyed>(path: &Path) -> Result<Vec<T>, GlossError> {
     Ok(entries)
 }
 
-/// 导出成输入法加载的学习语言表：`词\t词性 译词\t词性 译词`，日文译词后面接 `|假名`。同一个词以最后一条为准，按词排序。
+/// 匯出成輸入法載入的學習語言表：`詞\t詞性 譯詞\t詞性 譯詞`，日文譯詞後面接 `|假名`。同一個詞以最後一條為準，按詞排序。
 pub fn export(input: &Path, out_dir: &Path) -> Result<(), GlossError> {
     let mut latest: BTreeMap<String, GlossEntry> = BTreeMap::new();
     for entry in read_entries::<GlossEntry>(input)? {
@@ -199,8 +199,8 @@ fn write_if_non_empty(
     Ok(())
 }
 
-/// 英→中释义导出成 `glossary-zh.tsv`：`词\t词性. 释义\t…`，键是小写（英文候选按敲的大小写显示，查表时统一小写）。
-/// 同一个词以最后一条为准，按词排序。
+/// 英→中釋義匯出成 `glossary-zh.tsv`：`詞\t詞性. 釋義\t…`，鍵是小寫（英文候選按敲的大小寫顯示，查表時統一小寫）。
+/// 同一個詞以最後一條為準，按詞排序。
 pub fn export_english(input: &Path, out_dir: &Path) -> Result<(), GlossError> {
     let mut latest: BTreeMap<String, EnglishGlossEntry> = BTreeMap::new();
     for entry in read_entries::<EnglishGlossEntry>(input)? {

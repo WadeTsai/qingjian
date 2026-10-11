@@ -1,4 +1,4 @@
-//! 「候选窗口」页：外观、主题、排布、渲染引擎、字体（可搜索的列表）与字号、过渡动画、拼音显示位置。
+//! 「候選視窗」頁：外觀、主題、排布、渲染引擎、字型（可搜尋的列表）與字號、過渡動畫、拼音顯示位置。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -18,34 +18,34 @@ use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
 pub struct CandidatesPage {
-    /// 外观：跟随系统 / 浅色 / 深色。
+    /// 外觀：跟隨系統 / 淺色 / 深色。
     appearance: Retained<NSPopUpButton>,
 
-    /// 主题：内置主题按显示名列出。
+    /// 主題：內建主題按顯示名列出。
     theme: Retained<NSPopUpButton>,
 
-    /// 竖排 / 横排。
+    /// 豎排 / 橫排。
     layout_mode: Retained<NSPopUpButton>,
 
-    /// 横排时上 / 下键展开成多行矩阵。
+    /// 橫排時上 / 下鍵展開成多行矩陣。
     horizontal_grid: Retained<NSButton>,
 
-    /// 青简渲染器 / 系统绘制。
+    /// 青簡渲染器 / 系統繪製。
     renderer: Retained<NSPopUpButton>,
 
-    /// 候选窗字体：搜索框 + 列表。
+    /// 候選窗字型：搜尋框 + 列表。
     font: FontPicker,
 
-    /// 候选字字号，空为用主题的。
+    /// 候選字字號，空為用主題的。
     candidate_size: Retained<NSTextField>,
 
-    /// 译文字号，空为用主题的。
+    /// 譯文字號，空為用主題的。
     annotation_size: Retained<NSTextField>,
 
-    /// 过渡动画。
+    /// 過渡動畫。
     animations: Retained<NSButton>,
 
-    /// 拼音显示位置。
+    /// 拼音顯示位置。
     preedit: Retained<NSPopUpButton>,
 }
 
@@ -92,7 +92,7 @@ impl CandidatesPage {
         note(
             layout,
             mtm,
-            "勾上后横排下 ↑ / ↓ 把一行展开成 6 行矩阵并换行，← / → 在候选之间移动（拼音光标用 ⌥← / ⌥→），Esc 第一下先收回；不勾（缺省）按键与以前一样。",
+            "勾上后横排下 ↑ / ↓ 把一行展开成 6 行矩阵并换行，← / → 在候选之间移动（拼音光标用 ⌥← / ⌥→），Esc 第一下先收回；不勾（預設）按键与以前一样。",
         );
         let renderer_titles: Vec<String> = CandidateRenderer::ALL
             .iter()
@@ -171,7 +171,7 @@ impl CandidatesPage {
                 .iter()
                 .position(|a| *a == general.appearance()),
         );
-        // 主题目录里可能新放了主题，每次同步都重列
+        // 主題目錄裡可能新放了主題，每次同步都重列
         let themes = themes();
         set_items(&self.theme, &theme_titles(&themes));
         select(
@@ -214,7 +214,7 @@ impl CandidatesPage {
     }
 }
 
-/// 一行字号文本框。
+/// 一行字號文本框。
 fn size_field(
     layout: &mut Layout,
     mtm: MainThreadMarker,
@@ -227,7 +227,7 @@ fn size_field(
     field
 }
 
-/// 设过的字号，没设过显示主题的（用户知道从哪个数开始调）；整数不带小数点。
+/// 設過的字號，沒設過顯示主題的（使用者知道從哪個數開始調）；整數不帶小數點。
 fn set_size(field: &NSTextField, size: FontSize, theme: Option<f32>) {
     let text = size
         .get()
@@ -236,12 +236,12 @@ fn set_size(field: &NSTextField, size: FontSize, theme: Option<f32>) {
     field.setStringValue(&NSString::from_str(&text));
 }
 
-/// 主题库：内置主题加用户主题目录里的。
+/// 主題庫：內建主題加使用者主題目錄裡的。
 fn themes() -> ThemeLibrary {
     ThemeLibrary::load(crate::app::paths::themes_dir().as_deref())
 }
 
-/// 主题下拉的选项：显示名。
+/// 主題下拉的選項：顯示名。
 fn theme_titles(themes: &ThemeLibrary) -> Vec<String> {
     themes
         .themes()

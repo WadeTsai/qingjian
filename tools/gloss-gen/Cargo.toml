@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-gloss-gen"
-description = "用 LLM 批量生成释义表与多音字读音标注"
+description = "用 LLM 批次生成釋義表與多音字讀音標註"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -1,15 +1,15 @@
-//! 笔画码表：笔画表（`stroke` 子命令的产物）+ 词库 → `codes/stroke.qj`（随包原生码表）。
+//! 筆畫碼錶：筆畫表（`stroke` 子命令的產物）+ 詞庫 → `codes/stroke.qj`（隨包原生碼錶）。
 //!
-//! 取码规则照 `docs/design/aux-code.md` 的「原生表：只带笔画」：
+//! 取碼規則照 `docs/design/aux-code.md` 的「原生表：只帶筆畫」：
 //!
-//! - 键位：CNS 的 1 → `h` 横、2 → `s` 竖、3 → `p` 撇、5 → `z` 折，点与捺（4 / `n`）→ `n`；
-//! - 单字：前 4 笔 + 末笔（不足 5 笔按实际取，1 画的字就是 1 码）；
-//! - 词组：每字首笔——二字 2 码、三字 3 码、四字及以上 = 前三字首笔 + 末字首笔（4 码）；
-//! - 词里有一个字不在笔画表里，整词没有码、跳过并计入统计：宁可不出，也不用缺字的词凑半条码
-//!   （四字以上按规则用不到中间的字，同样要求整词都在表里）。
+//! - 鍵位：CNS 的 1 → `h` 橫、2 → `s` 豎、3 → `p` 撇、5 → `z` 折，點與捺（4 / `n`）→ `n`；
+//! - 單字：前 4 筆 + 末筆（不足 5 筆按實際取，1 畫的字就是 1 碼）；
+//! - 片語：每字首筆——二字 2 碼、三字 3 碼、四字及以上 = 前三字首筆 + 末字首筆（4 碼）；
+//! - 詞裡有一個字不在筆畫表裡，整詞沒有碼、跳過並計入統計：寧可不出，也不用缺字的詞湊半條碼
+//!   （四字以上按規則用不到中間的字，同樣要求整詞都在表裡）。
 //!
-//! 产物是 `AuxCodeTable` 的 `.qj`（辅码态两段式查询用的 `Kind::AuxCodeTable` 容器）；元数据的缺省值
-//! （名称「笔画」、OFL-1.1、CNS11643 署名）在 `pack` 里，许可依据见设计文档「许可」一节。
+//! 產物是 `AuxCodeTable` 的 `.qj`（輔碼態兩段式查詢用的 `Kind::AuxCodeTable` 容器）；後設資料的預設值
+//! （名稱「筆畫」、OFL-1.1、CNS11643 署名）在 `pack` 裡，許可依據見設計文件「許可」一節。
 
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
@@ -26,19 +26,19 @@ use crate::stroke::{malformed, single_char};
 #[cfg(test)]
 mod tests;
 
-/// 笔画表：字 → 键序列（`h` 横 / `s` 竖 / `p` 撇 / `n` 点捺 / `z` 折）。
+/// 筆畫表：字 → 鍵序列（`h` 橫 / `s` 豎 / `p` 撇 / `n` 點捺 / `z` 折）。
 pub struct StrokeTable {
-    /// 字 → 键序列，序列非空。
+    /// 字 → 鍵序列，序列非空。
     sequences: HashMap<char, String>,
 }
 
 impl StrokeTable {
-    /// 读 `stroke` 子命令的产物：每行 `字\t序列`，序列是 `[1235n]+`，`#` 开头为注释。
+    /// 讀 `stroke` 子命令的產物：每行 `字\t序列`，序列是 `[1235n]+`，`#` 開頭為註釋。
     pub fn from_path(path: &Path) -> Result<Self, ConvertError> {
         Self::parse(path, BufReader::new(File::open(path)?))
     }
 
-    /// 从任意读入流解析（测试用）。
+    /// 從任意讀入流解析（測試用）。
     fn parse(path: &Path, reader: impl BufRead) -> Result<Self, ConvertError> {
         let mut sequences: HashMap<char, String> = HashMap::new();
         for (index, line) in reader.lines().enumerate() {
@@ -76,39 +76,39 @@ impl StrokeTable {
         Ok(Self { sequences })
     }
 
-    /// 一个字的键序列。
+    /// 一個字的鍵序列。
     pub fn get(&self, ch: char) -> Option<&str> {
         self.sequences.get(&ch).map(String::as_str)
     }
 
-    /// 表里的字数。
+    /// 表裡的字數。
     pub fn len(&self) -> usize {
         self.sequences.len()
     }
 
-    /// 表是不是空的（空表时任何词都没有码）。
+    /// 表是不是空的（空表時任何詞都沒有碼）。
     pub fn is_empty(&self) -> bool {
         self.sequences.is_empty()
     }
 }
 
-/// 一次生成的统计。
+/// 一次生成的統計。
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct CodeStats {
-    /// 词库里的词条数（一个词多条读音算多条）。
+    /// 詞庫裡的詞條數（一個詞多條讀音算多條）。
     pub entries: usize,
 
-    /// 去重后的词数。
+    /// 去重後的詞數。
     pub words: usize,
 
-    /// 有码的词数。
+    /// 有碼的詞數。
     pub coded: usize,
 
-    /// 词里有字不在笔画表里、跳过的词数。
+    /// 詞裡有字不在筆畫表裡、跳過的詞數。
     pub skipped: usize,
 }
 
-/// 生成码表：读笔画表与词库，按取码规则算码，写 `.qj`（词里缺字的词跳过）。
+/// 生成碼錶：讀筆畫表與詞庫，按取碼規則算碼，寫 `.qj`（詞裡缺字的詞跳過）。
 pub fn build(
     stroke: &Path,
     dict: &Path,
@@ -149,7 +149,7 @@ pub fn build(
     Ok(stats)
 }
 
-/// 词库 → `(词, 码)` 对与统计；同一个词的重复词条（多音字）只算一次。
+/// 詞庫 → `(詞, 碼)` 對與統計；同一個詞的重複詞條（多音字）只算一次。
 fn collect(dictionary: &Dictionary, strokes: &StrokeTable) -> (Vec<(String, String)>, CodeStats) {
     let mut stats = CodeStats {
         entries: dictionary.len(),
@@ -173,7 +173,7 @@ fn collect(dictionary: &Dictionary, strokes: &StrokeTable) -> (Vec<(String, Stri
     (pairs, stats)
 }
 
-/// 一个词的码：单字走单字规则，词组每字首笔；词里有字不在表里就没有码。
+/// 一個詞的碼：單字走單字規則，片語每字首筆；詞裡有字不在表裡就沒有碼。
 fn word_code(word: &str, strokes: &StrokeTable) -> Option<String> {
     let mut sequences = Vec::new();
     for ch in word.chars() {
@@ -188,7 +188,7 @@ fn word_code(word: &str, strokes: &StrokeTable) -> Option<String> {
     }
 }
 
-/// 单字码：前 4 笔 + 末笔；不足 5 笔按实际取。
+/// 單字碼：前 4 筆 + 末筆；不足 5 筆按實際取。
 fn single_char_code(sequence: &str) -> Option<String> {
     let mut keys: Vec<char> = sequence.chars().collect();
     match keys.len() {
@@ -203,7 +203,7 @@ fn single_char_code(sequence: &str) -> Option<String> {
     }
 }
 
-/// 词组码：每个给定字各取首笔。
+/// 片語碼：每個給定字各取首筆。
 fn heads(sequences: &[&str]) -> Option<String> {
     sequences
         .iter()
@@ -211,7 +211,7 @@ fn heads(sequences: &[&str]) -> Option<String> {
         .collect()
 }
 
-/// 把一个字的 CNS 笔画序列映射成键；认不出的符号返回 `None`。
+/// 把一個字的 CNS 筆畫序列對映成鍵；認不出的符號返回 `None`。
 fn key_sequence(sequence: &str) -> Option<String> {
     if sequence.is_empty() {
         return None;
@@ -219,7 +219,7 @@ fn key_sequence(sequence: &str) -> Option<String> {
     sequence.chars().map(key).collect()
 }
 
-/// 单个笔画码的键位（`stroke` 的产物已经把点捺写成 `n`，`4` 是 CNS 的原始写法）。
+/// 單個筆畫碼的鍵位（`stroke` 的產物已經把點捺寫成 `n`，`4` 是 CNS 的原始寫法）。
 fn key(stroke: char) -> Option<char> {
     match stroke {
         '1' => Some('h'),

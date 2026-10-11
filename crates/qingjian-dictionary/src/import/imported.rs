@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 
-/// 一次导入的结果。
+/// 一次匯入的結果。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Imported {
-    /// 写出的 `.qj`。
+    /// 寫出的 `.qj`。
     pub path: PathBuf,
 
-    /// 词库名（Rime 头里的 `name:`，否则文件名主干）。
+    /// 詞庫名（Rime 頭裡的 `name:`，否則檔名主幹）。
     pub name: String,
 
-    /// 词条数。
+    /// 詞條數。
     pub entries: usize,
 }

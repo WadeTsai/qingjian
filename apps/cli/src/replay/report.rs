@@ -4,58 +4,58 @@ use qingjian_core::InputSource;
 
 use super::tally::Tally;
 
-/// 回放报告：按来源分组的计数，加上几条没命中的例子。
+/// 回放報告：按來源分組的計數，加上幾條沒命中的例子。
 #[derive(Debug, Default)]
 pub struct Report {
-    /// 词库词。
+    /// 詞庫詞。
     pub word: Tally,
 
     /// 本地整句。
     pub sentence: Tally,
 
-    /// 英文候选。
+    /// 英文候選。
     pub english: Tally,
 
-    /// 快捷候选与 emoji。
+    /// 快捷候選與 emoji。
     pub other: Tally,
 
-    /// 不评的来源（云端词、云端整句、原样上屏、译词）各自的条数。
+    /// 不評的來源（雲端詞、雲端整句、原樣上屏、譯詞）各自的條數。
     pub skipped: Vec<(InputSource, usize)>,
 
-    /// 撤销条数。
+    /// 撤銷條數。
     pub retracts: usize,
 
-    /// 重打条数（组句内退格重打 + 上屏后删掉重打）。
+    /// 重打條數（組句內退格重打 + 上屏後刪掉重打）。
     pub retypes: usize,
 
-    /// 会话行数、上文断开数、直通字符数。
+    /// 會話行數、上文斷開數、直通字元數。
     pub sessions: usize,
     pub breaks: usize,
     pub passthrough_chars: usize,
 
-    /// 云端联想展示了几次、其中紧接着被接受（上屏来源是云端词 / 云端整句）几次。
+    /// 雲端聯想展示了幾次、其中緊接著被接受（上屏來源是雲端詞 / 雲端整句）幾次。
     pub predictions: usize,
     pub predictions_accepted: usize,
 
-    /// 上一条是联想、还没等到接下来的上屏。
+    /// 上一條是聯想、還沒等到接下來的上屏。
     pub prediction_pending: bool,
 
-    /// 辅码态选词的条数，以及其中「同样的拼音、纯拼音输入下已排在首选」的条数。
+    /// 輔碼態選詞的條數，以及其中「同樣的拼音、純拼音輸入下已排在首選」的條數。
     pub aux_total: usize,
     pub aux_top1: usize,
 
-    /// 旧格式的空行（键与文本都空的原样上屏）。
+    /// 舊格式的空行（鍵與文本都空的原樣上屏）。
     pub empty: usize,
 
-    /// 解析不了的行数。
+    /// 解析不了的行數。
     pub unparsable: usize,
 
-    /// 没命中首选的例子。
+    /// 沒命中首選的例子。
     pub misses: Vec<String>,
 }
 
 impl Report {
-    /// 这个来源的计数板；不评的来源返回 `None`（另计到 `skipped`）。
+    /// 這個來源的計數板；不評的來源返回 `None`（另計到 `skipped`）。
     pub fn tally_for(&mut self, source: InputSource) -> Option<&mut Tally> {
         match source {
             InputSource::Word => Some(&mut self.word),

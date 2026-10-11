@@ -1,5 +1,5 @@
-//! 「快捷键」页：翻页键、模式键，译词 / 删候选 / 翻译选中文字的修饰键。
-//! 翻译选中文字只改修饰键，字母键固定用配置里当前的；要换字母直接改 `config.toml`。
+//! 「快捷鍵」頁：翻頁鍵、模式鍵，譯詞 / 刪候選 / 翻譯選中文字的修飾鍵。
+//! 翻譯選中文字只改修飾鍵，字母鍵固定用配置裡當前的；要換字母直接改 `config.toml`。
 
 use qingjian_platform::Modifiers;
 use windows_reactor::*;
@@ -7,17 +7,17 @@ use windows_reactor::*;
 use crate::panel::controls::{field, index_of, page};
 use crate::panel::{Message, Settings};
 
-/// 翻页键对：界面名 + 配置写法。
+/// 翻頁鍵對：介面名 + 配置寫法。
 pub(crate) const PAGE_KEYS: [(&str, &str); 3] = [
-    ("方括号 [ ]", "[]"),
-    ("逗号句号 , .", ",."),
-    ("减号等号 - =", "-="),
+    ("方括號 [ ]", "[]"),
+    ("逗號句號 , .", ",."),
+    ("減號等號 - =", "-="),
 ];
 
-/// 可当模式键的字母（与 Core `ModeKeys::CANDIDATES` 一致）。
+/// 可當模式鍵的字母（與 Core `ModeKeys::CANDIDATES` 一致）。
 pub(crate) const MODE_KEYS: [&str; 3] = ["v", "u", "i"];
 
-/// 修饰键预设：界面名 + 配置写法。
+/// 修飾鍵預設：介面名 + 配置寫法。
 pub(crate) const MODIFIERS: [(&str, &str); 6] = [
     ("Ctrl", "ctrl"),
     ("Alt", "alt"),
@@ -38,7 +38,7 @@ fn mode_combo(current: char, callback: Callback<Option<usize>>) -> ComboBox {
         .on_selection_changed(callback)
 }
 
-/// 按解析后相等找当前项，不依赖字符串写法。
+/// 按解析後相等找當前項，不依賴字串寫法。
 fn modifier_combo(current: Modifiers, callback: Callback<Option<usize>>) -> ComboBox {
     let selected = MODIFIERS
         .iter()
@@ -54,59 +54,59 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
     let s = &settings.config.shortcut;
     let rows = [
         field(
-            "翻页键",
-            "选「, .」或「- =」时组句中敲对应符号是翻页，不再是上屏加标点。",
+            "翻頁鍵",
+            "選「, .」或「- =」時組句中敲對應符號是翻頁，不再是上屏加標點。",
             ComboBox::new()
                 .items_source(PAGE_KEYS.iter().map(|(label, _)| *label))
                 .selected_index(index_of(&PAGE_KEYS, &settings.config.general.page_keys))
                 .on_selection_changed(context.callback(Message::PageKeys)),
         ),
         field(
-            "表达式模式键",
+            "表示式模式鍵",
             "",
             mode_combo(s.mode.expression, context.callback(Message::ModeExpression)),
         ),
         field(
-            "问字模式键",
-            "这两个字母开头进模式：v1+2 出 3，usangemu 问「三个木」（需要云服务）。两个键不能相同。",
+            "問字模式鍵",
+            "這兩個字母開頭進模式：v1+2 出 3，usangemu 問「三個木」（需要雲服務）。兩個鍵不能相同。",
             mode_combo(s.mode.question, context.callback(Message::ModeQuestion)),
         ),
         field(
-            "没在输入拼音时敲 ? 也进入问字",
-            "开着时 ? 先进问字（中英文模式都行），后面跟字母才是问题，跟其他键时还原成问号；关着问号就是问号。",
+            "沒在輸入拼音時敲 ? 也進入問字",
+            "開著時 ? 先進問字（中英文模式都行），後面跟字母才是問題，跟其他鍵時還原成問號；關著問號就是問號。",
             ToggleSwitch::new()
                 .is_on(s.mode.question_mark)
                 .on_toggled(context.callback(Message::QuestionMark)),
         ),
         field(
-            "译词上屏（第一个）",
-            "按住修饰键再按候选序号，上屏候选右侧的译词而不是中文。",
+            "譯詞上屏（第一個）",
+            "按住修飾鍵再按候選序號，上屏候選右側的譯詞而不是中文。",
             modifier_combo(s.translation, context.callback(Message::Translation)),
         ),
         field(
-            "译词上屏（第二个）",
-            "候选有两个译词时，这组键上屏后一个。两组不能相同。Ctrl + Shift 是 Windows 切换输入法的热键，同时装着别的输入法时别选它。",
+            "譯詞上屏（第二個）",
+            "候選有兩個譯詞時，這組鍵上屏後一個。兩組不能相同。Ctrl + Shift 是 Windows 切換輸入法的熱鍵，同時裝著別的輸入法時別選它。",
             modifier_combo(
                 s.translation_second,
                 context.callback(Message::TranslationSecond),
             ),
         ),
         field(
-            "删除候选",
-            "按住修饰键再按候选序号：自己造的词、云端选过的词整删；词库里的词清掉学习记录，回到原排序。",
+            "刪除候選",
+            "按住修飾鍵再按候選序號：自己造的詞、雲端選過的詞整刪；詞庫裡的詞清掉學習記錄，回到原排序。",
             modifier_combo(
                 s.delete_candidate,
                 context.callback(Message::DeleteCandidate),
             ),
         ),
         field(
-            "翻译选中文字",
-            "选中一段文字后按这组键 + 当前字母（缺省 Ctrl+Alt+T），把它译成学习语言，回车 / 空格替换、Esc 保留原文。需要云服务。这里只改修饰键，字母固定用当前的。",
+            "翻譯選中文字",
+            "選中一段文字後按這組鍵 + 當前字母（預設 Ctrl+Alt+T），把它譯成學習語言，回車 / 空格替換、Esc 保留原文。需要雲服務。這裡只改修飾鍵，字母固定用當前的。",
             modifier_combo(
                 s.translate_selection.modifiers,
                 context.callback(Message::TranslateSelection),
             ),
         ),
     ];
-    page("快捷键", StackPanel::new().spacing(16.0).children(rows))
+    page("快捷鍵", StackPanel::new().spacing(16.0).children(rows))
 }

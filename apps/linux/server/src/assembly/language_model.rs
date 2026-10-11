@@ -1,9 +1,9 @@
-//! 静态语言模型文件定位与加载。
+//! 靜態語言模型檔案定位與載入。
 use std::path::{Path, PathBuf};
 
 use qingjian_lm::{BigramModel, LmError};
 
-/// 语言模型的数据文件：`lm.qj` 优先，没有就用两张 TSV。
+/// 語言模型的資料檔案：`lm.qj` 優先，沒有就用兩張 TSV。
 pub enum LanguageModelFiles {
     Packed(PathBuf),
 

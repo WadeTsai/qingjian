@@ -1,5 +1,5 @@
-//! 附加词库：随包的领域词库（`Resources/dicts/`，按 `[dictionaries] domains` 挑）与用户目录 `dicts/` 下的 `.qj`（或 TSV）
-//! 文件（按 `[dictionaries] disabled` 过滤），加载后一起接到 Engine 上。
+//! 附加詞庫：隨包的領域詞庫（`Resources/dicts/`，按 `[dictionaries] domains` 挑）與使用者目錄 `dicts/` 下的 `.qj`（或 TSV）
+//! 檔案（按 `[dictionaries] disabled` 過濾），載入後一起接到 Engine 上。
 
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -7,10 +7,10 @@ use std::time::SystemTime;
 use crate::DictionariesConfig;
 use qingjian_dictionary::Dictionary;
 
-/// 目录里能加载的扩展名，靠前的优先：同名的 `.qj` 与 `.tsv` 只取 `.qj`（开发目录里两者并存）。
+/// 目錄裡能載入的副檔名，靠前的優先：同名的 `.qj` 與 `.tsv` 只取 `.qj`（開發目錄裡兩者並存）。
 const EXTENSIONS: [&str; 2] = ["qj", "tsv"];
 
-/// 可加载文件的快照：用于发现新增、移除与同名更新，不读取词库正文。
+/// 可載入檔案的快照：用於發現新增、移除與同名更新，不讀取詞庫正文。
 pub fn snapshot(dir: &Path) -> Vec<(PathBuf, Option<SystemTime>, u64)> {
     list(dir)
         .into_iter()
@@ -21,7 +21,7 @@ pub fn snapshot(dir: &Path) -> Vec<(PathBuf, Option<SystemTime>, u64)> {
         .collect()
 }
 
-/// 列出目录里的词库文件（按文件名排序，同名只留优先扩展名的那个），返回 (文件名不含扩展名, 路径)。目录不存在就是空。
+/// 列出目錄裡的詞庫檔案（按檔名排序，同名只留優先副檔名的那個），返回 (檔名不含副檔名, 路徑)。目錄不存在就是空。
 pub fn list(dir: &Path) -> Vec<(String, PathBuf)> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
@@ -44,7 +44,7 @@ pub fn list(dir: &Path) -> Vec<(String, PathBuf)> {
         .collect()
 }
 
-/// 加载没被关掉的词库：先随包领域词库，再用户目录。坏文件只记日志、跳过：一本词库坏了不能拖垮输入法。
+/// 載入沒被關掉的詞庫：先隨包領域詞庫，再使用者目錄。壞檔案只記日誌、跳過：一本詞庫壞了不能拖垮輸入法。
 pub fn load(
     bundled_dir: Option<&Path>,
     user_dir: Option<&Path>,

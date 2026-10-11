@@ -1,4 +1,4 @@
-//! 主题功能的集成测试：字体加载、状态条节点树、SVG 图片。快照对比在 `snapshots.rs`。
+//! 主題功能的整合測試：字型載入、狀態條節點樹、SVG 圖片。快照對比在 `snapshots.rs`。
 
 #[path = "../scenes/mod.rs"]
 mod scenes;

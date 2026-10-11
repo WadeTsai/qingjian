@@ -1,6 +1,6 @@
-//! 字重：100–900 的数字，或 `thin` / `light` / `regular` / `medium` / `semibold` / `bold` / `black` 这类名字。
+//! 字重：100–900 的數字，或 `thin` / `light` / `regular` / `medium` / `semibold` / `bold` / `black` 這類名字。
 //!
-//! 可变字体（SF）按 `wght` 轴取值，多字重的字体集合（苹方、微软雅黑）挑最近的一档。
+//! 可變字型（SF）按 `wght` 軸取值，多字重的字型集合（蘋方、微軟雅黑）挑最近的一檔。
 
 use serde::{Deserialize, Deserializer};
 
@@ -10,7 +10,7 @@ pub struct FontWeight(pub u16);
 impl FontWeight {
     pub const REGULAR: Self = Self(400);
 
-    /// 名字 → 数值，与 CSS 的 `font-weight` 一致。
+    /// 名字 → 數值，與 CSS 的 `font-weight` 一致。
     fn from_name(name: &str) -> Option<Self> {
         let value = match name {
             "thin" => 100,

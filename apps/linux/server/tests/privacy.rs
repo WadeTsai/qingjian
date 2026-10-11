@@ -1,4 +1,4 @@
-//! 隐私能力变化不能把暂存输入泄露到普通日志、用户词频或个人 n-gram。
+//! 隱私能力變化不能把暫存輸入洩露到普通日誌、使用者詞頻或個人 n-gram。
 use qingjian_core::{Engine, Learner};
 use qingjian_dictionary::Dictionary;
 use qingjian_learning::{FrequencyLearner, InputLog};
@@ -136,7 +136,7 @@ fn switching_privacy_contexts_preserves_both_compositions_and_close_logs_normal_
     text(&mut router, 3, "NORMALBUFFERB");
     close(&mut router, 2);
     close(&mut router, 1);
-    drop(router); // 退出时剩余的挂起/活动会话也需刷新。
+    drop(router); // 退出時剩餘的掛起/活動會話也需重新整理。
     let log = std::fs::read_to_string(path.join("input-log.jsonl")).unwrap();
     assert!(
         log.contains("NORMALBUFFERA") && log.contains("NORMALBUFFERB"),

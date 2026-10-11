@@ -1,5 +1,5 @@
-//! 英→中释义：给英文词表里的词写中文对应词，英文候选（中英混输、英文模式）右侧显示。
-//! 词按 wordfreq 词频挑（`english.tsv` 第三列），技术词表里的词不看词频一律要。
+//! 英→中釋義：給英文詞表裡的詞寫中文對應詞，英文候選（中英混輸、英文模式）右側顯示。
+//! 詞按 wordfreq 詞頻挑（`english.tsv` 第三列），技術詞表裡的詞不看詞頻一律要。
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -16,10 +16,10 @@ use crate::error::GlossError;
 use crate::prompt::normalize_pos;
 use crate::store::Store;
 
-/// 每个词最多留几个中文释义。
+/// 每個詞最多留幾個中文釋義。
 const MAX_SENSES: usize = 2;
 
-/// 单个中文释义最多几个字：再长是解释不是对应词。
+/// 單箇中文釋義最多幾個字：再長是解釋不是對應詞。
 const MAX_SENSE_CHARS: usize = 8;
 
 const SYSTEM_PROMPT: &str = "你是英汉词典编纂者。给每个英文词写最简短的中文对应词，供输入法在英文候选旁边一行显示，所以只要词、不要解释。\n\
@@ -92,7 +92,7 @@ impl Task for EnglishTask {
     }
 }
 
-/// 去空、去尾标点、限长、去重，最多两个。
+/// 去空、去尾標點、限長、去重，最多兩個。
 fn clean_chinese(raw: Vec<String>) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for text in raw {
@@ -113,8 +113,8 @@ fn clean_chinese(raw: Vec<String>) -> Vec<String> {
     out
 }
 
-/// 挑词：`english.tsv`（`词\t编码\t词频`）里词频不低于 `min_frequency` 的，加上 `include` 各表（带表头的 TSV，第一列）里的全部词；
-/// 按词频降序，最多 `limit` 个。
+/// 挑詞：`english.tsv`（`詞\t編碼\t詞頻`）裡詞頻不低於 `min_frequency` 的，加上 `include` 各表（帶表頭的 TSV，第一列）裡的全部詞；
+/// 按詞頻降序，最多 `limit` 個。
 fn select(
     words: &Path,
     min_frequency: u32,

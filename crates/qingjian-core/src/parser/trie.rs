@@ -2,16 +2,16 @@ use std::sync::LazyLock;
 
 use super::syllable::{MAX_SYLLABLE_LEN, SYLLABLES};
 
-/// 全局音节 trie，首次使用时从 [`SYLLABLES`] 构建。
+/// 全域性音節 trie，首次使用時從 [`SYLLABLES`] 構建。
 pub static SYLLABLE_TRIE: LazyLock<SyllableTrie> = LazyLock::new(|| SyllableTrie::build(SYLLABLES));
 
-/// trie 节点。子节点按字母 a–z 索引，0 表示无子节点（根节点永远是 0 号，不会被引用为子节点）。
+/// trie 節點。子節點按字母 a–z 索引，0 表示無子節點（根節點永遠是 0 號，不會被引用為子節點）。
 #[derive(Debug, Clone)]
 struct Node {
-    /// 26 个字母对应的子节点下标。
+    /// 26 個字母對應的子節點下標。
     children: [u16; 26],
 
-    /// 从根到此节点的路径是否为一个完整音节。
+    /// 從根到此節點的路徑是否為一個完整音節。
     terminal: bool,
 }
 
@@ -22,16 +22,16 @@ impl Node {
     };
 }
 
-/// 从输入某个位置起的匹配结果。
+/// 從輸入某個位置起的匹配結果。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Matches {
-    /// 以该位置开头的合法音节长度，升序；最多 [`MAX_SYLLABLE_LEN`] 个。
+    /// 以該位置開頭的合法音節長度，升序；最多 [`MAX_SYLLABLE_LEN`] 個。
     lengths: [u8; MAX_SYLLABLE_LEN],
 
-    /// `lengths` 里有效的个数。
+    /// `lengths` 裡有效的個數。
     count: u8,
 
-    /// 剩余整段是某个更长音节的真前缀（用于末尾残缺音节）。
+    /// 剩餘整段是某個更長音節的真字首（用於末尾殘缺音節）。
     pub whole_is_prefix: bool,
 }
 
@@ -43,10 +43,10 @@ impl Matches {
     }
 }
 
-/// 小写字母 trie，只接受 a–z。
+/// 小寫字母 trie，只接受 a–z。
 #[derive(Debug)]
 pub struct SyllableTrie {
-    /// 节点池，0 号为根。
+    /// 節點池，0 號為根。
     nodes: Vec<Node>,
 }
 
@@ -79,7 +79,7 @@ impl SyllableTrie {
         byte.is_ascii_lowercase().then(|| usize::from(byte - b'a'))
     }
 
-    /// 沿 `rest` 从根走到走不动为止，收集途中经过的完整音节。
+    /// 沿 `rest` 從根走到走不動為止，收集途中經過的完整音節。
     pub fn matches(&self, rest: &str) -> Matches {
         let mut result = Matches {
             lengths: [0; MAX_SYLLABLE_LEN],
@@ -102,7 +102,7 @@ impl SyllableTrie {
                 result.count += 1;
             }
         }
-        // 整段走完了还有子节点，说明它是某个更长音节的真前缀
+        // 整段走完了還有子節點，說明它是某個更長音節的真字首
         result.whole_is_prefix =
             !rest.is_empty() && self.nodes[current].children.iter().any(|&c| c != 0);
         result
@@ -112,7 +112,7 @@ impl SyllableTrie {
         self.matches(s).lengths().next_back() == Some(s.len()) && !s.is_empty()
     }
 
-    /// `s` 是否为某个合法音节的**真**前缀（不包含它自己就是完整音节的情况）。
+    /// `s` 是否為某個合法音節的**真**字首（不包含它自己就是完整音節的情況）。
     pub fn is_proper_prefix(&self, s: &str) -> bool {
         self.matches(s).whole_is_prefix
     }

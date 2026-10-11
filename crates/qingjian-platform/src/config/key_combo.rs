@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 
 use super::modifiers::Modifiers;
 
-/// 修饰键 + 一个字母键的组合，配置里写成 `control+option+t`。
+/// 修飾鍵 + 一個字母鍵的組合，配置裡寫成 `control+option+t`。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct KeyCombo {
-    /// 修饰键，至少一个。
+    /// 修飾鍵，至少一個。
     pub modifiers: Modifiers,
 
-    /// 字母或数字键（小写）。
+    /// 字母或數字鍵（小寫）。
     pub key: char,
 }
 
@@ -27,12 +27,12 @@ impl KeyCombo {
         key: 't',
     };
 
-    /// 配置文件里的写法。
+    /// 配置檔案裡的寫法。
     pub fn key_string(&self) -> String {
         format!("{}+{}", self.modifiers.key(), self.key)
     }
 
-    /// 给人看的写法：`⌃⌥T`。
+    /// 給人看的寫法：`⌃⌥T`。
     pub fn label(&self) -> String {
         format!(
             "{}{}",

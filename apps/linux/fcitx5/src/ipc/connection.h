@@ -1,4 +1,4 @@
-//! 有界 Unix socket 传输；任何错误都关闭连接，下一次按键重新握手。
+//! 有界 Unix socket 傳輸；任何錯誤都關閉連線，下一次按鍵重新握手。
 #pragma once
 #include <nlohmann/json.hpp>
 namespace qingjian {
@@ -11,11 +11,11 @@ public:
     bool open();
     bool send(const nlohmann::json &message, nlohmann::json *response = nullptr);
     bool connected() const { return fd_ >= 0; }
-    /// 只供事件循环观察断线；收发仍统一通过 send。
+    /// 只供事件迴圈觀察斷線；收發仍統一通過 send。
     int fd() const { return fd_; }
     void close();
 private:
-    /// 当前连接；-1 表示未连接。
+    /// 當前連線；-1 表示未連線。
     int fd_ = -1;
 };
 }

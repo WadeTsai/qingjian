@@ -1,14 +1,14 @@
-//! 整句转换用的词级语言模型：实现 Core 的 `LanguageModel` trait。
-//! 从 TSV 加载一元 / 二元计数（`from_paths`），或直接映射 `.qj`（`from_path`，`dict-convert pack lm` 生成，启动近零耗时）。
+//! 整句轉換用的詞級語言模型：實現 Core 的 `LanguageModel` trait。
+//! 從 TSV 載入一元 / 二元計數（`from_paths`），或直接對映 `.qj`（`from_path`，`dict-convert pack lm` 生成，啟動近零耗時）。
 //!
-//! TSV 由 `tools/dict-convert bigram` 从语料统计得到：
+//! TSV 由 `tools/dict-convert bigram` 從語料統計得到：
 //!
 //! ```text
-//! lm-unigram.tsv    词\t计数        （`<s>` 是句首标记，计数为句子数）
-//! lm-bigram.tsv     前词\t后词\t计数
+//! lm-unigram.tsv    詞\t計數        （`<s>` 是句首標記，計數為句子數）
+//! lm-bigram.tsv     前詞\t後詞\t計數
 //! ```
 //!
-//! 概率是插值平滑：P(w|v) = λ·c(v,w)/c(v) + (1-λ)·c(w)/N。模型里没有的词交回 Core 用词库词频兜底。
+//! 機率是插值平滑：P(w|v) = λ·c(v,w)/c(v) + (1-λ)·c(w)/N。模型裡沒有的詞交回 Core 用詞庫詞頻兜底。
 
 mod bigram_model;
 mod error;

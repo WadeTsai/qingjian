@@ -1,10 +1,10 @@
-//! 点中的是什么：第几个候选，或第几个候选的第几条译词。
+//! 點中的是什麼：第幾個候選，或第幾個候選的第幾條譯詞。
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HitTarget {
-    /// 这一页第 `n` 个候选（从 0 起）。
+    /// 這一頁第 `n` 個候選（從 0 起）。
     Candidate(usize),
 
-    /// 这一页第 `candidate` 个候选右侧的第 `sense` 条译词（从 0 起，与「上屏第一 / 第二条译词」的键对应）。
+    /// 這一頁第 `candidate` 個候選右側的第 `sense` 條譯詞（從 0 起，與「上屏第一 / 第二條譯詞」的鍵對應）。
     Translation { candidate: usize, sense: usize },
 }

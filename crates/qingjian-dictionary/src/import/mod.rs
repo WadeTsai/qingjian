@@ -1,7 +1,7 @@
-//! 导入词库：把用户给的文件（青简 TSV、Rime `.dict.yaml`、现成的 `.qj`）变成用户词库目录里的一个 `.qj`。
+//! 匯入詞庫：把使用者給的檔案（青簡 TSV、Rime `.dict.yaml`、現成的 `.qj`）變成使用者詞庫目錄裡的一個 `.qj`。
 //!
-//! 导入时只做格式转换，不做拼音校验：不合法的音节查不到而已，不影响别的词。
-//! 目标文件名取源文件的主干（`law.dict.yaml` → `law.qj`），已存在就覆盖（重新导入即更新）。
+//! 匯入時只做格式轉換，不做拼音校驗：不合法的音節查不到而已，不影響別的詞。
+//! 目標檔名取原始檔的主幹（`law.dict.yaml` → `law.qj`），已存在就覆蓋（重新匯入即更新）。
 
 mod imported;
 mod rime;
@@ -14,10 +14,10 @@ use crate::dictionary::Dictionary;
 use crate::error::DictionaryError;
 
 pub use imported::Imported;
-// `dict-convert wubi` 也读 Rime `.dict.yaml`（形码码表的第二列是编码，转换方式一样），共用这一个解析器
+// `dict-convert wubi` 也讀 Rime `.dict.yaml`（形碼碼錶的第二列是編碼，轉換方式一樣），共用這一個解析器
 pub use rime::{Parsed, looks_like_rime, to_tsv};
 
-/// 把 `source` 导入到 `dest_dir`，返回写出的文件与元数据。
+/// 把 `source` 匯入到 `dest_dir`，返回寫出的檔案與後設資料。
 pub fn import(source: &Path, dest_dir: &Path) -> Result<Imported, DictionaryError> {
     let stem = source
         .file_name()
@@ -72,7 +72,7 @@ pub(crate) fn strip_extensions(file_name: &str) -> String {
     stem.to_owned()
 }
 
-/// 词库目录里的 `.qj` 文件名。
+/// 詞庫目錄裡的 `.qj` 檔名。
 pub fn target_name(stem: &str) -> PathBuf {
     PathBuf::from(format!("{stem}.qj"))
 }

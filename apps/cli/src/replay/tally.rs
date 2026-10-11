@@ -1,51 +1,51 @@
-/// 一类来源的计数。
+/// 一類來源的計數。
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Tally {
-    /// 日志里这类上屏的总数。
+    /// 日誌裡這類上屏的總數。
     pub total: usize,
 
-    /// 现在的首选就是当时选的。
+    /// 現在的首選就是當時選的。
     pub top1: usize,
 
     /// 在第 2 到第 5 位。
     pub top5: usize,
 
-    /// 在第 6 位之后。
+    /// 在第 6 位之後。
     pub found_later: usize,
 
-    /// 当时选的词现在根本不在候选里（词库变了、删过词、云端词）。
+    /// 當時選的詞現在根本不在候選裡（詞庫變了、刪過詞、雲端詞）。
     pub missing: usize,
 
-    /// 作用域现在切不动（双拼方案 / 模式键变了）。
+    /// 作用域現在切不動（雙拼方案 / 模式鍵變了）。
     pub unparsable: usize,
 
-    /// 找到时的名次之和（算平均名次）。
+    /// 找到時的名次之和（算平均名次）。
     pub rank_sum: usize,
 
-    /// 当时拼写纠错生效的条数。
+    /// 當時拼寫糾錯生效的條數。
     pub corrected_then: usize,
 
-    /// 其中现在仍然纠错的条数。
+    /// 其中現在仍然糾錯的條數。
     pub corrected_now: usize,
 
-    /// 当时就命中首选的条数（日志里 `index == 0`），与「现在」无关，是隐式信号与重排对比的分母。
+    /// 當時就命中首選的條數（日誌裡 `index == 0`），與「現在」無關，是隱式訊號與重排對比的分母。
     pub then_top1: usize,
 
-    /// 当时命中首选的那些：翻页数之和、耗时之和（毫秒）。
+    /// 當時命中首選的那些：翻頁數之和、耗時之和（毫秒）。
     pub hit_pages: usize,
     pub hit_ms: u64,
 
-    /// 当时没命中首选的那些：翻页数之和、耗时之和。
+    /// 當時沒命中首選的那些：翻頁數之和、耗時之和。
     pub miss_pages: usize,
     pub miss_ms: u64,
 
-    /// 当时经过神经重排的条数，与其中当时命中首选的条数。
+    /// 當時經過神經重排的條數，與其中當時命中首選的條數。
     pub rescored_then: usize,
     pub rescored_then_top1: usize,
 }
 
 impl Tally {
-    /// 从日志里的一条记下当时的情况（命中、翻页、耗时、重排），回放前调。
+    /// 從日誌裡的一條記下當時的情況（命中、翻頁、耗時、重排），回放前調。
     pub fn note_logged(&mut self, commit: &qingjian_core::CommitEntry) {
         let hit = commit.index == Some(0);
         if hit {
@@ -62,7 +62,7 @@ impl Tally {
         }
     }
 
-    /// 当时命中 / 没命中两组的平均翻页数与平均耗时；日志里没这两个字段（旧格式）时全是 0，返回 `None`。
+    /// 當時命中 / 沒命中兩組的平均翻頁數與平均耗時；日誌裡沒這兩個欄位（舊格式）時全是 0，返回 `None`。
     pub fn implicit_signal(&self) -> Option<((f64, f64), (f64, f64))> {
         let misses = self.total.saturating_sub(self.then_top1);
         if self.hit_ms + self.miss_ms == 0 || self.then_top1 == 0 || misses == 0 {
@@ -81,7 +81,7 @@ impl Tally {
 }
 
 impl Tally {
-    /// 现在能评的条数（找到 + 没找到，不含切不动的）。
+    /// 現在能評的條數（找到 + 沒找到，不含切不動的）。
     pub fn evaluated(&self) -> usize {
         self.total - self.unparsable
     }

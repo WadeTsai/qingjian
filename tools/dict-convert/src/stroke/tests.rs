@@ -1,4 +1,4 @@
-//! stroke 子命令的规则与抽样对照测试。
+//! stroke 子命令的規則與抽樣對照測試。
 
 use std::collections::{HashMap, HashSet};
 use std::io::Cursor;
@@ -8,7 +8,7 @@ use crate::stroke::normalize;
 use crate::stroke::rules::PrcRules;
 use crate::stroke::verify::{compare, compare_first, sample};
 
-/// 覆盖表里的四类锚点各来一条，看改写落在哪里。
+/// 覆蓋表裡的四類錨點各來一條，看改寫落在哪裡。
 #[test]
 fn rewrites_follow_anchor() {
     let table = "rule\tcao\t2112\t122\tany\n\
@@ -16,10 +16,10 @@ fn rewrites_follow_anchor() {
                  rule\tfu\t552\t55\tboth\n\
                  rule\tyi\t413234\t45234\tprefix\n";
     let rules = PrcRules::parse(Path::new("test"), Cursor::new(table)).unwrap();
-    // any 取最左一处，不在开头也命中（佳 这种跨部件边界的模式由 skip 挡）
+    // any 取最左一處，不在開頭也命中（佳 這種跨部件邊界的模式由 skip 擋）
     assert_eq!(rules.apply('花', "21123215"), "1223215");
     assert_eq!(rules.apply('佳', "32121121"), "3211221");
-    // suffix 与 both 先看结尾，再退回开头
+    // suffix 與 both 先看結尾，再退回開頭
     assert_eq!(rules.apply('边', "534554"), "53454");
     assert_eq!(rules.apply('邓', "54552"), "5455");
     assert_eq!(rules.apply('阴', "5523511"), "553511");
@@ -27,7 +27,7 @@ fn rewrites_follow_anchor() {
     assert_eq!(rules.apply('补', "41323424"), "4523424");
 }
 
-/// 例外字跳过该规则，别的规则照常生效。
+/// 例外字跳過該規則，別的規則照常生效。
 #[test]
 fn skip_exempts_a_character() {
     let table = "rule\tcao\t2112\t122\tany\nskip\tcao\t卡\nrule\tzhi\t4134\t454\tsuffix\n";
@@ -36,7 +36,7 @@ fn skip_exempts_a_character() {
     assert_eq!(rules.apply('芝', "21124134"), "122454");
 }
 
-/// 整字覆盖优先于所有规则。
+/// 整字覆蓋優先於所有規則。
 #[test]
 fn override_wins_over_rules() {
     let table = "rule\tcao\t2112\t122\tany\nchar\t闹\t42541252\n";
@@ -46,7 +46,7 @@ fn override_wins_over_rules() {
     assert_eq!(rules.override_count(), 1);
 }
 
-/// 认不出的行与认不出的锚点直接报错，不静默吞掉。
+/// 認不出的行與認不出的錨點直接報錯，不靜默吞掉。
 #[test]
 fn rejects_bad_lines() {
     for table in [
@@ -62,14 +62,14 @@ fn rejects_bad_lines() {
     }
 }
 
-/// 点与捺合并成 n，1 2 3 5 原样保留。
+/// 點與捺合併成 n，1 2 3 5 原樣保留。
 #[test]
 fn normalize_merges_dot_and_na() {
     assert_eq!(normalize("12345"), "123n5");
     assert_eq!(normalize("4134"), "n13n");
 }
 
-/// 抽样按表序每 stride 字取一个。
+/// 抽樣按表序每 stride 字取一個。
 #[test]
 fn sample_picks_every_nth() {
     let chars: Vec<char> = "一二三四五六七".chars().collect();
@@ -77,7 +77,7 @@ fn sample_picks_every_nth() {
     assert!(sample(&chars, 8).is_empty());
 }
 
-/// 对照只放白名单之外的不过。
+/// 對照只放白名單之外的不過。
 #[test]
 fn compare_flags_only_unwhitelisted() {
     let sampled: Vec<char> = "一瓦卸".chars().collect();
@@ -89,7 +89,7 @@ fn compare_flags_only_unwhitelisted() {
     assert_eq!(used, whitelist);
     assert_eq!(unmatched, 1);
 }
-/// 首笔对照不按几何近似放行：类别不符的都要在白名单里，只有不可判的 ? 不算。
+/// 首筆對照不按幾何近似放行：類別不符的都要在白名單裡，只有不可判的 ? 不算。
 #[test]
 fn first_compare_requires_whitelist_for_every_mismatch() {
     let chars: Vec<char> = "一月主皮".chars().collect();
@@ -103,9 +103,9 @@ fn first_compare_requires_whitelist_for_every_mismatch() {
     let outcome = compare_first(&chars, &produced, &expected, &whitelist);
     // 只有 一 相等
     assert_eq!(outcome.compared, 1);
-    // 主 的对照不可判
+    // 主 的對照不可判
     assert_eq!(outcome.incomparable, 1);
     assert_eq!(outcome.used, whitelist);
-    // 月 是竖撇（p 对 s），不在白名单里就算不符
+    // 月 是豎撇（p 對 s），不在白名單裡就算不符
     assert_eq!(outcome.unmatched, 1);
 }

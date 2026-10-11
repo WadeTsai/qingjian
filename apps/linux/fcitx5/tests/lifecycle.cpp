@@ -1,4 +1,4 @@
-//! 框架真实事件次序：失焦只交付一次，能力与 Shift 事实完整转发。
+//! 框架真實事件次序：失焦只交付一次，能力與 Shift 事實完整轉發。
 #include "qingjian.h"
 #include "support/context.h"
 #include "support/mock.h"

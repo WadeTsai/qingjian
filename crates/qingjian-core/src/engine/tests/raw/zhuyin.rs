@@ -1,4 +1,4 @@
-//! 注音按单元映射光标，保留轻声重排、一声隐藏与尾串的既有输出。
+//! 注音按單元對映游標，保留輕聲重排、一聲隱藏與尾串的既有輸出。
 use super::assert_raw;
 use crate::engine::tests::engine;
 

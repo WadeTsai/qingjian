@@ -1,7 +1,7 @@
-//! 注音音节拼写规则与声调处理。
+//! 注音音節拼寫規則與聲調處理。
 use super::layout::Component;
 
-/// 暫存單個注音音節的組件
+/// 暫存單個注音音節的元件
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ZhuyinSyllable {
     /// 聲母（如 ㄅ、ㄆ）
@@ -28,8 +28,8 @@ impl ZhuyinSyllable {
             && self.tone.is_none()
     }
 
-    /// 加入一個新組件，若已滿或不相容則回傳 false，表示該開啟新音節。
-    /// （註：大千配置中，如果連打兩個聲母，後者通常覆蓋前者，或者視為新音節。這裡採取「遇到相同類型則開啟新音節」或「遇到聲母且已有其他組件則開啟新音節」的策略）
+    /// 加入一個新元件，若已滿或不相容則回傳 false，表示該開啟新音節。
+    /// （註：大千配置中，如果連打兩個聲母，後者通常覆蓋前者，或者視為新音節。這裡採取「遇到相同型別則開啟新音節」或「遇到聲母且已有其他元件則開啟新音節」的策略）
     pub fn push(&mut self, comp: Component, key: char) -> bool {
         match comp {
             Component::Initial(c) => {
@@ -125,7 +125,7 @@ impl ZhuyinSyllable {
         let mut pinyin = String::new();
 
         // 特殊處理：ㄓㄔㄕㄖㄗㄘㄙ 單獨出現時，拼音有 'i'，
-        // 但由於查詞引擎對於前綴也能查，如果只有聲母，直接回傳聲母即可，
+        // 但由於查詞引擎對於字首也能查，如果只有聲母，直接回傳聲母即可，
         // 除非它是一個完整的音節且後面有聲調。如果使用者輸入 'ㄓ' (zh)，
         // 給引擎 'zh' 即可查出 'zhe', 'zhi' 等等。
         if m_str == '\0' && f_str == '\0' {

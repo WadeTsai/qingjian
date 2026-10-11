@@ -1,4 +1,4 @@
-//! 真命名管道的端到端测试（仅 Windows）：监听线程 + 文件句柄客户端，走完「开会话 → 敲 nihao → 收候选」。
+//! 真命名管道的端到端測試（僅 Windows）：監聽執行緒 + 檔案控制代碼客戶端，走完「開會話 → 敲 nihao → 收候選」。
 
 #![cfg(windows)]
 
@@ -21,7 +21,7 @@ fn letter(c: char) -> KeyEvent {
     KeyEvent::new(c.to_ascii_uppercase() as u32, Some(c), Default::default())
 }
 
-/// 客户端重试打开管道，直到监听线程建好实例。
+/// 客戶端重試開啟管道，直到監聽執行緒建好例項。
 fn connect(name: &str) -> std::fs::File {
     for _ in 0..50 {
         match OpenOptions::new().read(true).write(true).open(name) {
@@ -36,7 +36,7 @@ fn connect(name: &str) -> std::fs::File {
 fn named_pipe_round_trips_the_open_type_loop() {
     let name = format!(r"\\.\pipe\qingjian-test-{}", std::process::id());
 
-    // 监听线程服务完一个客户端后阻塞等下一个，随进程退出即可。
+    // 監聽執行緒服務完一個客戶端後阻塞等下一個，隨程序退出即可。
     let server_name = name.clone();
     thread::spawn(move || {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
@@ -75,7 +75,7 @@ fn named_pipe_round_trips_the_open_type_loop() {
         .unwrap();
     }
 
-    // 开会话先回一条 `SessionOpened`，之后五个按键各回一条 `KeyResult`。
+    // 開會話先回一條 `SessionOpened`，之後五個按鍵各回一條 `KeyResult`。
     let mut last_frame = None;
     for _ in 0..6 {
         let message: ServerMessage = read_message(&mut client)

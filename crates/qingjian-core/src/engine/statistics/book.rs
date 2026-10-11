@@ -1,14 +1,14 @@
-/// 给累计字数一个直观参照的书。
+/// 給累計字數一個直觀參照的書。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Book {
-    /// 书名，不带书名号。
+    /// 書名，不帶書名號。
     pub title: &'static str,
 
-    /// 约多少汉字（不含标点，取整到万或千）。
+    /// 約多少漢字（不含標點，取整到萬或千）。
     pub hanzi: u64,
 }
 
-/// 参照书目，按字数从薄到厚。字数是通行版本的约数，只求量级对。
+/// 參照書目，按字數從薄到厚。字數是通行版本的約數，只求量級對。
 pub const BOOKS: &[Book] = &[
     Book {
         title: "道德经",
@@ -52,7 +52,7 @@ pub const BOOKS: &[Book] = &[
     },
 ];
 
-/// 挑一本书对照 `hanzi` 个字：不超过它的书里最厚的一本，一本都不到就拿最薄的。返回那本书与倍数。
+/// 挑一本書對照 `hanzi` 個字：不超過它的書裡最厚的一本，一本都不到就拿最薄的。返回那本書與倍數。
 pub fn book_scale(hanzi: u64) -> (&'static Book, f64) {
     let book = BOOKS
         .iter()

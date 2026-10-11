@@ -1,5 +1,5 @@
-//! Server 与 DLL 之间的传输。线上帧格式在 [`qingjian_platform::protocol`]（两端共用），
-//! 这层只提供双工字节流上的消息循环（[`serve`]）与具体传输（命名管道 [`pipe`]）。
+//! Server 與 DLL 之間的傳輸。線上幀格式在 [`qingjian_platform::protocol`]（兩端共用），
+//! 這層只提供雙工位元組流上的訊息迴圈（[`serve`]）與具體傳輸（命名管道 [`pipe`]）。
 
 #[cfg(windows)]
 pub mod pipe;
@@ -14,7 +14,7 @@ use qingjian_platform::protocol::ClientMessage;
 
 use crate::dispatch::Router;
 
-/// 在一条已连上的双工流上服务一个客户端：读消息、交给 Router、写回，直到对端在帧边界关闭。
+/// 在一條已連上的雙工流上服務一個客戶端：讀訊息、交給 Router、寫回，直到對端在幀邊界關閉。
 pub fn serve<S: Read + Write>(stream: &mut S, router: &mut Router) -> Result<(), CodecError> {
     while let Some(message) = read_message::<_, ClientMessage>(&mut *stream)? {
         if let Some(response) = router.handle(message) {

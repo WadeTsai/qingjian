@@ -1,9 +1,9 @@
-/// 日文译词的一段：一段汉字带它的假名，或一段原样的假名 / 符号。
+/// 日文譯詞的一段：一段漢字帶它的假名，或一段原樣的假名 / 符號。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FuriganaSegment {
-    /// 这一段的写法。
+    /// 這一段的寫法。
     pub text: String,
 
-    /// 这一段是汉字时的平假名读音；假名段没有。
+    /// 這一段是漢字時的平假名讀音；假名段沒有。
     pub reading: Option<String>,
 }

@@ -1,4 +1,4 @@
-//! 颜色写法：`"#rrggbb"` / `"#rrggbbaa"`（sRGB，alpha 不预乘），或 `"@名字"` 引用 `variables` 里的颜色。
+//! 顏色寫法：`"#rrggbb"` / `"#rrggbbaa"`（sRGB，alpha 不預乘），或 `"@名字"` 引用 `variables` 裡的顏色。
 
 use serde::Deserialize;
 
@@ -7,10 +7,10 @@ use crate::color::Color;
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(try_from = "String")]
 pub(crate) enum ColorRef {
-    /// 直接写的颜色。
+    /// 直接寫的顏色。
     Literal(Color),
 
-    /// 引用的变量名（不含 `@`）。
+    /// 引用的變數名（不含 `@`）。
     Variable(String),
 }
 

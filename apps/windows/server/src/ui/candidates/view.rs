@@ -1,5 +1,5 @@
-//! 候选窗口的绘制与测量。布局镜像 macOS 端：竖排 `序号  候选词   读音·词性 译文`，
-//! 横排 `序号 候选词` 左右排、高亮项的译文另起一行；顶部一行拼音，右侧整句补全。
+//! 候選視窗的繪製與測量。佈局映象 macOS 端：豎排 `序號  候選詞   讀音·詞性 譯文`，
+//! 橫排 `序號 候選詞` 左右排、高亮項的譯文另起一行；頂部一行拼音，右側整句補全。
 
 use qingjian_platform::LayoutMode;
 use qingjian_platform::protocol::PreeditKind;
@@ -13,10 +13,10 @@ use windows::Win32::Graphics::Gdi::{
 use super::RenderData;
 use super::theme::Theme;
 
-/// 云端候选词前的小云朵（macOS 用 SF Symbol `cloud`）。
+/// 雲端候選詞前的小云朵（macOS 用 SF Symbol `cloud`）。
 const CLOUD_GLYPH: &str = "☁";
 
-/// 竖排的列宽与统一行高。
+/// 豎排的列寬與統一行高。
 struct Columns {
     index_width: i32,
     text_width: i32,
@@ -24,7 +24,7 @@ struct Columns {
     row_height: i32,
 }
 
-/// 内容需要的大小（含内边距）。
+/// 內容需要的大小（含內邊距）。
 pub(super) fn preferred_size(hdc: HDC, data: &RenderData) -> SIZE {
     let theme = &data.theme;
     let (top_width, top_height) = top_line_size(hdc, data);
@@ -86,7 +86,7 @@ fn horizontal_size(hdc: HDC, data: &RenderData) -> (i32, i32) {
     (width, height)
 }
 
-/// 横排时高亮候选的译文行尺寸；没有译文 / 没有高亮为 `None`。
+/// 橫排時高亮候選的譯文行尺寸；沒有譯文 / 沒有高亮為 `None`。
 fn highlighted_annotation_size(hdc: HDC, data: &RenderData) -> Option<(i32, i32)> {
     let theme = &data.theme;
     let row = data.rows.get(data.highlight)?;
@@ -102,7 +102,7 @@ fn highlighted_annotation_size(hdc: HDC, data: &RenderData) -> Option<(i32, i32)
     Some((width, height))
 }
 
-/// 画整帧；背景与阴影已由合成器铺好，`client` 是内容区。
+/// 畫整幀；背景與陰影已由合成器鋪好，`client` 是內容區。
 pub(super) fn paint(hdc: HDC, data: &RenderData, client: RECT) {
     let theme = &data.theme;
     unsafe { SetBkMode(hdc, TRANSPARENT) };
@@ -116,8 +116,8 @@ pub(super) fn paint(hdc: HDC, data: &RenderData, client: RECT) {
     }
 }
 
-/// 顶部拼音行：各段按样式画、自己画光标、右侧整句补全。返回占用高度。
-/// 「只在行内」时没有拼音行，但整句补全仍要画（占用同一条线）。
+/// 頂部拼音行：各段按樣式畫、自己畫游標、右側整句補全。返回佔用高度。
+/// 「只在行內」時沒有拼音行，但整句補全仍要畫（佔用同一條線）。
 fn draw_top_line(hdc: HDC, data: &RenderData, y: i32) -> i32 {
     if data.preedit.is_empty() && data.sentence.is_none() {
         return 0;
@@ -131,7 +131,7 @@ fn draw_top_line(hdc: HDC, data: &RenderData, y: i32) -> i32 {
             PreeditKind::Typed => (theme.gloss_color, false, false),
             PreeditKind::Rest => (theme.pos_color, false, false),
             PreeditKind::Corrected => (theme.pos_color, true, false),
-            // 辅码码段：与剩余拼音同一个淡色，再压一道下划线把它们区分开
+            // 輔碼碼段：與剩餘拼音同一個淡色，再壓一道下劃線把它們區分開
             PreeditKind::AuxCode => (theme.pos_color, false, true),
         };
         let width = draw_text(hdc, theme.annotation_font, color, x, top, text);
@@ -190,7 +190,7 @@ fn draw_top_line(hdc: HDC, data: &RenderData, y: i32) -> i32 {
     height + theme.row_padding * 2
 }
 
-/// 屏幕提示行：拼音行下方、候选行上方，淡色小字。返回占用高度。
+/// 螢幕提示行：拼音行下方、候選行上方，淡色小字。返回佔用高度。
 fn draw_notice(hdc: HDC, data: &RenderData, y: i32) -> i32 {
     let Some(notice) = &data.notice else {
         return 0;
@@ -357,7 +357,7 @@ fn top_line_size(hdc: HDC, data: &RenderData) -> (i32, i32) {
     }
     let theme = &data.theme;
     let height = line_height(hdc, theme.annotation_font);
-    // 没有拼音行时那段宽度为 0，但整句补全前面的间隔照旧。
+    // 沒有拼音行時那段寬度為 0，但整句補全前面的間隔照舊。
     let mut width = if data.preedit.is_empty() {
         0
     } else {
@@ -397,12 +397,12 @@ fn columns(hdc: HDC, theme: &Theme, rows: &[Row]) -> Columns {
     columns
 }
 
-/// 小字相对候选词往下挪多少才纵向居中（GDI y 向下，取一半差）。
+/// 小字相對候選詞往下挪多少才縱向居中（GDI y 向下，取一半差）。
 fn small_offset(hdc: HDC, theme: &Theme, text_height: i32) -> i32 {
     ((text_height - line_height(hdc, theme.annotation_font)) / 2).max(0)
 }
 
-/// 云朵字形加它与后面文字的间隔。
+/// 雲朵字形加它與後面文字的間隔。
 fn cloud_glyph_width(hdc: HDC, theme: &Theme) -> i32 {
     measure(hdc, theme.annotation_font, CLOUD_GLYPH).cx + theme.column_gap / 2
 }
@@ -415,14 +415,14 @@ fn cloud_prefix_width(hdc: HDC, theme: &Theme, row: &Row) -> i32 {
     }
 }
 
-/// 候选词后面那段辅码的宽度；没有码是 0。
+/// 候選詞後面那段輔碼的寬度；沒有碼是 0。
 fn code_width(hdc: HDC, theme: &Theme, row: &Row) -> i32 {
     row.code
         .as_ref()
         .map_or(0, |code| measure(hdc, theme.annotation_font, code).cx)
 }
 
-/// 画候选词本体，云端词前带小云朵、后面紧跟辅码。返回占用宽度。
+/// 畫候選詞本體，雲端詞前帶小云朵、後面緊跟輔碼。返回佔用寬度。
 fn draw_word(hdc: HDC, theme: &Theme, row: &Row, x: i32, baseline: i32, small_offset: i32) -> i32 {
     let prefix = cloud_prefix_width(hdc, theme, row);
     let color = if row.cloud {
@@ -462,7 +462,7 @@ fn tone_color(theme: &Theme, tone: Tone) -> COLORREF {
     }
 }
 
-/// 拼音行光标前 `cursor` 个字符。
+/// 拼音行游標前 `cursor` 個字元。
 fn concat_before_cursor(preedit: &[(String, PreeditKind)], cursor: usize) -> String {
     preedit
         .iter()
@@ -471,7 +471,7 @@ fn concat_before_cursor(preedit: &[(String, PreeditKind)], cursor: usize) -> Str
         .collect()
 }
 
-/// 画一段文字，`(x, y)` 是左上角，返回宽度。调用方先 `SetBkMode(TRANSPARENT)`。
+/// 畫一段文字，`(x, y)` 是左上角，返回寬度。呼叫方先 `SetBkMode(TRANSPARENT)`。
 pub(crate) fn draw_text(hdc: HDC, font: HFONT, color: COLORREF, x: i32, y: i32, text: &str) -> i32 {
     let utf16: Vec<u16> = text.encode_utf16().collect();
     let mut size = SIZE::default();
@@ -498,7 +498,7 @@ fn line_height(hdc: HDC, font: HFONT) -> i32 {
     measure(hdc, font, "x").cy
 }
 
-/// 细线 / 光标的粗细，随 DPI 放大。
+/// 細線 / 游標的粗細，隨 DPI 放大。
 fn scale_line(theme: &Theme) -> i32 {
     (theme.padding / 8).max(1)
 }

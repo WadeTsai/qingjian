@@ -5,52 +5,52 @@ pub use value::SettingValue;
 use objc2_foundation::NSInteger;
 use qingjian_core::FuzzyRules;
 
-/// 模糊音勾选框的 tag 起点，后面加规则在 [`FuzzyRules::NAMES`] 里的下标。
+/// 模糊音勾選框的 tag 起點，後面加規則在 [`FuzzyRules::NAMES`] 裡的下標。
 const FUZZY_TAG_BASE: NSInteger = 100;
 
-/// 附加词库开关的 tag 起点，后面加词库在列表里的下标。
+/// 附加詞庫開關的 tag 起點，後面加詞庫在列表裡的下標。
 const DICTIONARY_ENABLED_TAG_BASE: NSInteger = 200;
 
-/// 附加词库「移除」按钮的 tag 起点。
+/// 附加詞庫「移除」按鈕的 tag 起點。
 const DICTIONARY_REMOVE_TAG_BASE: NSInteger = 300;
 
-/// 一页最多列多少本附加词库（tag 段的宽度）。
+/// 一頁最多列多少本附加詞庫（tag 段的寬度）。
 pub const MAX_DICTIONARIES: usize = 100;
 
-/// 设置窗口里的每个控件对应的配置项。编码进控件的 tag，`changed:` 里再解出来。
+/// 設定窗口裡的每個控制元件對應的配置項。編碼進控制元件的 tag，`changed:` 裡再解出來。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Setting {
-    /// `[general] learning_language`，弹出菜单，选项是打进包里的释义表语言。
+    /// `[general] learning_language`，彈出選單，選項是打進包裡的釋義表語言。
     LearningLanguage,
 
-    /// `[general] page_size`，弹出菜单 1–9。
+    /// `[general] page_size`，彈出選單 1–9。
     PageSize,
 
-    /// `[general] page_keys`，弹出菜单。
+    /// `[general] page_keys`，彈出選單。
     PageKeys,
 
-    /// `[general] appearance`，弹出菜单。
+    /// `[general] appearance`，彈出選單。
     Appearance,
 
-    /// `[general] theme`，弹出菜单，选项是内置主题。
+    /// `[general] theme`，彈出選單，選項是內建主題。
     Theme,
 
-    /// `[general] renderer`，弹出菜单：青简渲染器 / 系统绘制。
+    /// `[general] renderer`，彈出選單：青簡渲染器 / 系統繪製。
     Renderer,
 
-    /// `[general] font`，字体列表选中的字族名；「系统默认」为系统字体。
+    /// `[general] font`，字型列表選中的字族名；「系統預設」為系統字型。
     Font,
 
-    /// `[shortcut] expression`，弹出菜单 v / u / i。
+    /// `[shortcut] expression`，彈出選單 v / u / i。
     ExpressionKey,
 
-    /// `[shortcut] question`，弹出菜单 v / u / i。
+    /// `[shortcut] question`，彈出選單 v / u / i。
     QuestionKey,
 
-    /// `[shortcut] question_mark`，勾选框：没在组句时敲 `?` 也进问字。
+    /// `[shortcut] question_mark`，勾選框：沒在組句時敲 `?` 也進問字。
     QuestionMark,
 
-    /// `[fuzzy]` 里的一条规则，值是 [`FuzzyRules::NAMES`] 的下标。
+    /// `[fuzzy]` 裡的一條規則，值是 [`FuzzyRules::NAMES`] 的下標。
     Fuzzy(usize),
 
     /// `[predict] enabled`。
@@ -62,43 +62,43 @@ pub enum Setting {
     /// `[update] check`。
     UpdateCheck,
 
-    /// `[update] channel`，弹出菜单 正式版 / 测试版。
+    /// `[update] channel`，彈出選單 正式版 / 測試版。
     UpdateChannel,
 
-    /// 立即检查更新。
+    /// 立即檢查更新。
     CheckUpdateNow,
 
-    /// 打开下载页。
+    /// 開啟下載頁。
     OpenDownload,
 
-    /// 默认中文标点模式。
+    /// 預設中文標點模式。
     FullWidthPunctuation,
 
-    /// `[general] punct_commits`，勾选框：组句中会转全角的标点先把高亮候选上屏再补标点。
+    /// `[general] punct_commits`，勾選框：組句中會轉全形的標點先把高亮候選上屏再補標點。
     PunctCommits,
 
-    /// 选择已有自定义短语。
+    /// 選擇已有自定義短語。
     SelectPhrase,
 
-    /// 仅编辑草稿，不立即保存。
+    /// 僅編輯草稿，不立即儲存。
     PhraseDraft,
 
-    /// 保存自定义短语。
+    /// 儲存自定義短語。
     SavePhrase,
 
-    /// 删除当前自定义短语。
+    /// 刪除當前自定義短語。
     DeletePhrase,
 
     /// 新增文本。
     NewPhrase,
 
-    /// 编辑选中行。
+    /// 編輯選中行。
     EditPhrase,
 
-    /// 关闭编辑表单。
+    /// 關閉編輯表單。
     CancelPhraseEdit,
 
-    /// `[general] system_text_replacements`，勾选框：系统的文本替换并进自定义短语。
+    /// `[general] system_text_replacements`，勾選框：系統的文本替換並進自定義短語。
     SystemTextReplacements,
 
     /// `[predict] base_url`。
@@ -107,118 +107,118 @@ pub enum Setting {
     /// `[predict] model`。
     Model,
 
-    /// 密钥，写到 `.env`。
+    /// 金鑰，寫到 `.env`。
     ApiKey,
 
-    /// 「在编辑器中打开配置文件」按钮。
+    /// 「在編輯器中開啟配置檔案」按鈕。
     OpenConfigFile,
 
-    /// `[general] layout`，弹出菜单 竖排 / 横排。
+    /// `[general] layout`，彈出選單 豎排 / 橫排。
     Layout,
 
-    /// `[general] preedit`，弹出菜单。
+    /// `[general] preedit`，彈出選單。
     Preedit,
 
-    /// `[general] english_candidates`，勾选框。
+    /// `[general] english_candidates`，勾選框。
     EnglishCandidates,
 
-    /// `[general] chinese_first`，勾选框：中英混输时中文候选排在英文词前。
+    /// `[general] chinese_first`，勾選框：中英混輸時中文候選排在英文詞前。
     ChineseFirst,
 
-    /// `[general] english_in_chinese`，勾选框：中文模式也给英文词与补全。
+    /// `[general] english_in_chinese`，勾選框：中文模式也給英文詞與補全。
     EnglishInChinese,
 
-    /// `[general] emoji`，勾选框：候选后面配 emoji。
+    /// `[general] emoji`，勾選框：候選後面配 emoji。
     Emoji,
 
-    /// `[general] horizontal_grid`，勾选框：横排时上 / 下键展开成多行矩阵。
+    /// `[general] horizontal_grid`，勾選框：橫排時上 / 下鍵展開成多行矩陣。
     HorizontalGrid,
 
-    /// `[general] candidate_font_size`，文本框，空为用主题的。
+    /// `[general] candidate_font_size`，文本框，空為用主題的。
     CandidateFontSize,
 
     /// `[general] annotation_font_size`，同上。
     AnnotationFontSize,
 
-    /// `[general] animations`，勾选框。
+    /// `[general] animations`，勾選框。
     Animations,
 
-    /// 两个字号都回到主题的。
+    /// 兩個字號都回到主題的。
     ResetFontSizes,
 
-    /// `[general] shift_letter`，勾选框：中文模式下 Shift+字母进组句（勾上是 compose，否则 passthrough）。
+    /// `[general] shift_letter`，勾選框：中文模式下 Shift+字母進組句（勾上是 compose，否則 passthrough）。
     ShiftLetter,
 
-    /// `[shortcut] translation`，快捷键录制按钮（只记修饰键）。
+    /// `[shortcut] translation`，快捷鍵錄製按鈕（只記修飾鍵）。
     TranslationKeys,
 
     /// `[shortcut] translation_second`，同上。
     TranslationSecondKeys,
 
-    /// `[shortcut] translate_selection`，快捷键录制按钮（修饰键 + 字母）。
+    /// `[shortcut] translate_selection`，快捷鍵錄製按鈕（修飾鍵 + 字母）。
     TranslateSelectionKeys,
 
-    /// 「恢复默认快捷键」按钮：翻页键、模式键、三组译词 / 翻译快捷键全部回缺省。
+    /// 「恢復預設快捷鍵」按鈕：翻頁鍵、模式鍵、三組譯詞 / 翻譯快捷鍵全部回預設。
     ResetShortcuts,
 
-    /// 「导入词库…」按钮：选文件，转成 `.qj` 放进用户目录 `dicts/`。
+    /// 「匯入詞庫…」按鈕：選檔案，轉成 `.qj` 放進使用者目錄 `dicts/`。
     ImportDictionary,
 
-    /// 第 N 本附加词库的启用勾选框（下标是 Host 词库列表里的位置）。
+    /// 第 N 本附加詞庫的啟用勾選框（下標是 Host 詞庫列表裡的位置）。
     DictionaryEnabled(usize),
 
-    /// 第 N 本附加词库的「移除」按钮。
+    /// 第 N 本附加詞庫的「移除」按鈕。
     DictionaryRemove(usize),
 
-    /// `[general] scheme`，弹出菜单：全拼 + 五套双拼 + 大千注音 + 关。
+    /// `[general] scheme`，彈出選單：全拼 + 五套雙拼 + 大千注音 + 關。
     Scheme,
 
-    /// `[general] shuangpin_raw_preedit`，勾选框：双拼模式下输入框保留原始输入按键。
+    /// `[general] shuangpin_raw_preedit`，勾選框：雙拼模式下輸入框保留原始輸入按鍵。
     ShuangpinRawPreedit,
 
-    /// `[general] wubi`，勾选框：勾上是五笔（86 版）。与拼音同时开着就是混输。
+    /// `[general] wubi`，勾選框：勾上是五筆（86 版）。與拼音同時開著就是混輸。
     Wubi,
 
-    /// [general] traditional，勾选框：繁体输出。
+    /// [general] traditional，勾選框：繁體輸出。
     Traditional,
 
-    /// `[general] log_level`，勾选框：勾上是 debug。
+    /// `[general] log_level`，勾選框：勾上是 debug。
     VerboseLog,
 
-    /// 「关于」页「打开日志目录」按钮。
+    /// 「關於」頁「開啟日誌目錄」按鈕。
     OpenLogDirectory,
 
-    /// 「关于」页「复制诊断信息」按钮。
+    /// 「關於」頁「複製診斷資訊」按鈕。
     CopyDiagnostics,
 
-    /// 「关于」「高级」页「打包日志到桌面」按钮。
+    /// 「關於」「進階」頁「打包日誌到桌面」按鈕。
     ExportLogs,
 
-    /// `[predict] slots`，弹出菜单 0–4：第一页末尾留给云端词的格数。
+    /// `[predict] slots`，彈出選單 0–4：第一頁末尾留給雲端詞的格數。
     CloudSlots,
 
-    /// `[apps] english_candidates_on`，勾选框：勾上写缺省白名单，去掉写 `["*"]`（处处都给）。
+    /// `[apps] english_candidates_on`，勾選框：勾上寫預設白名單，去掉寫 `["*"]`（處處都給）。
     EnglishCandidatesOnlyInApps,
 
-    /// `[shortcut] delete_candidate`，快捷键录制按钮（只记修饰键）。
+    /// `[shortcut] delete_candidate`，快捷鍵錄製按鈕（只記修飾鍵）。
     DeleteCandidateKeys,
 
-    /// `[general] input_log`，勾选框。
+    /// `[general] input_log`，勾選框。
     InputLog,
 
-    /// 学习输入习惯开关。
+    /// 學習輸入習慣開關。
     Learning,
 
-    /// 「高级」页「清空输入日志」按钮。
+    /// 「進階」頁「清空輸入日誌」按鈕。
     ClearInputLog,
 
-    /// 「云服务」页「测试连接」按钮。
+    /// 「雲服務」頁「測試連線」按鈕。
     TestCloud,
 
-    /// 「关于」页「官网」按钮。
+    /// 「關於」頁「官網」按鈕。
     OpenWebsite,
 
-    /// 「关于」页「GitHub」按钮。
+    /// 「關於」頁「GitHub」按鈕。
     OpenRepository,
 }
 

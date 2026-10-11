@@ -1,4 +1,4 @@
-//! 连 Server：激活 / 获焦时开会话，失败按 [`RECONNECT_INTERVAL`] 退避重试；转发出错就断开、下一键重连。
+//! 連 Server：啟用 / 獲焦時開會話，失敗按 [`RECONNECT_INTERVAL`] 退避重試；轉發出錯就斷開、下一鍵重連。
 
 use std::time::Instant;
 
@@ -9,7 +9,7 @@ use crate::client::pipe::connect_default;
 use crate::com::log::log;
 
 impl TextService_Impl {
-    /// 连 Server 并开会话（会话号见 [`crate::com::session_id`]，带上宿主 exe 名）。
+    /// 連 Server 並開會話（會話號見 [`crate::com::session_id`]，帶上宿主 exe 名）。
     pub(super) fn connect(&self) {
         let session = crate::com::session_id();
         let app = crate::com::host_app_name();
@@ -20,26 +20,28 @@ impl TextService_Impl {
             Ok((client, input)) => {
                 *self.engine.borrow_mut() = Some(client);
                 self.last_connect_failure.set(None);
-                log("已连上 Server");
-                // 按键行为设置随 `OpenSession` 的回包一起下来（DLL 不读配置文件，AppContainer 里读不到）。
+                log("已連上 Server");
+                // 按鍵行為設定隨 `OpenSession` 的回包一起下來（DLL 不讀配置檔案，AppContainer 裡讀不到）。
                 self.apply_input_settings(input);
+                // Server 開會話按簡體算；本執行緒用的是「中文(台灣)」的青簡就告訴它出繁體。
+                self.report_profile();
             }
             Err(error) => {
                 self.last_connect_failure.set(Some(Instant::now()));
                 log(&format!(
-                    "连 Server 失败（qingjian-server 没起？）: {error}"
+                    "連 Server 失敗（qingjian-server 沒起？）: {error}"
                 ));
-                // Server 只在登录时由「启动」文件夹拉起，中途挂了以前只能等下次登录；
-                // 这里自己起一次（进程内冷却 + 跨进程互斥体，不会砸出一串 Server）。
+                // Server 只在登入時由「啟動」資料夾拉起，中途掛了以前只能等下次登入；
+                // 這裡自己起一次（程序內冷卻 + 跨程序互斥體，不會砸出一串 Server）。
                 if launch::launch_server() {
-                    // 不等 RECONNECT_INTERVAL：Server 一百多毫秒就监听管道，下一键就该连上
+                    // 不等 RECONNECT_INTERVAL：Server 一百多毫秒就監聽管道，下一鍵就該連上
                     self.last_connect_failure.set(None);
                 }
             }
         }
     }
 
-    /// 没连上就重连一次（距上次失败不到 [`RECONNECT_INTERVAL`] 则跳过）。返回此刻是否连着。
+    /// 沒連上就重連一次（距上次失敗不到 [`RECONNECT_INTERVAL`] 則跳過）。返回此刻是否連著。
     pub(super) fn ensure_connected(&self) -> bool {
         if self.engine.borrow().is_some() {
             return true;
@@ -53,17 +55,18 @@ impl TextService_Impl {
         }
         self.connect();
         let connected = self.engine.borrow().is_some();
-        // 重连上的多半是重启过的 Server，它不知道当前模式：前台这边报一次，成为全局模式。
+        // 重連上的多半是重啟過的 Server，它不知道當前模式：前臺這邊報一次，成為全域性模式。
         if connected && self.shared.foreground() {
             self.report_mode();
         }
         connected
     }
 
-    /// 转发失败后断开，下一键重连。
+    /// 轉發失敗後斷開，下一鍵重連。
     pub(super) fn disconnect(&self) {
         *self.engine.borrow_mut() = None;
         self.last_connect_failure.set(None);
+        self.profile_traditional.set(None);
         self.shared.end_composing();
     }
 }

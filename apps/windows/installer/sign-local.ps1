@@ -11,7 +11,7 @@
 .PARAMETER Path
     要签名的文件（.exe / .dll），可多个。
 .PARAMETER CertSubject
-    自签证书主题，缺省 "CN=Qingjian Dev CodeSign"。
+    自签证书主题，預設 "CN=Qingjian Dev CodeSign"。
 #>
 [CmdletBinding()]
 param(
@@ -21,7 +21,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# 1) 找已有的自签代码签名证书（带私钥），没有就造一张（5 年，够开发用）。
+# 1) 找已有的自籤程式碼簽名證書（帶私鑰），沒有就造一張（5 年，夠開發用）。
 $cert = Get-ChildItem Cert:\CurrentUser\My |
     Where-Object { $_.Subject -eq $CertSubject -and $_.HasPrivateKey } |
     Sort-Object NotAfter -Descending | Select-Object -First 1
@@ -38,15 +38,15 @@ if (-not $cert) {
 $thumbprint = $cert.Thumbprint
 Write-Host "证书指纹 $thumbprint" -ForegroundColor Cyan
 
-# 2) 把公钥装进「本机受信任的根」+「受信任的发布者」，uiAccess 的签名校验才认这张自签证书。
-#    已在就跳过（幂等）。
+# 2) 把公鑰裝進「本機受信任的根」+「受信任的釋出者」，uiAccess 的簽名校驗才認這張自簽證書。
+#    已在就跳過（冪等）。
 foreach ($store in @('Root', 'TrustedPublisher')) {
     $storePath = "Cert:\LocalMachine\$store"
     $exists = Get-ChildItem $storePath -ErrorAction SilentlyContinue |
         Where-Object { $_.Thumbprint -eq $thumbprint }
     if (-not $exists) {
         Write-Host "装证书进 LocalMachine\$store…" -ForegroundColor Cyan
-        # 只导公钥（.cer），不带私钥。
+        # 只導公鑰（.cer），不帶私鑰。
         $tmp = Join-Path $env:TEMP 'qingjian-dev-codesign.cer'
         Export-Certificate -Cert $cert -FilePath $tmp -Type CERT | Out-Null
         Import-Certificate -FilePath $tmp -CertStoreLocation $storePath | Out-Null
@@ -54,12 +54,12 @@ foreach ($store in @('Root', 'TrustedPublisher')) {
     }
 }
 
-# 3) 找 signtool（Windows SDK 里，取版本最新的一个）。
+# 3) 找 signtool（Windows SDK 裡，取版本最新的一個）。
 $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe' -ErrorAction SilentlyContinue |
     Sort-Object FullName -Descending | Select-Object -First 1
 if (-not $signtool) { throw '在 Windows SDK 里找不到 signtool.exe' }
 
-# 4) 签名（SHA256；开发自签不加时间戳，免网络依赖——证书 5 年内有效，够开发）。
+# 4) 簽名（SHA256；開發自籤不加時間戳，免網路依賴——證書 5 年內有效，夠開發）。
 foreach ($f in $Path) {
     if (-not (Test-Path -LiteralPath $f)) { throw "要签的文件不存在：$f" }
 }

@@ -1,10 +1,10 @@
 #!/bin/bash
-# 回放扫参：设置文件每行一组 `--tune` 设置（空行 = 缺省），并行跑 `qingjian-cli --replay`，汇成 TSV。
+# 回放掃參：設定檔案每行一組 `--tune` 設定（空行 = 預設），並行跑 `qingjian-cli --replay`，匯成 TSV。
 #
-#   tools/eval/sweep.sh <冻结日志> <配置文件> <设置文件> <输出 tsv>
+#   tools/eval/sweep.sh <凍結日誌> <配置檔案> <設定檔案> <輸出 tsv>
 #
-# 配置文件用一份 `[predict] enabled = false` 的副本（云联想开着 CLI 会因没密钥退出，也别拿输入法的密钥跑批量）。
-# 二进制缺省 target/release/qingjian-cli，可用 QINGJIAN_CLI 指定；QINGJIAN_JOBS 是并行数（缺省 4）。
+# 配置檔案用一份 `[predict] enabled = false` 的副本（雲聯想開著 CLI 會因沒金鑰退出，也別拿輸入法的金鑰跑批次）。
+# 二進位制預設 target/release/qingjian-cli，可用 QINGJIAN_CLI 指定；QINGJIAN_JOBS 是並行數（預設 4）。
 set -euo pipefail
 log=$1
 config=$2
@@ -23,7 +23,7 @@ run_one() {
   else
     "$bin" --config "$config" --replay "$log" --misses 0 --tune "$setting" > "$file" 2>&1
   fi
-  # 词 / 整句 / 英文 三行：首选命中数 / 总数、不在候选、现在仍纠
+  # 詞 / 整句 / 英文 三行：首選命中數 / 總數、不在候選、現在仍糾
   TAG=$tag perl -ne '
     if (/^(词|整句|英文)\s.*不在候选\s+(\d+).*命中数 (\d+) \/ (\d+)/) { $n=$1; $top{$n}=$3; $all{$n}=$4; $miss{$n}=$2 }
     if (/当时纠错生效 (\d+) 条，现在仍纠 (\d+)/) { $cor{$n}=$2 }

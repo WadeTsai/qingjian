@@ -1,9 +1,9 @@
-//! 拼音写法归一：带声调符号的（Unihan 的 `xíng`）与带声调数字的（通用词表的 `wei4'shen2'me`）都转成
-//! 不带声调、ü 写 v 的小写音节。
+//! 拼音寫法歸一：帶聲調符號的（Unihan 的 `xíng`）與帶聲調數字的（通用詞表的 `wei4'shen2'me`）都轉成
+//! 不帶聲調、ü 寫 v 的小寫音節。
 
 use qingjian_dictionary::canonical_syllable;
 
-/// `xíng` → `xing`，`lǜ` → `lv`，`ê̄` 这类罕见记号转成对应字母；组合用变音符号（U+0300–U+036F）丢掉。
+/// `xíng` → `xing`，`lǜ` → `lv`，`ê̄` 這類罕見記號轉成對應字母；組合用變音符號（U+0300–U+036F）丟掉。
 pub fn strip_tone(reading: &str) -> String {
     let mut out = String::with_capacity(reading.len());
     for c in reading.chars() {
@@ -25,7 +25,7 @@ pub fn strip_tone(reading: &str) -> String {
     canonical_syllable(&out).to_owned()
 }
 
-/// 通用词表的 `wei4'shen2'me` → `["wei", "shen", "me"]`；`lv4` 保持 v。空段跳过。
+/// 通用詞表的 `wei4'shen2'me` → `["wei", "shen", "me"]`；`lv4` 保持 v。空段跳過。
 pub fn numeric_syllables(pinyin: &str) -> Vec<String> {
     pinyin
         .split('\'')

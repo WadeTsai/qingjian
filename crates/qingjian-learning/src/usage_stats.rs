@@ -8,26 +8,26 @@ use qingjian_core::{Usage, UsageMeter, UsageSummary};
 
 use crate::error::LearningError;
 
-/// 汇总里「最近」算几天（含今天）。
+/// 彙總裡「最近」算幾天（含今天）。
 const RECENT_DAYS: i64 = 7;
 
-/// 输入统计的落盘：按天一行 `日期\t汉字\t中文词\t英文词\t上屏次数`，只写在本机数据目录里。
+/// 輸入統計的落盤：按天一行 `日期\t漢字\t中文詞\t英文詞\t上屏次數`，只寫在本機資料目錄裡。
 ///
-/// 与输入日志无关：日志关着或清空了统计照记；文件坏了按行跳过，读不了就只在内存里数（记一次警告），输入不受影响。
+/// 與輸入日誌無關：日誌關著或清空了統計照記；檔案壞了按行跳過，讀不了就只在記憶體裡數（記一次警告），輸入不受影響。
 #[derive(Debug, Default)]
 pub struct UsageStats {
     /// 每天的用量，按日期排好。
     days: BTreeMap<Date, Usage>,
 
-    /// 自上次保存后有没有新记录。
+    /// 自上次儲存後有沒有新記錄。
     dirty: bool,
 
-    /// [`UsageMeter::flush`] 时写回的路径；`None` 只在内存里数。
+    /// [`UsageMeter::flush`] 時寫回的路徑；`None` 只在記憶體裡數。
     path: Option<PathBuf>,
 }
 
 impl UsageStats {
-    /// 从文件加载（不存在就从零开始，flush 时建）；读不了就退回只在内存里数。
+    /// 從檔案載入（不存在就從零開始，flush 時建）；讀不了就退回只在記憶體裡數。
     pub fn open(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         match read_text_lossy(&path) {
@@ -43,7 +43,7 @@ impl UsageStats {
         }
     }
 
-    /// 有记录的天数。
+    /// 有記錄的天數。
     pub fn len(&self) -> usize {
         self.days.len()
     }
@@ -52,7 +52,7 @@ impl UsageStats {
         self.days.is_empty()
     }
 
-    /// 记到某一天上（[`UsageMeter::record`] 记到今天）。
+    /// 記到某一天上（[`UsageMeter::record`] 記到今天）。
     pub fn record_on(&mut self, date: Date, usage: Usage) {
         if usage.is_empty() {
             return;
@@ -61,7 +61,7 @@ impl UsageStats {
         self.dirty = true;
     }
 
-    /// 以 `today` 为准的汇总（[`UsageMeter::summary`] 以本机今天为准）。
+    /// 以 `today` 為準的彙總（[`UsageMeter::summary`] 以本機今天為準）。
     pub fn summary_on(&self, today: Date) -> UsageSummary {
         let recent_from = today.saturating_sub(jiff::Span::new().days(RECENT_DAYS - 1));
         let mut summary = UsageSummary {
@@ -81,7 +81,7 @@ impl UsageStats {
         summary
     }
 
-    /// 写回文件（没有新记录就什么都不做）。
+    /// 寫回檔案（沒有新記錄就什麼都不做）。
     pub fn save(&mut self) -> Result<(), LearningError> {
         let Some(path) = self.path.clone() else {
             return Ok(());
@@ -108,7 +108,7 @@ impl UsageStats {
     }
 }
 
-/// 按行解析；格式不对的行跳过（记警告），同一天出现两次就加起来。
+/// 按行解析；格式不對的行跳過（記警告），同一天出現兩次就加起來。
 fn parse(text: &str) -> BTreeMap<Date, Usage> {
     let mut days = BTreeMap::new();
     for (number, line) in text.lines().enumerate() {
@@ -185,7 +185,7 @@ mod tests {
         let summary = stats.summary_on(date("2026-09-06"));
         assert_eq!(summary.today.hanzi, 7);
         assert_eq!(summary.today.commits, 2);
-        // 最近 7 天：8-31 到 9-6，8-31 恰好在内
+        // 最近 7 天：8-31 到 9-6，8-31 恰好在內
         assert_eq!(summary.week.hanzi, 37);
         assert_eq!(summary.total.hanzi, 137);
         assert_eq!(summary.days, 4);
@@ -211,7 +211,7 @@ mod tests {
         let mut stats = UsageStats::open(&path);
         assert_eq!(stats.len(), 1);
         assert_eq!(stats.summary_on(date("2026-09-05")).today.hanzi, 13);
-        // 没新记录不写
+        // 沒新記錄不寫
         stats.save().unwrap();
         stats.record_on(date("2026-09-06"), usage(5));
         stats.save().unwrap();

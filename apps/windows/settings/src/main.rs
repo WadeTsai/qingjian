@@ -1,5 +1,5 @@
-//! 青简 Windows 设置界面入口：左侧导航栏 + 各分节表单，读写 `%APPDATA%\Qingjian\config.toml`。
-//! UI 用 Windows Reactor；非 Windows 编成空壳，让工作区能整体编译。
+//! 青簡 Windows 設定介面入口：左側導航欄 + 各分節表單，讀寫 `%APPDATA%\Qingjian\config.toml`。
+//! UI 用 Windows Reactor；非 Windows 編成空殼，讓工作區能整體編譯。
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
 #[cfg(windows)]
@@ -15,13 +15,13 @@ fn main() {
         return;
     }
     if let Err(error) = windows_reactor::App::run_component::<panel::Settings>(()) {
-        // GUI 子系统没有控制台：记文件日志，再弹个框让用户知道发生了什么（最常见是运行库文件缺失）。
-        log::error(format!("设置界面启动失败: {error:?}"));
+        // GUI 子系統沒有控制台：記檔案日誌，再彈個框讓使用者知道發生了什麼（最常見是執行庫檔案缺失）。
+        log::error(format!("設定介面啟動失敗: {error:?}"));
         rfd::MessageDialog::new()
             .set_level(rfd::MessageLevel::Error)
-            .set_title("青简设置")
+            .set_title("青簡設定")
             .set_description(format!(
-                "设置界面启动失败，请重新安装青简；仍不行请把日志目录发给作者。\n\n{error}"
+                "設定介面啟動失敗，請重新安裝青簡；仍不行請把日誌目錄發給作者。\n\n{error}"
             ))
             .set_buttons(rfd::MessageButtons::Ok)
             .show();
@@ -30,5 +30,5 @@ fn main() {
 
 #[cfg(not(windows))]
 fn main() {
-    eprintln!("qingjian-settings 仅支持 Windows");
+    eprintln!("qingjian-settings 僅支援 Windows");
 }

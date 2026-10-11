@@ -1,4 +1,4 @@
-//! 配置的读写测试：模板、分节解析、旧写法兼容、原地改键。
+//! 配置的讀寫測試：模板、分節解析、舊寫法相容、原地改鍵。
 
 use super::*;
 
@@ -33,7 +33,7 @@ fn general_and_shortcut_sections_parse() {
     .unwrap();
     assert_eq!(config.general.page_size(), 5);
     assert_eq!(config.general.page_keys(), ('[', ']'));
-    // 旧写法：外观写在 theme 里
+    // 舊寫法：外觀寫在 theme 裡
     assert_eq!(config.general.appearance(), Appearance::Dark);
     assert_eq!(config.general.theme_id(), DEFAULT_THEME);
     assert_eq!(config.general.layout, LayoutMode::Horizontal);
@@ -47,7 +47,7 @@ fn general_and_shortcut_sections_parse() {
     assert_eq!(config.general.log_level, LogLevel::Info);
     assert_eq!(config.shortcut.mode.expression, 'i');
     assert_eq!(config.shortcut.mode.question, 'u');
-    // 译词修饰键缺省分平台（Windows 是 Ctrl 系，其余 Option 系，见 shortcut.rs），断言跟着 Default 走
+    // 譯詞修飾鍵預設分平臺（Windows 是 Ctrl 系，其餘 Option 系，見 shortcut.rs），斷言跟著 Default 走
     assert_eq!(
         config.shortcut.translation,
         Config::default().shortcut.translation
@@ -59,19 +59,19 @@ fn general_and_shortcut_sections_parse() {
 #[test]
 fn appearance_reads_legacy_theme_key() {
     let parse = |text: &str| toml::from_str::<Config>(text).unwrap().general;
-    // 旧写法：外观写在 theme 里
+    // 舊寫法：外觀寫在 theme 裡
     let legacy = parse("[general]\ntheme = \"light\"\n");
     assert_eq!(legacy.appearance(), Appearance::Light);
     assert_eq!(legacy.theme_id(), DEFAULT_THEME);
-    // 新旧都在（设置页写了 appearance，旧的 theme 还留着）：appearance 为准
+    // 新舊都在（設定頁寫了 appearance，舊的 theme 還留著）：appearance 為準
     let both = parse("[general]\ntheme = \"dark\"\nappearance = \"system\"\n");
     assert_eq!(both.appearance(), Appearance::System);
     assert_eq!(both.theme_id(), DEFAULT_THEME);
-    // 新写法
+    // 新寫法
     let new = parse("[general]\nappearance = \"dark\"\ntheme = \"sakura\"\n");
     assert_eq!(new.appearance(), Appearance::Dark);
     assert_eq!(new.theme_id(), "sakura");
-    // 都没写
+    // 都沒寫
     let empty = parse("[general]\n");
     assert_eq!(empty.appearance(), Appearance::System);
     assert_eq!(empty.theme_id(), DEFAULT_THEME);
@@ -95,7 +95,7 @@ fn writing_appearance_migrates_legacy_theme_line() {
     let general = Config::load(&path).unwrap().general;
     assert_eq!(general.appearance(), Appearance::Light);
     assert_eq!(general.theme_id(), DEFAULT_THEME);
-    // 已迁移过（或新写法）的不再动
+    // 已遷移過（或新寫法）的不再動
     Config::set_value(&path, "general", "appearance", "dark").unwrap();
     let again = std::fs::read_to_string(&path).unwrap();
     assert_eq!(
@@ -113,7 +113,7 @@ fn writing_theme_first_keeps_legacy_appearance() {
         "[general]\n# 候选窗口外观：system 跟随系统 / light 浅色 / dark 深色\ntheme = \"dark\"\n",
     )
     .unwrap();
-    // 没切过外观、直接选了主题：旧的深色不能丢，注释也要换掉
+    // 沒切過外觀、直接選了主題：舊的深色不能丟，註釋也要換掉
     Config::set_value(&path, "general", "theme", "wechat").unwrap();
     let text = std::fs::read_to_string(&path).unwrap();
     assert!(text.contains(&format!("{THEME_COMMENT}theme = \"wechat\"")));
@@ -167,7 +167,7 @@ fn writes_create_the_data_directory_for_a_fresh_account() {
     assert!(Config::write_template_if_missing(&path).unwrap());
     assert!(!Config::write_template_if_missing(&path).unwrap());
     assert_eq!(std::fs::read_to_string(&path).unwrap(), TEMPLATE);
-    // 没有模板直接保存也行
+    // 沒有模板直接儲存也行
     std::fs::remove_dir_all(&dir).unwrap();
     Config::set_bool(&path, "predict", "enabled", true).unwrap();
     assert!(Config::load(&path).unwrap().predict.enabled);
@@ -225,16 +225,16 @@ fn font_sizes_and_animations_parse_and_default() {
 #[test]
 fn font_size_edits_ignore_echoed_theme_size() {
     let unset = FontSize::default();
-    // 框里显示主题的 17，原样交回不写
+    // 框裡顯示主題的 17，原樣交回不寫
     assert_eq!(unset.edited(Some(17.0), Some(17.0)), None);
     assert_eq!(unset.edited(Some(20.0), Some(17.0)), Some(FontSize(20.0)));
-    // 设过 20：清空或填 0 回到主题的
+    // 設過 20：清空或填 0 回到主題的
     assert_eq!(FontSize(20.0).edited(None, Some(17.0)), Some(FontSize(0.0)));
     assert_eq!(
         FontSize(20.0).edited(Some(0.0), Some(17.0)),
         Some(FontSize(0.0))
     );
-    // 设过 20 再填主题的 17：照写（用户明确要 17）
+    // 設過 20 再填主題的 17：照寫（使用者明確要 17）
     assert_eq!(
         FontSize(20.0).edited(Some(17.0), Some(17.0)),
         Some(FontSize(17.0))

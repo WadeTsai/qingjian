@@ -1,4 +1,4 @@
-//! 主题里的 SVG 图片：窗口底用九宫格、超出主题目录的路径不读。走完整的渲染器，按像素核对。
+//! 主題裡的 SVG 圖片：視窗底用九宮格、超出主題目錄的路徑不讀。走完整的渲染器，按畫素核對。
 
 use std::path::{Path, PathBuf};
 
@@ -6,7 +6,7 @@ use qingjian_render::{FontLibrary, Layout, Rendered, Renderer, Theme};
 
 use crate::scenes;
 
-/// 四边各 4 个单位红边、中间蓝色的 20×20 SVG。
+/// 四邊各 4 個單位紅邊、中間藍色的 20×20 SVG。
 const FRAME: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
     <rect width="20" height="20" fill="#ff0000"/>
     <rect x="4" y="4" width="12" height="12" fill="#0000ff"/>
@@ -35,7 +35,7 @@ fn render(dir: &Path) -> Option<Rendered> {
     )
 }
 
-/// 内容区里 `(x, y)` 像素（相对内容区左上角）的 RGBA。
+/// 內容區裡 `(x, y)` 畫素（相對內容區左上角）的 RGBA。
 fn pixel(rendered: &Rendered, x: u32, y: u32) -> [u8; 4] {
     let pixel = rendered
         .pixmap
@@ -52,7 +52,7 @@ fn svg_nine_slice_keeps_corners_at_scale() {
         return;
     };
     let width = rendered.content_width;
-    // 2 倍屏：4 个单位的红边是 8 个像素，宽度不随窗口拉伸
+    // 2 倍屏：4 個單位的紅邊是 8 個畫素，寬度不隨視窗拉伸
     assert_eq!(pixel(&rendered, 1, 1), [255, 0, 0, 255]);
     assert_eq!(pixel(&rendered, width / 2, 7), [255, 0, 0, 255]);
     assert_eq!(pixel(&rendered, width / 2, 8)[2], 255);

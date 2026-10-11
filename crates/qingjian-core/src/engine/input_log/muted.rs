@@ -1,10 +1,10 @@
 use super::{InputLogEntry, InputLogger};
 
-/// 套在壳装配的输入日志外面的一层：私密输入期间一条都不记（条目里有敲的键与上屏的字），见 [`crate::Engine::set_private`]。
+/// 套在殼裝配的輸入日誌外面的一層：私密輸入期間一條都不記（條目裡有敲的鍵與上屏的字），見 [`crate::Engine::set_private`]。
 pub(in crate::engine) struct MutedLogger {
     inner: Box<dyn InputLogger>,
 
-    /// 私密中：`record` 直接丢。
+    /// 私密中：`record` 直接丟。
     muted: bool,
 }
 

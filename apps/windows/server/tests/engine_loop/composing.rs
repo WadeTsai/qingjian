@@ -1,4 +1,4 @@
-//! 中文组句：出候选、选词、上屏、翻页键、直输段、失焦与学习落盘。
+//! 中文組句：出候選、選詞、上屏、翻頁鍵、直輸段、失焦與學習落盤。
 
 use crate::support::*;
 
@@ -22,8 +22,8 @@ fn typing_pinyin_shows_candidates() {
     );
 }
 
-/// 拼音显示位置随帧下发给 DLL：DLL 按 `inline()` 决定要不要往应用里放行内拼音，
-/// 窗口顶部画不画拼音行由 Server 自己按 `in_window()` 定，所以帧始终带着拼音行。
+/// 拼音顯示位置隨幀下發給 DLL：DLL 按 `inline()` 決定要不要往應用裡放行內拼音，
+/// 視窗頂部畫不畫拼音行由 Server 自己按 `in_window()` 定，所以幀始終帶著拼音行。
 #[test]
 fn frame_carries_the_preedit_mode() {
     for mode in PreeditMode::ALL {
@@ -124,7 +124,7 @@ fn focus_leave_commits_raw_pinyin() {
     );
     let (_, _, frame) = type_letters(&mut router, "ni");
     assert_eq!(preedit(&frame), "ni");
-    // 没在组句时 Commit 不交东西。
+    // 沒在組句時 Commit 不交東西。
     router.handle(ClientMessage::Key {
         session: SESSION,
         event: KeyEvent::new(0x1B, None, Default::default()),
@@ -148,7 +148,7 @@ fn commit_from_other_session_does_not_take_buffer() {
         app: None,
         protocol: PROTOCOL_VERSION,
     });
-    // 别的会话拿不到这个会话的拼音，但残留组句一并清掉。
+    // 別的會話拿不到這個會話的拼音，但殘留組句一併清掉。
     assert_eq!(
         router.handle(ClientMessage::Commit { session: other }),
         Some(ServerMessage::Committed {
@@ -166,8 +166,8 @@ fn commit_from_other_session_does_not_take_buffer() {
 
 #[test]
 fn page_keys_follow_config() {
-    // 每页 1 条保证多页；翻页键改成 `,` `.`。
-    // 组句中标点进直输段的老行为（`punct_commits` 关），`]` 才会留在拼音行里
+    // 每頁 1 條保證多頁；翻頁鍵改成 `,` `.`。
+    // 組句中標點進直輸段的老行為（`punct_commits` 關），`]` 才會留在拼音行裡
     let mut router = router_with(RouterConfig {
         page_size: 1,
         page_keys: (',', '.'),
@@ -189,7 +189,7 @@ fn page_keys_follow_config() {
     assert_eq!(frame.page, 1, "`.` 应翻到下一页");
     let (_, _, frame) = key(&mut router, ',');
     assert_eq!(frame.page, 0, "`,` 应翻回上一页");
-    // 缺省的 `]` 此时不再翻页，进直输段。
+    // 預設的 `]` 此時不再翻頁，進直輸段。
     let (_, _, frame) = key(&mut router, ']');
     assert_eq!(frame.page, 0);
     assert!(
@@ -233,7 +233,7 @@ fn minus_equals_page_keys_preserve_expression_input() {
 fn shift_uppercase_while_composing_commits_raw_first() {
     let mut router = router();
     type_letters(&mut router, "ni");
-    // 中文模式按住 Shift 打大写字母：拼音原样上屏，字母跟在后面一起插。
+    // 中文模式按住 Shift 打大寫字母：拼音原樣上屏，字母跟在後面一起插。
     let shifted = KeyModifiers {
         shift: true,
         ..KeyModifiers::default()
@@ -244,7 +244,7 @@ fn shift_uppercase_while_composing_commits_raw_first() {
         (KeyOutcome::Consumed, Some("niA"))
     );
     assert!(frame.is_empty());
-    // 没在组句时大写字母交给应用。
+    // 沒在組句時大寫字母交給應用。
     let (outcome, commit, _) = press(&mut router, letter_with('A', shifted));
     assert_eq!((outcome, commit), (KeyOutcome::Passthrough, None));
 }
@@ -282,7 +282,7 @@ fn learning_data_persists_to_user_dir() {
         session: SESSION,
         event: digit(position as u32 + 1),
     });
-    // 关会话时落盘。
+    // 關會話時落盤。
     router.handle(ClientMessage::CloseSession { session: SESSION });
 
     let user = std::fs::read_to_string(user_dir.join("user.tsv")).expect("user.tsv 应已写出");
@@ -293,7 +293,7 @@ fn learning_data_persists_to_user_dir() {
 
 #[test]
 fn raw_segment_takes_digits_and_keeps_the_space() {
-    // `-` 进英文直输段之后数字是内容不是选词键，空格整段原样上屏并保留空格（#28 排查时发现 `gpt-6` 丢了 6）。
+    // `-` 進英文直輸段之後數字是內容不是選詞鍵，空格整段原樣上屏並保留空格（#28 排查時發現 `gpt-6` 丟了 6）。
     let mut router = router();
     let mut frame = Frame::default();
     for c in "gpt-6".chars() {
@@ -312,7 +312,7 @@ fn raw_segment_takes_digits_and_keeps_the_space() {
 
 #[test]
 fn digit_without_a_slot_joins_the_buffer() {
-    // 这一页没有第 9 格：数字是内容（`gpt9`），不再被静默吞掉；成了直输段之后空格整段上屏。
+    // 這一頁沒有第 9 格：數字是內容（`gpt9`），不再被靜默吞掉；成了直輸段之後空格整段上屏。
     let mut router = router();
     let (_, _, frame) = type_letters(&mut router, "gpt");
     let shown = frame.candidates.items.len();
@@ -326,14 +326,14 @@ fn digit_without_a_slot_joins_the_buffer() {
     let (_, commit, after) = press(&mut router, letter(' '));
     assert_eq!(commit.as_deref(), Some("gpt9 "));
     assert!(after.is_empty());
-    // 有这一格照常选词。
+    // 有這一格照常選詞。
     let (_, _, frame) = type_letters(&mut router, "ni");
     let first = frame.candidates.items[0].text.clone();
     let (_, commit, _) = press(&mut router, digit(1));
     assert_eq!(commit, Some(first));
 }
 
-/// 双拼「输入框显示原始按键」：发给 DLL 的帧是敲的键、光标按键数算，自绘窗的拼音行照旧全拼。
+/// 雙拼「輸入框顯示原始按鍵」：發給 DLL 的幀是敲的鍵、游標按鍵數算，自繪窗的拼音行照舊全拼。
 #[test]
 fn shuangpin_raw_preedit_goes_to_the_app_and_full_pinyin_to_the_window() {
     let mut router = router_with(RouterConfig {
@@ -356,7 +356,7 @@ fn shuangpin_raw_preedit_goes_to_the_app_and_full_pinyin_to_the_window() {
     assert_eq!((preedit(last).as_str(), last.cursor), ("kai'fa", 3));
 }
 
-/// 自绘窗随帧收到输入状态（给主题显示中 / 英、简 / 繁、方案），与配置一致。
+/// 自繪窗隨幀收到輸入狀態（給主題顯示中 / 英、簡 / 繁、方案），與配置一致。
 #[test]
 fn self_drawn_window_gets_input_mode() {
     let mut router = router_with(RouterConfig {
@@ -376,4 +376,82 @@ fn self_drawn_window_gets_input_mode() {
     let mode = modes.last().expect("自绘窗收到过帧");
     assert!(!mode.english && mode.traditional && mode.full_width);
     assert_eq!(mode.scheme, "小鹤双拼");
+}
+
+/// 「中文(台灣)」下的青簡：DLL 報來繁體 profile，配置沒開繁體輸出也出繁體候選，自繪窗的輸入狀態跟著顯示繁；
+/// 切回簡體 profile 就回簡體。
+#[test]
+fn traditional_profile_outputs_traditional_without_the_config_switch() {
+    let mut router = router();
+    let sink = RecordingCandidates::default();
+    router.set_candidate_sink(Box::new(sink.clone()));
+    assert_eq!(
+        router.handle(ClientMessage::Profile {
+            session: SESSION,
+            traditional: true,
+        }),
+        None
+    );
+    let (_, _, frame) = type_letters(&mut router, "kaifa");
+    assert_eq!(candidate_texts(&frame)[0], "開發");
+    let _ = router.handle(ClientMessage::PositionCandidates {
+        session: SESSION,
+        rect: rect(),
+    });
+    assert!(
+        sink.1
+            .lock()
+            .unwrap()
+            .last()
+            .expect("自绘窗收到过帧")
+            .traditional
+    );
+    // 上屏的也是繁體
+    let (_, commit, _) = press(&mut router, digit(1));
+    assert_eq!(commit.as_deref(), Some("開發"));
+
+    // 切回「中文(簡體)」的青簡
+    let _ = router.handle(ClientMessage::Profile {
+        session: SESSION,
+        traditional: false,
+    });
+    let (_, _, frame) = type_letters(&mut router, "kaifa");
+    assert_eq!(candidate_texts(&frame)[0], "开发");
+}
+
+/// 組句中切 profile：組句清掉，不留簡繁混著的候選。
+#[test]
+fn switching_profile_mid_composition_resets_it() {
+    let mut router = router();
+    type_letters(&mut router, "kai");
+    let _ = router.handle(ClientMessage::Profile {
+        session: SESSION,
+        traditional: true,
+    });
+    let (_, _, frame) = type_letters(&mut router, "fa");
+    assert_eq!(preedit(&frame), "fa");
+}
+
+/// 繁體 profile 只管報它的那個會話：別的會話仍按配置出簡體。
+#[test]
+fn traditional_profile_is_per_session() {
+    let mut router = router();
+    let other = SessionId(2);
+    open_session(&mut router, other, Some("notepad.exe".to_owned()));
+    let _ = router.handle(ClientMessage::Profile {
+        session: other,
+        traditional: true,
+    });
+    let (_, _, frame) = type_letters(&mut router, "kaifa");
+    assert_eq!(candidate_texts(&frame)[0], "开发");
+    // 焦點換到報了繁體的那個會話：它出繁體
+    let mut last = None;
+    for c in "kaifa".chars() {
+        last = Some(key_result(router.handle(ClientMessage::Key {
+            session: other,
+            event: letter(c),
+        })));
+    }
+    let (_, _, frame) = last.expect("typed");
+    assert_eq!(candidate_texts(&frame)[0], "開發");
 }

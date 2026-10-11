@@ -1,4 +1,4 @@
-//! 当前页使用 CommonCandidateList；UI 翻页按钮回 Server 获取下一页。
+//! 當前頁使用 CommonCandidateList；UI 翻頁按鈕回 Server 獲取下一頁。
 #pragma once
 #include <fcitx/candidatelist.h>
 #include <functional>
@@ -13,11 +13,11 @@ public:
     void prev() override { if (hasPrev()) turn_(false); }
     void next() override { if (hasNext()) turn_(true); }
 private:
-    /// Server 当前页。
+    /// Server 當前頁。
     int page_;
-    /// Server 总页数。
+    /// Server 總頁數。
     int pages_;
-    /// 翻页请求。
+    /// 翻頁請求。
     std::function<void(bool)> turn_;
 };
 }

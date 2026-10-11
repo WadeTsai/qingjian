@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# 把含章模型的三件套打成同目录的正式命名 .qjm。
-# 含章·通变放 data/models/hanzhang-tongbian/（QINGJIAN_MODEL_DIR 指过去），元数据按字表里有没有 <sep> 自动选。
-# 随包只带 .qjm（mac Resources/models/<模型标识>/、Windows {app}\data\models\<模型标识>\）；三件套留给开发直接加载。
-# 元数据（名称 / 型号 / 许可 / 署名）只写在这里；脚本改动后两份模型都会重打。
+# 把含章模型的三件套打成同目錄的正式命名 .qjm。
+# 含章·通變放 data/models/hanzhang-tongbian/（QINGJIAN_MODEL_DIR 指過去），後設資料按字表裡有沒有 <sep> 自動選。
+# 隨包只帶 .qjm（mac Resources/models/<模型標識>/、Windows {app}\data\models\<模型標識>\）；三件套留給開發直接載入。
+# 後設資料（名稱 / 型號 / 許可 / 署名）只寫在這裡；指令碼改動後兩份模型都會重打。
 #
-#   tools/release/pack-model.sh            # 三件套或脚本比 .qjm 新（或没有 .qjm）才重打
-#   tools/release/pack-model.sh --force    # 总是重打（改了元数据）
+#   tools/release/pack-model.sh            # 三件套或指令碼比 .qjm 新（或沒有 .qjm）才重打
+#   tools/release/pack-model.sh --force    # 總是重打（改了後設資料）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -13,7 +13,7 @@ cd "$ROOT"
 MODEL_DIR="${QINGJIAN_MODEL_DIR:-data/models/hanzhang-zhiwei}"
 WEIGHTS="$MODEL_DIR/model.safetensors"
 
-# P2C 的字表含 <sep>，据此确定正式标识，不依赖目录名。
+# P2C 的字表含 <sep>，據此確定正式標識，不依賴目錄名。
 kind="$(python3 -c 'import json, sys; print("p2c" if "<sep>" in json.load(open(sys.argv[1]))["tokens"] else "sentence")' "$MODEL_DIR/vocab.json")"
 if [[ "$kind" == "p2c" ]]; then
   name="含章·通变（Hanzhang Tongbian）"
@@ -36,7 +36,7 @@ if [[ "${1:-}" != "--force" && -f "$OUT" &&
   exit 0
 fi
 
-# 权重与代码同一许可（2026-09-12 定），署名写清训练语料
+# 權重與程式碼同一許可（2026-09-12 定），署名寫清訓練語料
 cargo run --release -q -p qingjian-dict-convert -- --out-dir "$MODEL_DIR" pack model --input "$MODEL_DIR" \
   --output "$OUT" \
   --name "$name" --license "GPL-3.0-or-later" \

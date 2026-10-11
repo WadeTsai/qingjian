@@ -1,20 +1,20 @@
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum ParseError {
-    /// 缓冲区为空，没有可切分的内容。
+    /// 緩衝區為空，沒有可切分的內容。
     #[error("empty input")]
     Empty,
 
-    /// 出现了拼音字母和 `'` 之外的字符。
+    /// 出現了拼音字母和 `'` 之外的字元。
     #[error("character {ch:?} at position {position} is not a pinyin letter")]
     InvalidChar {
-        /// 从 1 开始的字符位置。
+        /// 從 1 開始的字元位置。
         position: usize,
 
-        /// 违规字符。
+        /// 違規字元。
         ch: char,
     },
 
-    /// 没有任何一种切法能覆盖整个输入。
+    /// 沒有任何一種切法能覆蓋整個輸入。
     #[error("cannot segment input into valid syllables")]
     NoSegmentation,
 }

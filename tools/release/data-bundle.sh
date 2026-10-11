@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 把产品词库与两份含章模型装进单个压缩包，发布为不可变的 data-vN Release，并写 tools/release/data.lock。
-# CI 与自编译按锁文件取数据（data-fetch.sh）；改了数据发新号，锁文件与用到新数据的代码同一个提交。
+# 把產品詞庫與兩份含章模型裝進單個壓縮包，釋出為不可變的 data-vN Release，並寫 tools/release/data.lock。
+# CI 與自編譯按鎖檔案取資料（data-fetch.sh）；改了資料發新號，鎖檔案與用到新資料的程式碼同一個提交。
 #
-#   tools/release/data-bundle.sh                 # 发到下一个 data-vN
-#   tools/release/data-bundle.sh --tag data-v7   # 指定标签；已存在就拒绝
-#   tools/release/data-bundle.sh --tag data-v3 --target main # 本地发版提交未推送时，标签指向远端 main
+#   tools/release/data-bundle.sh                 # 發到下一個 data-vN
+#   tools/release/data-bundle.sh --tag data-v7   # 指定標籤；已存在就拒絕
+#   tools/release/data-bundle.sh --tag data-v3 --target main # 本地發版提交未推送時，標籤指向遠端 main
 #   tools/release/data-bundle.sh --pack          # 只打包到 target/release-data/
 set -euo pipefail
 
@@ -34,15 +34,15 @@ for f in "${PRODUCT_FILES[@]}"; do
 done
 DOMAIN_FILES=()
 for f in data/generated/dicts/*.qj; do [[ -f "$f" ]] && DOMAIN_FILES+=("dicts/$(basename "$f")"); done
-[[ ${#DOMAIN_FILES[@]} -gt 0 ]] || { echo "缺少 data/generated/dicts/*.qj（领域词库）" >&2; exit 1; }
-# 随包辅码码表（笔画，issue #8）：由 tools/dict-convert 的 stroke + pack codes 生成，来源与许可见 assets/stroke/README.md
+[[ ${#DOMAIN_FILES[@]} -gt 0 ]] || { echo "缺少 data/generated/dicts/*.qj（領域詞庫）" >&2; exit 1; }
+# 隨包輔碼碼錶（筆畫，issue #8）：由 tools/dict-convert 的 stroke + pack codes 生成，來源與許可見 assets/stroke/README.md
 CODE_FILES=()
 for f in data/generated/codes/*.qj; do [[ -f "$f" ]] && CODE_FILES+=("codes/$(basename "$f")"); done
 if [ "$(ls -1 data/generated/codes/*.qj 2>/dev/null | wc -l)" -eq 0 ]; then
   echo "缺少 data/generated/codes/*.qj（随包笔画码表）：先跑 data/cns 的 stroke 与 pack codes，见 assets/stroke/README.md" >&2
   exit 1
 fi
-# 三件套比 .qjm 新（重训了没重打）就重打；没有三件套也没有 .qjm 就停。
+# 三件套比 .qjm 新（重訓了沒重打）就重打；沒有三件套也沒有 .qjm 就停。
 [[ -f data/models/hanzhang-zhiwei/model.safetensors || -f "$MODEL_FILE" ]] || { echo "缺少 $MODEL_FILE，先把导出的三件套放到 data/models/hanzhang-zhiwei/ 再跑 tools/release/pack-model.sh" >&2; exit 1; }
 [[ -f data/models/hanzhang-zhiwei/model.safetensors ]] && tools/release/pack-model.sh
 [[ -f data/models/hanzhang-tongbian/model.safetensors || -f "$P2C_MODEL_FILE" ]] || { echo "缺少 $P2C_MODEL_FILE，先把导出的三件套放到 data/models/hanzhang-tongbian/ 再运行 tools/release/pack-model.sh" >&2; exit 1; }
@@ -74,7 +74,7 @@ gh release create "$TAG" --prerelease --target "$TARGET" --title "产品数据 $
   "$OUT/qingjian-data.tar.gz"
 
 cat > "$LOCK" <<EOF
-# 产品数据版本，data-bundle.sh 写、data-fetch.sh 读；不要手改
+# 產品資料版本，data-bundle.sh 寫、data-fetch.sh 讀；不要手改
 tag = $TAG
 qingjian-data.tar.gz = $(sha_of qingjian-data.tar.gz)
 EOF

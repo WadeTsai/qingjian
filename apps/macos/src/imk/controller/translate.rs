@@ -1,11 +1,11 @@
-//! 翻译选中文字、译词键与删候选键。
+//! 翻譯選中文字、譯詞鍵與刪候選鍵。
 
 use super::*;
 
 impl QingjianInputController {
-    /// Option+数字：上屏当前页第几个候选的译文（学习和拼音消耗与选那个候选一样）。
-    /// 不在组句中时不管；候选没有译文就吞掉按键不动，免得 ¡™£ 进应用。
-    /// 翻译应用里选中的文字：云服务关着、密码框、没有选区都不动（键交回应用）。
+    /// Option+數字：上屏當前頁第幾個候選的譯文（學習和拼音消耗與選那個候選一樣）。
+    /// 不在組句中時不管；候選沒有譯文就吞掉按鍵不動，免得 ¡™£ 進應用。
+    /// 翻譯應用裡選中的文字：雲服務關著、密碼框、沒有選區都不動（鍵交回應用）。
     pub(super) fn translate_selection(&self, client: TextClient<'_>) -> bool {
         if !host::with(|h| h.engine.prediction_enabled()).unwrap_or(false) {
             tracing::info!("云服务没开，翻译快捷键不生效");
@@ -16,7 +16,7 @@ impl QingjianInputController {
             return false;
         }
         let Some((text, range)) = client.selected_text(MAX_TRANSLATE_CHARS) else {
-            // 分不清是没选还是应用不给读（不少 Electron 应用不支持），两种情况都提示一下，键吞掉
+            // 分不清是沒選還是應用不給讀（不少 Electron 應用不支援），兩種情況都提示一下，鍵吞掉
             tracing::debug!("没有选中的文字，或应用不支持读选区");
             let anchor = client.caret_rect();
             host::with(|h| {
@@ -27,7 +27,7 @@ impl QingjianInputController {
             });
             return true;
         };
-        // 光标位置先在借用之外取好：取的过程会等应用回话，期间别的 IMK 回调可能重入
+        // 游標位置先在借用之外取好：取的過程會等應用回話，期間別的 IMK 回撥可能重入
         let anchor = client.caret_rect();
         let sent = host::with(|h| {
             h.anchor = anchor;
@@ -42,14 +42,14 @@ impl QingjianInputController {
         true
     }
 
-    /// 翻译窗口开着时的按键：回车 / 空格 / 1 用译文替换选区，Esc 放弃；其他键放弃并交回应用。
+    /// 翻譯視窗開著時的按鍵：回車 / 空格 / 1 用譯文替換選區，Esc 放棄；其他鍵放棄並交回應用。
     pub(super) fn handle_translation_review(&self, key: u16, client: TextClient<'_>) -> bool {
         let job = host::with(|h| h.translation.clone()).flatten();
         let Some(job) = job else {
             return false;
         };
         match key {
-            // 回车 / 小键盘回车 / 空格 / 1：接受（译文还没到时先等）
+            // 回車 / 小鍵盤迴車 / 空格 / 1：接受（譯文還沒到時先等）
             36 | 76 | 49 | 18 => {
                 if let Some(result) = job.result {
                     tracing::debug!("接受译文");
@@ -58,7 +58,7 @@ impl QingjianInputController {
                 }
                 true
             }
-            // Esc：放弃
+            // Esc：放棄
             53 => {
                 host::with(|h| h.end_translation());
                 true
@@ -80,7 +80,7 @@ impl QingjianInputController {
         self.commit_translation_at(index, sense, client)
     }
 
-    /// 上屏排布里第 `index` 格候选的第 `sense` 条译词；数字键与点击共用。不在组句中返回 `false`。
+    /// 上屏排布里第 `index` 格候選的第 `sense` 條譯詞；數字鍵與點選共用。不在組句中返回 `false`。
     pub(super) fn commit_translation_at(
         &self,
         index: Option<usize>,
@@ -106,8 +106,8 @@ impl QingjianInputController {
         true
     }
 
-    /// 修饰键 + 数字（缺省 ⇧）：删掉当前页第几个候选。不在组句中不管；那格没有候选就吞掉按键不动。
-    /// 删完重新查一遍（排序会变），结果那句话显示在拼音行右侧，敲下一键就没了。
+    /// 修飾鍵 + 數字（預設 ⇧）：刪掉當前頁第幾個候選。不在組句中不管；那格沒有候選就吞掉按鍵不動。
+    /// 刪完重新查一遍（排序會變），結果那句話顯示在拼音行右側，敲下一鍵就沒了。
     pub(super) fn handle_delete_key(&self, digit: usize, client: TextClient<'_>) -> bool {
         let composing = host::with(|h| !h.engine.composition().is_empty()).unwrap_or(false);
         if !composing {

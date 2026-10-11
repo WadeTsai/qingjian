@@ -1,6 +1,6 @@
 use super::Usage;
 
-/// 输入统计的汇总，偏好设置「统计」页显示的就是它。
+/// 輸入統計的彙總，偏好設定「統計」頁顯示的就是它。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct UsageSummary {
     /// 今天。
@@ -9,12 +9,12 @@ pub struct UsageSummary {
     /// 最近 7 天（含今天）。
     pub week: Usage,
 
-    /// 从有记录起的累计。
+    /// 從有記錄起的累計。
     pub total: Usage,
 
-    /// 有过上屏的天数。
+    /// 有過上屏的天數。
     pub days: u32,
 
-    /// 最早一条记录的日期（`YYYY-MM-DD`）；没记录为 `None`。
+    /// 最早一條記錄的日期（`YYYY-MM-DD`）；沒記錄為 `None`。
     pub since: Option<String>,
 }

@@ -1,10 +1,10 @@
-//! 输入日志：每次上屏记一条「敲了什么、看到了什么、选了什么」，退格撤销、退格重打、直通字符、云端联想、
-//! 上文断开与会话信息各记一条。格式与各事件的用途见 `docs/plan/model-eval.md`。
+//! 輸入日誌：每次上屏記一條「敲了什麼、看到了什麼、選了什麼」，退格撤銷、退格重打、直通字元、雲端聯想、
+//! 上文斷開與會話資訊各記一條。格式與各事件的用途見 `docs/plan/model-eval.md`。
 //!
-//! 聚合的学习数据（选择次数、输入串选择、个人 n-gram）回答不了这个问题，而排序 / 整句的离线回归评测
-//! 与个人模型的训练对都要它。Core 只产生条目（[`InputLogEntry`]），写到哪、加不加时间戳由
-//! [`InputLogger`] 的实现定（`qingjian-learning` 写本机 jsonl）；缺省 [`NoInputLogger`] 什么都不记。
-//! 条目里只有用户敲的键与上屏的文字，不含应用里的上下文。
+//! 聚合的學習資料（選擇次數、輸入串選擇、個人 n-gram）回答不了這個問題，而排序 / 整句的離線迴歸評測
+//! 與個人模型的訓練對都要它。Core 只產生條目（[`InputLogEntry`]），寫到哪、加不加時間戳由
+//! [`InputLogger`] 的實現定（`qingjian-learning` 寫本機 jsonl）；預設 [`NoInputLogger`] 什麼都不記。
+//! 條目裡只有使用者敲的鍵與上屏的文字，不含應用裡的上下文。
 
 mod entry;
 mod logger;
@@ -16,5 +16,5 @@ pub use logger::{InputLogger, NoInputLogger};
 pub(super) use muted::MutedLogger;
 pub use source::InputSource;
 
-/// 写进条目的候选文本最多几条：一页的量，够算「首选命中了没有」「在不在第一页」和「选的是第几个」。
+/// 寫進條目的候選文本最多幾條：一頁的量，夠算「首選命中了沒有」「在不在第一頁」和「選的是第幾個」。
 pub const LOGGED_CANDIDATES: usize = 9;

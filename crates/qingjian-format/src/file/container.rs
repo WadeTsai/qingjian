@@ -11,35 +11,35 @@ use crate::{
     SectionEntry, Table, Text,
 };
 
-/// 打开的 `.qj` 文件：整个文件一次 mmap，分节按标签取。
+/// 開啟的 `.qj` 檔案：整個檔案一次 mmap，分節按標籤取。
 #[derive(Debug)]
 pub struct Container {
-    /// 文件映射，交给取出去的 [`Table`] / [`Text`] 共享。
+    /// 檔案對映，交給取出去的 [`Table`] / [`Text`] 共享。
     map: Arc<Mmap>,
 
-    /// 数据种类。
+    /// 資料種類。
     kind: Kind,
 
-    /// 标签 → (偏移, 长度)。
+    /// 標籤 → (偏移, 長度)。
     sections: HashMap<[u8; 4], (usize, usize)>,
 
-    /// 第一节解析出来的元数据。
+    /// 第一節解析出來的後設資料。
     metadata: Metadata,
 }
 
 impl Container {
-    /// 打开并校验：魔数、版本、种类、分节表边界、`META` 可解析。
+    /// 開啟並校驗：魔數、版本、種類、分節表邊界、`META` 可解析。
     pub fn open(path: &Path, expected: Kind) -> Result<Self, FormatError> {
         let file = File::open(path)?;
-        // SAFETY: 数据文件只整体替换（写临时文件再改名），从不就地修改；映射期间内容不变。
+        // SAFETY: 資料檔案只整體替換（寫臨時檔案再改名），從不就地修改；對映期間內容不變。
         let map = unsafe { Mmap::map(&file)? };
-        // `advise` 是 unix 专有（memmap2 里 `Advice` gated 在 cfg(unix)）：Windows 上跳过，只少一个预读提示。
+        // `advise` 是 unix 專有（memmap2 裡 `Advice` gated 在 cfg(unix)）：Windows 上跳過，只少一個預讀提示。
         #[cfg(unix)]
         let _ = map.advise(memmap2::Advice::WillNeed);
         Self::from_map(Arc::new(map), expected)
     }
 
-    /// 文件开头是不是 `.qj` 魔数（调用方据此在 TSV 与 `.qj` 之间选加载路径）。
+    /// 檔案開頭是不是 `.qj` 魔數（呼叫方據此在 TSV 與 `.qj` 之間選載入路徑）。
     pub fn is_qj(path: &Path) -> bool {
         use std::io::Read;
         let mut magic = [0u8; MAGIC.len()];
@@ -111,7 +111,7 @@ impl Container {
         &self.metadata
     }
 
-    /// 原始字节。
+    /// 原始位元組。
     pub fn bytes(&self, tag: [u8; 4]) -> Result<&[u8], FormatError> {
         let &(offset, length) = self
             .sections
@@ -120,7 +120,7 @@ impl Container {
         Ok(&self.map[offset..offset + length])
     }
 
-    /// 定长结构体数组分节。
+    /// 定長結構體陣列分節。
     pub fn table<T: FromBytes + Immutable + KnownLayout>(
         &self,
         tag: [u8; 4],
@@ -135,7 +135,7 @@ impl Container {
         })
     }
 
-    /// UTF-8 文本分节。
+    /// UTF-8 文本分節。
     pub fn text(&self, tag: [u8; 4]) -> Result<Text, FormatError> {
         let &(offset, length) = self
             .sections
@@ -185,7 +185,7 @@ mod tests {
             container.bytes(*b"NOPE"),
             Err(FormatError::MissingSection(_))
         ));
-        // 3 个 u32 当 u64 表读：长度不整除
+        // 3 個 u32 當 u64 表讀：長度不整除
         assert!(matches!(
             container.table::<u64>(*b"NUMS"),
             Err(FormatError::Malformed { .. })
@@ -212,7 +212,7 @@ mod tests {
         ));
     }
 
-    /// 测试用的临时文件路径，drop 时删除。
+    /// 測試用的臨時檔案路徑，drop 時刪除。
     mod tempfile_path {
         use std::path::PathBuf;
 

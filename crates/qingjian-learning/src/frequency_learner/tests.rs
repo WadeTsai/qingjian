@@ -31,7 +31,7 @@ fn records_and_round_trips_through_tsv() {
     assert_eq!(restored.weight("中文"), 1);
     assert_eq!(restored.weight("没有"), 0);
 
-    // flush 写回加载时的路径
+    // flush 寫回載入時的路徑
     restored.record(&candidate("中文"));
     restored.flush();
     assert_eq!(
@@ -87,7 +87,7 @@ fn unrecord_reverses_each_kind_of_record() {
     assert_eq!(learner.choice_weight("kaifa", "开放"), 0);
     assert_eq!(learner.choice_count(), 0);
     assert!(learner.user_ngram().is_none());
-    // 没记过的撤销不会变成负数
+    // 沒記過的撤銷不會變成負數
     learner.unrecord("没有");
     learner.unrecord_choice("x", "没有");
     assert_eq!(learner.weight("没有"), 0);
@@ -169,7 +169,7 @@ fn broken_lines_are_skipped_instead_of_failing_the_load() {
     std::fs::write(dir.join(USER_CHOICES_FILE), "ba\t吧\t2\nba\n").unwrap();
     std::fs::write(dir.join(USER_TYPOS_FILE), "gan\tguan\tx\ngan\tguan\t1\n").unwrap();
     std::fs::write(dir.join(USER_WORDS_FILE), "账套\tzhang tao\t100\n只有词\n").unwrap();
-    // 编码坏掉的字节也不能让整个文件读不了
+    // 編碼壞掉的位元組也不能讓整個檔案讀不了
     std::fs::write(dir.join(USER_ENGLISH_FILE), b"gist\t2\n\xff\xfe\t1\n").unwrap();
 
     let learner = FrequencyLearner::from_path(&path).unwrap();
@@ -232,13 +232,13 @@ fn forget_removes_the_user_word_and_every_trace_of_learning() {
     assert_eq!(learner.choice_weight("zt", "账套"), 0);
     assert_eq!(learner.choice_weight("zt", "周天"), 1);
     assert!(learner.user_ngram().is_none());
-    // 词库词、没学过：什么都没清
+    // 詞庫詞、沒學過：什麼都沒清
     assert!(learner.forget("开发").is_nothing());
-    // 只学过、不是用户词
+    // 只學過、不是使用者詞
     learner.record(&candidate("开发"));
     let forgotten = learner.forget("开发");
     assert!(!forgotten.user_word && forgotten.learning);
-    // 个人英文词
+    // 個人英文詞
     learner.learn_english("gist");
     assert!(learner.forget_english("Gist"));
     assert!(!learner.forget_english("gist"));
@@ -283,7 +283,7 @@ fn english_words_round_trip_through_tsv_and_form_a_word_list() {
     learner.learn_english("Gist");
     learner.learn_english("python");
     assert_eq!(learner.english_count(), 2);
-    // 第一次敲的写法留下，次数合并
+    // 第一次敲的寫法留下，次數合併
     assert_eq!(learner.user_english().unwrap().get("gist"), Some("gist"));
     assert_eq!(learner.user_english().unwrap().complete("g", 3), ["gist"]);
     learner.flush();

@@ -1,4 +1,4 @@
-//! 全拼、双拼、直输与编辑状态不应借用候选显示串。
+//! 全拼、雙拼、直輸與編輯狀態不應借用候選顯示串。
 use super::assert_raw;
 use crate::dictionary::Dictionary;
 use crate::engine::tests::engine;

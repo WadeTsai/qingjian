@@ -1,4 +1,4 @@
-//! 根组件的 Reactor 生命周期：建状态、按消息落盘、画左侧导航 + 当前页。
+//! 根元件的 Reactor 生命週期：建狀態、按訊息落盤、畫左側導航 + 當前頁。
 
 use qingjian_platform::{
     Appearance, CandidateRenderer, Config, DEFAULT_ENGLISH_CANDIDATES_ON_WINDOWS, LayoutMode,
@@ -45,12 +45,12 @@ impl Component for Settings {
         match message {
             Message::Navigate(Some(tag)) => {
                 self.page = tag;
-                // 上一页的导入提示不跟着过来
+                // 上一頁的匯入提示不跟著過來
                 self.notice.clear();
             }
             Message::Navigate(None) => {}
 
-            // 通用页
+            // 通用頁
             Message::LearningLanguage(Some(i)) if i < general::LANGUAGES.len() => {
                 self.save("general", "learning_language", general::LANGUAGES[i].1);
             }
@@ -96,12 +96,12 @@ impl Component for Settings {
             }
             Message::EnglishMode(on) => self.save("general", "english_mode", on),
 
-            // 候选窗口页
+            // 候選視窗頁
             Message::Appearance(Some(i)) if i < Appearance::ALL.len() => {
                 self.save("general", "appearance", Appearance::ALL[i].key());
             }
             Message::Theme(Some(i)) => {
-                // 与下拉同源：主题库（内置在前、用户主题按 id 排）
+                // 與下拉同源：主題庫（內建在前、使用者主題按 id 排）
                 let themes = ThemeLibrary::load(qingjian_platform::dirs::themes_dir().as_deref());
                 if let Some(theme) = themes.themes().get(i) {
                     let id = theme.id().to_owned();
@@ -152,7 +152,7 @@ impl Component for Settings {
             }
             Message::StatusBar(on) => self.save("status_bar", "enabled", on),
 
-            // 云服务页
+            // 雲服務頁
             Message::LocalModel(on) => self.save("model", "enabled", on),
             Message::CloudEnabled(on) => self.save("predict", "enabled", on),
             Message::CloudApiKey(value) => self.save("predict", "api_key", value),
@@ -180,7 +180,7 @@ impl Component for Settings {
                 };
             }
 
-            // 快捷键页
+            // 快捷鍵頁
             Message::PageKeys(Some(i)) if i < shortcut::PAGE_KEYS.len() => {
                 self.save("general", "page_keys", shortcut::PAGE_KEYS[i].1);
             }
@@ -206,10 +206,10 @@ impl Component for Settings {
                 self.save("shortcut", "translate_selection", combo);
             }
 
-            // 模糊音页
+            // 模糊音頁
             Message::Fuzzy(key, on) => self.save("fuzzy", key, on),
 
-            // 词库页
+            // 詞庫頁
             Message::ToggleDomain(name, on) => {
                 let mut domains = self.config.dictionaries.domains.clone();
                 if on {
@@ -222,7 +222,7 @@ impl Component for Settings {
                 self.save_array("dictionaries", "domains", &domains);
             }
             Message::ToggleUserDict(name, on) => {
-                // 用户词库缺省启用，`disabled` 列的是关掉的。
+                // 使用者詞庫預設啟用，`disabled` 列的是關掉的。
                 let mut disabled = self.config.dictionaries.disabled.clone();
                 if on {
                     disabled.retain(|d| d != &name);
@@ -240,7 +240,7 @@ impl Component for Settings {
                 self.reload();
             }
 
-            // 辅码页
+            // 輔碼頁
             Message::AuxCodeEnabled(on) => self.save("aux_code", "enabled", on),
             Message::AuxCodeShow(on) => self.save("general", "aux_code_show", on),
             Message::AuxCodeKeepEmpty(on) => self.save("general", "aux_code_keep_empty", on),
@@ -248,7 +248,7 @@ impl Component for Settings {
             Message::AuxRecordCancel => self.recorder = Recorder::Idle,
             Message::AuxRecorded(text) => aux_code::record_key(self, &text),
             Message::ToggleAuxTable(name, on) => {
-                // 码表缺省启用，`disabled` 列的是关掉的；随包笔画表也走这条
+                // 碼錶預設啟用，`disabled` 列的是關掉的；隨包筆畫表也走這條
                 let mut disabled = self.config.aux_code.disabled.clone();
                 if on {
                     disabled.retain(|d| d != &name);
@@ -266,7 +266,7 @@ impl Component for Settings {
                 self.reload();
             }
 
-            // 高级页
+            // 進階頁
             Message::VerboseLog(on) => {
                 let level = if on { LogLevel::Debug } else { LogLevel::Info };
                 self.save("general", "log_level", level.key());
@@ -292,15 +292,15 @@ impl Component for Settings {
                 if let Err(error) = std::fs::remove_file(&log)
                     && error.kind() != std::io::ErrorKind::NotFound
                 {
-                    crate::log::warn(format!("清空输入日志失败: {error}"));
+                    crate::log::warn(format!("清空輸入日誌失敗: {error}"));
                 }
             }
 
-            // 关于页
+            // 關於頁
             Message::OpenWebsite => open_with_explorer(about::WEBSITE_URL),
             Message::OpenDownload => open_with_explorer(qingjian_update::DOWNLOAD_URL),
 
-            // 关于页：检查更新
+            // 關於頁：檢查更新
             Message::UpdateCheck(on) => self.save("update", "check", on),
             Message::UpdateChannel(Some(i)) if i < UpdateChannel::ALL.len() => {
                 self.save("update", "channel", UpdateChannel::ALL[i].key());
@@ -337,7 +337,7 @@ impl Component for Settings {
     }
 
     fn view(&self, _input: &(), context: &mut ViewContext<Self>) -> View {
-        context.window_title("青简设置");
+        context.window_title("青簡設定");
         let item = |tag: &str, label: &str, symbol| {
             KeyedView::new(
                 tag,
@@ -355,19 +355,19 @@ impl Component for Settings {
         };
         let items = [
             item("general", "通用", Symbol::Setting),
-            item("candidates", "候选窗口", Symbol::View),
-            item("shortcut", "快捷键", Symbol::Keyboard),
-            item("cloud", "云服务", Symbol::World),
+            item("candidates", "候選視窗", Symbol::View),
+            item("shortcut", "快捷鍵", Symbol::Keyboard),
+            item("cloud", "雲服務", Symbol::World),
             item("fuzzy", "模糊音", Symbol::Audio),
-            item("dictionaries", "词库", Symbol::Library),
-            item("aux_code", "辅码", Symbol::Character),
-            item("usage", "统计", Symbol::List),
-            item("advanced", "高级", Symbol::Repair),
-            item("about", "关于", Symbol::Help),
+            item("dictionaries", "詞庫", Symbol::Library),
+            item("aux_code", "輔碼", Symbol::Character),
+            item("usage", "統計", Symbol::List),
+            item("advanced", "進階", Symbol::Repair),
+            item("about", "關於", Symbol::Help),
         ];
         NavigationView::new()
             .pane_display_mode(NavigationViewPaneDisplayMode::Left)
-            .pane_title("青简")
+            .pane_title("青簡")
             .open_pane_length(220.0)
             .is_pane_open(true)
             .is_pane_toggle_button_visible(false)

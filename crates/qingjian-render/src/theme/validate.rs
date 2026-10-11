@@ -1,9 +1,9 @@
-//! 加载时检查一遍引用（颜色变量、文字样式、组件），有问题记警告；渲染时引用不到的退回缺省值，不让整个主题失败。
+//! 載入時檢查一遍引用（顏色變數、文字樣式、元件），有問題記警告；渲染時引用不到的退回預設值，不讓整個主題失敗。
 
 use super::file::node::{BorderSpec, FillSpec, NodeKind, NodeSpec};
 use super::file::{ColorRef, ColorSpec, FontRef, ThemeFile};
 
-/// 列出主题里引用不到的名字。
+/// 列出主題裡引用不到的名字。
 pub(super) fn problems(file: &ThemeFile) -> Vec<String> {
     let mut found = Vec::new();
     let mut check = Checker {

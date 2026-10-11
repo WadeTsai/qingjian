@@ -1,32 +1,32 @@
 use serde::{Deserialize, Serialize};
 
-/// 数据文件的来历：名称、许可证、署名、来源。写在每个 `.qj` 的第一节，偏好设置里的词库列表直接显示它。
+/// 資料檔案的來歷：名稱、許可證、署名、來源。寫在每個 `.qj` 的第一節，偏好設定裡的詞庫列表直接顯示它。
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Metadata {
-    /// 给人看的名称（「雾凇拼音」「青简基础词库」）。
+    /// 給人看的名稱（「霧凇拼音」「青簡基礎詞庫」）。
     pub name: String,
 
-    /// 许可证标识（SPDX 表达式，如 `GPL-3.0-only`、`CC-BY-SA-4.0`）。
+    /// 許可證標識（SPDX 表示式，如 `GPL-3.0-only`、`CC-BY-SA-4.0`）。
     #[serde(default)]
     pub license: String,
 
-    /// 署名 / 版权行。
+    /// 署名 / 版權行。
     #[serde(default)]
     pub attribution: String,
 
-    /// 来源 URL。
+    /// 來源 URL。
     #[serde(default)]
     pub source: String,
 
-    /// 数据版本（上游版本号或日期）。
+    /// 資料版本（上游版本號或日期）。
     #[serde(default)]
     pub version: String,
 
-    /// 条数（词库是词条数，语言模型是 bigram 对数），只用于显示。
+    /// 條數（詞庫是詞條數，語言模型是 bigram 對數），只用於顯示。
     #[serde(default)]
     pub entries: u64,
 
-    /// 谁生成的（`qingjian-dict-convert 0.1.0`）。
+    /// 誰生成的（`qingjian-dict-convert 0.1.0`）。
     #[serde(default)]
     pub generator: String,
 }

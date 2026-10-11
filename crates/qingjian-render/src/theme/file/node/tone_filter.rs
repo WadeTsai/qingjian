@@ -1,4 +1,4 @@
-//! `annotation` 节点 `tones` 里的片段种类名，对应 [`Tone`]：`gloss` / `fresh` / `faint` / `pos` / `separator` / `code`。
+//! `annotation` 節點 `tones` 裡的片段種類名，對應 [`Tone`]：`gloss` / `fresh` / `faint` / `pos` / `separator` / `code`。
 
 use serde::Deserialize;
 

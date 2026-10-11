@@ -1,5 +1,5 @@
-//! 状态条的节点树画法：主题写了 `status.root` 时走这里，与候选窗口同一套模板、数据与绘制。
-//! 格子由 `repeat` 绑定 `cells` 展开；点击区域按各格盒子的右边界分，格子之间夹着的装饰算前一格。
+//! 狀態條的節點樹畫法：主題寫了 `status.root` 時走這裡，與候選視窗同一套模板、資料與繪製。
+//! 格子由 `repeat` 繫結 `cells` 展開；點選區域按各格盒子的右邊界分，格子之間夾著的裝飾算前一格。
 
 use super::{RenderedStatus, StatusCell};
 use crate::error::RenderError;
@@ -36,7 +36,7 @@ impl Renderer {
         let root = builder.status(spec, &frame, cells)?;
         let cell_nodes = std::mem::take(&mut builder.cell_nodes);
         let (content_width, content_height) = scene.layout(root, &mut self.text)?;
-        // 没画出来的格右边界同前一格（点不到它）；最后一格延到内容右边
+        // 沒畫出來的格右邊界同前一格（點不到它）；最後一格延到內容右邊
         let mut edges = Vec::with_capacity(cell_nodes.len());
         let mut previous = 0.0_f32;
         for node in cell_nodes {

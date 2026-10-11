@@ -1,4 +1,4 @@
-//! 循环动画的节点：登记关键帧、每帧设姿态，以及变换后的节点画出来占哪一块（算画出范围、局部重画用）。
+//! 迴圈動畫的節點：登記關鍵幀、每幀設姿態，以及變換後的節點畫出來佔哪一塊（算畫出範圍、區域性重畫用）。
 
 use taffy::NodeId;
 
@@ -14,14 +14,14 @@ impl Scene {
         }
     }
 
-    /// 这一帧的姿态；`None` 或静止姿态时按原样画。
+    /// 這一幀的姿態；`None` 或靜止姿態時按原樣畫。
     pub(crate) fn set_pose(&mut self, node: NodeId, pose: Option<Pose>) {
         if let Some(context) = self.tree.get_node_context_mut(node) {
             context.pose = pose.filter(|pose| *pose != Pose::REST);
         }
     }
 
-    /// 以 `root` 为根、带循环动画的节点与关键帧，按树序。
+    /// 以 `root` 為根、帶迴圈動畫的節點與關鍵幀，按樹序。
     pub(crate) fn animated(&self, root: NodeId) -> Result<Vec<(NodeId, Keyframes)>, RenderError> {
         let mut found = Vec::new();
         self.collect_animated(root, &mut found)?;
@@ -46,7 +46,7 @@ impl Scene {
         Ok(())
     }
 
-    /// 节点连同子树画出来的范围（画布像素），父节点左上角在 `(x, y)`；含投影、描边伸出的部分。
+    /// 節點連同子樹畫出來的範圍（畫布畫素），父節點左上角在 `(x, y)`；含投影、描邊伸出的部分。
     pub(crate) fn subtree_extent(
         &self,
         node: NodeId,
@@ -65,7 +65,7 @@ impl Scene {
         Ok(extent)
     }
 
-    /// 节点盒子的中心（画布像素），父节点左上角在 `(x, y)`：姿态绕它旋转缩放。
+    /// 節點盒子的中心（畫布畫素），父節點左上角在 `(x, y)`：姿態繞它旋轉縮放。
     pub(crate) fn center(&self, node: NodeId, x: f32, y: f32) -> Result<(f32, f32), RenderError> {
         let layout = self.tree.layout(node)?;
         Ok((
@@ -74,7 +74,7 @@ impl Scene {
         ))
     }
 
-    /// 节点父节点左上角相对 `root` 左上角的位置（像素，布局给的）。
+    /// 節點父節點左上角相對 `root` 左上角的位置（畫素，佈局給的）。
     pub(crate) fn parent_origin(
         &self,
         node: NodeId,

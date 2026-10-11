@@ -1,8 +1,8 @@
-//! 英文词表：每行 `词\t编码[\t…]`（表头行、YAML 头这类没有制表符或编码不是字母的行自然跳过），`#` 为注释。只收纯字母的词。
+//! 英文詞表：每行 `詞\t編碼[\t…]`（表頭行、YAML 頭這類沒有製表符或編碼不是字母的行自然跳過），`#` 為註釋。只收純字母的詞。
 //!
-//! 多个输入文件时：同一文件内同一编码**先到先得**（数据包按常用度排序，第一个就是最常用的写法），
-//! 后面的文件可以**覆盖**前面已经收过的编码——展示写法补充表（`07_display_forms.tsv`：`Windows` / `GitHub` / `VSCode`）
-//! 就是靠这条覆盖全小写的普通词形，而不动别的词的顺序。
+//! 多個輸入檔案時：同一檔案內同一編碼**先到先得**（資料包按常用度排序，第一個就是最常用的寫法），
+//! 後面的檔案可以**覆蓋**前面已經收過的編碼——展示寫法補充表（`07_display_forms.tsv`：`Windows` / `GitHub` / `VSCode`）
+//! 就是靠這條覆蓋全小寫的普通詞形，而不動別的詞的順序。
 
 use std::collections::{HashMap, HashSet};
 use std::io::{BufWriter, Write};
@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use crate::error::ConvertError;
 
-/// `frequency` 是可选的 `编码\t词频` 表，有就写进第三列。
+/// `frequency` 是可選的 `編碼\t詞頻` 表，有就寫進第三列。
 pub fn convert(
     inputs: &[PathBuf],
     frequency: Option<&Path>,
@@ -27,7 +27,7 @@ pub fn convert(
             .collect(),
         None => HashMap::new(),
     };
-    // 编码 → 在 `rows` 里的下标；`rows` 按首次出现的顺序，输出顺序与输入一致
+    // 編碼 → 在 `rows` 裡的下標；`rows` 按首次出現的順序，輸出順序與輸入一致
     let mut index_by_code: HashMap<String, usize> = HashMap::new();
     let mut rows: Vec<(String, String)> = Vec::new();
     for path in inputs {
@@ -43,7 +43,7 @@ pub fn convert(
             let Some(code) = fields.next().map(str::trim) else {
                 continue;
             };
-            // 数据包的表头：`word\tkey\tfrequency_level\t…`
+            // 資料包的表頭：`word\tkey\tfrequency_level\t…`
             if word == "word" && code == "key" {
                 continue;
             }
@@ -51,12 +51,12 @@ pub fn convert(
             if word.is_empty() || !word.bytes().all(|b| b.is_ascii_alphabetic()) {
                 continue;
             }
-            // 同一文件内先到先得（数据包按常用度排序）
+            // 同一檔案內先到先得（資料包按常用度排序）
             if !seen_in_file.insert(code.clone()) {
                 continue;
             }
             match index_by_code.get(&code) {
-                // 后面的文件覆盖前面的：展示写法补充表用这条把 `windows` 顶成 `Windows`
+                // 後面的檔案覆蓋前面的：展示寫法補充表用這條把 `windows` 頂成 `Windows`
                 Some(&index) => rows[index].0 = word.to_owned(),
                 None => {
                     index_by_code.insert(code.clone(), rows.len());
@@ -118,7 +118,7 @@ mod tests {
         );
         let rows = converted("header", std::slice::from_ref(&a));
         std::fs::remove_file(a).unwrap();
-        // 表头不进来；同一文件内先到先得，`windows` 保持小写、`act` 的小写写法也没被 `ACT` 顶掉
+        // 表頭不進來；同一檔案內先到先得，`windows` 保持小寫、`act` 的小寫寫法也沒被 `ACT` 頂掉
         assert_eq!(
             rows,
             [
@@ -135,7 +135,7 @@ mod tests {
         let rows = converted("override", &[a.clone(), b.clone()]);
         std::fs::remove_file(a).unwrap();
         std::fs::remove_file(b).unwrap();
-        // 覆盖保持原来的位置与顺序，新编码追加在后
+        // 覆蓋保持原來的位置與順序，新編碼追加在後
         assert_eq!(
             rows,
             [

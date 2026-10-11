@@ -1,9 +1,9 @@
-//! Engine 装配错误。
+//! Engine 裝配錯誤。
 use qingjian_dictionary::DictionaryError;
 use qingjian_lm::LmError;
 use qingjian_translate::GlossaryError;
 
-/// 装配 Engine 时的错误。
+/// 裝配 Engine 時的錯誤。
 #[derive(Debug, thiserror::Error)]
 pub enum ServerError {
     #[error("load dictionary: {0}")]

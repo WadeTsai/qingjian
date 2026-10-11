@@ -1,4 +1,4 @@
-//! 按既有注音规则解码，同时映射输入光标，不改变单元或尾串的顺序。
+//! 按既有注音規則解碼，同時對映輸入游標，不改變單元或尾串的順序。
 use super::{cursor::Cursor, result::Decoded, unit::Unit};
 use crate::zhuyin::{layout::map_key, syllable::ZhuyinSyllable};
 

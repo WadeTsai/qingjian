@@ -1,4 +1,4 @@
-//! Linux 的字体文件清单：发行版装 Noto 的常见位置。以后读 fontconfig 配置再补。
+//! Linux 的字型檔案清單：發行版裝 Noto 的常見位置。以後讀 fontconfig 配置再補。
 
 use std::path::PathBuf;
 

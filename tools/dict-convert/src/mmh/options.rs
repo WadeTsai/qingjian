@@ -1,21 +1,21 @@
-//! `mmh-reference` 子命令的参数与默认值。clap 定义就在这里（`Command::MmhReference` 装整个结构体）。
+//! `mmh-reference` 子命令的引數與預設值。clap 定義就在這裡（`Command::MmhReference` 裝整個結構體）。
 
 use std::path::PathBuf;
 
 use clap::Args;
 
-/// `mmh-reference` 子命令的参数。
+/// `mmh-reference` 子命令的引數。
 #[derive(Debug, Args)]
 pub struct MmhReferenceOptions {
-    /// hanzi-writer-data 解包目录（每字一个 `<字>.json`，含 medians）
+    /// hanzi-writer-data 解包目錄（每字一個 `<字>.json`，含 medians）
     #[arg(long, default_value = "data/mmh/package")]
     pub mmh: PathBuf,
 
-    /// 字表：只出表里的字，按表序排列
+    /// 字表：只出表裡的字，按表序排列
     #[arg(long, default_value = "assets/lexicon/01_characters/level1_3500.tsv")]
     pub filter: PathBuf,
 
-    /// 对照产物目录（gitignore，不进仓库）：写 prc-counts-l1.tsv 与 prc-first-strokes-l1.tsv
+    /// 對照產物目錄（gitignore，不進倉庫）：寫 prc-counts-l1.tsv 與 prc-first-strokes-l1.tsv
     #[arg(long, default_value = "data/mmh")]
     pub out_dir: PathBuf,
 }

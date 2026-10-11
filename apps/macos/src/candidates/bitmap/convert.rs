@@ -1,4 +1,4 @@
-//! 壳的帧类型 → 渲染器的帧类型。两边字段一一对应，spike 定型后壳直接用渲染器的类型，这层就没了。
+//! 殼的幀型別 → 渲染器的幀型別。兩邊欄位一一對應，spike 定型後殼直接用渲染器的型別，這層就沒了。
 
 use crate::candidates::frame::Frame;
 use crate::candidates::preedit::{Preedit, PreeditStyle};

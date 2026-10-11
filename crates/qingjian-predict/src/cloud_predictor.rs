@@ -8,20 +8,20 @@ use crate::config::PredictConfig;
 use crate::error::PredictError;
 use crate::worker::Worker;
 
-/// 走网络的联想器。构造时起一个后台线程，`submit` / `poll` 都只碰通道，不阻塞。
+/// 走網路的聯想器。構造時起一個後臺執行緒，`submit` / `poll` 都只碰通道，不阻塞。
 pub struct CloudPredictor {
-    /// 观察窗口、条数上限与开关，来自配置。
+    /// 觀察視窗、條數上限與開關，來自配置。
     policy: PredictionPolicy,
 
-    /// 往后台线程发请求。
+    /// 往後臺執行緒發請求。
     requests: Sender<PredictionRequest>,
 
-    /// 从后台线程收结果。
+    /// 從後臺執行緒收結果。
     responses: Receiver<Prediction>,
 }
 
 impl CloudPredictor {
-    /// 没有密钥直接报错，让壳退回 [`qingjian_core::NoPredictor`] 并记日志。
+    /// 沒有金鑰直接報錯，讓殼退回 [`qingjian_core::NoPredictor`] 並記日誌。
     pub fn new(config: &PredictConfig) -> Result<Self, PredictError> {
         let api_key = config
             .resolve_api_key()
@@ -69,7 +69,7 @@ impl Predictor for CloudPredictor {
     }
 
     fn poll(&mut self) -> Option<Prediction> {
-        // Empty 与 Disconnected 都当没有：线程退出时已经记过日志
+        // Empty 與 Disconnected 都當沒有：執行緒退出時已經記過日誌
         self.responses.try_recv().ok()
     }
 }

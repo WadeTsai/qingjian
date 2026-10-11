@@ -1,5 +1,5 @@
-//! 按键相关：TSF 虚拟键码到协议 [`KeyEvent`](qingjian_platform::protocol::KeyEvent) 的翻译（[`event`]）、
-//! 单击中英切换键的判定（[`tap`]，键来自 `[shortcut] switch_mode`）、「翻译选中文字」快捷键的保留键登记（[`preserved`]）。
+//! 按鍵相關：TSF 虛擬鍵碼到協議 [`KeyEvent`](qingjian_platform::protocol::KeyEvent) 的翻譯（[`event`]）、
+//! 單擊中英切換鍵的判定（[`tap`]，鍵來自 `[shortcut] switch_mode`）、「翻譯選中文字」快捷鍵的保留鍵登記（[`preserved`]）。
 
 pub(crate) mod event;
 mod layout;

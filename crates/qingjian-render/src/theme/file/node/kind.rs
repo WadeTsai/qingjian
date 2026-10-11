@@ -1,4 +1,4 @@
-//! 节点种类（JSON 里的 `type`）与各自的属性。
+//! 節點種類（JSON 裡的 `type`）與各自的屬性。
 
 use serde::Deserialize;
 
@@ -15,7 +15,7 @@ use crate::theme::file::{ColorSpec, FontRef};
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub(crate) enum NodeKind {
-    /// 框：按方向排子节点（或排成表格），可以有填充、边框与圆角。
+    /// 框：按方向排子節點（或排成表格），可以有填充、邊框與圓角。
     Frame {
         #[serde(default)]
         direction: Direction,
@@ -33,22 +33,22 @@ pub(crate) enum NodeKind {
         children: Vec<NodeSpec>,
     },
 
-    /// 一行文字：`bind` 绑定数据，或 `text` 写死。
+    /// 一行文字：`bind` 繫結資料，或 `text` 寫死。
     Text {
         bind: Option<String>,
 
         text: Option<String>,
 
-        /// `text.styles` 里的样式名，或在样式上改字号 / 字重。
+        /// `text.styles` 裡的樣式名，或在樣式上改字號 / 字重。
         font: FontRef,
 
         color: ColorSpec,
 
-        /// 描边。
+        /// 描邊。
         stroke: Option<BorderSpec>,
     },
 
-    /// 矢量图标，在盒子里垂直居中。
+    /// 向量圖示，在盒子裡垂直居中。
     Icon {
         icon: Icon,
 
@@ -57,59 +57,59 @@ pub(crate) enum NodeKind {
         color: ColorSpec,
     },
 
-    /// 拼音行：各段按状态着色，光标画在光标位置。
+    /// 拼音行：各段按狀態著色，游標畫在游標位置。
     Preedit {
         font: FontRef,
 
         /// 已敲的拼音。
         typed: ColorSpec,
 
-        /// 光标后未确认的拼音。
+        /// 游標後未確認的拼音。
         rest: ColorSpec,
 
-        /// 纠错改掉的字母，带删除线。
+        /// 糾錯改掉的字母，帶刪除線。
         struck: ColorSpec,
 
         caret: CaretSpec,
 
-        /// 拼音的描边。
+        /// 拼音的描邊。
         stroke: Option<BorderSpec>,
     },
 
-    /// 一串译文片段，按深浅着色。
+    /// 一串譯文片段，按深淺著色。
     Annotation {
         bind: String,
 
         font: FontRef,
 
-        /// 译文。
+        /// 譯文。
         gloss: ColorSpec,
 
-        /// 生词的译文。
+        /// 生詞的譯文。
         fresh: ColorSpec,
 
-        /// 淡色片段（假名注音）；词性与分隔符没单独写颜色时也用它。
+        /// 淡色片段（假名注音）；詞性與分隔符沒單獨寫顏色時也用它。
         faint: ColorSpec,
 
-        /// 词性；不写用 `faint`。
+        /// 詞性；不寫用 `faint`。
         pos: Option<ColorSpec>,
 
-        /// 义项间的分隔；不写用 `faint`。
+        /// 義項間的分隔；不寫用 `faint`。
         separator: Option<ColorSpec>,
 
-        /// 只画这几种片段（词性、译文分两行排时各写一个节点）；不写全画。
+        /// 只畫這幾種片段（詞性、譯文分兩行排時各寫一個節點）；不寫全畫。
         tones: Option<Vec<ToneFilter>>,
 
-        /// 只画前几个义项（按分隔数）；不写全画。
+        /// 只畫前幾個義項（按分隔數）；不寫全畫。
         senses: Option<usize>,
 
-        /// 描边。
+        /// 描邊。
         stroke: Option<BorderSpec>,
     },
 
-    /// 引用一个组件；这里写的盒子属性盖过组件根节点的。
+    /// 引用一個元件；這裡寫的盒子屬性蓋過元件根節點的。
     Use { component: String },
 
-    /// 按列表数据把组件重复多份，每份绑定一项。
+    /// 按列表資料把元件重複多份，每份繫結一項。
     Repeat { bind: String, component: String },
 }

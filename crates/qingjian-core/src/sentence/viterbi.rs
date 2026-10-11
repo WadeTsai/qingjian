@@ -1,7 +1,7 @@
-//! 词图上的最优路径：bigram Viterbi + 束搜索。
+//! 詞圖上的最優路徑：bigram Viterbi + 束搜尋。
 //!
-//! 状态只按前一个词分（束宽内），个人三元要的前二词取前驱节点的回指（它那条最优路径上的前一个词）：
-//! 不扩状态，代价是三元上下文是近似的，个人数据量下够用。
+//! 狀態只按前一個詞分（束寬內），個人三元要的前二詞取前驅節點的回指（它那條最優路徑上的前一個詞）：
+//! 不擴狀態，代價是三元上下文是近似的，個人資料量下夠用。
 
 use qingjian_dictionary::{Dictionary, Match, SyllablePattern};
 
@@ -12,43 +12,43 @@ use super::{
 };
 use crate::ranking::weight_bonus;
 
-/// 词库里没有的孤立音节（罕见音节没有单字）按这个 log 概率兜底，让路径总能走通。
+/// 詞庫裡沒有的孤立音節（罕見音節沒有單字）按這個 log 機率兜底，讓路徑總能走通。
 const UNKNOWN_LOG_PROB: f64 = -30.0;
 
-/// 一条部分路径的末尾节点。
+/// 一條部分路徑的末尾節點。
 struct Node {
-    /// 这个词从第几个音节开始。
+    /// 這個詞從第幾個音節開始。
     start: usize,
 
-    /// 词。
+    /// 詞。
     text: String,
 
-    /// 词的音节。
+    /// 詞的音節。
     syllables: Vec<String>,
 
-    /// 到此为止的累计得分。
+    /// 到此為止的累計得分。
     score: f64,
 
-    /// 累计得分里静态模型的部分（见 `Conversion::static_score`）。
+    /// 累計得分裡靜態模型的部分（見 `Conversion::static_score`）。
     static_score: f64,
 
-    /// 前驱在 `nodes[start]` 里的下标；`start == 0` 时无意义。
+    /// 前驅在 `nodes[start]` 裡的下標；`start == 0` 時無意義。
     back: usize,
 
-    /// 是占位音节。
+    /// 是佔位音節。
     placeholder: bool,
 
-    /// 到此为止路径上模糊音 / 敲错变体的代价之和（已从 `score` 里扣掉，另记一份给调用方判断路径是不是原样）。
+    /// 到此為止路徑上模糊音 / 敲錯變體的代價之和（已從 `score` 里扣掉，另記一份給呼叫方判斷路徑是不是原樣）。
     penalty: f64,
 }
 
-/// 把音节序列转成最可能的词序列。`positions` 每个位置是若干写法（第一种是敲的，其余是模糊音 / 敲错变体），
-/// `cost(位置, 命中的音节)` 是那个位置命中这种写法要扣的分（敲的原样 0），
-/// `weight` 是用户选择次数，`personal` 是个人 n-gram 与插值参数（没有个人数据就传 [`Personal::NONE`]），`cache` 是格子候选的缓存
-/// （调用方保证它与词库、`weight`、`personal`、`cost` 一致，这些一变就清）。
+/// 把音節序列轉成最可能的詞序列。`positions` 每個位置是若干寫法（第一種是敲的，其餘是模糊音 / 敲錯變體），
+/// `cost(位置, 命中的音節)` 是那個位置命中這種寫法要扣的分（敲的原樣 0），
+/// `weight` 是使用者選擇次數，`personal` 是個人 n-gram 與插值引數（沒有個人資料就傳 [`Personal::NONE`]），`cache` 是格子候選的快取
+/// （呼叫方保證它與詞庫、`weight`、`personal`、`cost` 一致，這些一變就清）。
 ///
-/// 简拼位置（`w x q`）按前缀取词：每个格子的候选会多得多，由语言模型在路径上分辨。
-/// 全拼句子末尾的前缀太短时不算它（多半是没打完的音节）；前面已有简拼的句子里末尾单字母就是一个音节。
+/// 簡拼位置（`w x q`）按字首取詞：每個格子的候選會多得多，由語言模型在路徑上分辨。
+/// 全拼句子末尾的字首太短時不算它（多半是沒打完的音節）；前面已有簡拼的句子裡末尾單字母就是一個音節。
 pub fn convert(
     dictionaries: &[&Dictionary],
     positions: &[Vec<SyllablePattern<'_>>],
@@ -70,8 +70,8 @@ pub fn convert(
     )
 }
 
-/// 同 [`convert`]，但全拼句子末尾的单字母也当一个音节读（`huo z…` → 或者）：
-/// 给「整段拼音读法」与别的读法比分用，比分要两边覆盖同样多的字母。
+/// 同 [`convert`]，但全拼句子末尾的單字母也當一個音節讀（`huo z…` → 或者）：
+/// 給「整段拼音讀法」與別的讀法比分用，比分要兩邊覆蓋同樣多的字母。
 pub fn convert_whole(
     dictionaries: &[&Dictionary],
     positions: &[Vec<SyllablePattern<'_>>],
@@ -93,7 +93,7 @@ pub fn convert_whole(
     )
 }
 
-/// [`convert`] 与 [`convert_whole`] 的共同实现，`keep_partial` 选哪种；只要最优的一条。
+/// [`convert`] 與 [`convert_whole`] 的共同實現，`keep_partial` 選哪種；只要最優的一條。
 #[allow(clippy::too_many_arguments)]
 pub fn convert_with(
     dictionaries: &[&Dictionary],
@@ -120,7 +120,7 @@ pub fn convert_with(
     .next()
 }
 
-/// 得分最高的前 `k` 条路径（最多束宽条，按得分降序，文本相同的只留一条）：给重打分用。
+/// 得分最高的前 `k` 條路徑（最多束寬條，按得分降序，文本相同的只留一條）：給重打分用。
 #[allow(clippy::too_many_arguments)]
 pub fn convert_paths(
     dictionaries: &[&Dictionary],
@@ -160,7 +160,7 @@ pub fn convert_paths(
         .max(1.0);
     let log_total = total.ln();
 
-    // nodes[i]：覆盖前 i 个音节、以某个词结尾的部分路径；nodes[0] 是虚拟起点
+    // nodes[i]：覆蓋前 i 個音節、以某個詞結尾的部分路徑；nodes[0] 是虛擬起點
     let mut nodes: Vec<Vec<Node>> = (0..=n).map(|_| Vec::new()).collect();
     nodes[0].push(Node {
         start: 0,
@@ -210,7 +210,7 @@ pub fn convert_paths(
                 });
             }
         }
-        // 这个音节连单字都查不到：用音节本身占位，别让整句断掉
+        // 這個音節連單字都查不到：用音節本身佔位，別讓整句斷掉
         if !any {
             let text = positions[start][0].text;
             let (score, back) = best_predecessor(
@@ -249,7 +249,7 @@ pub fn convert_paths(
     paths
 }
 
-/// 从 `nodes[position][index]` 回溯出整条路径。
+/// 從 `nodes[position][index]` 回溯出整條路徑。
 fn backtrack(nodes: &[Vec<Node>], mut position: usize, mut index: usize) -> Conversion {
     let score = nodes[position][index].score;
     let static_score = nodes[position][index].static_score;
@@ -282,7 +282,7 @@ fn backtrack(nodes: &[Vec<Node>], mut position: usize, mut index: usize) -> Conv
     }
 }
 
-/// 占位音节不问语言模型。
+/// 佔位音節不問語言模型。
 struct NoModel;
 
 impl LanguageModel for NoModel {
@@ -291,10 +291,10 @@ impl LanguageModel for NoModel {
     }
 }
 
-/// 一个格子里的候选词：所有词库的精确命中，按词频（加用户选择次数与个人出现次数，替代写法命中的按代价打折）取前几个。
-/// 个人次数只在这里保证用户常用的同音词进得了格子，不进路径打分（那是 n-gram 的事）；
-/// 打折让敲错变体命中的词只在原样命中不够多时才进格子，而常用词（关系）即使打折也留得住。
-/// 格子里有简拼位置时命中的是一大片不同读音的词，多留一些让语言模型去挑。
+/// 一個格子裡的候選詞：所有詞庫的精確命中，按詞頻（加使用者選擇次數與個人出現次數，替代寫法命中的按代價打折）取前幾個。
+/// 個人次數只在這裡保證使用者常用的同音詞進得了格子，不進路徑打分（那是 n-gram 的事）；
+/// 打折讓敲錯變體命中的詞只在原樣命中不夠多時才進格子，而常用詞（關係）即使打折也留得住。
+/// 格子裡有簡拼位置時命中的是一大片不同讀音的詞，多留一些讓語言模型去挑。
 fn span_candidates(
     dictionaries: &[&Dictionary],
     span: &[Vec<SyllablePattern<'_>>],
@@ -313,7 +313,7 @@ fn span_candidates(
             .map(|(index, syllable)| cost(start + index, syllable))
             .sum::<f64>()
     };
-    // 得分先算好再排：单字母简拼的格子能命中几千条，比较器里每次查两张表会让排序占掉十几毫秒
+    // 得分先算好再排：單字母簡拼的格子能命中幾千條，比較器裡每次查兩張表會讓排序佔掉十幾毫秒
     let mut scored: Vec<(f64, f64, Match<'_>)> = dictionaries
         .iter()
         .flat_map(|d| d.lookup_exact_alt(span))
@@ -343,8 +343,8 @@ fn span_candidates(
         .collect()
 }
 
-/// 在 `nodes[start]` 的前驱里挑让 `word` 得分最高的那条，返回 (累计得分, 前驱下标)。
-/// 转移概率先问静态模型（不认识就用词库兜底值），再与个人 n-gram 插值；前二词是前驱自己的前驱（回指）。
+/// 在 `nodes[start]` 的前驅裡挑讓 `word` 得分最高的那條，返回 (累計得分, 前驅下標)。
+/// 轉移機率先問靜態模型（不認識就用詞庫兜底值），再與個人 n-gram 插值；前二詞是前驅自己的前驅（回指）。
 fn best_predecessor(
     nodes: &[Vec<Node>],
     start: usize,
@@ -372,7 +372,7 @@ fn best_predecessor(
     best
 }
 
-/// 按得分降序只留束宽条。
+/// 按得分降序只留束寬條。
 fn prune(nodes: &mut Vec<Node>) {
     nodes.sort_by(|a, b| {
         b.score
@@ -419,7 +419,7 @@ mod tests {
         let patterns = complete(&["wo", "xiang", "qu", "chi", "fan"]);
         let conversion = unigram(&dictionary, &patterns).unwrap();
         assert_eq!(conversion.text, "我想去吃饭");
-        assert_eq!(conversion.word_count(), 3); // 我想 / 去 / 吃饭
+        assert_eq!(conversion.word_count(), 3); // 我想 / 去 / 吃飯
         assert_eq!(conversion.words[0].text, "我想");
         assert_eq!(conversion.words[0].syllables, ["wo", "xiang"]);
         assert_eq!(conversion.syllables.len(), 5);
@@ -428,7 +428,7 @@ mod tests {
     #[test]
     fn user_weight_lifts_near_ties_but_is_capped() {
         let dictionary = Dictionary::parse(SAMPLE).unwrap();
-        // wo qu 没有整词：卧 / 我 词频差 450 倍（log 差 6.1），加分封顶后选多少次都翻不过来
+        // wo qu 沒有整詞：臥 / 我 詞頻差 450 倍（log 差 6.1），加分封頂後選多少次都翻不過來
         let patterns = complete(&["wo", "qu"]);
         let lifted = |count: u32| {
             convert(
@@ -445,7 +445,7 @@ mod tests {
         };
         assert_eq!(lifted(20), "我去");
         assert_eq!(lifted(500), "我去");
-        // 去 / 区 差 4 倍（log 差 1.4）：选过十几次就翻过来
+        // 去 / 區 差 4 倍（log 差 1.4）：選過十幾次就翻過來
         let patterns = complete(&["wo", "qu"]);
         let lifted = |count: u32| {
             convert(
@@ -470,7 +470,7 @@ mod tests {
         let mut patterns = complete(&["wo", "xiang"]);
         patterns.push(vec![SyllablePattern::prefix("ka")]);
         assert_eq!(unigram(&dictionary, &patterns).unwrap().text, "我想开");
-        // 全拼句子末尾的单字母多半是没打完的音节，不参与
+        // 全拼句子末尾的單字母多半是沒打完的音節，不參與
         let mut patterns = complete(&["wo", "xiang"]);
         patterns.push(vec![SyllablePattern::prefix("k")]);
         assert_eq!(unigram(&dictionary, &patterns).unwrap().text, "我想");
@@ -486,12 +486,12 @@ mod tests {
     #[test]
     fn abbreviated_sentences_convert_by_prefix() {
         let dictionary = Dictionary::parse(SAMPLE).unwrap();
-        // 全简拼：每个格子按前缀取词，末尾单字母也是一个音节
+        // 全簡拼：每個格子按字首取詞，末尾單字母也是一個音節
         let conversion = unigram(&dictionary, &abbreviated(&["w", "x", "q"])).unwrap();
         assert_eq!(conversion.text, "我想去");
         assert_eq!(conversion.syllables, ["wo", "xiang", "qu"]);
         assert_eq!(conversion.words[0].text, "我想");
-        // 简拼与全拼混用
+        // 簡拼與全拼混用
         let patterns = [
             vec![SyllablePattern::prefix("w")],
             vec![SyllablePattern::complete("xiang")],
@@ -500,13 +500,13 @@ mod tests {
             vec![SyllablePattern::prefix("f")],
         ];
         assert_eq!(unigram(&dictionary, &patterns).unwrap().text, "我想去吃饭");
-        // 简拼位置按前缀取词：`f` 既是 fa 也是 fang，词频高的 开放 胜出
+        // 簡拼位置按字首取詞：`f` 既是 fa 也是 fang，詞頻高的 開放 勝出
         let conversion = unigram(&dictionary, &abbreviated(&["k", "f"])).unwrap();
         assert_eq!(conversion.text, "开放");
         assert!(!conversion.has_placeholder());
     }
 
-    /// 只认 `我 → 翔` 的假模型下，简拼 `w x` 也该听语言模型的。
+    /// 只認 `我 → 翔` 的假模型下，簡拼 `w x` 也該聽語言模型的。
     #[test]
     fn language_model_decides_abbreviated_homophones() {
         let dictionary = Dictionary::parse(SAMPLE).unwrap();
@@ -534,7 +534,7 @@ mod tests {
         assert!(conversion.words.iter().filter(|w| w.placeholder).count() == 1);
     }
 
-    /// 只认 `我 → 翔` 的假模型：bigram 应该压过一元词频。
+    /// 只認 `我 → 翔` 的假模型：bigram 應該壓過一元詞頻。
     struct XiangModel;
 
     impl LanguageModel for XiangModel {
@@ -585,8 +585,8 @@ mod tests {
             .text
         };
         assert_eq!(text(&personal), "我翔");
-        // 静态模型给 翔 的是很强的 bigram（P ≈ 0.14）：用户选过一次 我 → 想 翻不过（防误选），两次就翻。
-        // 静态证据越弱（P 越小），个人偏好翻过来得越早。
+        // 靜態模型給 翔 的是很強的 bigram（P ≈ 0.14）：使用者選過一次 我 → 想 翻不過（防誤選），兩次就翻。
+        // 靜態證據越弱（P 越小），個人偏好翻過來得越早。
         personal.record(Context::START, "我");
         personal.record(Context::after("我"), "想");
         assert_eq!(text(&personal), "我翔");
@@ -595,8 +595,8 @@ mod tests {
         assert_eq!(text(&personal), "我想");
     }
 
-    /// 三元上下文来自前驱的回指：「我想」后面的 去 / 区 由用户在「我想」后选过什么决定，
-    /// 而「卧想」后面（回指不同）拿不到这条三元。
+    /// 三元上下文來自前驅的回指：「我想」後面的 去 / 區 由使用者在「我想」後選過什麼決定，
+    /// 而「臥想」後面（回指不同）拿不到這條三元。
     #[test]
     fn trigram_context_comes_from_the_predecessor_chain() {
         let dictionary = Dictionary::parse(SAMPLE).unwrap();
@@ -614,9 +614,9 @@ mod tests {
             .unwrap()
         };
         let mut personal = UserNgram::default();
-        // 一元下 我想去（我想 是一个词）
+        // 一元下 我想去（我想 是一個詞）
         assert_eq!(convert_with(&personal).text, "我想去");
-        // 用户在 我 → 想 之后选过 区：三元 (我, 想) → 区 把 区 抬过 去，路径改走 我 / 想 / 区
+        // 使用者在 我 → 想 之後選過 區：三元 (我, 想) → 區 把 區 抬過 去，路徑改走 我 / 想 / 區
         for _ in 0..4 {
             personal.record(Context::START, "我");
             personal.record(Context::after("我"), "想");
@@ -647,19 +647,19 @@ mod tests {
         };
         let fresh = run(&mut cache, &["wo", "xiang", "qu", "chi"]);
         let before = cache.len();
-        // 多敲一个音节：只新增以它结尾的格子
+        // 多敲一個音節：只新增以它結尾的格子
         let extended = run(&mut cache, &["wo", "xiang", "qu", "chi", "fan"]);
         assert_eq!(extended, "我想去吃饭");
         assert!(cache.len() > before);
         assert!(cache.len() - before <= MAX_WORD_SYLLABLES);
-        // 再算一遍全部命中缓存，结果一致
+        // 再算一遍全部命中快取，結果一致
         let again = cache.len();
         assert_eq!(run(&mut cache, &["wo", "xiang", "qu", "chi"]), fresh);
         assert_eq!(cache.len(), again);
     }
 
-    /// 敲错变体是带代价的边：`gan xi` 在 `gan` 位多一种写法 `guan`（代价 4.5），原样凑不出像样的句子时 关系 胜出，
-    /// 原样本身说得通（`gan xie` 感谢）时代价让它输。
+    /// 敲錯變體是帶代價的邊：`gan xi` 在 `gan` 位多一種寫法 `guan`（代價 4.5），原樣湊不出像樣的句子時 關係 勝出，
+    /// 原樣本身說得通（`gan xie` 感謝）時代價讓它輸。
     #[test]
     fn typo_alternatives_are_penalized_edges() {
         let dictionary = Dictionary::parse(
@@ -697,7 +697,7 @@ mod tests {
         let conversion = run(with_typo("xi"));
         assert_eq!(conversion.text, "关系");
         assert_eq!(conversion.words[0].syllables, ["guan", "xi"]);
-        // 原样 干洗 两个单字的得分远低于 关系 − 4.5：噪声信道选纠正，路径带着代价
+        // 原樣 乾洗 兩個單字的得分遠低於 關係 − 4.5：噪聲通道選糾正，路徑帶著代價
         assert_eq!(conversion.penalty, 4.5);
         let conversion = run(with_typo("xie"));
         assert_eq!(conversion.text, "感谢");

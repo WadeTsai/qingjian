@@ -1,5 +1,5 @@
-//! 本地整句模型：停顿后重排换首选、动过高亮不换、模型在组句中途接上也补这一轮；
-//! 插件定时 Poll 回的帧内容没变时展示身份不变，重排换了顺序才推进。
+//! 本地整句模型：停頓後重排換首選、動過高亮不換、模型在組句中途接上也補這一輪；
+//! 外掛定時 Poll 回的幀內容沒變時展示身份不變，重排換了順序才推進。
 use std::time::{Duration, Instant};
 
 use qingjian_core::Engine;
@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 const SESSION: SessionId = SessionId(1);
 
-/// 假打分器：偏爱某个文本，其余都给低分（与 Core / Windows Server 的重打分测试同款）。
+/// 假打分器：偏愛某個文本，其餘都給低分（與 Core / Windows Server 的重打分測試同款）。
 struct Prefers(&'static str);
 
 impl SentenceScorer for Prefers {
@@ -25,7 +25,7 @@ impl SentenceScorer for Prefers {
     }
 }
 
-/// k 优路径按末词分状态，几条路径要在末词上不同才都留下来：ni + ta → 你他 / 你她 / 你它。
+/// k 優路徑按末詞分狀態，幾條路徑要在末詞上不同才都留下來：ni + ta → 你他 / 你她 / 你它。
 fn engine() -> Engine {
     Engine::new(Dictionary::parse("你\tni\t100\n他\tta\t100\n她\tta\t90\n它\tta\t80\n").unwrap())
 }
@@ -44,7 +44,7 @@ fn router_with(engine: Engine) -> Router {
     router
 }
 
-/// 接了假模型的 Router：本地整句模型在 Server 里是异步接法，按键先按词级出候选，停顿后 tick 才换。
+/// 接了假模型的 Router：本地整句模型在 Server 裡是非同步接法，按鍵先按詞級出候選，停頓後 tick 才換。
 fn router_with_scorer(preferred: &'static str) -> Router {
     let mut engine = engine();
     engine.set_async_sentence_scorer(Some(Box::new(Prefers(preferred))));
@@ -87,7 +87,7 @@ fn poll(router: &mut Router) -> Frame {
     }
 }
 
-/// 一直 tick 到首选变成 `text` 或等满 `timeout`；返回最后一帧。
+/// 一直 tick 到首選變成 `text` 或等滿 `timeout`；返回最後一幀。
 fn tick_until_first(router: &mut Router, text: &str, timeout: Duration) -> Frame {
     let started = Instant::now();
     loop {
@@ -104,9 +104,9 @@ fn tick_until_first(router: &mut Router, text: &str, timeout: Duration) -> Frame
 fn local_model_rescoring_reorders_sentence_after_pause() {
     let mut router = router_with_scorer("你它");
     let frame = type_letters(&mut router, "nita");
-    // 按键时只按词级模型：他 的词频高，首选是「你他」
+    // 按鍵時只按詞級模型：他 的詞頻高，首選是「你他」
     assert_eq!(first(&frame), Some("你他"));
-    // 在等防抖，主循环该在 80 ms 内醒来
+    // 在等防抖，主迴圈該在 80 ms 內醒來
     assert!(router.next_tick() <= Duration::from_millis(80));
 
     let frame = tick_until_first(&mut router, "你它", Duration::from_secs(3));
@@ -116,7 +116,7 @@ fn local_model_rescoring_reorders_sentence_after_pause() {
         "停顿后模型偏爱的整句应换到首位，实际：{:?}",
         frame.candidates.items
     );
-    // 换完不再等；空闲节拍回到落盘学习的一秒
+    // 換完不再等；空閒節拍回到落盤學習的一秒
     assert_eq!(router.next_tick(), Duration::from_secs(1));
 }
 
@@ -124,33 +124,33 @@ fn local_model_rescoring_reorders_sentence_after_pause() {
 fn local_model_does_not_touch_a_navigated_page() {
     let mut router = router_with_scorer("你它");
     type_letters(&mut router, "nita");
-    // 用户动过高亮（下方向键）：模型的结果只留在缓存里，不换正在看的这页
+    // 使用者動過高亮（下方向鍵）：模型的結果只留在快取裡，不換正在看的這頁
     let frame = press(
         &mut router,
         KeyEvent::new(0x28, None, KeyModifiers::default()),
     );
     assert_eq!(first(&frame), Some("你他"));
-    // 防抖 80 ms + 假模型立即回分，300 ms 足够等到结果；首选仍是原来的
+    // 防抖 80 ms + 假模型立即回分，300 ms 足夠等到結果；首選仍是原來的
     let frame = tick_until_first(&mut router, "你它", Duration::from_millis(300));
     assert_eq!(first(&frame), Some("你他"));
 }
 
 #[test]
 fn model_attached_during_composition_rescores_the_current_round() {
-    // 模型还在后台加载时用户已经在组句：这一轮的查询从没见过打分器
+    // 模型還在後臺載入時使用者已經在組句：這一輪的查詢從沒見過打分器
     let mut router = router_with(engine());
     let frame = type_letters(&mut router, "nita");
     assert_eq!(first(&frame), Some("你他"));
     assert_eq!(router.next_tick(), Duration::from_secs(1));
 
-    // 加载完成接上：不用再敲键，这一轮也补一次重排
+    // 載入完成接上：不用再敲鍵，這一輪也補一次重排
     router.attach_sentence_scorer(Box::new(Prefers("你它")));
     assert!(router.next_tick() <= Duration::from_millis(80));
     let frame = tick_until_first(&mut router, "你它", Duration::from_secs(3));
     assert_eq!(first(&frame), Some("你它"));
 }
 
-/// 插件走 JSON 通道：握手报了展示身份，之后每帧都带 `identity`。
+/// 外掛走 JSON 通道：握手報了展示身份，之後每幀都帶 `identity`。
 fn poll_json(router: &mut Router) -> Value {
     router
         .handle_linux(json!({"Poll": {"session": 1}}))
@@ -176,7 +176,7 @@ fn poll_keeps_the_display_identity_until_the_frame_changes() {
             .unwrap()["KeyResult"]["identity"]
             .take();
     }
-    // 组句期间插件每 80 ms 问一次：内容没变就沿用身份，插件不重画、不重复回报曝光
+    // 組句期間外掛每 80 ms 問一次：內容沒變就沿用身份，外掛不重畫、不重複回報曝光
     for _ in 0..3 {
         let update = poll_json(&mut router);
         assert_eq!(update["Update"]["identity"], shown);
@@ -186,7 +186,7 @@ fn poll_keeps_the_display_identity_until_the_frame_changes() {
         );
     }
 
-    // 模型接上、重排换了顺序：这一帧才是新的展示，版本号推进
+    // 模型接上、重排換了順序：這一幀才是新的展示，版本號推進
     router.attach_sentence_scorer(Box::new(Prefers("你它")));
     let started = Instant::now();
     let changed = loop {
@@ -204,7 +204,7 @@ fn poll_keeps_the_display_identity_until_the_frame_changes() {
         "你它"
     );
     assert!(changed["Update"]["identity"]["revision"].as_u64() > shown["revision"].as_u64());
-    // 换完之后再问：又是沿用
+    // 換完之後再問：又是沿用
     assert_eq!(
         poll_json(&mut router)["Update"]["identity"],
         changed["Update"]["identity"]

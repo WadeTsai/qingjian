@@ -1,12 +1,12 @@
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
-/// 文件头魔数。
+/// 檔案頭魔數。
 pub const MAGIC: [u8; 8] = *b"QINGJIAN";
 
-/// 当前格式版本。布局不兼容时加一，读旧版本的代码按需保留。
+/// 當前格式版本。佈局不相容時加一，讀舊版本的程式碼按需保留。
 pub const FORMAT_VERSION: u16 = 1;
 
-/// 文件头，32 字节，紧跟着 `section_count` 条 [`crate::SectionEntry`]。
+/// 檔案頭，32 位元組，緊跟著 `section_count` 條 [`crate::SectionEntry`]。
 #[derive(Debug, Clone, Copy, FromBytes, IntoBytes, Immutable, KnownLayout)]
 #[repr(C)]
 pub struct Header {
@@ -16,13 +16,13 @@ pub struct Header {
     /// [`FORMAT_VERSION`]。
     pub version: u16,
 
-    /// 数据种类，见 [`crate::Kind`]。
+    /// 資料種類，見 [`crate::Kind`]。
     pub kind: u16,
 
-    /// 分节数。
+    /// 分節數。
     pub section_count: u32,
 
-    /// 留给以后（校验和、标志位），现在全零。
+    /// 留給以後（校驗和、標誌位），現在全零。
     pub reserved: [u8; 16],
 }
 

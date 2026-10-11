@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-predict"
-description = "云联想：OpenAI 兼容接口的候选词、整句补全、问字、翻译与释义兜底"
+description = "雲聯想：OpenAI 相容介面的候選詞、整句補全、問字、翻譯與釋義兜底"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

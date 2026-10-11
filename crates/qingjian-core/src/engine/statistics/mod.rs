@@ -1,8 +1,8 @@
-//! 输入统计：每次上屏折成几个汉字、几个中文词、几个英文词，交给 [`UsageMeter`] 按天累计。
+//! 輸入統計：每次上屏折成幾個漢字、幾個中文詞、幾個英文詞，交給 [`UsageMeter`] 按天累計。
 //!
-//! 这是给用户看的「用青简打了多少字」，不是学习数据，也不从输入日志算（日志可以关、可以清，统计还在）。
-//! Core 只负责算数（[`Usage::of_text`] 与 `Engine` 里的词数），按天累计与落盘由实现做
-//! （`qingjian-learning` 的 `UsageStats`）；缺省 [`NoUsageMeter`] 什么都不记。
+//! 這是給使用者看的「用青簡打了多少字」，不是學習資料，也不從輸入日誌算（日誌可以關、可以清，統計還在）。
+//! Core 只負責算數（[`Usage::of_text`] 與 `Engine` 裡的詞數），按天累計與落盤由實現做
+//! （`qingjian-learning` 的 `UsageStats`）；預設 [`NoUsageMeter`] 什麼都不記。
 
 mod book;
 mod meter;

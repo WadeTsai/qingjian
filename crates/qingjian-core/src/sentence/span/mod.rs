@@ -1,4 +1,4 @@
-//! 词图的跨度：一段音节位置上查到的词（`SpanWord`）与按输入串缓存的查词结果（`SpanCache`）。
+//! 詞圖的跨度：一段音節位置上查到的詞（`SpanWord`）與按輸入串快取的查詞結果（`SpanCache`）。
 
 mod cache;
 mod word;

@@ -1,11 +1,11 @@
-//! 候选的排布。与配置里的 `LayoutMode` 一一对应，渲染器不依赖配置 crate，由壳换算。
+//! 候選的排布。與配置裡的 `LayoutMode` 一一對應，渲染器不依賴配置 crate，由殼換算。
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Layout {
-    /// 竖排：一行一个候选，译文在同一行右侧。
+    /// 豎排：一行一個候選，譯文在同一行右側。
     #[default]
     Vertical,
 
-    /// 横排：候选排成一行，只给高亮那个在下面显示译文；帧的 `columns` 不为 0 时展开成多行矩阵。
+    /// 橫排：候選排成一行，只給高亮那個在下面顯示譯文；幀的 `columns` 不為 0 時展開成多行矩陣。
     Horizontal,
 }

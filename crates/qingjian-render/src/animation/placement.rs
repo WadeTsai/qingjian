@@ -1,4 +1,4 @@
-//! 节点在窗口里的位置、大小（像素，相对根节点左上角）与不透明度：过渡的起点、终点与中间值。
+//! 節點在窗口裡的位置、大小（畫素，相對根節點左上角）與不透明度：過渡的起點、終點與中間值。
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Placement {
@@ -14,7 +14,7 @@ pub(crate) struct Placement {
 }
 
 impl Placement {
-    /// 从 `self` 到 `to` 走了 `progress`（可略超出 0–1，回弹曲线）。
+    /// 從 `self` 到 `to` 走了 `progress`（可略超出 0–1，回彈曲線）。
     pub(crate) fn lerp(self, to: Self, progress: f32) -> Self {
         let mix = |a: f32, b: f32| a + (b - a) * progress;
         Self {

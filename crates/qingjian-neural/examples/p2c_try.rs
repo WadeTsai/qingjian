@@ -1,8 +1,8 @@
-//! 拿真的 P2C 模型跑一遍：拼音 → 候选，顺带量每条的耗时。
+//! 拿真的 P2C 模型跑一遍：拼音 → 候選，順帶量每條的耗時。
 //!
-//! 用法：`cargo run --release -p qingjian-neural --example p2c_try --features metal -- <模型目录> [拼音...]`
+//! 用法：`cargo run --release -p qingjian-neural --example p2c_try --features metal -- <模型目錄> [拼音...]`
 //!
-//! 不给拼音就跑内置样例，并按 beam 1/3/5/8 扫一遍延迟（中位数，热身 3 次取 15 次）。
+//! 不給拼音就跑內建樣例，並按 beam 1/3/5/8 掃一遍延遲（中位數，熱身 3 次取 15 次）。
 
 use std::path::PathBuf;
 use std::time::Instant;
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// 跑 `runs` 次取中位数（毫秒），前面先热身 3 次。
+/// 跑 `runs` 次取中位數（毫秒），前面先熱身 3 次。
 fn median(runs: usize, mut run: impl FnMut()) -> f64 {
     for _ in 0..3 {
         run();

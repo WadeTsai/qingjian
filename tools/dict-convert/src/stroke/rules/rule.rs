@@ -1,23 +1,23 @@
-//! 大陆笔顺覆盖规则：模式、替换与说明。
+//! 大陸筆順覆蓋規則：模式、替換與說明。
 
 use std::collections::HashSet;
 
 use crate::stroke::rules::anchor::Anchor;
 
-/// 一条部件重写规则：CNS（台湾序）里的 `from` 模式就是大陆的 `to`。
+/// 一條部件重寫規則：CNS（台灣序）裡的 `from` 模式就是大陸的 `to`。
 pub(super) struct Rule {
-    /// 部件名（覆盖表里的标识，报错与日志用）。
+    /// 部件名（覆蓋表裡的標識，報錯與日誌用）。
     pub(super) name: String,
 
-    /// CNS 序列里的部件笔画模式。
+    /// CNS 序列裡的部件筆畫模式。
     pub(super) from: String,
 
-    /// 大陆规范里的部件笔画模式。
+    /// 大陸規範裡的部件筆畫模式。
     pub(super) to: String,
 
     /// 匹配位置。
     pub(super) anchor: Anchor,
 
-    /// 例外字：这些字里命中的模式不是该部件，规则不适用。
+    /// 例外字：這些字裡命中的模式不是該部件，規則不適用。
     pub(super) skips: HashSet<char>,
 }

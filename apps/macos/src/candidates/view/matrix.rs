@@ -1,6 +1,6 @@
-//! 系统绘制路径的矩阵排布：横排展开后的多行网格，规则与渲染器的 `renderer/matrix.rs` 一致——
-//! 一行 `frame.columns` 格，各列宽度由帧给（按整份候选估的，滚动时不变），超宽的候选截尾加「…」，
-//! 网格下面固定留一行信息（完整文本、译文、页码），信息行放不下的也截断，窗口宽度只由列宽决定。
+//! 系統繪製路徑的矩陣排布：橫排展開後的多行網格，規則與渲染器的 `renderer/matrix.rs` 一致——
+//! 一行 `frame.columns` 格，各列寬度由幀給（按整份候選估的，滾動時不變），超寬的候選截尾加「…」，
+//! 網格下面固定留一行資訊（完整文本、譯文、頁碼），資訊行放不下的也截斷，視窗寬度只由列寬決定。
 
 use objc2_app_kit::{NSColor, NSFont};
 use objc2_foundation::{NSPoint, NSRect, NSSize};
@@ -8,36 +8,36 @@ use objc2_foundation::{NSPoint, NSRect, NSSize};
 use super::{CandidateView, HIGHLIGHT_INSET, INDEX_GAP};
 use crate::candidates::frame::Frame;
 
-/// 帧没给列宽时，一格里候选词最多多宽（按候选字号的倍数）。
+/// 幀沒給列寬時，一格里候選詞最多多寬（按候選字號的倍數）。
 const MAX_CELL_EMS: f64 = 4.0;
 
-/// 列宽在估出来的字宽之外再留一点：估宽按整字算，字形实际会多出零点几个点。
+/// 列寬在估出來的字寬之外再留一點：估寬按整字算，字形實際會多出零點幾個點。
 const CELL_SLACK: f64 = 1.5;
 
-/// 信息行里完整文本与译文之间的间距。
+/// 資訊行裡完整文本與譯文之間的間距。
 const INFO_GAP: f64 = 10.0;
 
 const ELLIPSIS: &str = "…";
 
-/// 量好的网格：每格显示的文字（可能已截断）、各列的宽度与统一的行高。
+/// 量好的網格：每格顯示的文字（可能已截斷）、各列的寬度與統一的行高。
 struct Cells {
     texts: Vec<(String, bool)>,
 
     index_width: f64,
 
-    /// 每列一格的宽度（序号 + 间距 + 候选词）。
+    /// 每列一格的寬度（序號 + 間距 + 候選詞）。
     column_widths: Vec<f64>,
 
     row_height: f64,
 }
 
 impl Cells {
-    /// 第 `column` 列左边相对网格起点的偏移。
+    /// 第 `column` 列左邊相對網格起點的偏移。
     fn offset(&self, column: usize, gap: f64) -> f64 {
         self.column_widths[..column].iter().sum::<f64>() + gap * column as f64
     }
 
-    /// 网格总宽（不含两侧高亮留边）。
+    /// 網格總寬（不含兩側高亮留邊）。
     fn width(&self, gap: f64) -> f64 {
         self.column_widths.iter().sum::<f64>()
             + gap * self.column_widths.len().saturating_sub(1) as f64
@@ -101,7 +101,7 @@ impl CandidateView {
                 text_height,
             );
         }
-        // 信息行：页码靠右；左边先放被截断的高亮候选的完整文本，再放译文，放不下的截断
+        // 資訊行：頁碼靠右；左邊先放被截斷的高亮候選的完整文本，再放譯文，放不下的截斷
         let grid_rows = frame.rows.len().div_ceil(columns);
         let info_top = y + cells.row_height * grid_rows as f64 + theme.row_padding / 2.0;
         let right = bounds.size.width - theme.padding;
@@ -136,15 +136,15 @@ impl CandidateView {
         }
     }
 
-    /// 在信息行里画一段小字，宽度超过 `budget` 就截断；返回画了多宽。
+    /// 在資訊行裡畫一段小字，寬度超過 `budget` 就截斷；返回畫了多寬。
     fn draw_clipped(&self, text: &str, color: &NSColor, x: f64, top: f64, budget: f64) -> f64 {
         let font = &self.theme().annotation_font;
         let (shown, _) = self.truncate(text, font, budget);
         self.draw_text(&shown, font, color, top, x)
     }
 
-    /// 每格的显示文字与各列宽度。序号列按最宽的一位数留，行与行才对得齐。
-    /// 列宽优先用帧给的（按整份候选估的，滚动时不变）；没给就按视口里实测、每格封顶 [`MAX_CELL_EMS`]。
+    /// 每格的顯示文字與各列寬度。序號列按最寬的一位數留，行與行才對得齊。
+    /// 列寬優先用幀給的（按整份候選估的，滾動時不變）；沒給就按視口裡實測、每格封頂 [`MAX_CELL_EMS`]。
     fn matrix_cells(&self, frame: &Frame) -> Cells {
         let theme = self.theme();
         let columns = frame.columns.max(1);
@@ -189,7 +189,7 @@ impl CandidateView {
         }
     }
 
-    /// `text` 宽度超过 `max_width` 就从末尾去字、补上「…」直到放得下；返回显示文字与是否截断过。
+    /// `text` 寬度超過 `max_width` 就從末尾去字、補上「…」直到放得下；返回顯示文字與是否截斷過。
     fn truncate(&self, text: &str, font: &NSFont, max_width: f64) -> (String, bool) {
         if text.is_empty() || self.measure(text, font).width <= max_width {
             return (text.to_owned(), false);

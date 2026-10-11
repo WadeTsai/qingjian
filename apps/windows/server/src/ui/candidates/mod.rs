@@ -1,6 +1,6 @@
-//! 候选窗口：不抢焦点、置顶的分层窗口，跟随光标，画拼音行与候选列表，四周柔和阴影。
-//! 缺省交给青简渲染器出位图再贴（[`super::painter`]），配置 `renderer = "system"` 时走 GDI：绘制在 [`view`]，
-//! 配色 / 字体在 [`theme`]。绘制内容在 [`RenderData`]，一行的展示形态在 [`row`]。设计语言对齐 macOS 端。
+//! 候選視窗：不搶焦點、置頂的分層視窗，跟隨游標，畫拼音行與候選列表，四周柔和陰影。
+//! 預設交給青簡渲染器出點陣圖再貼（[`super::painter`]），配置 `renderer = "system"` 時走 GDI：繪製在 [`view`]，
+//! 配色 / 字型在 [`theme`]。繪製內容在 [`RenderData`]，一行的展示形態在 [`row`]。設計語言對齊 macOS 端。
 
 mod click;
 mod render_data;
@@ -37,13 +37,13 @@ use super::window_class::WindowClass;
 const CLASS_NAME: PCWSTR = w!("QingjianCandidateWindow");
 static CLASS: WindowClass = WindowClass::new();
 
-/// 动画定时器的 id（间隔按渲染器给的 `next_frame`；系统定时器精度约 15.6 ms）。
+/// 動畫定時器的 id（間隔按渲染器給的 `next_frame`；系統定時器精度約 15.6 ms）。
 const ANIMATION_TIMER: usize = 1;
 
-/// 光标行与候选窗之间的间隙（逻辑像素）。
+/// 游標行與候選窗之間的間隙（邏輯畫素）。
 const CARET_GAP: i32 = 2;
 
-/// 按外观模式解析深浅；`System` 读系统主题。
+/// 按外觀模式解析深淺；`System` 讀系統主題。
 pub(super) fn resolve_dark(mode: Appearance) -> bool {
     match mode {
         Appearance::Light => false,
@@ -52,7 +52,7 @@ pub(super) fn resolve_dark(mode: Appearance) -> bool {
     }
 }
 
-/// `HKCU\...\Themes\Personalize\AppsUseLightTheme` 为 0 是深色；读不到当浅色。
+/// `HKCU\...\Themes\Personalize\AppsUseLightTheme` 為 0 是深色；讀不到當淺色。
 fn system_prefers_dark() -> bool {
     windows_registry::CURRENT_USER
         .open(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
@@ -60,31 +60,31 @@ fn system_prefers_dark() -> bool {
         .is_ok_and(|value| value == 0)
 }
 
-/// 候选窗口。内容经 `UpdateLayeredWindow` 一次贴上，窗口过程只走默认处理。
+/// 候選視窗。內容經 `UpdateLayeredWindow` 一次貼上，視窗過程只走預設處理。
 pub(crate) struct CandidateWindow {
     hwnd: HWND,
 
-    /// 绘制内容。
+    /// 繪製內容。
     data: RefCell<RenderData>,
 
-    /// 上次用的 DPI，变了重建字体。
+    /// 上次用的 DPI，變了重建字型。
     dpi: Cell<u32>,
 
-    /// 上次解析出的深浅，变了重建配色。
+    /// 上次解析出的深淺，變了重建配色。
     dark: Cell<bool>,
 
-    /// 上次记进日志的缩放值（窗口 DPI、光标所在显示器 DPI）：变了才再记一条（#146）。
+    /// 上次記進日誌的縮放值（視窗 DPI、游標所在顯示器 DPI）：變了才再記一條（#146）。
     logged_dpi: Cell<Option<(u32, Option<u32>)>>,
 
-    /// 青简渲染器；`None` 走 GDI。
+    /// 青簡渲染器；`None` 走 GDI。
     painter: SharedPainter,
 
-    /// 最近一次贴图时窗口左上角的屏幕坐标；动画帧贴在同一处。
+    /// 最近一次貼圖時視窗左上角的螢幕座標；動畫幀貼在同一處。
     position: Cell<(i32, i32)>,
 }
 
 impl CandidateWindow {
-    /// 建一个隐藏的候选窗口；点中候选或译词时调 `on_click`。
+    /// 建一個隱藏的候選視窗；點中候選或譯詞時調 `on_click`。
     pub(crate) fn new(painter: SharedPainter, on_click: CandidateClicks) -> Result<Self> {
         CLASS.ensure(|| WNDCLASSEXW {
             lpfnWndProc: Some(wndproc),
@@ -96,13 +96,13 @@ impl CandidateWindow {
         let dpi = unsafe { GetDpiForSystem() }.max(96);
         let dark = resolve_dark(Appearance::default());
         let data = RefCell::new(RenderData::empty(Rc::new(Theme::new(dpi, dark))));
-        // NOACTIVATE：显示时不抢应用焦点。鼠标只在候选与译词上收，其余穿透（见 [`click`]）。
+        // NOACTIVATE：顯示時不搶應用焦點。滑鼠只在候選與譯詞上收，其餘穿透（見 [`click`]）。
         click::install(on_click);
         let hwnd = unsafe {
             CreateWindowExW(
                 WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE,
                 CLASS_NAME,
-                w!("青简候选"),
+                w!("青簡候選"),
                 WS_POPUP,
                 0,
                 0,
@@ -125,12 +125,12 @@ impl CandidateWindow {
         })
     }
 
-    /// 刷新内容（不定位、不显示）。
+    /// 重新整理內容（不定位、不顯示）。
     pub(crate) fn set_content(&self, frame: &Frame, mode: Mode) {
         self.data.borrow_mut().set(frame, mode);
     }
 
-    /// 按光标矩形定位并显示：贴光标下方（放不下放上方），四周留出阴影。
+    /// 按游標矩形定位並顯示：貼游標下方（放不下放上方），四周留出陰影。
     pub(crate) fn show(&self, anchor: RECT) {
         self.sync_theme(anchor);
         let rendered = {
@@ -176,7 +176,7 @@ impl CandidateWindow {
         }
     }
 
-    /// GDI 画法：量尺寸、定位、合成。
+    /// GDI 畫法：量尺寸、定位、合成。
     fn show_gdi(&self, anchor: RECT) -> Result<()> {
         let margin = layered::shadow_margin(self.dpi.get());
         let content = self.preferred_size();
@@ -208,12 +208,12 @@ impl CandidateWindow {
         }
     }
 
-    /// 这条消息是候选窗的动画定时器。
+    /// 這條訊息是候選窗的動畫定時器。
     pub(crate) fn is_animation_timer(&self, msg: &MSG) -> bool {
         msg.message == WM_TIMER && msg.hwnd == self.hwnd && msg.wParam.0 == ANIMATION_TIMER
     }
 
-    /// 定时器每跳：要动画的下一帧贴在原处；播完就停。
+    /// 定時器每跳：要動畫的下一幀貼在原處；播完就停。
     pub(crate) fn animation_frame(&self) {
         let rendered = self
             .painter
@@ -228,12 +228,12 @@ impl CandidateWindow {
         self.schedule(rendered.next_frame);
     }
 
-    /// 按渲染器给的间隔（过渡 16 ms、循环动画 33 ms）起或改定时器；`None` 停。同一个 id 再 SetTimer 就是改间隔。
+    /// 按渲染器給的間隔（過渡 16 ms、迴圈動畫 33 ms）起或改定時器；`None` 停。同一個 id 再 SetTimer 就是改間隔。
     fn schedule(&self, next_frame: Option<std::time::Duration>) {
         match next_frame {
             Some(interval) => {
                 let ms = interval.as_millis().clamp(10, 1000) as u32;
-                // SAFETY: 本线程建的窗口；定时器消息由 UI 线程的消息循环截下交给 animation_frame
+                // SAFETY: 本執行緒建的視窗；定時器訊息由 UI 執行緒的訊息迴圈截下交給 animation_frame
                 unsafe { SetTimer(Some(self.hwnd), ANIMATION_TIMER, ms, None) };
             }
             None => self.stop_animation(),
@@ -241,14 +241,14 @@ impl CandidateWindow {
     }
 
     fn stop_animation(&self) {
-        // SAFETY: 没在跳时 KillTimer 返回错误，忽略
+        // SAFETY: 沒在跳時 KillTimer 返回錯誤，忽略
         let _ = unsafe { KillTimer(Some(self.hwnd), ANIMATION_TIMER) };
     }
 
-    /// DPI 或深浅变了就重建主题；每次 `show` 前调。
+    /// DPI 或深淺變了就重建主題；每次 `show` 前調。
     ///
-    /// DPI 取光标所在显示器的：窗口藏着时改了缩放（或睡眠唤醒后多显示器重排），
-    /// `GetDpiForWindow` 会停在旧值，候选字就大小不对（#146）。
+    /// DPI 取游標所在顯示器的：視窗藏著時改了縮放（或睡眠喚醒後多顯示器重排），
+    /// `GetDpiForWindow` 會停在舊值，候選字就大小不對（#146）。
     fn sync_theme(&self, anchor: RECT) {
         let caret = POINT {
             x: anchor.left,
@@ -270,7 +270,7 @@ impl CandidateWindow {
         }
     }
 
-    /// 缩放值变了就记一条，多显示器 / 睡眠唤醒的问题从日志里能看出取到的是哪个值（#146）。
+    /// 縮放值變了就記一條，多顯示器 / 睡眠喚醒的問題從日誌裡能看出取到的是哪個值（#146）。
     fn log_dpi(&self, caret: POINT, window_dpi: u32, monitor_dpi: Option<u32>, used: u32) {
         if self.logged_dpi.replace(Some((window_dpi, monitor_dpi)))
             == Some((window_dpi, monitor_dpi))
@@ -284,11 +284,11 @@ impl CandidateWindow {
             system_dpi = unsafe { GetDpiForSystem() },
             caret_x = caret.x,
             caret_y = caret.y,
-            "候选窗口缩放值"
+            "候選視窗縮放值"
         );
     }
 
-    /// 内容需要的大小（不含阴影留白）。
+    /// 內容需要的大小（不含陰影留白）。
     fn preferred_size(&self) -> (i32, i32) {
         let hdc = unsafe { GetDC(Some(self.hwnd)) };
         let size = view::preferred_size(hdc, &self.data.borrow());
@@ -303,7 +303,7 @@ impl Drop for CandidateWindow {
     }
 }
 
-/// 内容左上角：贴光标下方，放不下放上方，再放不下贴屏幕内；都夹在所在显示器工作区里。
+/// 內容左上角：貼游標下方，放不下放上方，再放不下貼螢幕內；都夾在所在顯示器工作區裡。
 fn place(anchor: RECT, content: (i32, i32)) -> (i32, i32) {
     let work = monitor::work_area_near(POINT {
         x: anchor.left,
@@ -324,7 +324,7 @@ fn place(anchor: RECT, content: (i32, i32)) -> (i32, i32) {
     (x, y)
 }
 
-/// 分层窗口无需 `WM_PAINT`；鼠标交给 [`click`]，其余全交默认处理。
+/// 分層視窗無需 `WM_PAINT`；滑鼠交給 [`click`]，其餘全交預設處理。
 unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     match msg {
         WM_NCHITTEST => click::hit_test(lparam),

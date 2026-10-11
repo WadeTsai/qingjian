@@ -1,4 +1,4 @@
-//! 候选窗口的点击区域：每个候选一块、每条译词一块，点在哪块上就是哪个目标；各内置主题、横竖排都要有。
+//! 候選視窗的點選區域：每個候選一塊、每條譯詞一塊，點在哪塊上就是哪個目標；各內建主題、橫豎排都要有。
 
 mod scenes;
 
@@ -40,7 +40,7 @@ fn candidates_and_their_translations_are_clickable() {
             for i in 0..frame.rows.len() {
                 region(hits, HitTarget::Candidate(i));
             }
-            // 「你好」有两条译词 hello · hi；主题只画第一条时第二条不可点
+            // 「你好」有兩條譯詞 hello · hi；主題只畫第一條時第二條不可點
             let first = region(
                 hits,
                 HitTarget::Translation {
@@ -65,7 +65,7 @@ fn candidates_and_their_translations_are_clickable() {
                 let (x, y) = center(second, rendered.scale);
                 assert_eq!(rendered.hit_at(x, y), Some(second.target), "{what}");
             }
-            // 候选本体：从候选区域左边往里一点，落在序号 / 词上
+            // 候選本體：從候選區域左邊往裡一點，落在序號 / 詞上
             let word = region(hits, HitTarget::Candidate(1));
             let (x, y) = (
                 (word.x + 2.0) / rendered.scale,

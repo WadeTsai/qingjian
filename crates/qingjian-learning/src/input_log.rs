@@ -5,28 +5,28 @@ use std::path::{Path, PathBuf};
 use qingjian_core::{InputLogEntry, InputLogger};
 use serde::Serialize;
 
-/// 输入日志落盘：每条一行 JSON（jsonl），追加写，带本机时间戳。只写在这台电脑的数据目录里。
+/// 輸入日誌落盤：每條一行 JSON（jsonl），追加寫，帶本機時間戳。只寫在這臺電腦的資料目錄裡。
 ///
-/// 打不开文件时退化成不记（记一次警告），输入不受影响。
+/// 打不開檔案時退化成不記（記一次警告），輸入不受影響。
 #[derive(Debug)]
 pub struct InputLog {
-    /// 文件路径。
+    /// 檔案路徑。
     path: PathBuf,
 
-    /// 打开的写入端；打不开为 `None`。
+    /// 開啟的寫入端；打不開為 `None`。
     file: Option<BufWriter<File>>,
 
-    /// 自上次 flush 后写了几条（攒几条再刷盘，别每次上屏都碰磁盘）。
+    /// 自上次 flush 後寫了幾條（攢幾條再刷盤，別每次上屏都碰磁碟）。
     pending: usize,
 }
 
-/// 攒到这么多条就刷一次盘；停用输入法时也刷。
+/// 攢到這麼多條就刷一次盤；停用輸入法時也刷。
 const FLUSH_EVERY: usize = 20;
 
-/// 落盘的一行：时间戳 + 条目本身的字段。
+/// 落盤的一行：時間戳 + 條目本身的欄位。
 #[derive(Serialize)]
 struct Line<'a> {
-    /// 本机时间，带时区偏移。
+    /// 本機時間，帶時區偏移。
     t: String,
 
     #[serde(flatten)]
@@ -34,7 +34,7 @@ struct Line<'a> {
 }
 
 impl InputLog {
-    /// 追加模式打开（不存在就建）。
+    /// 追加模式開啟（不存在就建）。
     pub fn open(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         let file = match OpenOptions::new().create(true).append(true).open(&path) {
@@ -55,12 +55,12 @@ impl InputLog {
         &self.path
     }
 
-    /// 清空日志文件（用户在偏好设置里点「清空」）。
+    /// 清空日誌檔案（使用者在偏好設定裡點「清空」）。
     pub fn clear(path: &Path) -> std::io::Result<()> {
         File::create(path).map(|_| ())
     }
 
-    /// 文件里有多少行（诊断信息用）；文件不存在算 0。
+    /// 檔案裡有多少行（診斷資訊用）；檔案不存在算 0。
     pub fn line_count(path: &Path) -> usize {
         std::fs::read_to_string(path).map_or(0, |text| text.lines().count())
     }

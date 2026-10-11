@@ -1,4 +1,4 @@
-//! 测试消息读写；断言只检查协议适配，业务在 Rust 测试覆盖。
+//! 測試訊息讀寫；斷言只檢查協議適配，業務在 Rust 測試覆蓋。
 #pragma once
 #include <nlohmann/json.hpp>
 #include <array>

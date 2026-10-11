@@ -1,5 +1,5 @@
-//! 悬浮状态条（Windows）：几格并排的小条 `[中 / 英][，。/ ,.][⚙]`，每格文字居中、格间一条细线，圆角背景加阴影。
-//! macOS 用菜单栏状态项，没有这一块。主题没写 `status.root` 时排法固定，尺寸与颜色取 `status` 分节；写了走节点树（`tree.rs`）。
+//! 懸浮狀態條（Windows）：幾格並排的小條 `[中 / 英][，。/ ,.][⚙]`，每格文字居中、格間一條細線，圓角背景加陰影。
+//! macOS 用選單欄狀態項，沒有這一塊。主題沒寫 `status.root` 時排法固定，尺寸與顏色取 `status` 分節；寫了走節點樹（`tree.rs`）。
 
 mod cell;
 mod rendered;
@@ -19,13 +19,13 @@ use crate::theme::file::ColorSpec;
 use crate::theme::file::node::EffectSpec;
 use crate::theme::{TextSizes, Theme};
 
-/// 一次渲染里按倍数换算好的状态条参数。
+/// 一次渲染裡按倍數換算好的狀態條引數。
 struct Metrics<'a> {
     theme: &'a Theme,
 
     scale: f32,
 
-    /// 文字样式（颜色后配）。
+    /// 文字樣式（顏色後配）。
     font: crate::theme::FontSpec,
 }
 
@@ -49,7 +49,7 @@ impl Metrics<'_> {
         )
     }
 
-    /// 状态条没有数据条件，条件颜色取 `else` 分支。
+    /// 狀態條沒有資料條件，條件顏色取 `else` 分支。
     fn effect(&self, spec: &EffectSpec) -> Effect {
         let color = match &spec.shadow().color {
             ColorSpec::Fixed(color)
@@ -62,9 +62,9 @@ impl Metrics<'_> {
 }
 
 impl Renderer {
-    /// 画状态条，返回位图与各格右边界（供点击命中）。`mode` 给节点树画法的主题显示中 / 英等状态。
-    /// 设置里改了候选字号时整条按同一比例放大缩小。
-    /// 固定排法：每格宽 = 内容宽 + 两侧内边距，高 = 行高 + 内边距。
+    /// 畫狀態條，返回點陣圖與各格右邊界（供點選命中）。`mode` 給節點樹畫法的主題顯示中 / 英等狀態。
+    /// 設定裡改了候選字號時整條按同一比例放大縮小。
+    /// 固定排法：每格寬 = 內容寬 + 兩側內邊距，高 = 行高 + 內邊距。
     pub fn render_status(
         &mut self,
         cells: &[StatusCell],
@@ -72,7 +72,7 @@ impl Renderer {
         theme: &Theme,
         scale: f32,
     ) -> Result<RenderedStatus, RenderError> {
-        // 整条按候选字的比例缩放：去掉设置里的字号再整体乘倍数，图标、边距、点击边界跟文字一起变，与用哪个文字样式无关
+        // 整條按候選字的比例縮放：去掉設定裡的字號再整體乘倍數，圖示、邊距、點選邊界跟文字一起變，與用哪個文字樣式無關
         let scale = scale * theme.candidate_scale();
         let theme = &theme.with_text_sizes(TextSizes::default());
         self.text.use_families(theme.families());
@@ -93,7 +93,7 @@ impl Renderer {
             .collect();
         let total: f32 = widths.iter().sum();
         let content_width = total.ceil();
-        // 取整多出来的零头给最后一格，让最后一格的右边界正好是内容宽
+        // 取整多出來的零頭給最後一格，讓最後一格的右邊界正好是內容寬
         if let Some(last) = widths.last_mut() {
             *last += content_width - total;
         }
@@ -130,7 +130,7 @@ impl Renderer {
         })
     }
 
-    /// 一格内容的宽度（像素，不含内边距）。
+    /// 一格內容的寬度（畫素，不含內邊距）。
     fn status_cell_width(&mut self, cell: &StatusCell, m: &Metrics) -> f32 {
         match cell {
             StatusCell::Text { text, emphasized } => {
@@ -141,7 +141,7 @@ impl Renderer {
     }
 }
 
-/// 一格：内容在格里居中；不是第一格时左边画一条上下各缩进半个内边距的细线。
+/// 一格：內容在格里居中；不是第一格時左邊畫一條上下各縮排半個內邊距的細線。
 fn status_cell(
     scene: &mut Scene,
     cell: &StatusCell,
@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn cells_have_increasing_edges_ending_at_content_width() {
-        // 没有系统字体的环境（CI 容器）跳过
+        // 沒有系統字型的環境（CI 容器）跳過
         let Ok(library) = FontLibrary::system("zh-CN") else {
             return;
         };

@@ -6,12 +6,12 @@ use objc2_foundation::{NSObject, NSObjectProtocol};
 use crate::host;
 
 define_class!(
-    // SAFETY: NSObject 没有子类化要求；没有实现 Drop。
+    // SAFETY: NSObject 沒有子類化要求；沒有實現 Drop。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = ()]
-    /// 状态项菜单的 target：输入法进程没有 key window，nil target 走不到响应链，得有个实体收 action。
-    /// 输入源菜单那边的同名选择器在控制器上，两边都汇到 [`host::Host::perform`]。
+    /// 狀態項選單的 target：輸入法程序沒有 key window，nil target 走不到響應鏈，得有個實體收 action。
+    /// 輸入源選單那邊的同名選擇器在控制器上，兩邊都匯到 [`host::Host::perform`]。
     pub struct MenuTarget;
 
     impl MenuTarget {

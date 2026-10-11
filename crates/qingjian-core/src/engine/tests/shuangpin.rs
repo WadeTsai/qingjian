@@ -1,4 +1,4 @@
-//! 双拼。
+//! 雙拼。
 
 use super::*;
 
@@ -12,12 +12,12 @@ fn shuangpin_decodes_keys_before_lookup_and_shows_full_pinyin() {
     assert_eq!(query.marked_cursor(), 6);
     assert_eq!(query.text, "kdfa");
     assert!(query.decoded_keys);
-    // 末尾落单的键是声母前缀：`kdf` = kai f…
+    // 末尾落單的鍵是聲母字首：`kdf` = kai f…
     engine.set_input("kdf");
     let query = engine.query().unwrap();
     assert_eq!(query.marked_text(), "kai'f");
     assert_eq!(query.candidates.items[0].text, "开放");
-    // 配不出音节的键原样留作尾巴
+    // 配不出音節的鍵原樣留作尾巴
     engine.set_input("kdbl");
     let query = engine.query().unwrap();
     assert_eq!(query.marked_text(), "kai'bl");
@@ -32,11 +32,11 @@ fn shuangpin_shows_raw_keys_in_preedit_and_decoded_pinyin_in_segments() {
     engine.set_input("kdfa");
     let query = engine.query().unwrap();
     assert_eq!(query.candidates.items[0].text, "开发");
-    // 输入框内 marked_text 显示原始输入按键
+    // 輸入框內 marked_text 顯示原始輸入按鍵
     assert_eq!(query.marked_text(), "kdfa");
     assert_eq!(query.marked_cursor(), 4);
     assert_eq!(query.text, "kdfa");
-    // 候选窗口顶部拼音行保持显示解码全拼
+    // 候選視窗頂部拼音行保持顯示解碼全拼
     let segments_text: String = query
         .marked_segments()
         .iter()
@@ -45,7 +45,7 @@ fn shuangpin_shows_raw_keys_in_preedit_and_decoded_pinyin_in_segments() {
     assert_eq!(segments_text, "kai'fa");
     assert_eq!(query.segments_cursor(), 6);
 
-    // 移动光标到中间 kd|fa
+    // 移動游標到中間 kd|fa
     engine.move_cursor_left();
     engine.move_cursor_left();
     let query = engine.query().unwrap();
@@ -59,7 +59,7 @@ fn shuangpin_shows_raw_keys_in_preedit_and_decoded_pinyin_in_segments() {
     assert_eq!(segments_text, "kai'fa");
     assert_eq!(query.segments_cursor(), 3);
 
-    // k|dfa：光标后的剩余段保留原始按键，和敲的对得上（双拼光标插进音节中间，单独解码会错开）
+    // k|dfa：游標後的剩餘段保留原始按鍵，和敲的對得上（雙拼游標插進音節中間，單獨解碼會錯開）
     engine.move_cursor_left();
     let query = engine.query().unwrap();
     assert_eq!(query.marked_text(), "kdfa");
@@ -87,7 +87,7 @@ fn shuangpin_commit_consumes_keys_per_syllable() {
     engine.commit(&kaifa);
     assert_eq!(engine.composition().text(), "ve");
     assert_eq!(engine.query().unwrap().marked_text(), "zhe");
-    // 未打完的最后一个键也被候选吃掉
+    // 未打完的最後一個鍵也被候選吃掉
     engine.set_input("kdf");
     let kaifang = engine.query().unwrap().candidates.items[0].clone();
     engine.commit(&kaifang);
@@ -99,12 +99,12 @@ fn shuangpin_records_choices_by_full_pinyin() {
     let mut engine = xiaohe();
     engine.set_input("kdfa");
     let query = engine.query().unwrap();
-    // 两键定局：`fa` 不再按前缀放宽成 fan / fang
+    // 兩鍵定局：`fa` 不再按字首放寬成 fan / fang
     assert!(query.candidates.items.iter().all(|c| c.text != "开饭"));
     let kaifa = query.candidates.items[0].clone();
     assert_eq!(kaifa.text, "开发");
     engine.commit(&kaifa);
-    // 学习记的是全拼 kaifa：切回全拼、同样的拼音也受益
+    // 學習記的是全拼 kaifa：切回全拼、同樣的拼音也受益
     assert!(engine.recent_commits.last().unwrap().same_input("kaifa"));
 }
 
@@ -116,7 +116,7 @@ fn shuangpin_moves_mode_keys_to_shifted_letters() {
     assert_eq!(engine.query().unwrap().marked_text(), "zh");
     engine.set_input("u1");
     assert!(!engine.question_mode());
-    // Shift+V / Shift+U 进模式，之后与全拼下的 v / u 一样
+    // Shift+V / Shift+U 進模式，之後與全拼下的 v / u 一樣
     assert!(engine.takes_mode_letter('V') && engine.takes_mode_letter('U'));
     assert!(!engine.takes_mode_letter('v') && !engine.takes_mode_letter('I'));
     engine.set_input("V1+2");
@@ -128,12 +128,12 @@ fn shuangpin_moves_mode_keys_to_shifted_letters() {
     engine.set_input("Unihc");
     assert!(engine.question_mode());
     assert_eq!(engine.query().unwrap().marked_text(), "Uni'hao");
-    // 全拼下大写字母不是入口
+    // 全拼下大寫字母不是入口
     let mut full = super::engine();
     assert!(!full.takes_mode_letter('V'));
     full.set_input("V1+2");
     assert!(!full.expression_mode());
-    // `?` 入口开着时照常进问字（缺省关）
+    // `?` 入口開著時照常進問字（預設關）
     engine.set_input("?nihc");
     assert!(!engine.question_mode());
     engine.set_mode_keys(ModeKeys {
@@ -155,7 +155,7 @@ fn microsoft_semicolon_is_a_final_only_after_a_lone_initial() {
     assert!(!engine.takes_semicolon());
     assert!(!engine.raw_mode());
     assert_eq!(engine.query().unwrap().marked_text(), "xing");
-    // 问字模式里也认：`?x;` 问的是 xing
+    // 問字模式裡也認：`?x;` 問的是 xing
     engine.set_mode_keys(ModeKeys {
         question_mark: true,
         ..ModeKeys::default()

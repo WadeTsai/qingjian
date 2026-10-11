@@ -1,4 +1,4 @@
-//! 无会话总线加载、默认面板回报、候选点击和协议失效回归。
+//! 無會話匯流排載入、預設面板回報、候選點選和協議失效迴歸。
 #include "qingjian.h"
 #include "key/mapping.h"
 #include "support/context.h"

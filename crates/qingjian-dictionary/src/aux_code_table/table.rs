@@ -1,4 +1,4 @@
-//! 码表本体：词 → 码的映射、`.qj` 读写与查询。
+//! 碼錶本體：詞 → 碼的對映、`.qj` 讀寫與查詢。
 
 use std::ops::Range;
 use std::path::Path;
@@ -10,47 +10,47 @@ use super::lookup::AuxCodeLookup;
 use super::parsed::ParsedTable;
 use crate::error::DictionaryError;
 
-/// `.qj` 里的分节：词文本 arena、码键 arena、条目表、词 → 条目区间的哈希索引。
+/// `.qj` 裡的分節：詞文本 arena、碼鍵 arena、條目表、詞 → 條目區間的雜湊索引。
 const TEXT_TAG: [u8; 4] = *b"TEXT";
 const CODE_TAG: [u8; 4] = *b"CODE";
 const ENTR_TAG: [u8; 4] = *b"ENTR";
 const HASH_TAG: [u8; 4] = *b"HASH";
 
-/// 码的最长字节数（`a-z`，1–8）。
+/// 碼的最長位元組數（`a-z`，1–8）。
 pub const MAX_CODE_LEN: usize = 8;
 
-/// 码是否合法：全是 `a-z`（大小写不敏感）、长度 1–`MAX_CODE_LEN`。
+/// 碼是否合法：全是 `a-z`（大小寫不敏感）、長度 1–`MAX_CODE_LEN`。
 pub fn is_valid_code(code: &str) -> bool {
     !code.is_empty() && code.len() <= MAX_CODE_LEN && code.bytes().all(|b| b.is_ascii_lowercase())
 }
 
-/// 码表：词 → 码的映射。从 `.qj` 打开时四段数据都是映射文件里的一段，查询代码不区分。
+/// 碼錶：詞 → 碼的對映。從 `.qj` 開啟時四段資料都是對映檔案裡的一段，查詢程式碼不區分。
 #[derive(Debug, Default)]
 pub struct AuxCodeTable {
-    /// 所有词文本首尾相接。
+    /// 所有詞文本首尾相接。
     words: Text,
 
-    /// 所有码首尾相接。
+    /// 所有碼首尾相接。
     codes: Text,
 
-    /// 按词文本的字节序升序；同一个词的条目相邻。
+    /// 按詞文本的位元組序升序；同一個詞的條目相鄰。
     entries: Table<CodeEntry>,
 
-    /// 词 → 条目区间起点的哈希索引（`hash::build` 的开放寻址表）。
+    /// 詞 → 條目區間起點的雜湊索引（`hash::build` 的開放定址表）。
     index: Table<u32>,
 
-    /// 去重后的词数。
+    /// 去重後的詞數。
     word_count: usize,
 
-    /// `.qj` 里的来历（名称、许可证、署名）；内存里造的没有。
+    /// `.qj` 裡的來歷（名稱、許可證、署名）；記憶體裡造的沒有。
     metadata: Option<Metadata>,
 }
 
 impl AuxCodeTable {
-    /// 用 `(词, 码)` 对造一张表。
+    /// 用 `(詞, 碼)` 對造一張表。
     ///
-    /// 重复的 `(词, 码)` 去掉；同一个词的多条码都保留（一词多码）。码非法时报错，
-    /// 调用方（导入）应当先过滤并统计，不要让坏数据走到这里。
+    /// 重複的 `(詞, 碼)` 去掉；同一個詞的多條碼都保留（一詞多碼）。碼非法時報錯，
+    /// 呼叫方（匯入）應當先過濾並統計，不要讓壞資料走到這裡。
     pub fn from_pairs(
         pairs: impl IntoIterator<Item = (String, String)>,
     ) -> Result<Self, DictionaryError> {
@@ -99,7 +99,7 @@ impl AuxCodeTable {
         })
     }
 
-    /// 从 TSV 解析：每行 `词\t码`，`#` 开头为注释，空行忽略；同一个词可以有多行。
+    /// 從 TSV 解析：每行 `詞\t碼`，`#` 開頭為註釋，空行忽略；同一個詞可以有多行。
     pub fn parse(source: &str) -> Result<Self, DictionaryError> {
         let mut pairs = Vec::new();
         for (index, raw) in source.lines().enumerate() {
@@ -133,7 +133,7 @@ impl AuxCodeTable {
         Self::from_pairs(pairs)
     }
 
-    /// 按文件内容选加载方式：`.qj` 容器直接映射；文本再按内容分 Rime `.dict.yaml` 与 `词\t码` TSV。
+    /// 按檔案內容選載入方式：`.qj` 容器直接對映；文本再按內容分 Rime `.dict.yaml` 與 `詞\t碼` TSV。
     pub fn from_path(path: impl AsRef<Path>) -> Result<Self, DictionaryError> {
         let path = path.as_ref();
         if Container::is_qj(path) {
@@ -143,8 +143,8 @@ impl AuxCodeTable {
         }
     }
 
-    /// 解析码表文本：有 YAML 头（`---` 或 `name:` 打头）的按 Rime 规则读——与「导入码表」走同一套
-    /// 解析（`columns` / `import_tables` / 「有词无码」统计口径一致），其余按 `词\t码` 的 TSV 读。
+    /// 解析碼錶文本：有 YAML 頭（`---` 或 `name:` 打頭）的按 Rime 規則讀——與「匯入碼錶」走同一套
+    /// 解析（`columns` / `import_tables` / 「有詞無碼」統計口徑一致），其餘按 `詞\t碼` 的 TSV 讀。
     pub fn from_text(text: &str) -> Result<Self, DictionaryError> {
         if !looks_like_rime(text) {
             return Self::parse(text);
@@ -156,7 +156,7 @@ impl AuxCodeTable {
         Self::from_pairs(parsed.pairs)
     }
 
-    /// 打开 `.qj` 码表：映射四个分节，逐条校验偏移落在 arena 内、条目按词有序、哈希索引自洽。
+    /// 開啟 `.qj` 碼錶：對映四個分節，逐條校驗偏移落在 arena 內、條目按詞有序、雜湊索引自洽。
     pub fn open(path: &Path) -> Result<Self, DictionaryError> {
         let container = Container::open(path, Kind::AuxCodeTable)?;
         let words = container.text(TEXT_TAG)?;
@@ -211,7 +211,7 @@ impl AuxCodeTable {
         })
     }
 
-    /// 写成 `.qj`：内存里的四段原样落盘。`metadata.entries` 会填成词条数。
+    /// 寫成 `.qj`：記憶體裡的四段原樣落盤。`metadata.entries` 會填成詞條數。
     pub fn write_qj(&self, path: &Path, metadata: &Metadata) -> Result<(), DictionaryError> {
         let metadata = Metadata {
             entries: self.entries.len() as u64,
@@ -226,12 +226,12 @@ impl AuxCodeTable {
         Ok(())
     }
 
-    /// `.qj` 里的来历；内存里造的返回 `None`。
+    /// `.qj` 裡的來歷；記憶體裡造的返回 `None`。
     pub fn metadata(&self) -> Option<&Metadata> {
         self.metadata.as_ref()
     }
 
-    /// 词条数（词 → 码 的条目数，一词多码算多条）。
+    /// 詞條數（詞 → 碼 的條目數，一詞多碼算多條）。
     pub fn len(&self) -> usize {
         self.entries.len()
     }
@@ -240,25 +240,25 @@ impl AuxCodeTable {
         self.entries.is_empty()
     }
 
-    /// 去重后的词数。
+    /// 去重後的詞數。
     pub fn word_count(&self) -> usize {
         self.word_count
     }
 
-    /// `word` 的全部码，按文件里的顺序。没有这个词时是空迭代器。
+    /// `word` 的全部碼，按檔案裡的順序。沒有這個詞時是空迭代器。
     pub fn codes_of<'a>(&'a self, word: &str) -> impl Iterator<Item = &'a str> + 'a {
         let range = self.range_of(word);
         self.entries[range].iter().map(|entry| self.code(entry))
     }
 
-    /// 全部条目，按词文本的字节序升序。
+    /// 全部條目，按詞文本的位元組序升序。
     pub fn entries(&self) -> impl Iterator<Item = (&str, &str)> + '_ {
         self.entries
             .iter()
             .map(|entry| (self.word(entry), self.code(entry)))
     }
 
-    /// 词 → 条目区间。没有这个词时是空区间。
+    /// 詞 → 條目區間。沒有這個詞時是空區間。
     fn range_of(&self, word: &str) -> Range<usize> {
         let Some(first) = hash::find(&self.index, word, |id| {
             self.word(&self.entries[id as usize])
@@ -281,7 +281,7 @@ impl AuxCodeTable {
     }
 }
 
-/// 文本像不像 Rime 词库 / 码表：第一条非注释非空行是 `---` 或以 `name:` 打头。
+/// 文本像不像 Rime 詞庫 / 碼錶：第一條非註釋非空行是 `---` 或以 `name:` 打頭。
 fn looks_like_rime(text: &str) -> bool {
     text.lines()
         .map(str::trim)
@@ -291,7 +291,7 @@ fn looks_like_rime(text: &str) -> bool {
 
 impl AuxCodeLookup for AuxCodeTable {
     fn code_with_prefix<'a>(&'a self, word: &str, prefix: &str) -> Option<&'a str> {
-        // inherent 的 codes_of 是迭代器版本，这里要用它（别递归回 trait）
+        // inherent 的 codes_of 是迭代器版本，這裡要用它（別遞歸回 trait）
         AuxCodeTable::codes_of(self, word).find(|code| code.starts_with(prefix))
     }
 

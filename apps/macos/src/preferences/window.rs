@@ -1,4 +1,4 @@
-//! 偏好设置窗口本体：把各页（`pages/`）装进标签视图，底部一行状态；刷新时逐页同步。
+//! 偏好設定視窗本體：把各頁（`pages/`）裝進標籤檢視，底部一行狀態；重新整理時逐頁同步。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -19,64 +19,64 @@ use super::panel::PreferencesPanel;
 use super::target::PreferencesTarget;
 use crate::host::DictionaryInfo;
 
-/// 每页顶部留白、页面最低高度（矮页也撑到这个高度，切页时窗口不跳）。
+/// 每頁頂部留白、頁面最低高度（矮頁也撐到這個高度，切頁時視窗不跳）。
 const PAGE_TOP: f64 = 18.0;
 const MIN_PAGE_HEIGHT: f64 = 250.0;
 
-/// 标签视图四周留白、底部状态行高度。
+/// 標籤檢視四周留白、底部狀態行高度。
 const TAB_MARGIN: f64 = 14.0;
 const STATUS_HEIGHT: f64 = 18.0;
 
-/// 窗口比屏幕可用高度至少矮这么多（标题栏 + 上下留一点边）；页面比窗口高时自己滚。
+/// 視窗比螢幕可用高度至少矮這麼多（標題欄 + 上下留一點邊）；頁面比視窗高時自己滾。
 const SCREEN_MARGIN: f64 = 80.0;
 
-/// 设置窗口与需要按配置刷新的各页。
+/// 設定視窗與需要按配置重新整理的各頁。
 pub struct PreferencesWindow {
-    /// 窗口。
+    /// 視窗。
     panel: Retained<PreferencesPanel>,
 
-    /// 「通用」页。
+    /// 「通用」頁。
     general: GeneralPage,
 
-    /// 「候选窗口」页。
+    /// 「候選視窗」頁。
     candidates: CandidatesPage,
 
-    /// 「快捷键」页。
+    /// 「快捷鍵」頁。
     shortcuts: ShortcutsPage,
 
-    /// 自定义短语编辑。
+    /// 自定義短語編輯。
     phrases: PhrasesPage,
 
-    /// 「模糊音」页。
+    /// 「模糊音」頁。
     fuzzy: FuzzyPage,
 
-    /// 「词库」页。
+    /// 「詞庫」頁。
     dictionaries: DictionariesPage,
 
-    /// 「云服务」页。
+    /// 「雲服務」頁。
     cloud: CloudPage,
 
-    /// 「高级」页。
+    /// 「進階」頁。
     advanced: AdvancedPage,
 
-    /// 「统计」页的数字。
+    /// 「統計」頁的數字。
     usage: UsagePage,
 
-    /// 「关于」页的检查更新控件。
+    /// 「關於」頁的檢查更新控制元件。
     about: AboutPage,
 
-    /// 底部状态行：配置文件解析失败时显示原因，也给临时提示用。
+    /// 底部狀態行：配置檔案解析失敗時顯示原因，也給臨時提示用。
     status: Retained<NSTextField>,
 
-    /// 所有控件的 target，要和窗口活得一样久。
+    /// 所有控制元件的 target，要和視窗活得一樣久。
     _target: Retained<PreferencesTarget>,
 }
 
-/// 一页：标题、布局器、承载视图。
+/// 一頁：標題、佈局器、承載檢視。
 type Page = (&'static str, Layout, Retained<NSView>);
 
 impl PreferencesWindow {
-    /// `languages` 是打进包里的释义表语言，`version` / `build` 显示在「关于」页。
+    /// `languages` 是打進包裡的釋義表語言，`version` / `build` 顯示在「關於」頁。
     pub fn new(mtm: MainThreadMarker, languages: &[Language], version: &str, build: &str) -> Self {
         let target = PreferencesTarget::new(mtm);
         let new_layout = || Layout::new(PAGE_WIDTH, PAGE_TOP);
@@ -129,12 +129,12 @@ impl PreferencesWindow {
         let about = build_about(&mut layout, mtm, &target, version, build);
         pages.push(page("关于", layout));
 
-        // 标签视图：先用临时尺寸量出边框与标签栏占多少，再按最高的一页定最终尺寸
+        // 標籤檢視：先用臨時尺寸量出邊框與標籤欄佔多少，再按最高的一頁定最終尺寸
         let tallest = pages
             .iter()
             .map(|(_, layout, _)| layout.height() + PAGE_TOP)
             .fold(MIN_PAGE_HEIGHT, f64::max);
-        // 设置项多了以后最高的一页会超出小屏幕，窗口底部（状态行）掉到程序坞后面：窗口封顶，超高的页放进滚动视图
+        // 設定項多了以後最高的一頁會超出小螢幕，視窗底部（狀態行）掉到程式塢後面：視窗封頂，超高的頁放進滾動檢視
         let page_height = tallest.min(max_page_height(mtm)).max(MIN_PAGE_HEIGHT);
         let probe = NSRect::new(NSPoint::ZERO, NSSize::new(PAGE_WIDTH, page_height));
         let tabs = NSTabView::initWithFrame(mtm.alloc(), probe);
@@ -157,7 +157,7 @@ impl PreferencesWindow {
                 NSSize::new(PAGE_WIDTH, own_height),
             ));
             layout.finish(&view, own_height);
-            // SAFETY: identifier 允许为空；条目随 NSTabView 活着
+            // SAFETY: identifier 允許為空；條目隨 NSTabView 活著
             let item = unsafe { NSTabViewItem::initWithIdentifier(mtm.alloc(), None) };
             item.setLabel(&NSString::from_str(title));
             if own_height > page_height {
@@ -223,12 +223,12 @@ impl PreferencesWindow {
         Ok((self.phrases.selected(config)?, self.phrases.draft()))
     }
 
-    /// 打开（或带到最前）。
+    /// 開啟（或帶到最前）。
     pub fn show(&self) {
         self.panel.present();
     }
 
-    /// 按配置刷新所有控件。`key_present` 是密钥已经有了（环境或配置里）；密钥框永远不回显值。
+    /// 按配置重新整理所有控制元件。`key_present` 是金鑰已經有了（環境或配置裡）；金鑰框永遠不回顯值。
     pub fn sync(
         &self,
         config: &Config,
@@ -258,12 +258,12 @@ impl PreferencesWindow {
         self.status.setStringValue(&NSString::from_str(&status));
     }
 
-    /// 检查更新的状态变了（查完了、查到新版），只刷「关于」页。
+    /// 檢查更新的狀態變了（查完了、查到新版），只刷「關於」頁。
     pub fn sync_update(&self, config: &Config, update: &UpdateStatus) {
         self.about.sync(config, update);
     }
 
-    /// 刷新「统计」页。打开窗口时调（数字随时在变，不跟配置一起同步）。
+    /// 重新整理「統計」頁。開啟視窗時調（數字隨時在變，不跟配置一起同步）。
     pub fn sync_usage(
         &self,
         summary: &UsageSummary,
@@ -277,7 +277,7 @@ impl PreferencesWindow {
         );
     }
 
-    /// 底部状态行临时显示一句提示（不是错误，灰字）；下次 `sync` 会被配置状态覆盖。
+    /// 底部狀態行臨時顯示一句提示（不是錯誤，灰字）；下次 `sync` 會被配置狀態覆蓋。
     pub fn set_status(&self, text: &str) {
         self.status
             .setTextColor(Some(&NSColor::secondaryLabelColor()));
@@ -285,14 +285,14 @@ impl PreferencesWindow {
     }
 }
 
-/// 一页最高能多高：主屏可用高度减去标题栏、标签栏、状态行与留白。取不到屏幕就不封顶。
+/// 一頁最高能多高：主屏可用高度減去標題欄、標籤欄、狀態行與留白。取不到螢幕就不封頂。
 fn max_page_height(mtm: MainThreadMarker) -> f64 {
     NSScreen::mainScreen(mtm).map_or(f64::MAX, |screen| {
         screen.visibleFrame().size.height - SCREEN_MARGIN - 2.0 * TAB_MARGIN - STATUS_HEIGHT
     })
 }
 
-/// 把比窗口高的一页放进滚动视图，开始时停在页顶。
+/// 把比視窗高的一頁放進滾動檢視，開始時停在頁頂。
 fn scrolling(
     mtm: MainThreadMarker,
     page: &NSView,
@@ -307,7 +307,7 @@ fn scrolling(
     scroll.setAutohidesScrollers(true);
     scroll.setDrawsBackground(false);
     scroll.setDocumentView(Some(page));
-    // 页面视图没有翻转坐标，页顶在 y 最大处
+    // 頁面檢視沒有翻轉座標，頁頂在 y 最大處
     let clip: Retained<NSClipView> = scroll.contentView();
     clip.scrollToPoint(NSPoint::new(0.0, page_height - visible_height));
     scroll.reflectScrolledClipView(&clip);

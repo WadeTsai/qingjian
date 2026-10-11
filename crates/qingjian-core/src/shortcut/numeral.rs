@@ -1,64 +1,64 @@
-//! 阿拉伯数字串转中文数字：小写（一百二十三）与大写（壹佰贰拾叁，财务用），以及小数读法与金额写法。
+//! 阿拉伯數字串轉中文數字：小寫（一百二十三）與大寫（壹佰貳拾叄，財務用），以及小數讀法與金額寫法。
 
-/// 小写数字与单位。
+/// 小寫數字與單位。
 const LOWER: Numeral = Numeral {
     digits: ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"],
     units: ["", "十", "百", "千"],
-    // 口语里 10–19 开头的「一」省掉：十五，而不是一十五
+    // 口語裡 10–19 開頭的「一」省掉：十五，而不是一十五
     drop_leading_one_ten: true,
 };
 
-/// 大写数字与单位，财务票据写法。
+/// 大寫數字與單位，財務票據寫法。
 const UPPER: Numeral = Numeral {
     digits: ["零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"],
     units: ["", "拾", "佰", "仟"],
     drop_leading_one_ten: false,
 };
 
-/// 亿以内每四位一节的节单位；亿以上把高位部分整体读出再接「亿」（一万二千三百四十五亿）。
+/// 億以內每四位一節的節單位；億以上把高位部分整體讀出再接「億」（一萬二千三百四十五億）。
 const SECTIONS: [&str; 2] = ["", "万"];
 
-/// 一「亿」有几位。
+/// 一「億」有幾位。
 const YI_DIGITS: usize = 8;
 
-/// 一套数字写法。
+/// 一套數字寫法。
 struct Numeral {
     /// 0–9。
     digits: [&'static str; 10],
 
-    /// 个、十、百、千。
+    /// 個、十、百、千。
     units: [&'static str; 4],
 
-    /// 整个数以「一十」开头时是否省掉「一」。
+    /// 整個數以「一十」開頭時是否省掉「一」。
     drop_leading_one_ten: bool,
 }
 
-/// `123` → `一百二十三`。只接受纯数字串；超过 16 位或空串原样返回。
+/// `123` → `一百二十三`。只接受純數字串；超過 16 位或空串原樣返回。
 pub fn chinese_lower(digits: &str) -> String {
     LOWER.convert(digits)
 }
 
-/// `123` → `壹佰贰拾叁`。
+/// `123` → `壹佰貳拾叄`。
 pub fn chinese_upper(digits: &str) -> String {
     UPPER.convert(digits)
 }
 
-/// `123.5` → `一百二十三点五`：小数部分逐位读。
+/// `123.5` → `一百二十三點五`：小數部分逐位讀。
 pub fn chinese_decimal_lower(integer: &str, fraction: &str) -> String {
     LOWER.decimal(integer, fraction)
 }
 
-/// `123.5` → `壹佰贰拾叁点伍`。
+/// `123.5` → `壹佰貳拾叄點伍`。
 pub fn chinese_decimal_upper(integer: &str, fraction: &str) -> String {
     UPPER.decimal(integer, fraction)
 }
 
-/// 金额小写：`123.5` → `一百二十三元五角`，`123` → `一百二十三元整`。`fraction` 最多两位（角、分）。
+/// 金額小寫：`123.5` → `一百二十三元五角`，`123` → `一百二十三元整`。`fraction` 最多兩位（角、分）。
 pub fn amount_lower(integer: &str, fraction: &str) -> String {
     LOWER.amount(integer, fraction)
 }
 
-/// 金额大写：`123.05` → `壹佰贰拾叁元零伍分`。
+/// 金額大寫：`123.05` → `壹佰貳拾叄元零伍分`。
 pub fn amount_upper(integer: &str, fraction: &str) -> String {
     UPPER.amount(integer, fraction)
 }
@@ -72,7 +72,7 @@ impl Numeral {
         format!("{}点{fraction}", self.convert(integer))
     }
 
-    /// 票据写法：元后无角分写「整」；有分无角补「零」；不足一元不写元。
+    /// 票據寫法：元后無角分寫「整」；有分無角補「零」；不足一元不寫元。
     fn amount(&self, integer: &str, fraction: &str) -> String {
         let mut cents = fraction.bytes().map(|b| usize::from(b - b'0'));
         let jiao = cents.next().unwrap_or(0);
@@ -117,7 +117,7 @@ impl Numeral {
         text
     }
 
-    /// 亿以上：高位整体转换后接「亿」，低八位非零时接上（不足八位补「零」）。
+    /// 億以上：高位整體轉換後接「億」，低八位非零時接上（不足八位補「零」）。
     fn below_yi_or_split(&self, digits: &str) -> String {
         if digits.len() <= YI_DIGITS {
             return self.below_yi(digits);
@@ -135,7 +135,7 @@ impl Numeral {
         text
     }
 
-    /// 亿以内（最多八位，无前导零）：从低位起每四位一节。
+    /// 億以內（最多八位，無前導零）：從低位起每四位一節。
     fn below_yi(&self, digits: &str) -> String {
         let values: Vec<usize> = digits.bytes().map(|b| usize::from(b - b'0')).collect();
         let mut sections: Vec<&[usize]> = values.rchunks(4).collect();
@@ -149,7 +149,7 @@ impl Numeral {
                 pending_zero = true;
                 continue;
             }
-            // 上一节是零、或本节不足四位（高位有零），补一个零
+            // 上一節是零、或本節不足四位（高位有零），補一個零
             if !text.is_empty() && (pending_zero || value < 1000) {
                 text.push_str(self.digits[0]);
             }
@@ -160,7 +160,7 @@ impl Numeral {
         text
     }
 
-    /// 一节（最多四位，非零）。中间的零合并成一个，末尾的零不写。
+    /// 一節（最多四位，非零）。中間的零合併成一個，末尾的零不寫。
     fn section(&self, digits: &[usize]) -> String {
         let mut text = String::new();
         let mut zero = false;
@@ -225,7 +225,7 @@ mod tests {
         assert_eq!(amount_upper("123", "05"), "壹佰贰拾叁元零伍分");
         assert_eq!(amount_upper("10", "5"), "壹拾元伍角");
         assert_eq!(amount_lower("10", "5"), "十元五角");
-        // 不足一元不写元；零就是零元整
+        // 不足一元不寫元；零就是零元整
         assert_eq!(amount_lower("0", "5"), "五角");
         assert_eq!(amount_upper("0", "05"), "伍分");
         assert_eq!(amount_lower("0", ""), "零元整");

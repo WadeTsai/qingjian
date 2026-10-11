@@ -1,4 +1,4 @@
-//! 共享长度前缀协议的内存回环。
+//! 共享長度字首協議的記憶體迴環。
 use qingjian_platform::protocol::{
     ClientMessage, KeyEvent, KeyModifiers, PROTOCOL_VERSION, ServerMessage, SessionId,
     read_message, write_message,
@@ -74,7 +74,7 @@ fn linux_display_identity_round_trips_without_changing_shared_protocol() {
     assert_eq!(decoded.senses, vec![(0, 1), (3, 0)]);
 }
 
-/// Fcitx5 插件的 OpenSession 把协议版本写死在 C++ 里；Server 要求完全一致，升版本时两边得一起改。
+/// Fcitx5 外掛的 OpenSession 把協議版本寫死在 C++ 裡；Server 要求完全一致，升版本時兩邊得一起改。
 #[test]
 fn fcitx5_plugin_opens_sessions_with_the_current_protocol() {
     let plugin = concat!(env!("CARGO_MANIFEST_DIR"), "/../fcitx5/src/qingjian.cpp");

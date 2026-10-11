@@ -1,11 +1,11 @@
-//! 普通话音节表。查找逻辑在 [`super::trie`]。
+//! 普通話音節表。查詢邏輯在 [`super::trie`]。
 
-/// 无声调的普通话合法音节表（含 ü 写作 v / ue 两种写法；j / q / x / y 后的 `v` 是 `u` 的键盘别名，查词前经 `canonical_syllable` 归一）。
+/// 無聲調的普通話合法音節表（含 ü 寫作 v / ue 兩種寫法；j / q / x / y 後的 `v` 是 `u` 的鍵盤別名，查詞前經 `canonical_syllable` 歸一）。
 ///
-/// 只放独立成字的音节，不含 `m` / `ng` / `hm` 这类叹词写法。按声母分组便于人工核对。
+/// 只放獨立成字的音節，不含 `m` / `ng` / `hm` 這類嘆詞寫法。按聲母分組便於人工核對。
 #[rustfmt::skip]
 pub const SYLLABLES: &[&str] = &[
-    // 零声母
+    // 零聲母
     "a", "ai", "an", "ang", "ao", "e", "ei", "en", "eng", "er", "o", "ou",
     "yi", "ya", "yao", "ye", "you", "yan", "yin", "yang", "ying", "yong", "yu", "yv", "yue", "yuan", "yun", "yo",
     "wu", "wa", "wo", "wai", "wei", "wan", "wen", "wang", "weng",
@@ -38,16 +38,16 @@ pub const SYLLABLES: &[&str] = &[
     "sa", "se", "si", "sai", "sao", "sou", "san", "sen", "sang", "seng", "song", "su", "suo", "sui", "suan", "sun",
 ];
 
-/// 音节最长 6 个字母（zhuang / chuang / shuang）。
+/// 音節最長 6 個字母（zhuang / chuang / shuang）。
 pub const MAX_SYLLABLE_LEN: usize = 6;
 
-/// 简拼允许单独出现的声母。`y` / `w` 按拼音书写习惯也算。
+/// 簡拼允許單獨出現的聲母。`y` / `w` 按拼音書寫習慣也算。
 pub const INITIALS: &[&str] = &[
     "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "j", "q", "x", "zh", "ch", "sh", "r",
     "z", "c", "s", "y", "w",
 ];
 
-/// `rest` 开头能当声母的长度：`zh` 开头返回 `[1, 2]`（`z` 与 `zh` 都可能），`k` 返回 `[1]`，元音开头为空。
+/// `rest` 開頭能當聲母的長度：`zh` 開頭返回 `[1, 2]`（`z` 與 `zh` 都可能），`k` 返回 `[1]`，母音開頭為空。
 pub fn initial_lengths(rest: &str) -> impl Iterator<Item = usize> + '_ {
     INITIALS
         .iter()

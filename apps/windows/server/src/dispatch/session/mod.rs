@@ -1,4 +1,4 @@
-//! 会话：DLL 每个应用线程一条，Server 记宿主应用；焦点在哪个会话，组句就属于谁。
+//! 會話：DLL 每個應用執行緒一條，Server 記宿主應用；焦點在哪個會話，組句就屬於誰。
 
 mod info;
 
@@ -12,7 +12,7 @@ impl Router {
         self.sessions.len()
     }
 
-    /// 聚焦会话所在应用的 exe 名；DLL 没报时为 `None`。
+    /// 聚焦會話所在應用的 exe 名；DLL 沒報時為 `None`。
     pub(super) fn focused_app(&self) -> Option<&str> {
         self.focused
             .and_then(|session| self.sessions.get(&session))
@@ -27,10 +27,33 @@ impl Router {
             self.engine.set_application(app);
             let private = self.focused_private();
             self.engine.set_private(private);
+            self.engine.set_traditional_mode(self.traditional_output());
         }
     }
 
-    /// 当前聚焦的会话在私密输入框里（Engine 不学不记不发云端）。
+    /// 聚焦會話該不該出繁體：配置開著就是；關著時看它用的是不是繁體那個語言 profile（Windows「中文(台灣)」下的青簡）。
+    pub(super) fn traditional_output(&self) -> bool {
+        self.config.traditional
+            || self
+                .focused
+                .and_then(|session| self.sessions.get(&session))
+                .is_some_and(|info| info.traditional)
+    }
+
+    /// DLL 報來該會話用的語言 profile 是不是繁體的：記下；是當前會話且變了就清掉組句再切 Engine
+    /// （組句中切 profile 極少見，候選裡簡繁混著不如從頭來）。
+    pub(super) fn set_profile(&mut self, session: SessionId, traditional: bool) {
+        let before = self.traditional_output();
+        if let Some(info) = self.sessions.get_mut(&session) {
+            info.traditional = traditional;
+        }
+        if self.focused == Some(session) && self.traditional_output() != before {
+            self.reset_composition();
+            self.engine.set_traditional_mode(self.traditional_output());
+        }
+    }
+
+    /// 當前聚焦的會話在私密輸入框裡（Engine 不學不記不發雲端）。
     pub fn is_private(&self) -> bool {
         self.engine.is_private()
     }
@@ -41,7 +64,7 @@ impl Router {
             .is_some_and(|info| info.private)
     }
 
-    /// DLL 报来该会话的输入框私密与否变了：记下；是当前会话就立刻让 Engine 进 / 出私密。
+    /// DLL 報來該會話的輸入框私密與否變了：記下；是當前會話就立刻讓 Engine 進 / 出私密。
     pub(super) fn set_privacy(&mut self, session: SessionId, private: bool) {
         if let Some(info) = self.sessions.get_mut(&session) {
             info.private = private;
@@ -51,7 +74,7 @@ impl Router {
         }
     }
 
-    /// 焦点离开：把缓冲区原样交出并清组句。组句不属于 `session` 时只清不交，别把 A 应用的拼音落进 B。
+    /// 焦點離開：把緩衝區原樣交出並清組句。組句不屬於 `session` 時只清不交，別把 A 應用的拼音落進 B。
     pub(super) fn commit_raw_for(&mut self, session: SessionId) -> Option<String> {
         let text = (self.focused == Some(session) && !self.engine.composition().is_empty())
             .then(|| self.engine.take_raw());
@@ -59,7 +82,7 @@ impl Router {
         text
     }
 
-    /// 清掉组句、展示状态、在飞的云联想与翻译评审，收起候选窗口。
+    /// 清掉組句、展示狀態、在飛的雲聯想與翻譯評審，收起候選視窗。
     pub(super) fn reset_composition(&mut self) {
         self.engine.break_chain();
         self.engine.clear();

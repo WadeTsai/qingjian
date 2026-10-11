@@ -1,4 +1,4 @@
-//! 已冻结拼音与来源的字词样本；答案只用于结果归档，不参与候选构造。
+//! 已凍結拼音與來源的字詞樣本；答案只用於結果歸檔，不參與候選構造。
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Entry {

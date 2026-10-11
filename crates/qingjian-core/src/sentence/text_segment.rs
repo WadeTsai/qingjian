@@ -1,19 +1,19 @@
-//! 把一段汉字文本按语言模型切成词序列（没有拼音的场合，如接受了云端的整句补全之后要记个人 n-gram）。
+//! 把一段漢字文本按語言模型切成詞序列（沒有拼音的場合，如接受了雲端的整句補全之後要記個人 n-gram）。
 //!
-//! 与拼音驱动的整句转换不同，这里的词图节点是文本子串：每个位置试 1 到 [`MAX_TEXT_WORD_CHARS`] 个字，
-//! 模型认识的子串才算词，单字总可以切出来（模型不认识就扣分）。Viterbi 状态是「切到哪、上一个词是什么」，
-//! 打分只用静态模型（个人 bigram 还没记这句，用它反而会自我强化）。标点等非汉字处断句，各句独立。
+//! 與拼音驅動的整句轉換不同，這裡的詞圖節點是文本子串：每個位置試 1 到 [`MAX_TEXT_WORD_CHARS`] 個字，
+//! 模型認識的子串才算詞，單字總可以切出來（模型不認識就扣分）。Viterbi 狀態是「切到哪、上一個詞是什麼」，
+//! 打分只用靜態模型（個人 bigram 還沒記這句，用它反而會自我強化）。標點等非漢字處斷句，各句獨立。
 
 use super::LanguageModel;
 
-/// 文本切词时一个词最多几个字。
+/// 文本切詞時一個詞最多幾個字。
 pub const MAX_TEXT_WORD_CHARS: usize = 6;
 
-/// 模型不认识的单字的分数：相当于亿级语料里只出现一次的词，任何认识的词都比它强。
+/// 模型不認識的單字的分數：相當於億級語料裡只出現一次的詞，任何認識的詞都比它強。
 const UNKNOWN_CHAR_LOG_PROB: f64 = -18.5;
 
-/// 切成一句句（非汉字处断开）的词序列。模型一个词都不认识时返回 `None`：没有语言模型（或全是生僻字）时切出来的
-/// 只是单字流，记进个人 n-gram 没有意义。
+/// 切成一句句（非漢字處斷開）的詞序列。模型一個詞都不認識時返回 `None`：沒有語言模型（或全是生僻字）時切出來的
+/// 只是單字流，記進個人 n-gram 沒有意義。
 pub fn segment_text(text: &str, model: &dyn LanguageModel) -> Option<Vec<Vec<String>>> {
     let mut clauses = Vec::new();
     let mut known = false;
@@ -29,8 +29,8 @@ pub fn segment_text(text: &str, model: &dyn LanguageModel) -> Option<Vec<Vec<Str
     (known && !clauses.is_empty()).then_some(clauses)
 }
 
-/// 一句里的 Viterbi：节点 = (起点, 词)，每个节点记最优前驱；同一起点、同一个词只留一个节点，
-/// 前驱按「上一个词」区分打分。返回词序列和「有没有模型认识的词」。
+/// 一句裡的 Viterbi：節點 = (起點, 詞)，每個節點記最優前驅；同一起點、同一個詞只留一個節點，
+/// 前驅按「上一個詞」區分打分。返回詞序列和「有沒有模型認識的詞」。
 fn segment_clause(chars: &[char], model: &dyn LanguageModel) -> (Vec<String>, bool) {
     struct Node {
         word: String,
@@ -40,7 +40,7 @@ fn segment_clause(chars: &[char], model: &dyn LanguageModel) -> (Vec<String>, bo
     }
     let n = chars.len();
     let mut nodes: Vec<Node> = Vec::new();
-    // 每个结束位置上的节点下标
+    // 每個結束位置上的節點下標
     let mut ending: Vec<Vec<usize>> = vec![Vec::new(); n + 1];
     for start in 0..n {
         let predecessors: Vec<Option<usize>> = if start == 0 {
@@ -99,7 +99,7 @@ fn segment_clause(chars: &[char], model: &dyn LanguageModel) -> (Vec<String>, bo
     (path, known)
 }
 
-/// 是不是汉字（CJK 统一表意文字各区）。
+/// 是不是漢字（CJK 統一表意文字各區）。
 pub(crate) fn is_han(c: char) -> bool {
     matches!(c as u32, 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xF900..=0xFAFF | 0x20000..=0x323AF)
 }

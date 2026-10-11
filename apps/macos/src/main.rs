@@ -1,9 +1,9 @@
-//! 青简 macOS 输入法壳（IMK）。
+//! 青簡 macOS 輸入法殼（IMK）。
 //!
-//! 按键进 [`qingjian_core::Engine`]，候选画在自绘 NSPanel 里。数字选词，空格上首选，
-//! 回车上屏拼音本身，退格删一个，Esc 清空，上下键移动高亮。
+//! 按鍵進 [`qingjian_core::Engine`]，候選畫在自繪 NSPanel 裡。數字選詞，空格上首選，
+//! 回車上屏拼音本身，退格刪一個，Esc 清空，上下鍵移動高亮。
 //!
-//! 无法 `cargo run`：必须打包成 `.app` 装到 `~/Library/Input Methods/`，见 `scripts/bundle.sh`。
+//! 無法 `cargo run`：必須打包成 `.app` 裝到 `~/Library/Input Methods/`，見 `scripts/bundle.sh`。
 
 mod app;
 mod candidates;
@@ -19,13 +19,13 @@ use objc2_foundation::NSString;
 use objc2_input_method_kit::IMKServer;
 
 fn main() {
-    // `--register` 起的子进程：在干净的 TIS 缓存里回读启用状态并切成当前（见 input_source.rs）
+    // `--register` 起的子程序：在乾淨的 TIS 快取裡回讀啟用狀態並切成當前（見 input_source.rs）
     let mut arguments = std::env::args().skip(1);
     if arguments.next().as_deref() == Some(app::input_source::FINISH_FLAG) {
         let source_id = arguments.next().unwrap_or_default();
         std::process::exit(app::input_source::finish_register(&source_id));
     }
-    // 主题投稿用：把主题目录画成预览图写进它的 preview/，不起 IMK（主题仓库的 tools/preview.py 调它）
+    // 主題投稿用：把主題目錄畫成預覽圖寫進它的 preview/，不起 IMK（主題倉庫的 tools/preview.py 調它）
     let mut arguments = std::env::args().skip(1);
     if arguments.next().as_deref() == Some(qingjian_render::preview::FLAG) {
         let Some(dir) = arguments.next() else {
@@ -37,7 +37,7 @@ fn main() {
             candidates::family_files,
         ));
     }
-    // 安装器的 postinstall 以登录用户身份调 `--register`：注册、启用并切成当前输入源后直接退出，不起 IMK
+    // 安裝器的 postinstall 以登入使用者身份調 `--register`：註冊、啟用並切成當前輸入源後直接退出，不起 IMK
     if std::env::args().any(|argument| argument == "--register") {
         match app::input_source::register_main_bundle() {
             Ok(true) => println!("青简输入源已注册、启用并切成当前输入源"),
@@ -50,8 +50,8 @@ fn main() {
         return;
     }
     let _log_guard = app::logging::init();
-    // panic 的位置与 backtrace 记进日志（拦截在 imk::catch_panic，这里只记不碰状态）；
-    // 后台线程（云联想）的 panic 也经过这里，否则只会打到没人看的 stderr
+    // panic 的位置與 backtrace 記進日誌（攔截在 imk::catch_panic，這裡只記不碰狀態）；
+    // 後臺執行緒（雲聯想）的 panic 也經過這裡，否則只會打到沒人看的 stderr
     std::panic::set_hook(Box::new(|info| {
         let backtrace = std::backtrace::Backtrace::force_capture();
         tracing::error!(%info, %backtrace, "panic");
@@ -59,9 +59,9 @@ fn main() {
     let info = app::BundleInfo::from_main_bundle();
     tracing::info!(connection = %info.connection_name, bundle = %info.identifier, "启动");
 
-    // define_class! 的类在首次调用 class() 时才注册到 ObjC 运行时，而 IMKServer 初始化时就会按
-    // Info.plist 里的类名查找；找不到会静默退回基类 IMKInputController，表现为按键全部透传。
-    // 所以必须先注册类，再建 server。
+    // define_class! 的類在首次呼叫 class() 時才註冊到 ObjC 執行時，而 IMKServer 初始化時就會按
+    // Info.plist 裡的類名查詢；找不到會靜默退回基類 IMKInputController，表現為按鍵全部透傳。
+    // 所以必須先註冊類，再建 server。
     let controller_class = imk::QingjianInputController::class();
     tracing::info!(class = %controller_class.name().to_string_lossy(), "控制器类已注册");
 
@@ -71,7 +71,7 @@ fn main() {
         std::process::exit(1);
     }
 
-    // IMKServer 需要在主线程创建，并在整个进程生命周期内活着
+    // IMKServer 需要在主執行緒建立，並在整個程序生命週期內活著
     let server = unsafe {
         IMKServer::initWithName_bundleIdentifier(
             IMKServer::alloc(),

@@ -1,4 +1,4 @@
-//! 一次要绘制的组句状态：preedit 行加候选页。
+//! 一次要繪製的組句狀態：preedit 行加候選頁。
 
 pub mod preedit;
 
@@ -10,57 +10,57 @@ use qingjian_core::CandidateList;
 
 use crate::{Appearance, LayoutMode, PreeditMode};
 
-/// Server 告诉 DLL「现在屏幕上该是什么样」：组句的拼音行、候选页、高亮与页码。
-/// 空 [`Frame`]（`preedit` 与 `candidates` 都空）表示没有在组句，DLL 收起候选窗口。
+/// Server 告訴 DLL「現在螢幕上該是什麼樣」：組句的拼音行、候選頁、高亮與頁碼。
+/// 空 [`Frame`]（`preedit` 與 `candidates` 都空）表示沒有在組句，DLL 收起候選視窗。
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Frame {
-    /// 组句拼音行的分段，按顺序拼成整行。
+    /// 組句拼音行的分段，按順序拼成整行。
     pub preedit: Vec<PreeditSegment>,
 
-    /// 拼音显示在哪（`[general] preedit`）：DLL 按 [`PreeditMode::inline`] 决定要不要往应用里放行内拼音，
-    /// 窗口顶部画不画拼音行由 Server 自己按 [`PreeditMode::in_window`] 定。
+    /// 拼音顯示在哪（`[general] preedit`）：DLL 按 [`PreeditMode::inline`] 決定要不要往應用裡放行內拼音，
+    /// 視窗頂部畫不畫拼音行由 Server 自己按 [`PreeditMode::in_window`] 定。
     #[serde(default)]
     pub preedit_mode: PreeditMode,
 
-    /// 光标在拼音行里的位置，按 `preedit` 拼接后的字符（`char`）数算。
+    /// 游標在拼音行裡的位置，按 `preedit` 拼接後的字元（`char`）數算。
     pub cursor: usize,
 
-    /// 当前页的候选（已排好序、不带译文由后续 [`super::ServerMessage::Update`] 补）。
+    /// 當前頁的候選（已排好序、不帶譯文由後續 [`super::ServerMessage::Update`] 補）。
     pub candidates: CandidateList,
 
-    /// 当前页里高亮的候选下标（页内，从 0 起）。
+    /// 當前頁裡高亮的候選下標（頁內，從 0 起）。
     pub highlight: usize,
 
-    /// 当前页码（从 0 起）。
+    /// 當前頁碼（從 0 起）。
     pub page: usize,
 
-    /// 总页数；翻页键是否可用看它。
+    /// 總頁數；翻頁鍵是否可用看它。
     pub page_count: usize,
 
-    /// 候选排布（竖排 / 横排）。DLL 是纯渲染端，布局由 Server 按 `[general] layout` 配置随帧下发。
+    /// 候選排布（豎排 / 橫排）。DLL 是純渲染端，佈局由 Server 按 `[general] layout` 配置隨幀下發。
     pub layout: LayoutMode,
 
-    /// 候选窗口外观（跟随系统 / 浅色 / 深色）。`System` 由绘制端按当前系统深浅色解析。
-    /// 线上字段名仍是 `theme`（2026-09-18 之前的名字），没重启的应用里的旧 DLL 要求有这个字段，改名会让它解不出帧。
+    /// 候選視窗外觀（跟隨系統 / 淺色 / 深色）。`System` 由繪製端按當前系統深淺色解析。
+    /// 線上欄位名仍是 `theme`（2026-09-18 之前的名字），沒重啟的應用裡的舊 DLL 要求有這個欄位，改名會讓它解不出幀。
     #[serde(rename = "theme")]
     pub appearance: Appearance,
 
-    /// 候选上是否显示辅码（`[general] aux_code_show`）：候选带 `aux_code` 时拼在 annotation 最前面。
-    /// 与 `layout` / `theme` 一样，显示开关由 Server 按配置随帧下发。
+    /// 候選上是否顯示輔碼（`[general] aux_code_show`）：候選帶 `aux_code` 時拼在 annotation 最前面。
+    /// 與 `layout` / `theme` 一樣，顯示開關由 Server 按配置隨幀下發。
     #[serde(default)]
     pub aux_code_show: bool,
 
-    /// 整句补全（云联想给的整段拼音的整句结果）：画在 preedit 行右侧，按 Tab 上屏。无则 `None`。
+    /// 整句補全（雲聯想給的整段拼音的整句結果）：畫在 preedit 行右側，按 Tab 上屏。無則 `None`。
     pub sentence: Option<String>,
 
-    /// 屏幕提示（删候选后的「已删除…」一句）：画在 preedit 行下方，显示到下一次按键。无则 `None`。
-    /// 不参与 [`is_empty`](Self::is_empty)：单有提示不算在组句，否则空组句也会撑开候选窗口。
+    /// 螢幕提示（刪候選後的「已刪除…」一句）：畫在 preedit 行下方，顯示到下一次按鍵。無則 `None`。
+    /// 不參與 [`is_empty`](Self::is_empty)：單有提示不算在組句，否則空組句也會撐開候選視窗。
     #[serde(default)]
     pub notice: Option<String>,
 }
 
 impl Frame {
-    /// 没有在组句：DLL 据此收起候选窗口。提示不算数（见 [`notice`](Self::notice)）。
+    /// 沒有在組句：DLL 據此收起候選視窗。提示不算數（見 [`notice`](Self::notice)）。
     pub fn is_empty(&self) -> bool {
         self.preedit.is_empty() && self.candidates.items.is_empty()
     }

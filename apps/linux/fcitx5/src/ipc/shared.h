@@ -1,4 +1,4 @@
-//! 插件唯一连接、观察器与安全上下文登记；析构通知延迟到下一事务。
+//! 外掛唯一連線、觀察器與安全上下文登記；析構通知延遲到下一事務。
 #pragma once
 #include "connection.h"
 #include <fcitx/inputcontext.h>

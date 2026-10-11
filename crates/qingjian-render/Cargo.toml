@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-render"
-description = "自绘渲染器：把候选窗一帧画成位图，各平台只负责贴图"
+description = "自繪渲染器：把候選窗一幀畫成點陣圖，各平臺只負責貼圖"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 tiny-skia.workspace = true
-# 主题里的 SVG 图片：解析 + 栅格到 tiny-skia 位图（与上面同一个 tiny-skia）；不要 SVG 文字、系统字体与内嵌位图解码
+# 主題裡的 SVG 圖片：解析 + 柵格到 tiny-skia 點陣圖（與上面同一個 tiny-skia）；不要 SVG 文字、系統字型與內嵌點陣圖解碼
 resvg = { version = "0.48.1", default-features = false }
 cosmic-text.workspace = true
 zeno.workspace = true
@@ -19,7 +19,7 @@ serde.workspace = true
 serde_json.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-# 字体登记走 DirectWrite（按字族名找文件、列字族）
+# 字型登記走 DirectWrite（按字族名找檔案、列字族）
 windows = { version = "0.62.2", features = ["Win32_Graphics_DirectWrite"] }
 
 [dev-dependencies]

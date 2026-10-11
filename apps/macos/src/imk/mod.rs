@@ -1,7 +1,7 @@
-//! InputMethodKit 这一侧：输入控制器、文本客户端封装、修饰键与 Secure Input 查询。
+//! InputMethodKit 這一側：輸入控制器、文本客戶端封裝、修飾鍵與 Secure Input 查詢。
 //!
-//! 只做两件事：把系统输入事件翻译成 Engine 的调用，把 Engine 的结果交给候选窗口。
-//! 排序、词库、翻译逻辑一概不许出现在这里。
+//! 只做兩件事：把系統輸入事件翻譯成 Engine 的呼叫，把 Engine 的結果交給候選視窗。
+//! 排序、詞庫、翻譯邏輯一概不許出現在這裡。
 
 mod client;
 mod controller;
@@ -14,9 +14,9 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 pub use client::TextClient;
 pub use controller::{QingjianInputController, click};
 
-/// 在 ObjC 运行时回调的边界拦住 panic。`define_class!` 生成的方法是系统直接调的，panic 穿过去整个进程就没了，
-/// 用户正在打的字也跟着没了。拦住后记一条错误日志（位置与 backtrace 由 `main.rs` 装的 panic hook 记），
-/// 返回 `None` 让调用方善后（见 [`recover_from_panic`]）。
+/// 在 ObjC 執行時回撥的邊界攔住 panic。`define_class!` 生成的方法是系統直接調的，panic 穿過去整個程序就沒了，
+/// 使用者正在打的字也跟著沒了。攔住後記一條錯誤日誌（位置與 backtrace 由 `main.rs` 裝的 panic hook 記），
+/// 返回 `None` 讓呼叫方善後（見 [`recover_from_panic`]）。
 pub fn catch_panic<R>(what: &'static str, f: impl FnOnce() -> R) -> Option<R> {
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Some(value),
@@ -31,8 +31,8 @@ pub fn catch_panic<R>(what: &'static str, f: impl FnOnce() -> R) -> Option<R> {
     }
 }
 
-/// panic 之后的善后：把缓冲区里的字母原样交给应用（用户敲过的键不能消失），再清掉引擎状态、收起窗口。
-/// 善后本身再 panic 就只能放弃，至少进程还活着。
+/// panic 之後的善後：把緩衝區裡的字母原樣交給應用（使用者敲過的鍵不能消失），再清掉引擎狀態、收起視窗。
+/// 善後本身再 panic 就只能放棄，至少程序還活著。
 pub fn recover_from_panic(client: Option<TextClient<'_>>) {
     let recovered = catch_unwind(AssertUnwindSafe(|| {
         let pending = crate::host::with(|h| {
@@ -54,7 +54,7 @@ pub fn recover_from_panic(client: Option<TextClient<'_>>) {
     }
 }
 
-/// panic payload 里的文字：`panic!("...")` 是 `&str` 或 `String`，别的类型给个占位。
+/// panic payload 裡的文字：`panic!("...")` 是 `&str` 或 `String`，別的型別給個佔位。
 fn panic_message(payload: &(dyn Any + Send)) -> &str {
     payload
         .downcast_ref::<&str>()

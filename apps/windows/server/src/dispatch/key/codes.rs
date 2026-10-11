@@ -1,4 +1,4 @@
-//! 按键分派用的虚拟键码与字符解析。
+//! 按鍵分派用的虛擬鍵碼與字元解析。
 
 use qingjian_platform::protocol::KeyEvent;
 
@@ -15,7 +15,7 @@ pub(crate) const UP: u32 = 0x26;
 pub(crate) const RIGHT: u32 = 0x27;
 pub(crate) const DOWN: u32 = 0x28;
 
-/// 翻页键对 `(上一页, 下一页)`：返回 -1 / +1。
+/// 翻頁鍵對 `(上一頁, 下一頁)`：返回 -1 / +1。
 pub(crate) fn page_key(event: &KeyEvent, page_keys: (char, char)) -> Option<isize> {
     let c = event.character?;
     if c == page_keys.0 {
@@ -27,7 +27,7 @@ pub(crate) fn page_key(event: &KeyEvent, page_keys: (char, char)) -> Option<isiz
     }
 }
 
-/// 敲出来是数字 1–9 的键（选候选用）：按 `character` 认，Shift 出的 `!@#` 不算。
+/// 敲出來是數字 1–9 的鍵（選候選用）：按 `character` 認，Shift 出的 `!@#` 不算。
 pub(crate) fn digit(event: &KeyEvent) -> Option<usize> {
     match event.character {
         Some(c) => ('1'..='9').contains(&c).then(|| c as usize - '0' as usize),
@@ -35,14 +35,14 @@ pub(crate) fn digit(event: &KeyEvent) -> Option<usize> {
     }
 }
 
-/// 主键盘区数字键 1–9 的键码，不管修饰键（修饰键 + 数字的快捷键按键位认）。
+/// 主鍵盤區數字鍵 1–9 的鍵碼，不管修飾鍵（修飾鍵 + 數字的快捷鍵按鍵位認）。
 pub(crate) fn digit_key(virtual_key: u32) -> Option<usize> {
     (0x31..=0x39)
         .contains(&virtual_key)
         .then(|| (virtual_key - 0x30) as usize)
 }
 
-/// 小键盘区的键（数字与 `* + - . /`）：敲出来的标点一律半角。
+/// 小鍵盤區的鍵（數字與 `* + - . /`）：敲出來的標點一律半形。
 pub(crate) fn is_keypad(virtual_key: u32) -> bool {
     (0x60..=0x6F).contains(&virtual_key)
 }

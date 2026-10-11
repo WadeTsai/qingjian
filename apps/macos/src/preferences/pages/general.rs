@@ -1,4 +1,4 @@
-//! 「通用」页：学习语言、每页候选数、输入方案、英文模式候选。
+//! 「通用」頁：學習語言、每頁候選數、輸入方案、英文模式候選。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -14,60 +14,60 @@ use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
 pub struct GeneralPage {
-    /// 学习语言。
+    /// 學習語言。
     learning_language: Retained<NSPopUpButton>,
 
-    /// 每页候选数。
+    /// 每頁候選數。
     page_size: Retained<NSPopUpButton>,
 
-    /// 拼音方案（按 `Scheme::ALL` 的顺序）。
+    /// 拼音方案（按 `Scheme::ALL` 的順序）。
     scheme: Retained<NSPopUpButton>,
 
-    /// 双拼模式下输入框保留原始输入按键。
+    /// 雙拼模式下輸入框保留原始輸入按鍵。
     shuangpin_raw_preedit: Retained<NSButton>,
-    /// 五笔（86 版形码）；与拼音方案同时开着就是混输。
+    /// 五筆（86 版形碼）；與拼音方案同時開著就是混輸。
     wubi: Retained<NSButton>,
 
-    /// 繁体输出模式。
+    /// 繁體輸出模式。
     traditional: Retained<NSButton>,
 
-    /// 候选后面配 emoji。
+    /// 候選後面配 emoji。
     emoji: Retained<NSButton>,
 
-    /// 英文模式也给候选。
+    /// 英文模式也給候選。
     english: Retained<NSButton>,
 
-    /// 终端 / 编辑器里不给英文候选。
+    /// 終端 / 編輯器裡不給英文候選。
     english_only_in_apps: Retained<NSButton>,
 
-    /// 中文模式也给英文词与补全。
+    /// 中文模式也給英文詞與補全。
     english_in_chinese: Retained<NSButton>,
 
-    /// 中英混输时中文候选排在英文词前。
+    /// 中英混輸時中文候選排在英文詞前。
     chinese_first: Retained<NSButton>,
 
-    /// 中文模式下 Shift+字母进组句。
+    /// 中文模式下 Shift+字母進組句。
     shift_letter: Retained<NSButton>,
 
-    /// 学习语言弹出菜单里各项对应的语言。
+    /// 學習語言彈出選單裡各項對應的語言。
     languages: Vec<Language>,
 
-    /// 默认中文标点模式。
+    /// 預設中文標點模式。
     punctuation: Retained<NSPopUpButton>,
 
-    /// 组句中会转全角的标点先把高亮候选上屏再补标点。
+    /// 組句中會轉全形的標點先把高亮候選上屏再補標點。
     punct_commits: Retained<NSButton>,
 }
 
 impl GeneralPage {
-    /// `languages` 是打进包里的释义表语言。
+    /// `languages` 是打進包裡的釋義表語言。
     pub fn build(
         layout: &mut Layout,
         mtm: MainThreadMarker,
         target: &PreferencesTarget,
         languages: &[Language],
     ) -> Self {
-        // 最后一项是关
+        // 最後一項是關
         let language_titles: Vec<String> = languages
             .iter()
             .map(|l| language_label(*l).to_owned())
@@ -198,7 +198,7 @@ impl GeneralPage {
         note(
             layout,
             mtm,
-            "勾上后整段输入是英文词时（hello、key）英文词排第二，空格上屏的仍是中文；不勾（缺省）拼音不成立的输入英文词排第一。",
+            "勾上后整段输入是英文词时（hello、key）英文词排第二，空格上屏的仍是中文；不勾（預設）拼音不成立的输入英文词排第一。",
         );
         let shift_letter = checkbox(
             mtm,
@@ -210,7 +210,7 @@ impl GeneralPage {
         note(
             layout,
             mtm,
-            "不勾（缺省）是临时打英文：拼音先上屏，这个大写字母原样交给应用。勾上后它进拼音缓冲区、按小写参与匹配，Cpan 与 cpan 一样能出「C盘」；回车原样上屏时保留大写。",
+            "不勾（預設）是临时打英文：拼音先上屏，这个大写字母原样交给应用。勾上后它进拼音缓冲区、按小写参与匹配，Cpan 与 cpan 一样能出「C盘」；回车原样上屏时保留大写。",
         );
         Self {
             learning_language,

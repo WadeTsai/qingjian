@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-/// 连通性测试成功时的结果。
+/// 連通性測試成功時的結果。
 pub struct ConnectionReport {
-    /// 请求用的模型名。
+    /// 請求用的模型名。
     pub model: String,
 
-    /// 从发出到收到回复的时间。
+    /// 從發出到收到回覆的時間。
     pub elapsed: Duration,
 
-    /// 模型的原始回复（只用来在日志里对一眼）。
+    /// 模型的原始回覆（只用來在日誌裡對一眼）。
     pub reply: String,
 }

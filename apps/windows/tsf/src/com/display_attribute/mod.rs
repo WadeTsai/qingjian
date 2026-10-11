@@ -1,6 +1,6 @@
-//! 组句 preedit 的内联下划线：按 TSF 显示属性协议给组句范围标一个「输入中」属性（对应 macOS marked text 的下划线）。
-//! 系统经 `ITfDisplayAttributeProvider`（实现在 [`super::service::TextService`]）来取 [`AttributeInfo`]
-//! （枚举器 [`AttributeEnum`]）；写组句时把 GUID 换成 atom 写进范围的 `GUID_PROP_ATTRIBUTE`。
+//! 組句 preedit 的內聯下劃線：按 TSF 顯示屬性協議給組句範圍標一個「輸入中」屬性（對應 macOS marked text 的下劃線）。
+//! 系統經 `ITfDisplayAttributeProvider`（實現在 [`super::service::TextService`]）來取 [`AttributeInfo`]
+//! （列舉器 [`AttributeEnum`]）；寫組句時把 GUID 換成 atom 寫進範圍的 `GUID_PROP_ATTRIBUTE`。
 
 mod enumerator;
 mod info;
@@ -20,16 +20,16 @@ use self::enumerator::AttributeEnum;
 use self::info::AttributeInfo;
 use super::log::log;
 
-/// 青简的组句显示属性 GUID（自定义），与注册表里声明的显示属性提供者类别配套。
+/// 青簡的組句顯示屬性 GUID（自定義），與登錄檔裡宣告的顯示屬性提供者類別配套。
 pub(crate) const GUID_DISPLAY_ATTRIBUTE_INPUT: GUID =
     GUID::from_u128(0xc47cb4c0_0ac9_4c8f_bdbf_8b6d21cc504f);
 
 thread_local! {
-    /// GUID 在类别管理器里的 atom，首次用时算出来缓存；0 = 还没算。
+    /// GUID 在類別管理器裡的 atom，首次用時算出來快取；0 = 還沒算。
     static ATOM: Cell<u32> = const { Cell::new(0) };
 }
 
-/// 点虚线下划线，前景 / 背景 / 线色跟随文档。
+/// 點虛線下劃線，前景 / 背景 / 線色跟隨文件。
 pub(super) fn input_attribute() -> TF_DISPLAYATTRIBUTE {
     let follow_text = TF_DA_COLOR {
         r#type: TF_CT_NONE,
@@ -45,10 +45,10 @@ pub(super) fn input_attribute() -> TF_DISPLAYATTRIBUTE {
     }
 }
 
-/// 给组句范围打上下划线属性。失败只记日志。
+/// 給組句範圍打上下劃線屬性。失敗只記日誌。
 pub(crate) fn mark(context: &ITfContext, ec: u32, range: &ITfRange) {
     if let Err(error) = mark_inner(context, ec, range) {
-        log(&format!("组句下划线属性写入失败: {error}"));
+        log(&format!("組句下劃線屬性寫入失敗: {error}"));
     }
 }
 

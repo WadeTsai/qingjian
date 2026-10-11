@@ -3,23 +3,23 @@ use std::path::Path;
 
 use crate::GlossaryError;
 
-/// 词汇等级表：译词 → 等级（CEFR A1–C2 / JLPT N5–N1），给「统计」页按级数词汇用。
+/// 詞彙等級表：譯詞 → 等級（CEFR A1–C2 / JLPT N5–N1），給「統計」頁按級數詞彙用。
 ///
-/// 文件是 TSV：`# levels\tA1\tA2…` 一行给出等级从易到难的顺序，之后每行 `词\t等级`；`#` 开头是注释。
-/// 查询时英文按小写比，日文查不到再试去掉词尾的 する / な / だ（释义表里是 `開発する`，等级表里是 `開発`）。
+/// 檔案是 TSV：`# levels\tA1\tA2…` 一行給出等級從易到難的順序，之後每行 `詞\t等級`；`#` 開頭是註釋。
+/// 查詢時英文按小寫比，日文查不到再試去掉詞尾的 する / な / だ（釋義表裡是 `開発する`，等級表裡是 `開発`）。
 #[derive(Debug, Default, Clone)]
 pub struct LevelTable {
-    /// 等级名，从易到难。
+    /// 等級名，從易到難。
     levels: Vec<String>,
 
-    /// 词 → 等级在 `levels` 里的下标。
+    /// 詞 → 等級在 `levels` 裡的下標。
     words: HashMap<String, usize>,
 
-    /// 每级有多少词。
+    /// 每級有多少詞。
     sizes: Vec<u64>,
 }
 
-/// 日文查不到时试着去掉的词尾。
+/// 日文查不到時試著去掉的詞尾。
 const JAPANESE_SUFFIXES: [&str; 3] = ["する", "な", "だ"];
 
 impl LevelTable {
@@ -27,7 +27,7 @@ impl LevelTable {
         Self::parse(&std::fs::read_to_string(path)?)
     }
 
-    /// 解析；没有 `# levels` 行时等级按首次出现的顺序排。格式不对的行报错（这是随包数据，不该坏）。
+    /// 解析；沒有 `# levels` 行時等級按首次出現的順序排。格式不對的行報錯（這是隨包資料，不該壞）。
     pub fn parse(source: &str) -> Result<Self, GlossaryError> {
         let mut table = Self::default();
         for (index, line) in source.lines().enumerate() {
@@ -60,17 +60,17 @@ impl LevelTable {
         Ok(table)
     }
 
-    /// 等级名，从易到难。
+    /// 等級名，從易到難。
     pub fn levels(&self) -> &[String] {
         &self.levels
     }
 
-    /// 第 `rank` 级有多少词。
+    /// 第 `rank` 級有多少詞。
     pub fn size(&self, rank: usize) -> u64 {
         self.sizes.get(rank).copied().unwrap_or(0)
     }
 
-    /// `word` 的等级下标（越小越易）；表里没有返回 `None`。
+    /// `word` 的等級下標（越小越易）；表裡沒有返回 `None`。
     pub fn rank(&self, word: &str) -> Option<usize> {
         let lower = word.to_lowercase();
         if let Some(rank) = self.words.get(&lower) {
@@ -82,7 +82,7 @@ impl LevelTable {
             .find_map(|stem| self.words.get(stem).copied())
     }
 
-    /// `word` 的等级名。
+    /// `word` 的等級名。
     pub fn level(&self, word: &str) -> Option<&str> {
         self.rank(word).map(|rank| self.levels[rank].as_str())
     }

@@ -1,18 +1,18 @@
-//! 候选翻译 annotation：本地 gloss 表查询。
+//! 候選翻譯 annotation：本地 gloss 表查詢。
 //!
-//! 运行时不联网。文件格式为 TSV，一行一个词，后面每列一条释义，最多取两条；
-//! 释义开头可带词性缩写（`n.` / `v.` / `adj.` …，后跟空格），没有也行：
+//! 執行時不聯網。檔案格式為 TSV，一行一個詞，後面每列一條釋義，最多取兩條；
+//! 釋義開頭可帶詞性縮寫（`n.` / `v.` / `adj.` …，後跟空格），沒有也行：
 //!
 //! ```text
-//! 词\t[词性. ]译文[\t[词性. ]译文]
-//! 开发\tv. develop\tn. development
+//! 詞\t[詞性. ]譯文[\t[詞性. ]譯文]
+//! 開發\tv. develop\tn. development
 //! 中文\tChinese language
 //! ```
 //!
-//! `#` 开头为注释行。每个文件对应一种学习语言，语言由构造时指定。
+//! `#` 開頭為註釋行。每個檔案對應一種學習語言，語言由構造時指定。
 //!
-//! [`LevelTable`] 是词汇等级表（`levels-<语言>.tsv`，`词\t等级`），给词汇统计按级数词用。
-//! [`PersonalGlossary`] 是用户目录里的个人释义表（释义兜底写入、可手改），[`LayeredTranslator`] 把它叠在随包表上面。
+//! [`LevelTable`] 是詞彙等級表（`levels-<語言>.tsv`，`詞\t等級`），給詞彙統計按級數詞用。
+//! [`PersonalGlossary`] 是使用者目錄裡的個人釋義表（釋義兜底寫入、可手改），[`LayeredTranslator`] 把它疊在隨包表上面。
 
 mod error;
 mod glossary;

@@ -1,4 +1,4 @@
-//! 候选窗口输出：Router 只产出 [`Frame`] 与光标矩形，交给 [`CandidateSink`] 去画；帧没变就不重画。
+//! 候選視窗輸出：Router 只產出 [`Frame`] 與游標矩形，交給 [`CandidateSink`] 去畫；幀沒變就不重畫。
 
 mod sink;
 
@@ -10,7 +10,7 @@ pub use self::sink::{CandidateSink, NoopSink, RenderSettings};
 use super::Router;
 
 impl Router {
-    /// 空帧收窗口；非空且已知光标矩形就重绘；还没收到矩形（组句刚起）先不显示，免得在旧位置闪一下。
+    /// 空幀收視窗；非空且已知游標矩形就重繪；還沒收到矩形（組句剛起）先不顯示，免得在舊位置閃一下。
     pub(super) fn reconcile_candidates(&mut self, frame: &Frame) {
         if frame.is_empty() {
             self.engine.note_displayed(std::iter::empty());
@@ -20,7 +20,7 @@ impl Router {
             let unchanged = matches!(&self.last_shown,
                 Some((f, m, r)) if f == frame && *m == mode && *r == rect);
             if !unchanged {
-                // 词汇记录的「看到轮次」按真正显示的页算，与 macOS 壳对齐。
+                // 詞彙記錄的「看到輪次」按真正顯示的頁算，與 macOS 殼對齊。
                 self.engine.note_displayed(frame.candidates.items.iter());
                 self.candidates.show(frame.clone(), mode.clone(), rect);
                 self.last_shown = Some((frame.clone(), mode, rect));
@@ -28,11 +28,11 @@ impl Router {
         }
     }
 
-    /// 给主题显示的输入状态，候选窗口与状态条共用。
+    /// 給主題顯示的輸入狀態，候選視窗與狀態條共用。
     pub(super) fn input_mode(&self) -> Mode {
         Mode {
             english: self.english,
-            traditional: self.config.traditional,
+            traditional: self.traditional_output(),
             full_width: self.full_width_for(self.english),
             scheme: scheme_name(self.config.scheme, self.config.wubi),
         }
@@ -49,7 +49,7 @@ impl Router {
             return;
         }
         self.last_rect = Some(rect);
-        // 自绘窗吃未降级的帧（降级只作用于发给 DLL 的那份）
+        // 自繪窗吃未降級的幀（降級只作用於發給 DLL 的那份）
         let frame = self.self_drawn_frame();
         self.reconcile_candidates(&frame);
     }

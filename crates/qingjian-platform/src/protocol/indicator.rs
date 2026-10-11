@@ -1,35 +1,35 @@
 use serde::{Deserialize, Serialize};
 
-/// 任务栏「中 / 英」图标右键菜单里要交给 Server 办的项（中 / 英切换在 DLL 侧自己做）。
+/// 工作列「中 / 英」圖示右鍵選單裡要交給 Server 辦的項（中 / 英切換在 DLL 側自己做）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum IndicatorCommand {
-    /// 翻转当前模式的全角标点，与悬浮条上点「，。」一样。
+    /// 翻轉當前模式的全形標點，與懸浮條上點「，。」一樣。
     TogglePunctuation,
 
-    /// 显示 / 隐藏悬浮状态条（`[status_bar] enabled`）。
+    /// 顯示 / 隱藏懸浮狀態條（`[status_bar] enabled`）。
     ToggleStatusBar,
 
-    /// 打开设置程序。DLL 可能在 UWP 沙箱里起不了进程，交给 Server 起。
+    /// 開啟設定程式。DLL 可能在 UWP 沙箱裡起不了程序，交給 Server 起。
     OpenSettings,
 
-    /// 查到新版本时菜单里的「有新版本」：打开下载页，同样交给 Server。
+    /// 查到新版本時選單裡的「有新版本」：開啟下載頁，同樣交給 Server。
     OpenDownload,
 }
 
-/// 右键菜单打勾用的开关状态。DLL 不读配置文件（UWP 沙箱里读不到），由 Server 随
-/// [`super::ServerMessage::ModeSync`] 每一拍带下来。
+/// 右鍵選單打勾用的開關狀態。DLL 不讀配置檔案（UWP 沙箱裡讀不到），由 Server 隨
+/// [`super::ServerMessage::ModeSync`] 每一拍帶下來。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct IndicatorState {
-    /// 中文模式下标点转全角（`[general] full_width_punctuation`）。
+    /// 中文模式下標點轉全形（`[general] full_width_punctuation`）。
     pub full_width_punctuation: bool,
 
-    /// 英文模式下标点转全角（`[general] english_full_width_punctuation`）。
+    /// 英文模式下標點轉全形（`[general] english_full_width_punctuation`）。
     pub english_full_width_punctuation: bool,
 
-    /// 悬浮状态条开着（`[status_bar] enabled`）。
+    /// 懸浮狀態條開著（`[status_bar] enabled`）。
     pub status_bar: bool,
 
-    /// 检查更新查到了新版本，菜单里露出「有新版本」。
+    /// 檢查更新查到了新版本，選單裡露出「有新版本」。
     pub update_available: bool,
 }

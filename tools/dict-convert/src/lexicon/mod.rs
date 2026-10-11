@@ -1,14 +1,14 @@
-//! 青简自己的词库：从「输入法字词库_分类整理版」数据包（规范字 + 现代汉语常用词 + THUOCL 领域词）建 `dict.tsv`。
+//! 青簡自己的詞庫：從「輸入法字詞庫_分類整理版」資料包（規範字 + 現代漢語常用詞 + THUOCL 領域詞）建 `dict.tsv`。
 //!
-//! 通用词自带拼音，直接规范化；规范字与领域词没有拼音，读音来自 Unihan（Unicode 许可）：
-//! 单字按 kHanyuPinlu / kXHC1983 / kMandarin 给全部读音与权重，多字词按字拼接，多音字先看 LLM 标注
-//! （`gloss-gen pinyin` 的 JSONL，逐字对照 Unihan 校验）、再看通用词里该字最常见的读音、再看 kHanyuPinlu。
-//! 词频来自自己的语料统计（`bigram` 子命令的 lm-unigram.tsv），没统计到的按词表排序号 / 文档频次给一个很小的底值。
+//! 通用詞自帶拼音，直接規範化；規範字與領域詞沒有拼音，讀音來自 Unihan（Unicode 許可）：
+//! 單字按 kHanyuPinlu / kXHC1983 / kMandarin 給全部讀音與權重，多字詞按字拼接，多音字先看 LLM 標註
+//! （`gloss-gen pinyin` 的 JSONL，逐字對照 Unihan 校驗）、再看通用詞裡該字最常見的讀音、再看 kHanyuPinlu。
+//! 詞頻來自自己的語料統計（`bigram` 子命令的 lm-unigram.tsv），沒統計到的按詞表排序號 / 文件頻次給一個很小的底值。
 //!
-//! 两遍跑：第一遍没有词频，只为分词与 `--emit-ambiguous` 出待标注词表；标注、统计完再跑一遍写最终 dict.tsv。
+//! 兩遍跑：第一遍沒有詞頻，只為分詞與 `--emit-ambiguous` 出待標註詞表；標註、統計完再跑一遍寫最終 dict.tsv。
 //!
-//! 领域词拆开出：语料里出现够多的（`domain_keep_min`）是通用词，留在基础词库 `dict.tsv`；其余按来源文件各写一本
-//! `dicts/<领域>.tsv` 与带元数据的 `dicts/<领域>.qj`，随包分发、缺省关闭，用户按需打开。基础词库与各领域词库互不重叠。
+//! 領域詞拆開出：語料裡出現夠多的（`domain_keep_min`）是通用詞，留在基礎詞庫 `dict.tsv`；其餘按來原始檔各寫一本
+//! `dicts/<領域>.tsv` 與帶後設資料的 `dicts/<領域>.qj`，隨包分發、預設關閉，使用者按需開啟。基礎詞庫與各領域詞庫互不重疊。
 
 mod annotations;
 mod corpus;
@@ -30,25 +30,25 @@ use entry::LexiconEntry;
 use pack::Pack;
 use readings::CharReadings;
 
-/// 领域词最长几个字：再长是法规名、诗句，输入法用不上。
+/// 領域詞最長几個字：再長是法規名、詩句，輸入法用不上。
 const MAX_WORD_CHARS: usize = 10;
 
-/// 没统计到词频时通用词的底值区间上限（按排序号线性递减到 1）。
+/// 沒統計到詞頻時通用詞的底值區間上限（按排序號線性遞減到 1）。
 const COMMON_FLOOR: f64 = 100.0;
 
-/// 没统计到词频时领域词的底值上限（按文档频次取对数）。
+/// 沒統計到詞頻時領域詞的底值上限（按文件頻次取對數）。
 const DOMAIN_FLOOR: u32 = 30;
 
-/// 没统计到词频时单字按字表级别给的底值。
+/// 沒統計到詞頻時單字按字表級別給的底值。
 const CHAR_FLOOR: [u32; 3] = [30, 10, 3];
 
-/// 单字不在 kHanyuPinlu 里的次要读音占主读音权重的比例。
+/// 單字不在 kHanyuPinlu 裡的次要讀音佔主讀音權重的比例。
 const MINOR_READING_SHARE: f64 = 0.05;
 
-/// 常用词表自带的读音与 LLM 标注不一致时，原表读音降到标注读音词频的几分之一保留（怎么打都找得到，但不抢首选）。
+/// 常用詞表自帶的讀音與 LLM 標註不一致時，原表讀音降到標註讀音詞頻的幾分之一保留（怎麼打都找得到，但不搶首選）。
 const DISPUTED_READING_DIVISOR: u32 = 8;
 
-/// 领域词库的中文名（文件名主干 → 名称），写进 `.qj` 元数据，偏好设置「词库」页显示它。
+/// 領域詞庫的中文名（檔名主幹 → 名稱），寫進 `.qj` 後設資料，偏好設定「詞庫」頁顯示它。
 const DOMAIN_NAMES: [(&str, &str); 11] = [
     ("animals", "动物"),
     ("automotive", "汽车"),
@@ -63,14 +63,14 @@ const DOMAIN_NAMES: [(&str, &str); 11] = [
     ("poetry_lines", "诗词名句"),
 ];
 
-/// 领域词库的许可证与署名（THUOCL）。
+/// 領域詞庫的許可證與署名（THUOCL）。
 const DOMAIN_LICENSE: &str = "MIT AND Unicode-3.0";
 const DOMAIN_ATTRIBUTION: &str =
     "THUOCL（清华大学自然语言处理实验室，MIT）；读音 Unihan（Unicode）";
 const DOMAIN_SOURCE: &str = "https://github.com/thunlp/THUOCL";
 
-/// 建词库。`pinyin` 是 LLM 标注 JSONL，`frequency` 是 lm-unigram.tsv，`emit_ambiguous` 写出仍靠猜的多音字词，
-/// `domain_keep_min` 是领域词留在基础词库的最低语料次数（没有词频时按领域词处理，全部拆出去）。
+/// 建詞庫。`pinyin` 是 LLM 標註 JSONL，`frequency` 是 lm-unigram.tsv，`emit_ambiguous` 寫出仍靠猜的多音字詞，
+/// `domain_keep_min` 是領域詞留在基礎詞庫的最低語料次數（沒有詞頻時按領域詞處理，全部拆出去）。
 #[allow(clippy::too_many_arguments)]
 pub fn convert(
     pack_dir: &Path,
@@ -83,7 +83,7 @@ pub fn convert(
     out_dir: &Path,
 ) -> Result<(), ConvertError> {
     let mut pack = Pack::load(pack_dir)?;
-    // 语料挖出来的词当作一类领域词并入：次数当文档频次（也就是没有语料词频时的底值来源）
+    // 語料挖出來的詞當作一類領域詞併入：次數當文件頻次（也就是沒有語料詞頻時的底值來源）
     for path in extra_words {
         let before = pack.domain.len();
         for word in corpus::extra_words(path)? {
@@ -105,7 +105,7 @@ pub fn convert(
         Some(path) => corpus::load(path)?,
         None => HashMap::new(),
     };
-    // 挖出来的词在语料里的次数就是它的词频（分词时它被拆成单字，一元表里没有）
+    // 挖出來的詞在語料裡的次數就是它的詞頻（分詞時它被拆成單字，一元表裡沒有）
     for path in extra_words {
         for word in corpus::extra_words(path)? {
             counts.entry(word.text).or_insert(word.count);
@@ -121,7 +121,7 @@ pub fn convert(
         "数据加载完成"
     );
 
-    // 通用词里每个字各种读音出现的次数：多音字在词里猜读音的第一依据
+    // 通用詞裡每個字各種讀音出現的次數：多音字在詞裡猜讀音的第一依據
     let mut common_stats: HashMap<char, HashMap<String, u32>> = HashMap::new();
     for row in &pack.common {
         for (ch, syllable) in row.text.chars().zip(&row.syllables) {
@@ -134,7 +134,7 @@ pub fn convert(
     }
 
     let mut entries: BTreeMap<(String, Vec<String>), LexiconEntry> = BTreeMap::new();
-    // 拆出去的领域词：领域 → 词条
+    // 拆出去的領域詞：領域 → 詞條
     let mut domains: BTreeMap<String, BTreeMap<(String, Vec<String>), LexiconEntry>> =
         BTreeMap::new();
     let mut insert = |entry: LexiconEntry| {
@@ -146,7 +146,7 @@ pub fn convert(
     };
     let mut dropped = 0usize;
 
-    // 单字：规范字表全部 + 通用词里用到而字表没有的
+    // 單字：規範字表全部 + 通用詞裡用到而字表沒有的
     let mut chars: Vec<(char, Option<u8>)> =
         pack.chars.iter().map(|c| (c.ch, Some(c.level))).collect();
     let listed: HashSet<char> = chars.iter().map(|c| c.0).collect();
@@ -167,7 +167,7 @@ pub fn convert(
             .filter(|(syllable, _)| is_syllable(syllable))
             .cloned()
             .collect();
-        // 嗯 在 Unihan 里只有 ng / n，不是拼音音节会整个字丢掉；各家输入法都用 en 打它
+        // 嗯 在 Unihan 裡只有 ng / n，不是拼音音節會整個字丟掉；各家輸入法都用 en 打它
         if valid.is_empty() && weighted.iter().any(|(s, _)| s == "n" || s == "ng") {
             valid.push(("en".to_owned(), 1.0));
         }
@@ -189,8 +189,8 @@ pub fn convert(
         }
     }
 
-    // 通用词：自带拼音，但原表对多音字有错（重庆 zhong qing、长大 chang da），含多音字的词以 LLM 标注为主读音，
-    // 原表读音不同时降权保留
+    // 通用詞：自帶拼音，但原表對多音字有錯（重慶 zhong qing、長大 chang da），含多音字的詞以 LLM 標註為主讀音，
+    // 原表讀音不同時降權保留
     let common_total = pack.common.len().max(1) as f64;
     let char_texts: HashSet<String> = chars.iter().map(|(ch, _)| ch.to_string()).collect();
     let mut common_texts: HashSet<&str> = HashSet::new();
@@ -211,8 +211,8 @@ pub fn convert(
             dropped += 1;
             continue;
         }
-        // 单字以字表那条为准：那里按读音频次分摊了词频；通用词表里 了 有 le / liao 两条，
-        // 都给整个字的词频会让 liao 下的 了 压过 聊 / 料
+        // 單字以字表那條為準：那裡按讀音訊次分攤了詞頻；通用詞表裡 了 有 le / liao 兩條，
+        // 都給整個字的詞頻會讓 liao 下的 了 壓過 聊 / 料
         if char_texts.contains(&row.text) {
             common_texts.insert(&row.text);
             continue;
@@ -258,7 +258,7 @@ pub fn convert(
         }
     }
 
-    // 领域词：没有拼音，按字推；多音字先看标注。额外词文件给了读音的（短语层）直接用
+    // 領域詞：沒有拼音，按字推；多音字先看標註。額外詞檔案給了讀音的（短語層）直接用
     let mut guessed = 0usize;
     let mut given = 0usize;
     let mut annotated = 0usize;
@@ -273,7 +273,7 @@ pub fn convert(
         {
             continue;
         }
-        // 额外词文件给了读音的（短语层由成分词拼出）直接用；否则先看 LLM 标注，再按字推
+        // 額外詞檔案給了讀音的（短語層由成分詞拼出）直接用；否則先看 LLM 標註，再按字推
         let given_syllables = row
             .syllables
             .as_ref()
@@ -343,7 +343,7 @@ pub fn convert(
             syllables,
             frequency,
         };
-        // 语料里常见的领域词其实是通用词（医疗器械、侵权行为），留在基础词库；其余进各自的领域词库
+        // 語料裡常見的領域詞其實是通用詞（醫療器械、侵權行為），留在基礎詞庫；其餘進各自的領域詞庫
         match &row.domain {
             Some(domain) if corpus_count.unwrap_or(0) < domain_keep_min => {
                 domains
@@ -400,7 +400,7 @@ pub fn convert(
     Ok(())
 }
 
-/// 每个领域写一本 `dicts/<领域>.tsv`（与主词库同格式）和一本带元数据的 `dicts/<领域>.qj`。
+/// 每個領域寫一本 `dicts/<領域>.tsv`（與主詞庫同格式）和一本帶後設資料的 `dicts/<領域>.qj`。
 fn write_domains(
     domains: &BTreeMap<String, BTreeMap<(String, Vec<String>), LexiconEntry>>,
     out_dir: &Path,

@@ -1,4 +1,4 @@
-//! 本地整句模型的三个定时器：等后台加载接上、停键后的防抖（到点才把整句路径送去后台打分）与结果轮询（到了就重画，平时不占 CPU）。
+//! 本地整句模型的三個定時器：等後臺載入接上、停鍵後的防抖（到點才把整句路徑送去後臺打分）與結果輪詢（到了就重畫，平時不佔 CPU）。
 
 use std::time::{Duration, Instant};
 
@@ -7,29 +7,29 @@ use objc2::runtime::AnyObject;
 use objc2::{MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
 use objc2_foundation::{NSObject, NSObjectProtocol, NSTimer};
 
-/// 停键多久才请求重排：比一般的击键间隔短，连着敲时不请求。
+/// 停鍵多久才請求重排：比一般的擊鍵間隔短，連著敲時不請求。
 const DEBOUNCE: f64 = 0.08;
 
-/// 轮询间隔：模型一次二三十毫秒。
+/// 輪詢間隔：模型一次二三十毫秒。
 const POLL_INTERVAL: f64 = 0.02;
 
-/// 最长等多久；后台线程卡住时兜底。
+/// 最長等多久；後臺執行緒卡住時兜底。
 const MAX_WAIT: Duration = Duration::from_secs(2);
 
-/// 等模型加载的间隔：加载要几百毫秒到几秒，接上晚几十毫秒无妨。
+/// 等模型載入的間隔：載入要幾百毫秒到幾秒，接上晚幾十毫秒無妨。
 const LOAD_INTERVAL: f64 = 0.1;
 
 pub struct RescoreMonitor {
-    /// 等模型加载的定时器；没在加载为 `None`。
+    /// 等模型載入的定時器；沒在載入為 `None`。
     loading: Option<Retained<NSTimer>>,
 
-    /// 防抖定时器（一次性）；没在等为 `None`。
+    /// 防抖定時器（一次性）；沒在等為 `None`。
     debounce: Option<Retained<NSTimer>>,
 
-    /// 轮询定时器；没在等结果为 `None`。
+    /// 輪詢定時器；沒在等結果為 `None`。
     poll: Option<Retained<NSTimer>>,
 
-    /// 本轮开始等结果的时间。
+    /// 本輪開始等結果的時間。
     since: Option<Instant>,
 
     mtm: MainThreadMarker,
@@ -46,7 +46,7 @@ impl RescoreMonitor {
         }
     }
 
-    /// 模型在后台加载：定时看一眼接上没有。按键路径也会看，但用户停键后没人再看，接上的那一刻就没人知道。
+    /// 模型在後臺載入：定時看一眼接上沒有。按鍵路徑也會看，但使用者停鍵後沒人再看，接上的那一刻就沒人知道。
     pub fn watch_loading(&mut self) {
         if self.loading.is_some() {
             return;
@@ -64,14 +64,14 @@ impl RescoreMonitor {
         self.loading = Some(timer);
     }
 
-    /// 加载有结果了（接上、失败或卸掉）：不再看。
+    /// 載入有結果了（接上、失敗或卸掉）：不再看。
     pub fn stop_watching(&mut self) {
         if let Some(timer) = self.loading.take() {
             timer.invalidate();
         }
     }
 
-    /// 又敲了一键：重新计时。
+    /// 又敲了一鍵：重新計時。
     pub fn schedule(&mut self) {
         if let Some(timer) = self.debounce.take() {
             timer.invalidate();
@@ -89,7 +89,7 @@ impl RescoreMonitor {
         self.debounce = Some(timer);
     }
 
-    /// 请求已发出：开始轮询结果。
+    /// 請求已發出：開始輪詢結果。
     pub fn start_polling(&mut self) {
         self.since = Some(Instant::now());
         if self.poll.is_some() {
@@ -108,7 +108,7 @@ impl RescoreMonitor {
         self.poll = Some(timer);
     }
 
-    /// 停下两个定时器。
+    /// 停下兩個定時器。
     pub fn stop(&mut self) {
         if let Some(timer) = self.debounce.take() {
             timer.invalidate();
@@ -125,7 +125,7 @@ impl RescoreMonitor {
 }
 
 define_class!(
-    // SAFETY: NSObject 没有子类化要求；没有实现 Drop。
+    // SAFETY: NSObject 沒有子類化要求；沒有實現 Drop。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = ()]

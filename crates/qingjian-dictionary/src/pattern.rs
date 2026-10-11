@@ -1,7 +1,7 @@
-/// 把键盘输入常用的 `lue` / `nue` 转成词库规范形式。
+/// 把鍵盤輸入常用的 `lue` / `nue` 轉成詞庫規範形式。
 ///
-/// 词库用 `v` 表示 ü。j / q / x / y 后 ü 的正字法写作 `u`，但键盘上 `jv` / `qv` / `xv` / `yv`
-/// 是常见输入习惯（与微软、搜狗一致），也归一到规范写法。其他音节原样返回。
+/// 詞庫用 `v` 表示 ü。j / q / x / y 後 ü 的正字法寫作 `u`，但鍵盤上 `jv` / `qv` / `xv` / `yv`
+/// 是常見輸入習慣（與微軟、搜狗一致），也歸一到規範寫法。其他音節原樣返回。
 pub fn canonical_syllable(text: &str) -> &str {
     match text {
         "lue" => "lve",
@@ -14,13 +14,13 @@ pub fn canonical_syllable(text: &str) -> &str {
     }
 }
 
-/// 一个音节的查询条件。
+/// 一個音節的查詢條件。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SyllablePattern<'a> {
-    /// 用户敲的字母：完整音节，或音节前缀 / 声母。
+    /// 使用者敲的字母：完整音節，或音節字首 / 聲母。
     pub text: &'a str,
 
-    /// 为真时要求音节与 `text` 完全相等，否则只要求以 `text` 开头（简拼、未打完的音节）。
+    /// 為真時要求音節與 `text` 完全相等，否則只要求以 `text` 開頭（簡拼、未打完的音節）。
     pub complete: bool,
 }
 

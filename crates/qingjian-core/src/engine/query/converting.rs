@@ -1,13 +1,13 @@
-//! 整句候选：把词图里重排过的前几条路径变成候选，以及整句转换本身。
+//! 整句候選：把詞圖裡重排過的前幾條路徑變成候選，以及整句轉換本身。
 
 use super::*;
 
 impl Engine {
-    /// 整句候选。没有英文尾段时是整段拼音的转换（[`Self::plain_sentence`]），排在开头的英文候选之后。
-    /// 有英文尾段且英文读法胜出（`head_wins`）时，头段的转换加上那个词排第一（`woxiangxuehaorust` → 我想学好rust），
-    /// 整段也能读成拼音的再把拼音读法的整句放在第二；英文读法输了就不出（`diaoyong` 不出 掉Yong），
-    /// 免得把真正要的候选往后挤。
-    /// `typos` 为假时词图里不加敲错边（整段一处编辑的纠错已经生效，不在纠正后的拼音上再猜第二处）。
+    /// 整句候選。沒有英文尾段時是整段拼音的轉換（[`Self::plain_sentence`]），排在開頭的英文候選之後。
+    /// 有英文尾段且英文讀法勝出（`head_wins`）時，頭段的轉換加上那個詞排第一（`woxiangxuehaorust` → 我想學好rust），
+    /// 整段也能讀成拼音的再把拼音讀法的整句放在第二；英文讀法輸了就不出（`diaoyong` 不出 掉Yong），
+    /// 免得把真正要的候選往後擠。
+    /// `typos` 為假時詞圖裡不加敲錯邊（整段一處編輯的糾錯已經生效，不在糾正後的拼音上再猜第二處）。
     pub(in crate::engine) fn insert_sentence(
         &self,
         items: &mut Vec<Candidate>,
@@ -26,7 +26,7 @@ impl Engine {
                 if let Some(mixed) = self.mixed_sentence(best, tail, typos) {
                     items.insert(0, mixed);
                 }
-                // 整段读成拼音的那条本来就是「另一种读法」，只给一条
+                // 整段讀成拼音的那條本來就是「另一種讀法」，只給一條
                 if tail.competes
                     && let Some(full) = first_segmentation(keys)
                     && let Some(plain) = self.plain_sentence(items, &full, typos, false).pop()
@@ -36,13 +36,13 @@ impl Engine {
                 }
             }
             _ => {
-                // 整段本身就是英文词（`database`）：备选整句会把那条英文候选再往后挤，只给一条
+                // 整段本身就是英文詞（`database`）：備選整句會把那條英文候選再往後擠，只給一條
                 let alternates = !self.scope_is_english_word();
                 let sentences = self.plain_sentence(items, best, typos, alternates);
                 let position = leading_english(items);
-                // 词图读不通整段时模型直接生成的整句排在词图那几条前面：这时词图给的是把英文段
-                // 硬读成拼音的结果（`yongdockerbushuhenfangbian` → 用的哦乘客仍不熟很方便），排它前面没有可惜的
-                // `typos` 为假就是拼写纠错已经生效（见调用处），那时 `best` 是纠正后的切分
+                // 詞圖讀不通整段時模型直接生成的整句排在詞圖那幾條前面：這時詞圖給的是把英文段
+                // 硬讀成拼音的結果（`yongdockerbushuhenfangbian` → 用的哦乘客仍不熟很方便），排它前面沒有可惜的
+                // `typos` 為假就是拼寫糾錯已經生效（見呼叫處），那時 `best` 是糾正後的切分
                 let generated: Vec<Candidate> = self
                     .generated_sentence_candidates(best, keys, !typos)
                     .into_iter()
@@ -67,13 +67,13 @@ impl Engine {
         }
     }
 
-    /// 整段拼音的整句候选：最优切分至少两个音节、且最优路径不止一个词时才有（空格上屏的就是它）。
-    /// 整段本身就是词库里的词时不重复；有音节没转成字的不算句子。
-    /// 词级候选里已有同文本同读音的候选时不出（那条留在词级排序给它的位置），同文本不同读音的从 `items` 里去掉。
+    /// 整段拼音的整句候選：最優切分至少兩個音節、且最優路徑不止一個詞時才有（空格上屏的就是它）。
+    /// 整段本身就是詞庫裡的詞時不重複；有音節沒轉成字的不算句子。
+    /// 詞級候選裡已有同文本同讀音的候選時不出（那條留在詞級排序給它的位置），同文本不同讀音的從 `items` 裡去掉。
     ///
-    /// `alternates` 为真且输入够长时把重排后的第 2、3 条路径也给出来（[`SENTENCE_CANDIDATES`] 条封顶）：
-    /// 长句错一个字就得整句拆开重打，一条候选不够用；短输入不给，那几格留给词级候选更值。
-    /// 备选只收真整句（路径上不止一个词），「整段读成一个词」那种噪声信道的判断只认第一条。
+    /// `alternates` 為真且輸入夠長時把重排後的第 2、3 條路徑也給出來（[`SENTENCE_CANDIDATES`] 條封頂）：
+    /// 長句錯一個字就得整句拆開重打，一條候選不夠用；短輸入不給，那幾格留給詞級候選更值。
+    /// 備選只收真整句（路徑上不止一個詞），「整段讀成一個詞」那種噪聲通道的判斷只認第一條。
     pub(in crate::engine) fn plain_sentence(
         &self,
         items: &mut Vec<Candidate>,
@@ -93,8 +93,8 @@ impl Engine {
         if paths.is_empty() {
             return Vec::new();
         }
-        // 不按原样读的路径（敲错边 / 模糊音）不许压过「敲的拼音本身就是一个词」：`jineng` 按 `jin eng` 切时
-        // 词图里没有 技能，敲错边读出 近藤；`ceshi` 读出 的是。词级候选里有音节正好拼成整段输入的词时退回原样的路径
+        // 不按原樣讀的路徑（敲錯邊 / 模糊音）不許壓過「敲的拼音本身就是一個詞」：`jineng` 按 `jin eng` 切時
+        // 詞圖裡沒有 技能，敲錯邊讀出 近藤；`ceshi` 讀出 的是。詞級候選裡有音節正好拼成整段輸入的詞時退回原樣的路徑
         if paths[0].altered() {
             let letters = best.joined("");
             let spelled_exactly = items
@@ -109,8 +109,8 @@ impl Engine {
             if out.len() >= wanted {
                 break;
             }
-            // 最优路径不合格就一条都不出：它不合格多半是「整段本来就是一个词」（`nihao` → 你好），
-            // 这时越过它去拿第二条路径，等于把 你号 插到词库词 你好 前面
+            // 最優路徑不合格就一條都不出：它不合格多半是「整段本來就是一個詞」（`nihao` → 你好），
+            // 這時越過它去拿第二條路徑，等於把 你號 插到詞庫詞 你好 前面
             let first = rank == 0;
             if conversion.has_placeholder() {
                 if first {
@@ -118,9 +118,9 @@ impl Engine {
                 }
                 continue;
             }
-            // 整段本来就是一个词时不出整句；但路径靠敲错变体把整段读成的一个词（`meiganxi` → 没关系）是噪声信道的判断，
-            // 词级查询按原样查不到它，作为普通词候选插到最前。只读了一部分（末尾没打完的音节没算进去）的不插。
-            // 备选只收真整句，单个词的第 2、3 条路径是噪声
+            // 整段本來就是一個詞時不出整句；但路徑靠敲錯變體把整段讀成的一個詞（`meiganxi` → 沒關係）是噪聲通道的判斷，
+            // 詞級查詢按原樣查不到它，作為普通詞候選插到最前。只讀了一部分（末尾沒打完的音節沒算進去）的不插。
+            // 備選只收真整句，單個詞的第 2、3 條路徑是噪聲
             let kind = if conversion.word_count() >= 2 {
                 CandidateKind::Sentence
             } else if first
@@ -136,12 +136,12 @@ impl Engine {
             if out.iter().any(|c| c.text == conversion.text) {
                 continue;
             }
-            // 词级候选里已经有同样的文本：读音也相同就是同一个候选，不重复插、词留在词级排序给它的位置
-            //（先是 / 有的 这种整句恰好拼成一个词的，词级排序更可信）；读音不同的是按别的读音对上的词
-            //（云端学来的错读音用户词 `我的 wo di` 靠敲错变体对上 `wode`），那条不是这个候选，去掉它，整句以正确读音顶上
+            // 詞級候選裡已經有同樣的文本：讀音也相同就是同一個候選，不重複插、詞留在詞級排序給它的位置
+            //（先是 / 有的 這種整句恰好拼成一個詞的，詞級排序更可信）；讀音不同的是按別的讀音對上的詞
+            //（雲端學來的錯讀音使用者詞 `我的 wo di` 靠敲錯變體對上 `wode`），那條不是這個候選，去掉它，整句以正確讀音頂上
             if let Some(index) = items.iter().position(|c| c.text == conversion.text) {
                 if items[index].syllables == conversion.syllables {
-                    // 首选与词级候选撞上：整句这边一条都不出（备选插在它前面会绕到那条词前面去）
+                    // 首選與詞級候選撞上：整句這邊一條都不出（備選插在它前面會繞到那條詞前面去）
                     if first {
                         return Vec::new();
                     }
@@ -161,8 +161,8 @@ impl Engine {
         out
     }
 
-    /// 跑一次整句转换：主词库 + 用户词（含模糊音与敲错写法，命中的按代价扣分），静态语言模型与个人 n-gram 插值，用户选择次数加分。
-    /// `typos` 为假时不加敲错边。
+    /// 跑一次整句轉換：主詞庫 + 使用者詞（含模糊音與敲錯寫法，命中的按代價扣分），靜態語言模型與個人 n-gram 插值，使用者選擇次數加分。
+    /// `typos` 為假時不加敲錯邊。
     pub(in crate::engine) fn convert_sentence(
         &self,
         patterns: &[qingjian_dictionary::SyllablePattern<'_>],
@@ -171,10 +171,10 @@ impl Engine {
         self.convert_sentence_with(patterns, typos, false)
     }
 
-    /// 同 [`Self::convert_sentence`]，`whole` 为真时末尾单字母也读（[`sentence::convert_whole`]），只给比分用。
-    /// 接了神经重打分器时取前 [`RESCORE_PATHS`] 条路径，按「路径分 + λ·(神经分 − 静态分)」重排（[`Self::rescore_paths`]）：
-    /// 神经分替换的是静态二元模型那部分判断，个人 n-gram 插值、用户加分、敲错代价原样保留。
-    /// 返回重排后的第一条；`score` 始终是静态尺度的路径分，神经分不写进去，跨读法的比较才还成立。
+    /// 同 [`Self::convert_sentence`]，`whole` 為真時末尾單字母也讀（[`sentence::convert_whole`]），只給比分用。
+    /// 接了神經重打分器時取前 [`RESCORE_PATHS`] 條路徑，按「路徑分 + λ·(神經分 − 靜態分)」重排（[`Self::rescore_paths`]）：
+    /// 神經分替換的是靜態二元模型那部分判斷，個人 n-gram 插值、使用者加分、敲錯代價原樣保留。
+    /// 返回重排後的第一條；`score` 始終是靜態尺度的路徑分，神經分不寫進去，跨讀法的比較才還成立。
     pub(in crate::engine) fn convert_sentence_with(
         &self,
         patterns: &[qingjian_dictionary::SyllablePattern<'_>],
@@ -186,8 +186,8 @@ impl Engine {
             .next()
     }
 
-    /// 重排后的整句路径，最好的在前。`want` 是调用方要几条：只要一条时没接模型就只算一条
-    /// （拼写纠错对每个候选都要转一次，多算几条纯是浪费）；要备选时至少算这么多条。
+    /// 重排後的整句路徑，最好的在前。`want` 是呼叫方要幾條：只要一條時沒接模型就只算一條
+    /// （拼寫糾錯對每個候選都要轉一次，多算幾條純是浪費）；要備選時至少算這麼多條。
     pub(in crate::engine) fn sentence_paths(
         &self,
         patterns: &[qingjian_dictionary::SyllablePattern<'_>],
@@ -213,12 +213,12 @@ impl Engine {
             |index, syllable| expanded.cost(index, syllable),
             &mut self.span_cache.borrow_mut(),
         );
-        // 与最优路径差得太远的不参与：那种差距多半是个人 n-gram 拉开的
+        // 與最優路徑差得太遠的不參與：那種差距多半是個人 n-gram 拉開的
         if paths.len() > 1 {
             let floor = paths[0].score - self.neural_margin;
             paths.retain(|p| p.score >= floor);
-            // 条件是这批路径共同解释的那段按键，不是整个作用域：英文尾巴那条只转换了 head，
-            // 拿整段当条件会让它凭空背上没覆盖的字母
+            // 條件是這批路徑共同解釋的那段按鍵，不是整個作用域：英文尾巴那條只轉換了 head，
+            // 拿整段當條件會讓它憑空背上沒覆蓋的字母
             let keys: String = patterns.iter().map(|p| p.text).collect();
             self.rescore_paths(&mut paths, &keys);
         }

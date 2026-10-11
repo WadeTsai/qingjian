@@ -1,8 +1,8 @@
-//! 辅码码表：词 → 码的映射（`AuxCodeTable` 的 `.qj`），辅码态逐键即筛用；与五笔那类编码 → 词的形码码表方向相反。
+//! 輔碼碼錶：詞 → 碼的對映（`AuxCodeTable` 的 `.qj`），輔碼態逐鍵即篩用；與五筆那類編碼 → 詞的形碼碼錶方向相反。
 //!
-//! 不复用词库存储的理由见 `docs/design/aux-code.md`。
-//! 分节：`TEXT` 词文本 arena、`CODES` 码键 arena、`ENTR` 条目表（按词文本字节序升序，同词的条目相邻）、
-//! `HASH` 词 → 条目区间的哈希索引（槽 = 区间起点，键 = 词文本）。
+//! 不復用詞庫儲存的理由見 `docs/design/aux-code.md`。
+//! 分節：`TEXT` 詞文本 arena、`CODES` 碼鍵 arena、`ENTR` 條目表（按詞文本位元組序升序，同詞的條目相鄰）、
+//! `HASH` 詞 → 條目區間的雜湊索引（槽 = 區間起點，鍵 = 詞文本）。
 
 mod columns;
 mod entry;

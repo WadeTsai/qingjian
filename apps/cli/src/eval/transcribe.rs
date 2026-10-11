@@ -1,19 +1,19 @@
-//! 汉字 → 全拼：按语言模型把句子切成词（[`segment_text`]），每个词查词库里的读音，
-//! 词库没有的词退到逐字查；多音字取词库里那个词（或那个字最常用）的读音。任何一个字查不到就放弃这句。
+//! 漢字 → 全拼：按語言模型把句子切成詞（[`segment_text`]），每個詞查詞庫裡的讀音，
+//! 詞庫沒有的詞退到逐字查；多音字取詞庫裡那個詞（或那個字最常用）的讀音。任何一個字查不到就放棄這句。
 
 use std::collections::HashMap;
 
 use qingjian_core::sentence::{LanguageModel, segment_text};
 use qingjian_dictionary::Dictionary;
 
-/// 汉字到读音的反查表。
+/// 漢字到讀音的反查表。
 pub struct Transcriber {
-    /// 词文本 → 无分隔全拼；同一个词多个读音时取词频最高的。
+    /// 詞文本 → 無分隔全拼；同一個詞多個讀音時取詞頻最高的。
     readings: HashMap<String, (String, u32)>,
 }
 
 impl Transcriber {
-    /// 从词库（主词库 + 附加词库）建反查表。
+    /// 從詞庫（主詞庫 + 附加詞庫）建反查表。
     pub fn new<'a>(dictionaries: impl IntoIterator<Item = &'a Dictionary>) -> Self {
         let mut readings: HashMap<String, (String, u32)> = HashMap::new();
         for dictionary in dictionaries {
@@ -35,7 +35,7 @@ impl Transcriber {
         self.readings.len()
     }
 
-    /// 一句纯汉字的全拼；有字查不到读音就 `None`。
+    /// 一句純漢字的全拼；有字查不到讀音就 `None`。
     pub fn transcribe(&self, text: &str, model: &dyn LanguageModel) -> Option<String> {
         let words: Vec<String> = match segment_text(text, model) {
             Some(clauses) => clauses.into_iter().flatten().collect(),
@@ -69,12 +69,12 @@ mod tests {
     fn prefers_the_word_reading_over_the_most_common_char_reading() {
         let dictionary = Dictionary::parse(SAMPLE).unwrap();
         let transcriber = Transcriber::new([&dictionary]);
-        // 没有语言模型时逐字：长 取词频高的 zhang
+        // 沒有語言模型時逐字：長 取詞頻高的 zhang
         assert_eq!(
             transcriber.transcribe("长大", &NoLanguageModel).as_deref(),
             Some("zhangda")
         );
-        // 词库有「长度」这个词：整词查到 chang
+        // 詞庫有「長度」這個詞：整詞查到 chang
         struct Model;
         impl LanguageModel for Model {
             fn log_prob(&self, _: Option<&str>, word: &str) -> Option<f64> {

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 平台 job 的最后一步：把安装包传到本次的草稿 Release，附上这个平台的摘要与构建信息片段（SHA256SUMS-<平台>、build-info-<平台>.json），
+# 平臺 job 的最後一步：把安裝包傳到本次的草稿 Release，附上這個平臺的摘要與構建資訊片段（SHA256SUMS-<平臺>、build-info-<平臺>.json），
 # 由 publish job 的 finish-release.sh 合成一份。
 #
-#   tools/release/upload-build.sh <平台> <构建机描述> <安装包>...
+#   tools/release/upload-build.sh <平臺> <構建機描述> <安裝包>...
 #
-# 需要 gh、jq 与环境变量 VERSION、GITHUB_REF_NAME、GITHUB_SHA；数据与模型摘要由 data-fetch.sh 写进 GITHUB_ENV。
+# 需要 gh、jq 與環境變數 VERSION、GITHUB_REF_NAME、GITHUB_SHA；資料與模型摘要由 data-fetch.sh 寫進 GITHUB_ENV。
 set -euo pipefail
 
 PLATFORM="$1"

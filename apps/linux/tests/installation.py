@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# //! 临时用户目录真实文件安装：重复安装、路径登记、校验拒绝与保留用户文件。
+# //! 臨時使用者目錄真實檔案安裝：重複安裝、路徑登記、校驗拒絕與保留使用者檔案。
 import json
 import os
 from pathlib import Path

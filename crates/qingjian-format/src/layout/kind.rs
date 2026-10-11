@@ -1,26 +1,26 @@
-/// 文件里装的是哪种数据。编号写进文件头，不要改已有编号。
+/// 檔案裡裝的是哪種資料。編號寫進檔案頭，不要改已有編號。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u16)]
 pub enum Kind {
-    /// 拼音词库（`qingjian-dictionary::Dictionary`）。
+    /// 拼音詞庫（`qingjian-dictionary::Dictionary`）。
     Dictionary = 1,
 
-    /// 词级 bigram 语言模型（`qingjian-lm::BigramModel`）。
+    /// 詞級 bigram 語言模型（`qingjian-lm::BigramModel`）。
     LanguageModel = 2,
 
-    /// 释义表。
+    /// 釋義表。
     Glossary = 3,
 
     /// emoji 表。
     Emoji = 4,
 
-    /// 英文词表。
+    /// 英文詞表。
     WordList = 5,
 
-    /// 本地整句模型（`qingjian-neural::CharScorer`，扩展名 `.qjm`）。
+    /// 本地整句模型（`qingjian-neural::CharScorer`，副檔名 `.qjm`）。
     Model = 6,
 
-    /// 辅码码表（`qingjian-dictionary::AuxCodeTable`）：词 → 码的映射，辅码态逐键即筛用。
+    /// 輔碼碼錶（`qingjian-dictionary::AuxCodeTable`）：詞 → 碼的對映，輔碼態逐鍵即篩用。
     AuxCodeTable = 7,
 }
 

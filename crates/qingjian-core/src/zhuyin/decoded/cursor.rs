@@ -1,4 +1,4 @@
-//! 按输入来源映射注音光标；未知尾串与已解码音节分别累计。
+//! 按輸入來源對映注音游標；未知尾串與已解碼音節分別累計。
 use crate::zhuyin::{layout::map_key, syllable::ZhuyinSyllable};
 
 pub(super) struct Cursor {
@@ -38,8 +38,8 @@ impl Cursor {
                         prefix.push(component, key);
                     }
                 }
-                // 前置轻声会被移到单元末尾。按逻辑符号数映射，不能把 ˙ 的
-                // 两字节长度直接当作完整单元内的偏移（可能落在 ㄋ 的中间）。
+                // 前置輕聲會被移到單元末尾。按邏輯符號數對映，不能把 ˙ 的
+                // 兩位元組長度直接當作完整單元內的偏移（可能落在 ㄋ 的中間）。
                 display
                     .char_indices()
                     .nth(prefix.display_string().chars().count())

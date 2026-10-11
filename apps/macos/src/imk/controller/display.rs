@@ -1,13 +1,13 @@
-//! 查询与呈现：刷新候选、画候选窗、整句补全、翻页与高亮。
+//! 查詢與呈現：重新整理候選、畫候選窗、整句補全、翻頁與高亮。
 
 use super::*;
 
 impl QingjianInputController {
-    /// 按当前缓冲区重新查候选、更新 marked text，回到第一页并重画候选窗口。
+    /// 按當前緩衝區重新查候選、更新 marked text，回到第一頁並重畫候選視窗。
     pub(super) fn refresh(&self, client: TextClient<'_>) {
-        // 本地整句模型要看光标前文：一段组句只在第一键读一次（组句中它不变；应用偶尔不回话也不至于让前文来回换），
-        // 读应用文本要等应用回话，放在借 Host 之外（见 request_prediction）
-        // 模型还在后台加载也读：接上时会补这一轮的重排，前文得先备好
+        // 本地整句模型要看游標前文：一段組句只在第一鍵讀一次（組句中它不變；應用偶爾不回話也不至於讓前文來回換），
+        // 讀應用文本要等應用回話，放在借 Host 之外（見 request_prediction）
+        // 模型還在後臺載入也讀：接上時會補這一輪的重排，前文得先備好
         let wants_context = host::with(|h| {
             h.attach_loaded_model();
             (h.engine.has_sentence_scorer() || h.model_loading())
@@ -27,7 +27,7 @@ impl QingjianInputController {
             if let Some(before) = before {
                 h.engine.set_rescoring_context(before);
             }
-            // 查询失败（整段切不动）时退回显示原始字母
+            // 查詢失敗（整段切不動）時退回顯示原始字母
             let mut marked = h.engine.composition().text().to_owned();
             let mut cursor = h.engine.composition().cursor();
             let mut preedit = Preedit::plain(&marked, cursor);
@@ -49,13 +49,13 @@ impl QingjianInputController {
         }) else {
             return;
         };
-        // 配置成只在候选窗口显示拼音时，应用里不放 marked text（光标位置仍按插入点取）
+        // 配置成只在候選視窗顯示拼音時，應用裡不放 marked text（游標位置仍按插入點取）
         if inline {
             client.set_marked_text(&marked, cursor);
         } else {
             client.set_marked_text("", 0);
         }
-        // 先发联想再画：发出去就留好云端槽位，画出来的第一帧本地候选就已经在最终位置
+        // 先發聯想再畫：發出去就留好雲端槽位，畫出來的第一幀本地候選就已經在最終位置
         if !marked.is_empty() {
             let candidates = host::with(|h| h.session.layout.local().to_vec()).unwrap_or_default();
             self.request_prediction(client, &candidates);
@@ -63,8 +63,8 @@ impl QingjianInputController {
         self.render(client);
     }
 
-    /// 缓冲区里只有一个 `?` 而用户按了别的键：把它还原成问号上屏（中文遵循标点设置、英文半角）、清空缓冲区。
-    /// 返回是否发生了还原。
+    /// 緩衝區裡只有一個 `?` 而使用者按了別的鍵：把它還原成問號上屏（中文遵循標點設定、英文半形）、清空緩衝區。
+    /// 返回是否發生了還原。
     pub(super) fn restore_bare_question(&self, client: TextClient<'_>) -> bool {
         let english = modifiers::caps_lock_on();
         let restored = host::with(|h| {
@@ -81,7 +81,7 @@ impl QingjianInputController {
         true
     }
 
-    /// 记下光标位置并按会话状态重画候选窗口。
+    /// 記下游標位置並按會話狀態重畫候選視窗。
     pub(super) fn render(&self, client: TextClient<'_>) {
         let anchor = client.caret_rect();
         host::with(|h| {
@@ -90,10 +90,10 @@ impl QingjianInputController {
         });
     }
 
-    /// 发一次联想请求。Secure Input 里绝不发；没接联想器时是空操作。
+    /// 發一次聯想請求。Secure Input 裡絕不發；沒接聯想器時是空操作。
     ///
-    /// 读上下文要等应用回话，这段时间 IMK 可能把 `deactivateServer:` 之类的回调插进来，
-    /// 所以分两次借 Host：先拿策略、放开借用去读、再借回来发请求。
+    /// 讀上下文要等應用回話，這段時間 IMK 可能把 `deactivateServer:` 之類的回撥插進來，
+    /// 所以分兩次借 Host：先拿策略、放開借用去讀、再借回來發請求。
     pub(super) fn request_prediction(&self, client: TextClient<'_>, candidates: &[Candidate]) {
         let policy = host::with(|h| {
             if !h.engine.prediction_enabled() {
@@ -124,7 +124,7 @@ impl QingjianInputController {
         });
     }
 
-    /// 接受组句中的整句补全：作用域内的拼音作废，句子上屏。没有补全返回 false。
+    /// 接受組句中的整句補全：作用域內的拼音作廢，句子上屏。沒有補全返回 false。
     pub(super) fn accept_sentence(&self, client: TextClient<'_>) -> bool {
         let Some(text) = host::with(|h| h.sentence.take()).flatten() else {
             return false;
@@ -136,8 +136,8 @@ impl QingjianInputController {
         true
     }
 
-    /// 上下键。高亮逐个移动，越过页边自动翻页；横排矩阵开着（`[general] horizontal_grid`）时改为：
-    /// 单行先展开成矩阵，在矩阵里换行（视口跟着滚）。
+    /// 上下鍵。高亮逐個移動，越過頁邊自動翻頁；橫排矩陣開著（`[general] horizontal_grid`）時改為：
+    /// 單行先展開成矩陣，在矩陣裡換行（視口跟著滾）。
     pub(super) fn move_highlight(&self, delta: isize, client: TextClient<'_>) {
         let changed = host::with(|h| {
             if h.grid_keys() {
@@ -152,8 +152,8 @@ impl QingjianInputController {
         }
     }
 
-    /// 左右键。横排矩阵开着而且有候选时归候选：单行里逐个移动高亮（到页边自动翻页，不展开），展开后按阅读顺序跨行移动——
-    /// 上下键被矩阵占了，单行里只剩左右键能挪高亮。返回是不是归了候选（不是的话调用方照旧移动拼音光标）。
+    /// 左右鍵。橫排矩陣開著而且有候選時歸候選：單行裡逐個移動高亮（到頁邊自動翻頁，不展開），展開後按閱讀順序跨行移動——
+    /// 上下鍵被矩陣佔了，單行裡只剩左右鍵能挪高亮。返回是不是歸了候選（不是的話呼叫方照舊移動拼音游標）。
     pub(super) fn move_cells(&self, delta: isize, client: TextClient<'_>) -> bool {
         let handled = host::with(|h| {
             if !h.grid_keys() || h.session.layout.is_empty() {
@@ -172,7 +172,7 @@ impl QingjianInputController {
         handled.is_some()
     }
 
-    /// 每个键都问一次应用标识（activateServer 时进程刚拉起可能还拿不到），变了才告诉 Engine。
+    /// 每個鍵都問一次應用標識（activateServer 時程序剛拉起可能還拿不到），變了才告訴 Engine。
     pub(super) fn note_application(&self, client: &TextClient<'_>) {
         let app = client.bundle_identifier();
         host::with(|h| {
@@ -182,10 +182,10 @@ impl QingjianInputController {
         });
     }
 
-    /// 翻页，高亮落到新页第一项。已在首页 / 末页时不动。
+    /// 翻頁，高亮落到新頁第一項。已在首頁 / 末頁時不動。
     pub(super) fn turn_page(&self, delta: isize, client: TextClient<'_>) -> bool {
         let turned = host::with(|h| {
-            // 矩阵展开着：翻页键一次翻一屏
+            // 矩陣展開著：翻頁鍵一次翻一屏
             let turned = if h.session.grid.is_some() {
                 h.session.move_screens(delta)
             } else {

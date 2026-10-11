@@ -1,5 +1,5 @@
-//! 拼音标注：给多音字词标读音。词表一行一个词（`dict-convert lexicon --emit-ambiguous` 写出的），
-//! 结果 JSONL 每行 `{"word":"重庆","pinyin":["chong","qing"]}`，`dict-convert lexicon --pinyin` 读回去、再按 Unihan 校验。
+//! 拼音標註：給多音字詞標讀音。詞表一行一個詞（`dict-convert lexicon --emit-ambiguous` 寫出的），
+//! 結果 JSONL 每行 `{"word":"重慶","pinyin":["chong","qing"]}`，`dict-convert lexicon --pinyin` 讀回去、再按 Unihan 校驗。
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -20,7 +20,7 @@ const SYSTEM_PROMPT: &str = "你是普通话审音专家。给每个中文词标
 - 不要解释，没有把握也要给最可能的读音。\n\
 输出严格的 JSON：{\"items\":[{\"w\":\"重庆\",\"py\":\"chong2 qing4\"}]}。items 与输入的词一一对应、顺序一致、每个词恰好一项，w 必须原样照抄输入的词。";
 
-/// 拼音任务。
+/// 拼音任務。
 struct PinyinTask;
 
 #[derive(Debug, Deserialize)]
@@ -53,7 +53,7 @@ impl Task for PinyinTask {
         text
     }
 
-    /// 只收请求过的词；音节数必须等于字数，音节只能是字母（声调数字去掉）。
+    /// 只收請求過的詞；音節數必須等於字數，音節只能是字母（聲調數字去掉）。
     fn parse_reply(
         &self,
         content: &str,
@@ -79,7 +79,7 @@ impl Task for PinyinTask {
     }
 }
 
-/// `chong2 qing4` → `["chong", "qing"]`；音节数不等于字数、含非字母字符（去掉声调数字与 ü 转 v 之后）就不要。
+/// `chong2 qing4` → `["chong", "qing"]`；音節數不等於字數、含非字母字元（去掉聲調數字與 ü 轉 v 之後）就不要。
 fn clean_pinyin(raw: &str, chars: usize) -> Option<Vec<String>> {
     let syllables: Vec<String> = raw
         .split(|c: char| c.is_whitespace() || c == '\'')

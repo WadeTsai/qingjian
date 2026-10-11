@@ -1,9 +1,9 @@
-//! 本地整句模型（与 macOS 壳的 `host/model.rs` 对齐）：后台加载、停键后请求重排、结果到了重画当前页。
+//! 本地整句模型（與 macOS 殼的 `host/model.rs` 對齊）：後臺載入、停鍵後請求重排、結果到了重畫當前頁。
 //!
-//! 按键回调里永远只跑词级模型；模型的意见在停键 80 毫秒后请求、几十毫秒后到，只换候选窗口里的整句候选，
-//! 用户翻过页或动过高亮就不打扰。前文优先用应用里光标前的文字（DLL 起组句时随 `ClientMessage::Surrounding` 送来），没有退回本会话历史。
-//! 节拍由工人循环驱动：[`Router::next_tick`] 说下次多久来一次 [`Router::tick`]；DLL 组句期间每 80 ms 的 `Poll` 也顺带 tick。
-//! 加载在 [`loader`]，进行态在 [`state`]。
+//! 按鍵回撥裡永遠只跑詞級模型；模型的意見在停鍵 80 毫秒後請求、幾十毫秒後到，只換候選窗口裡的整句候選，
+//! 使用者翻過頁或動過高亮就不打擾。前文優先用應用裡游標前的文字（DLL 起組句時隨 `ClientMessage::Surrounding` 送來），沒有退回本會話歷史。
+//! 節拍由工人迴圈驅動：[`Router::next_tick`] 說下次多久來一次 [`Router::tick`]；DLL 組句期間每 80 ms 的 `Poll` 也順帶 tick。
+//! 載入在 [`loader`]，進行態在 [`state`]。
 
 mod loader;
 mod state;
@@ -21,7 +21,7 @@ pub(crate) use self::state::RescoreState;
 use super::Router;
 use super::composed::{Composed, marked_parts};
 
-/// P2C 优先，同类模型里用户目录优先；没有 P2C 才回退字级模型。
+/// P2C 優先，同類模型裡使用者目錄優先；沒有 P2C 才回退字級模型。
 pub fn find_model(user_dir: Option<&Path>, bundled_root: &Path) -> Option<PathBuf> {
     let candidates = [
         user_dir.map(|dir| dir.join("models/hanzhang-tongbian")),
@@ -38,7 +38,7 @@ pub fn find_model(user_dir: Option<&Path>, bundled_root: &Path) -> Option<PathBu
 }
 
 impl Router {
-    /// 启动时：记下模型文件，按 `[model] enabled` 决定要不要加载。
+    /// 啟動時：記下模型檔案，按 `[model] enabled` 決定要不要載入。
     pub fn configure_local_model(
         &mut self,
         model_path: Option<PathBuf>,
@@ -51,7 +51,7 @@ impl Router {
         }
     }
 
-    /// 热加载：`[model]` 变了才重载 / 卸载。
+    /// 熱載入：`[model]` 變了才過載 / 解除安裝。
     pub(super) fn apply_model_config(&mut self, config: &LocalModelConfig) {
         if *config == self.applied_model {
             return;
@@ -64,7 +64,7 @@ impl Router {
         }
     }
 
-    /// 在后台线程加载模型；没有模型文件就什么都不做。
+    /// 在後臺執行緒載入模型；沒有模型檔案就什麼都不做。
     fn load_local_model(&mut self) {
         if self.model_loader.is_some() || self.engine.has_sentence_scorer() {
             return;
@@ -76,7 +76,7 @@ impl Router {
         self.model_loader = ModelLoader::spawn(path);
     }
 
-    /// 卸掉模型（配置关掉）。
+    /// 卸掉模型（配置關掉）。
     fn unload_local_model(&mut self) {
         self.model_loader = None;
         self.engine.set_async_sentence_scorer(None);
@@ -84,7 +84,7 @@ impl Router {
         tracing::info!("本地整句模型已卸载（[model] enabled = false）");
     }
 
-    /// 加载线程有结果了就接到 Engine 上；每次按键 / tick 顺手看一眼，不阻塞。
+    /// 載入執行緒有結果了就接到 Engine 上；每次按鍵 / tick 順手看一眼，不阻塞。
     pub(super) fn attach_loaded_model(&mut self) {
         let Some(loader) = &self.model_loader else {
             return;
@@ -95,7 +95,7 @@ impl Router {
                 match result {
                     Ok(scorer) => {
                         self.engine.set_async_sentence_scorer(Some(scorer));
-                        // 模型上线了：日志里补一条会话信息，之后的条目知道重排开着
+                        // 模型上線了：日誌裡補一條會話資訊，之後的條目知道重排開著
                         self.engine
                             .log_session(env!("CARGO_PKG_VERSION"), "windows");
                     }
@@ -107,14 +107,14 @@ impl Router {
         }
     }
 
-    /// 组句结束：什么都不等了；应用前文也作废（下一段组句 DLL 会再送）。
+    /// 組句結束：什麼都不等了；應用前文也作廢（下一段組句 DLL 會再送）。
     pub(super) fn stop_rescoring(&mut self) {
         self.rescore.stop();
         self.engine.set_rescoring_context(None);
     }
 
-    /// DLL 送来聚焦会话的光标前文：给 Engine 当前文，缓存里按旧前文记的「要打分的」作废，重新攒一次并重新计时。
-    /// 组句已经结束 / 不是聚焦会话的丢掉。
+    /// DLL 送來聚焦會話的游標前文：給 Engine 當前文，快取裡按舊前文記的「要打分的」作廢，重新攢一次並重新計時。
+    /// 組句已經結束 / 不是聚焦會話的丟掉。
     pub(super) fn set_surrounding(&mut self, session: SessionId, text: String) {
         if self.focused != Some(session) || self.engine.composition().is_empty() {
             return;
@@ -122,13 +122,13 @@ impl Router {
         self.engine
             .set_rescoring_context((!text.is_empty()).then_some(text));
         if matches!(self.composed, Some(Composed::Candidates { .. })) {
-            // 查一次只为按新前文重新记下要打分的文本，候选顺序此刻不变
+            // 查一次只為按新前文重新記下要打分的文本，候選順序此刻不變
             let _ = self.engine.query();
             self.schedule_rescoring();
         }
     }
 
-    /// 缓冲变化之后：有整句路径等着打分就起防抖计时，否则停下。
+    /// 緩衝變化之後：有整句路徑等著打分就起防抖計時，否則停下。
     pub(super) fn schedule_rescoring(&mut self) {
         if self.engine.rescoring_pending() {
             self.rescore.schedule();
@@ -137,7 +137,7 @@ impl Router {
         }
     }
 
-    /// 工人循环下次该多久后来一次 [`Self::tick`]：在等重排就按它的节拍，否则按配置热加载的一秒。
+    /// 工人迴圈下次該多久後來一次 [`Self::tick`]：在等重排就按它的節拍，否則按配置熱載入的一秒。
     pub fn next_tick(&self) -> Duration {
         self.rescore
             .next_deadline()
@@ -146,14 +146,14 @@ impl Router {
             })
     }
 
-    /// 到点了：接上加载好的模型、推进重排、看一眼配置文件。工人循环超时与 DLL 的 `Poll` 都会调。
+    /// 到點了：接上載入好的模型、推進重排、看一眼配置檔案。工人迴圈超時與 DLL 的 `Poll` 都會調。
     pub fn tick(&mut self) {
         self.attach_loaded_model();
         self.advance_rescoring();
         self.poll_config_reload();
     }
 
-    /// 防抖到点就发请求；在等结果就收一次，收到了重查并重画当前页。
+    /// 防抖到點就發請求；在等結果就收一次，收到了重查並重畫當前頁。
     fn advance_rescoring(&mut self) {
         if self.engine.composition().is_empty() || self.translation.is_some() {
             self.rescore.stop();
@@ -170,7 +170,7 @@ impl Router {
             return;
         }
         if !self.engine.poll_rescoring() {
-            // 等太久多半是前文变了（上屏后接着打下一段）、结果作废；真卡住也只是这轮不重排
+            // 等太久多半是前文變了（上屏後接著打下一段）、結果作廢；真卡住也只是這輪不重排
             if self.rescore.expired() {
                 tracing::debug!("等本地整句模型超时，本轮不重排");
                 self.rescore.stop();
@@ -184,7 +184,7 @@ impl Router {
         self.requery_rescored();
     }
 
-    /// 分回来了：按重排后的顺序重建候选布局，云端词与整句补全留着，重画当前页。
+    /// 分回來了：按重排後的順序重建候選佈局，雲端詞與整句補全留著，重畫當前頁。
     fn requery_rescored(&mut self) {
         let Ok(query) = self.engine.query() else {
             return;
@@ -211,7 +211,7 @@ impl Router {
         (*preedit, *cursor, *typed_keys) = marked_parts(&query);
         let frame = self.self_drawn_frame();
         self.reconcile_candidates(&frame);
-        // 前文在结果回来之前换过（Surrounding 晚到）：这次查询又记下了一批要打分的，再来一轮
+        // 前文在結果回來之前換過（Surrounding 晚到）：這次查詢又記下了一批要打分的，再來一輪
         self.schedule_rescoring();
     }
 }

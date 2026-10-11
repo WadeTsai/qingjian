@@ -1,15 +1,15 @@
 use super::cloud_word::CloudWord;
 
-/// 联想结果。只是候选之外的补充展示，**不重排本地候选**：云端词补进第一页末尾几格。
+/// 聯想結果。只是候選之外的補充展示，**不重排本地候選**：雲端詞補進第一頁末尾幾格。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Prediction {
-    /// 对应的请求序号。
+    /// 對應的請求序號。
     pub sequence: u64,
 
-    /// 这段拼音可能对应的词（已按拼音校验）。
+    /// 這段拼音可能對應的詞（已按拼音校驗）。
     pub words: Vec<CloudWord>,
 
-    /// 组句中的整句补全，替换整段拼音。
+    /// 組句中的整句補全，替換整段拼音。
     pub sentence: Option<String>,
 }
 

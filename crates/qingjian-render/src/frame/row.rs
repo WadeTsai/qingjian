@@ -1,27 +1,27 @@
-//! 候选窗口的一行：序号、候选词、annotation 片段。
+//! 候選視窗的一行：序號、候選詞、annotation 片段。
 
 use super::tone::Tone;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
-    /// 显示用序号文本，如 `1`。
+    /// 顯示用序號文本，如 `1`。
     pub index: String,
 
-    /// 候选词。
+    /// 候選詞。
     pub text: String,
 
-    /// 紧跟在候选词后面的辅码，如 `[kf]`：码是词本身的属性，不进右侧的 annotation 列。
+    /// 緊跟在候選詞後面的輔碼，如 `[kf]`：碼是詞本身的屬性，不進右側的 annotation 列。
     pub code: Option<String>,
 
-    /// 右侧 annotation，按顺序绘制；没有译文时为空。
+    /// 右側 annotation，按順序繪製；沒有譯文時為空。
     pub annotation: Vec<(String, Tone)>,
 
-    /// 来自云联想：词前画一个小云朵，与本地候选区分。
+    /// 來自雲聯想：詞前畫一個小云朵，與本地候選區分。
     pub cloud: bool,
 }
 
 impl Row {
-    /// 只有序号和候选词的一行。
+    /// 只有序號和候選詞的一行。
     pub fn plain(index: usize, text: impl Into<String>) -> Self {
         Self {
             index: (index + 1).to_string(),

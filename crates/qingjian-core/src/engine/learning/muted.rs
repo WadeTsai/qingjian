@@ -4,16 +4,16 @@ use super::{Forgotten, Learner};
 use crate::candidate::Candidate;
 use crate::sentence::{Context, UserNgram};
 
-/// 套在壳装配的学习器外面的一层：私密输入（密码框、浏览器无痕窗口）期间或用户关掉学习后，**写**全部吞掉、
-/// **读**照常转发——排序仍按已有的个人数据算，只是不再记新的（见 [`crate::Engine::set_private`] 与
-/// [`crate::Engine::set_learning`]）。撤销类写操作也一起吞：没记的，之后也不该被撤。
+/// 套在殼裝配的學習器外面的一層：私密輸入（密碼框、瀏覽器無痕視窗）期間或使用者關掉學習後，**寫**全部吞掉、
+/// **讀**照常轉發——排序仍按已有的個人資料算，只是不再記新的（見 [`crate::Engine::set_private`] 與
+/// [`crate::Engine::set_learning`]）。撤銷類寫操作也一起吞：沒記的，之後也不該被撤。
 pub(in crate::engine) struct MutedLearner {
     inner: Box<dyn Learner>,
 
-    /// 私密输入中。
+    /// 私密輸入中。
     private: bool,
 
-    /// 用户关掉了学习（`[general] learning = false`）。
+    /// 使用者關掉了學習（`[general] learning = false`）。
     disabled: bool,
 }
 
@@ -34,7 +34,7 @@ impl MutedLearner {
         self.disabled = disabled;
     }
 
-    /// 两个开关任一生效就不写。
+    /// 兩個開關任一生效就不寫。
     fn muted(&self) -> bool {
         self.private || self.disabled
     }
@@ -43,7 +43,7 @@ impl MutedLearner {
         self.inner = inner;
     }
 
-    /// 里面那个学习器（壳的落盘 / 导入 / 删词等管理操作直接对它）。
+    /// 裡面那個學習器（殼的落盤 / 匯入 / 刪詞等管理操作直接對它）。
     pub(in crate::engine) fn inner(&self) -> &dyn Learner {
         self.inner.as_ref()
     }
@@ -148,7 +148,7 @@ impl Learner for MutedLearner {
         self.inner.typo_count(typed, intended)
     }
 
-    // 删词是用户在候选窗口里明确要求的管理操作，不算「这段输入的学习」，私密中照做
+    // 刪詞是使用者在候選窗口裡明確要求的管理操作，不算「這段輸入的學習」，私密中照做
     fn forget(&mut self, text: &str) -> Forgotten {
         self.inner.forget(text)
     }
@@ -166,7 +166,7 @@ impl Learner for MutedLearner {
 mod tests {
     use super::*;
 
-    /// 只数 `record_raw` 被调了几次的桩。
+    /// 只數 `record_raw` 被調了幾次的樁。
     struct Counting(u32);
 
     impl Learner for Counting {

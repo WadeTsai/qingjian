@@ -1,4 +1,4 @@
-//! 节点效果（像素、颜色已按外观取好）：投影垫在节点底下，内阴影压在节点填充上。
+//! 節點效果（畫素、顏色已按外觀取好）：投影墊在節點底下，內陰影壓在節點填充上。
 
 use crate::color::Color;
 use crate::theme::file::node::EffectSpec;
@@ -14,7 +14,7 @@ pub(crate) struct Effect {
 
     pub(crate) blur: f32,
 
-    /// 扩展：投影外扩、内阴影内缩，只对盒子生效。
+    /// 擴充套件：投影外擴、內陰影內縮，只對盒子生效。
     pub(crate) spread: f32,
 
     pub(crate) color: Color,
@@ -27,7 +27,7 @@ pub(crate) enum EffectKind {
 }
 
 impl Effect {
-    /// 主题里的效果按倍数换成像素，颜色由调用方按数据与外观取好。
+    /// 主題裡的效果按倍數換成畫素，顏色由呼叫方按資料與外觀取好。
     pub(crate) fn from_spec(spec: &EffectSpec, scale: f32, color: Color) -> Self {
         let shadow = spec.shadow();
         Self {
@@ -43,7 +43,7 @@ impl Effect {
         }
     }
 
-    /// 投影伸出节点盒子的最远距离；窗口根节点按它在四周留边。
+    /// 投影伸出節點盒子的最遠距離；視窗根節點按它在四周留邊。
     pub(crate) fn overhang(&self) -> f32 {
         match self.kind {
             EffectKind::DropShadow => {

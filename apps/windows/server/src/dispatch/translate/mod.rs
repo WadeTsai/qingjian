@@ -1,6 +1,6 @@
-//! 「翻译选中文字」：快捷键 → 请 DLL 读选区 → 云端翻译 → 候选窗显示译文，回车 / 空格替换、Esc 保留。
-//! 与 macOS 壳对齐；引擎调用在 Core。替换选区靠回给 DLL 的 `commit`：无组句时 `InsertTextAtSelection` 正好替换选区。
-//! 进行态在 [`Translation`]。
+//! 「翻譯選中文字」：快捷鍵 → 請 DLL 讀選區 → 雲端翻譯 → 候選窗顯示譯文，回車 / 空格替換、Esc 保留。
+//! 與 macOS 殼對齊；引擎呼叫在 Core。替換選區靠回給 DLL 的 `commit`：無組句時 `InsertTextAtSelection` 正好替換選區。
+//! 進行態在 [`Translation`]。
 
 mod job;
 
@@ -14,15 +14,15 @@ use super::Router;
 use super::key::{ESCAPE, RETURN};
 
 impl Router {
-    /// 修饰键比物理组合（去掉 Caps / 中英模式两个状态位）。
+    /// 修飾鍵比物理組合（去掉 Caps / 中英模式兩個狀態位）。
     pub(super) fn matches_translate_combo(&self, event: &KeyEvent) -> bool {
         let combo = self.config.translate_selection;
         event.character == Some(combo.key)
             && event.modifiers.chord() == KeyModifiers::from(combo.modifiers)
     }
 
-    /// DLL 回来的选区：非空且云服务开着就进入评审；否则回空帧让 DLL 清掉本地翻译态。
-    /// 回给 DLL 的帧恒空（候选窗在 Server 自绘）。
+    /// DLL 回來的選區：非空且雲服務開著就進入評審；否則回空幀讓 DLL 清掉本地翻譯態。
+    /// 回給 DLL 的幀恆空（候選窗在 Server 自繪）。
     pub(super) fn handle_selection(
         &mut self,
         session: SessionId,
@@ -54,7 +54,7 @@ impl Router {
         empty
     }
 
-    /// 评审态收到按键：任何键都结束评审。回车 / 空格 / 1 接受（译文没到就只吃键），Esc 放弃，其余放弃并交回应用。
+    /// 評審態收到按鍵：任何鍵都結束評審。回車 / 空格 / 1 接受（譯文沒到就只吃鍵），Esc 放棄，其餘放棄並交回應用。
     pub(super) fn handle_translation_review(
         &mut self,
         session: SessionId,
@@ -83,7 +83,7 @@ impl Router {
         }
     }
 
-    /// 结束评审：丢进行态、取消在飞的请求、收起候选窗。没在评审时是空操作。
+    /// 結束評審：丟進行態、取消在飛的請求、收起候選窗。沒在評審時是空操作。
     pub(super) fn end_translation(&mut self) {
         if self.translation.take().is_some() {
             self.cancel_prediction();
@@ -91,7 +91,7 @@ impl Router {
         }
     }
 
-    /// 评审帧：单条候选（译文或「翻译中…」），无 preedit、无分页。
+    /// 評審幀：單條候選（譯文或「翻譯中…」），無 preedit、無分頁。
     pub(super) fn translation_frame(&self, translation: &Translation) -> Frame {
         let text = translation
             .result
@@ -116,7 +116,7 @@ impl Router {
     }
 }
 
-/// 译文包成一条云端样式的候选（带云朵标记）。
+/// 譯文包成一條雲端樣式的候選（帶雲朵標記）。
 fn translate_candidate(text: String) -> Candidate {
     Candidate {
         text,

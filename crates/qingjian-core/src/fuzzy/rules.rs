@@ -5,7 +5,7 @@ use super::Expanded;
 use crate::parser;
 use crate::ranking::FUZZY_PENALTY;
 
-/// 模糊音开关，配置文件 `[fuzzy]` 分节；缺省全关。
+/// 模糊音開關，配置檔案 `[fuzzy]` 分節；預設全關。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct FuzzyRules {
@@ -38,7 +38,7 @@ pub struct FuzzyRules {
 }
 
 impl FuzzyRules {
-    /// 全开，测试和 CLI 用。
+    /// 全開，測試和 CLI 用。
     pub const ALL: Self = Self {
         z_zh: true,
         c_ch: true,
@@ -55,17 +55,17 @@ impl FuzzyRules {
         *self != Self::default()
     }
 
-    /// 全部规则的配置键名，与 `[fuzzy]` 分节的字段名一致；菜单按这个顺序列出。
+    /// 全部規則的配置鍵名，與 `[fuzzy]` 分節的欄位名一致；選單按這個順序列出。
     pub const NAMES: [&'static str; 9] = [
         "z_zh", "c_ch", "s_sh", "n_l", "f_h", "l_r", "an_ang", "en_eng", "in_ing",
     ];
 
-    /// 按名字开一条规则（`z-zh` / `z_zh` / `zzh` 都认），CLI 参数用；不认识返回 `false`。
+    /// 按名字開一條規則（`z-zh` / `z_zh` / `zzh` 都認），CLI 引數用；不認識返回 `false`。
     pub fn enable(&mut self, name: &str) -> bool {
         self.set(name, true)
     }
 
-    /// 按名字设置一条规则的开关；不认识返回 `false`。
+    /// 按名字設定一條規則的開關；不認識返回 `false`。
     pub fn set(&mut self, name: &str, on: bool) -> bool {
         match self.flag_mut(name) {
             Some(flag) => {
@@ -76,7 +76,7 @@ impl FuzzyRules {
         }
     }
 
-    /// 按名字查一条规则是否开着；不认识返回 `false`。
+    /// 按名字查一條規則是否開著；不認識返回 `false`。
     pub fn is_on(&self, name: &str) -> bool {
         let mut copy = *self;
         copy.flag_mut(name).is_some_and(|flag| *flag)
@@ -102,7 +102,7 @@ impl FuzzyRules {
         })
     }
 
-    /// 把一串模式扩展成每个位置的多种写法（第一种是用户敲的，代价 0；模糊音写法扣 [`FUZZY_PENALTY`]）。
+    /// 把一串模式擴充套件成每個位置的多種寫法（第一種是使用者敲的，代價 0；模糊音寫法扣 [`FUZZY_PENALTY`]）。
     pub fn expand(&self, patterns: &[SyllablePattern<'_>]) -> Expanded {
         Expanded::new(patterns.iter().map(|p| {
             let forms = self
@@ -115,7 +115,7 @@ impl FuzzyRules {
         }))
     }
 
-    /// `syllable` 是不是 `typed` 按当前规则的一种模糊写法（不含它自己）。
+    /// `syllable` 是不是 `typed` 按當前規則的一種模糊寫法（不含它自己）。
     pub fn is_variant(&self, typed: &str, syllable: &str) -> bool {
         canonical_syllable(typed) != canonical_syllable(syllable)
             && self
@@ -124,14 +124,14 @@ impl FuzzyRules {
                 .any(|form| canonical_syllable(form) == canonical_syllable(syllable))
     }
 
-    /// 一个音节的全部写法，第一个是敲的原文；没开模糊音就只有它自己。
-    /// 同一位置的写法互不覆盖（词库多写法查询的契约）：前缀 `zh` 换成 `z` 后只留 `z`。
+    /// 一個音節的全部寫法，第一個是敲的原文；沒開模糊音就只有它自己。
+    /// 同一位置的寫法互不覆蓋（詞庫多寫法查詢的契約）：字首 `zh` 換成 `z` 後只留 `z`。
     fn alternatives(&self, pattern: SyllablePattern<'_>) -> Vec<String> {
         let mut forms = vec![pattern.text.to_owned()];
         if !self.any() {
             return forms;
         }
-        // 规则之间可以叠加（zhen → zeng），跑到不再增长为止；规则集很小，两轮就收敛
+        // 規則之間可以疊加（zhen → zeng），跑到不再增長為止；規則集很小，兩輪就收斂
         let mut index = 0;
         while index < forms.len() {
             let current = forms[index].clone();
@@ -143,10 +143,10 @@ impl FuzzyRules {
             index += 1;
         }
         if !pattern.complete {
-            // 前缀之间去覆盖：被别的更短前缀包含的去掉
+            // 字首之間去覆蓋：被別的更短字首包含的去掉
             let snapshot = forms.clone();
             forms.retain(|f| !snapshot.iter().any(|o| o != f && f.starts_with(o.as_str())));
-            // 原文若被去掉了，把覆盖它的那个放到第一位，保证第一种写法仍能匹配原文能匹配的
+            // 原文若被去掉了，把覆蓋它的那個放到第一位，保證第一種寫法仍能匹配原文能匹配的
             if forms.first().map(String::as_str) != Some(pattern.text)
                 && let Some(position) = forms
                     .iter()
@@ -158,7 +158,7 @@ impl FuzzyRules {
         forms
     }
 
-    /// 对一种写法各套一次规则得到的新写法（可能不合法，这里过滤掉）。
+    /// 對一種寫法各套一次規則得到的新寫法（可能不合法，這裡過濾掉）。
     fn apply_once(&self, form: &str, complete: bool) -> Vec<String> {
         let mut out = Vec::new();
         let mut swap_initial = |a: &str, b: &str| {
@@ -168,7 +168,7 @@ impl FuzzyRules {
                 out.push(format!("{a}{rest}"));
             }
         };
-        // 先比双字母声母，`sh` 不能被当成 `s` 处理
+        // 先比雙字母聲母，`sh` 不能被當成 `s` 處理
         if self.z_zh {
             swap_initial("zh", "z");
         }
@@ -195,7 +195,7 @@ impl FuzzyRules {
                     out.push(format!("{head}{a}"));
                 }
             };
-            // 先比长的：`ang` 结尾的不能再被当成 `an`
+            // 先比長的：`ang` 結尾的不能再被當成 `an`
             if self.an_ang {
                 swap_final("ang", "an");
             }
@@ -237,7 +237,7 @@ mod tests {
         let mut lan = forms(&rules, SyllablePattern::complete("lan"));
         lan.sort();
         assert_eq!(lan, ["lan", "lang", "nan", "nang", "ran", "rang"]);
-        // 不合法的写法不出：hua 没有 fua
+        // 不合法的寫法不出：hua 沒有 fua
         assert_eq!(forms(&rules, SyllablePattern::complete("hua")), ["hua"]);
     }
 
@@ -255,20 +255,20 @@ mod tests {
             forms(&rules, SyllablePattern::complete("zhi")),
             ["zhi", "zi"]
         );
-        // 韵母规则没开：fen 只有自己（f/h 也没开）
+        // 韻母規則沒開：fen 只有自己（f/h 也沒開）
         assert_eq!(forms(&rules, SyllablePattern::complete("fen")), ["fen"]);
     }
 
     #[test]
     fn prefixes_only_get_initial_rules_and_never_overlap() {
         let rules = FuzzyRules::ALL;
-        // 前缀 zh 换成 z 后 z 已覆盖 zh，只留 z
+        // 字首 zh 換成 z 後 z 已覆蓋 zh，只留 z
         assert_eq!(forms(&rules, SyllablePattern::prefix("zh")), ["z"]);
         assert_eq!(forms(&rules, SyllablePattern::prefix("z")), ["z"]);
         let mut fe = forms(&rules, SyllablePattern::prefix("fe"));
         fe.sort();
         assert_eq!(fe, ["fe", "he"]);
-        // 前缀不套韵母规则
+        // 字首不套韻母規則
         assert_eq!(forms(&rules, SyllablePattern::prefix("xin")), ["xin"]);
         let expanded = rules.expand(&[
             SyllablePattern::complete("zi"),

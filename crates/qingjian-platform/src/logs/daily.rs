@@ -1,19 +1,19 @@
-//! 按天一个文件的日志：文件名约定 `<前缀>.<YYYY-MM-DD>.log` 与清理旧文件。
+//! 按天一個檔案的日誌：檔名約定 `<字首>.<YYYY-MM-DD>.log` 與清理舊檔案。
 //!
-//! Server 用 tracing_appender 滚动，TSF DLL 与设置程序自己开文件追加；三者共用这里的命名与「只留最近几天」规则，
-//! 日期怎么取由调用方定（DLL 用 `GetLocalTime`，不想在每个应用进程里多拉一份时区库）。
+//! Server 用 tracing_appender 滾動，TSF DLL 與設定程式自己開檔案追加；三者共用這裡的命名與「只留最近幾天」規則，
+//! 日期怎麼取由呼叫方定（DLL 用 `GetLocalTime`，不想在每個應用程序裡多拉一份時區庫）。
 
 use std::path::Path;
 
-/// 缺省保留天数，三个进程一致。
+/// 預設保留天數，三個程序一致。
 pub const KEEP_DAYS: u32 = 7;
 
-/// `<前缀>.<YYYY-MM-DD>.log`。
+/// `<字首>.<YYYY-MM-DD>.log`。
 pub fn file_name(prefix: &str, year: i64, month: u32, day: u32) -> String {
     format!("{prefix}.{year:04}-{month:02}-{day:02}.log")
 }
 
-/// 公历日期 → 自 1970-01-01 起的天数（Howard Hinnant 的 `days_from_civil`），够比大小用。
+/// 公曆日期 → 自 1970-01-01 起的天數（Howard Hinnant 的 `days_from_civil`），夠比大小用。
 pub fn days_from_civil(year: i64, month: u32, day: u32) -> u32 {
     let y = if month <= 2 { year - 1 } else { year };
     let era = y.div_euclid(400);
@@ -24,7 +24,7 @@ pub fn days_from_civil(year: i64, month: u32, day: u32) -> u32 {
     (era * 146_097 + i64::from(doe) - 719_468) as u32
 }
 
-/// 删掉目录里早于 `today - keep_days` 的 `<前缀>.<日期>.log`；别的文件（包括其他进程的日志）不碰。
+/// 刪掉目錄裡早於 `today - keep_days` 的 `<字首>.<日期>.log`；別的檔案（包括其他程序的日誌）不碰。
 pub fn prune(dir: &Path, prefix: &str, today: u32, keep_days: u32) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
@@ -40,7 +40,7 @@ pub fn prune(dir: &Path, prefix: &str, today: u32, keep_days: u32) {
     }
 }
 
-/// `tsf.2026-09-11.log` → 那天的天数；不是该前缀的日志文件为 `None`。
+/// `tsf.2026-09-11.log` → 那天的天數；不是該字首的日誌檔案為 `None`。
 pub fn log_day(name: &str, prefix: &str) -> Option<u32> {
     let date = name
         .strip_prefix(prefix)?

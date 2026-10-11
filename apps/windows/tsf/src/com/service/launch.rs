@@ -1,20 +1,20 @@
-//! 连不上 Server 时自己拉起它。
+//! 連不上 Server 時自己拉起它。
 //!
-//! Server 只在登录时由「启动」文件夹的快捷方式拉起（Explorer 走 `ShellExecute`，见 `qingjian.iss`），
-//! 中途挂了（崩溃 / 被杀 / 装完没重启）以前 DLL 只能静默吞键到下次登录。这里在连接失败后起一次与
-//! DLL 同目录的 `qingjian-server.exe`：用 `ShellExecuteW` 而不是 `CreateProcess`——`uiAccess=true`
-//! 的 exe 用 `CreateProcess` 拉不起来（报 740），ShellExecute 等同双击，两种构建都行。
+//! Server 只在登入時由「啟動」資料夾的快捷方式拉起（Explorer 走 `ShellExecute`，見 `qingjian.iss`），
+//! 中途掛了（崩潰 / 被殺 / 裝完沒重啟）以前 DLL 只能靜默吞鍵到下次登入。這裡在連線失敗後起一次與
+//! DLL 同目錄的 `qingjian-server.exe`：用 `ShellExecuteW` 而不是 `CreateProcess`——`uiAccess=true`
+//! 的 exe 用 `CreateProcess` 拉不起來（報 740），ShellExecute 等同雙擊，兩種構建都行。
 //!
-//! 两道闸门防重复启动：进程内的冷却时间（同一应用连敲只试一次），与跨进程的命名互斥体
-//! （多个应用同时发现 Server 不在，只起一个）。找不到 exe / 起失败记日志返回 `false`，调用方退回原来的退避重连。
+//! 兩道閘門防重複啟動：程序內的冷卻時間（同一應用連敲只試一次），與跨程序的命名互斥體
+//! （多個應用同時發現 Server 不在，只起一個）。找不到 exe / 起失敗記日誌返回 `false`，呼叫方退回原來的退避重連。
 //!
-//! 另一道门是宿主的完整性级别：输入法会被加载进登录界面（LogonUI）、UAC 的 consent.exe 这类
-//! 以 SYSTEM 跑在安全桌面上的进程，也会进 AppContainer 的商店应用（Low）。在这些宿主里
-//! `ShellExecute` 要么起出一个 SYSTEM 权限、挂在安全桌面上的 Server，要么干脆起不来——
-//! 只在普通桌面应用（Medium）里拉，其余照旧退避重连。
+//! 另一道門是宿主的完整性級別：輸入法會被載入進登入介面（LogonUI）、UAC 的 consent.exe 這類
+//! 以 SYSTEM 跑在安全桌面上的程序，也會進 AppContainer 的商店應用（Low）。在這些宿主裡
+//! `ShellExecute` 要麼起出一個 SYSTEM 許可權、掛在安全桌面上的 Server，要麼乾脆起不來——
+//! 只在普通桌面應用（Medium）里拉，其餘照舊退避重連。
 //!
-//! 安装 / 卸载程序运行期间也不拉：它刚结束 Server 要替换 exe，这时拉起会占住文件（错误代码 5），
-//! 安装程序持有命名互斥体 [`INSTALLER_MUTEX`]（见 `qingjian.iss`），装完它自己起新 Server。
+//! 安裝 / 解除安裝程式執行期間也不拉：它剛結束 Server 要替換 exe，這時拉起會佔住檔案（錯誤程式碼 5），
+//! 安裝程式持有命名互斥體 [`INSTALLER_MUTEX`]（見 `qingjian.iss`），裝完它自己起新 Server。
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -37,41 +37,41 @@ use windows::core::{HSTRING, PCWSTR, w};
 use crate::com::log::log;
 use crate::com::module_path;
 
-/// 同一进程内两次尝试拉起 Server 的最短间隔：连接失败每个键都会走到这里，别把应用砸出一串 Server。
+/// 同一程序內兩次嘗試拉起 Server 的最短間隔：連線失敗每個鍵都會走到這裡，別把應用砸出一串 Server。
 const LAUNCH_COOLDOWN: Duration = Duration::from_secs(5);
 
-/// 跨进程互斥体：多个应用的 DLL 同时发现 Server 不在时只起一个（第二个起来的抢不到管道会自己退出）。
+/// 跨程序互斥體：多個應用的 DLL 同時發現 Server 不在時只起一個（第二個起來的搶不到管道會自己退出）。
 const LAUNCH_MUTEX: windows::core::PCWSTR = w!("Local\\QingjianServerLaunch");
 
-/// 安装 / 卸载程序运行期间持有的互斥体，名字与 `qingjian.iss` 的 `HoldInstallerMutex` 一致。
+/// 安裝 / 解除安裝程式執行期間持有的互斥體，名字與 `qingjian.iss` 的 `HoldInstallerMutex` 一致。
 const INSTALLER_MUTEX: windows::core::PCWSTR = w!("Global\\QingjianInstaller");
 
-/// 普通桌面应用的完整性级别 RID（UAC 未提升的用户进程）。低一档是 AppContainer / 浏览器沙箱，
-/// 高一档是管理员提升、SYSTEM 与安全桌面上的进程——那些里都不拉 Server。
+/// 普通桌面應用的完整性級別 RID（UAC 未提升的使用者程序）。低一檔是 AppContainer / 瀏覽器沙箱，
+/// 高一檔是管理員提升、SYSTEM 與安全桌面上的程序——那些裡都不拉 Server。
 const MEDIUM_INTEGRITY_RID: u32 = 0x2000;
 
-/// 上次尝试拉起的时间；本进程内所有文本服务实例共用。
+/// 上次嘗試拉起的時間；本程序內所有文本服務例項共用。
 static LAST_LAUNCH: Mutex<Option<Instant>> = Mutex::new(None);
 
-/// 连不上 Server 时拉起它。已请求启动返回 `true`（下一键就该连上），没试 / 失败返回 `false`。
+/// 連不上 Server 時拉起它。已請求啟動返回 `true`（下一鍵就該連上），沒試 / 失敗返回 `false`。
 pub(super) fn launch_server() -> bool {
     if !cooldown_passed() {
         return false;
     }
     if !host_is_plain_desktop_app() {
-        log("宿主进程不是普通桌面应用（完整性级别非 Medium），不拉起 Server");
+        log("宿主程序不是普通桌面應用（完整性級別非 Medium），不拉起 Server");
         return false;
     }
     if installer_running() {
-        log("安装程序正在运行，不拉起 Server");
+        log("安裝程式正在執行，不拉起 Server");
         return false;
     }
     let Some(exe) = server_exe() else {
-        log("找不到与 DLL 同目录的 qingjian-server.exe，不拉起");
+        log("找不到與 DLL 同目錄的 qingjian-server.exe，不拉起");
         return false;
     };
     let Some(_mutex) = launch_mutex() else {
-        // 别的进程正在起：不重复起，退回退避重连
+        // 別的程序正在起：不重複起，退回退避重連
         return false;
     };
     let file = HSTRING::from(exe.as_os_str());
@@ -79,7 +79,7 @@ pub(super) fn launch_server() -> bool {
         .parent()
         .map(|dir| HSTRING::from(dir.as_os_str()))
         .unwrap_or_default();
-    // 起完就返回：Server 一百多毫秒就监听管道，阻塞在应用 UI 线程上会被 TSF 看门狗切走输入法。
+    // 起完就返回：Server 一百多毫秒就監聽管道，阻塞在應用 UI 執行緒上會被 TSF 看門狗切走輸入法。
     let code = unsafe {
         ShellExecuteW(
             None,
@@ -92,18 +92,18 @@ pub(super) fn launch_server() -> bool {
     };
     // ShellExecuteW 返回值 > 32 才算成功。
     if (code.0 as isize) > 32 {
-        log("已请求启动 qingjian-server");
+        log("已請求啟動 qingjian-server");
         true
     } else {
         log(&format!(
-            "启动 qingjian-server 失败，返回值 {}",
+            "啟動 qingjian-server 失敗，返回值 {}",
             code.0 as isize
         ));
         false
     }
 }
 
-/// 进程内冷却：距上次尝试不到 [`LAUNCH_COOLDOWN`] 就不试。时间在尝试**之前**记，失败也冷却。
+/// 程序內冷卻：距上次嘗試不到 [`LAUNCH_COOLDOWN`] 就不試。時間在嘗試**之前**記，失敗也冷卻。
 fn cooldown_passed() -> bool {
     let Ok(mut last) = LAST_LAUNCH.lock() else {
         return false;
@@ -115,18 +115,18 @@ fn cooldown_passed() -> bool {
     true
 }
 
-/// 宿主进程是不是普通桌面应用（完整性级别为 Medium）。
+/// 宿主程序是不是普通桌面應用（完整性級別為 Medium）。
 ///
-/// 读当前进程令牌的 `TokenIntegrityLevel`，SID 最后一个子授权值就是级别 RID。
-/// 读不到一律当成「不是」：宁可不拉（退回退避重连，下次登录时由启动文件夹的快捷方式起），
-/// 也不能在安全桌面上起出一个 SYSTEM 权限的 Server。
+/// 讀當前程序令牌的 `TokenIntegrityLevel`，SID 最後一個子授權值就是級別 RID。
+/// 讀不到一律當成「不是」：寧可不拉（退回退避重連，下次登入時由啟動資料夾的快捷方式起），
+/// 也不能在安全桌面上起出一個 SYSTEM 許可權的 Server。
 fn host_is_plain_desktop_app() -> bool {
     let mut token = HANDLE::default();
     if unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) }.is_err() {
         return false;
     }
     let mut needed = 0u32;
-    // 两段式：第一次只问要多少字节（总是报缓冲区不够，属正常）。
+    // 兩段式：第一次只問要多少位元組（總是報緩衝區不夠，屬正常）。
     unsafe {
         let _ = GetTokenInformation(token, TokenIntegrityLevel, None, 0, &mut needed);
     }
@@ -165,7 +165,7 @@ fn host_is_plain_desktop_app() -> bool {
     !rid_ptr.is_null() && unsafe { *rid_ptr } == MEDIUM_INTEGRITY_RID
 }
 
-/// 安装程序的互斥体在不在。它由提升的安装程序建，普通应用打开会被拒（`ERROR_ACCESS_DENIED`），拒也说明存在。
+/// 安裝程式的互斥體在不在。它由提升的安裝程式建，普通應用開啟會被拒（`ERROR_ACCESS_DENIED`），拒也說明存在。
 fn installer_running() -> bool {
     match unsafe { OpenMutexW(SYNCHRONIZATION_SYNCHRONIZE, false, INSTALLER_MUTEX) } {
         Ok(handle) => {
@@ -176,7 +176,7 @@ fn installer_running() -> bool {
     }
 }
 
-/// 跨进程互斥体；已被别的进程持有（对方正在起 Server）返回 `None`。
+/// 跨程序互斥體；已被別的程序持有（對方正在起 Server）返回 `None`。
 fn launch_mutex() -> Option<LaunchMutex> {
     let handle = unsafe { CreateMutexW(None, false, LAUNCH_MUTEX) }.ok()?;
     if unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
@@ -186,7 +186,7 @@ fn launch_mutex() -> Option<LaunchMutex> {
     Some(LaunchMutex(handle))
 }
 
-/// 持有互斥体的句柄，析构时关闭。
+/// 持有互斥體的控制代碼，析構時關閉。
 struct LaunchMutex(HANDLE);
 
 impl Drop for LaunchMutex {
@@ -200,7 +200,7 @@ fn server_exe() -> Option<PathBuf> {
     Some(server_exe_path(Path::new(&module.to_string())))
 }
 
-/// 与 DLL 同目录的 `qingjian-server.exe`（安装器把两者装在同一目录）。
+/// 與 DLL 同目錄的 `qingjian-server.exe`（安裝器把兩者裝在同一目錄）。
 fn server_exe_path(module: &Path) -> PathBuf {
     module.with_file_name("qingjian-server.exe")
 }

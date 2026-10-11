@@ -1,4 +1,4 @@
 ---
-title: 帮助
+title: 幫助
 order: 6
 ---

@@ -1,4 +1,4 @@
-//! 进程级基础设施：bundle 信息、日志、数据路径、配置文件的运行时状态。与 IMK、窗口都无关。
+//! 程序級基礎設施：bundle 資訊、日誌、資料路徑、配置檔案的執行時狀態。與 IMK、視窗都無關。
 
 pub mod bundle;
 pub mod input_source;

@@ -20,7 +20,7 @@ import sys
 import pyarrow.parquet as pq
 from opencc import OpenCC
 
-# 多余空白
+# 多餘空白
 SPACES = re.compile(r"[ \t　]+")
 
 

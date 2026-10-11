@@ -1,9 +1,9 @@
-//! DLL 引擎层的端到端协议测试：把 [`EngineClient`] 接到真正的 Server（`qingjian-windows-server` 的
-//! [`Router`] + [`serve`](qingjian_windows_server::ipc::serve)），两端各在一条 socketpair 上，验证
-//! 「开会话 → 敲拼音收到候选 → 空格上屏」这条 IPC 闭环。
+//! DLL 引擎層的端到端協議測試：把 [`EngineClient`] 接到真正的 Server（`qingjian-windows-server` 的
+//! [`Router`] + [`serve`](qingjian_windows_server::ipc::serve)），兩端各在一條 socketpair 上，驗證
+//! 「開會話 → 敲拼音收到候選 → 空格上屏」這條 IPC 閉環。
 //!
-//! 用 `UnixStream::pair` 起真双工流，所以只在 Unix 跑（mac 上开发时能验证 client 编排）；Windows 上
-//! 同一套 [`EngineClient`] 由命名管道驱动，靠交互测试。样例词库来自 `assets/sample/`，无需产品数据。
+//! 用 `UnixStream::pair` 起真雙工流，所以只在 Unix 跑（mac 上開發時能驗證 client 編排）；Windows 上
+//! 同一套 [`EngineClient`] 由命名管道驅動，靠互動測試。樣例詞庫來自 `assets/sample/`，無需產品資料。
 #![cfg(unix)]
 
 use std::os::unix::net::UnixStream;
@@ -17,12 +17,12 @@ use qingjian_windows_server::{AssemblySpec, Router, RouterConfig, assembly, ipc}
 
 const SESSION: SessionId = SessionId(1);
 
-/// 一个字母键（`character` 带小写字母，虚拟键码用其大写 ASCII）。
+/// 一個字母鍵（`character` 帶小寫字母，虛擬鍵碼用其大寫 ASCII）。
 fn letter(c: char) -> KeyEvent {
     KeyEvent::new(c.to_ascii_uppercase() as u32, Some(c), Default::default())
 }
 
-/// 取常规按键结果；收到「读选区」请求（不该在这些用例里出现）就 panic。
+/// 取常規按鍵結果；收到「讀選區」請求（不該在這些用例裡出現）就 panic。
 fn result(reply: KeyReply) -> KeyResponse {
     match reply {
         KeyReply::Result(response) => response,
@@ -30,7 +30,7 @@ fn result(reply: KeyReply) -> KeyResponse {
     }
 }
 
-/// 起一个后台 Server：用样例词库装 Router，在 `server_end` 上 serve 到对端关闭。
+/// 起一個後臺 Server：用樣例詞庫裝 Router，在 `server_end` 上 serve 到對端關閉。
 fn spawn_server(server_end: UnixStream) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
@@ -128,15 +128,15 @@ fn commit_returns_raw_text() {
     server.join().unwrap();
 }
 
-/// 「翻译选中文字」快捷键在云服务关着时不劫持：样例词库没配 predictor，Ctrl+Alt+T 不该要求读选区，
-/// 而是走常规分派（带 Ctrl/Alt 的键 Router 一律 Passthrough 交回应用）。真正的翻译闭环靠真机测（要云服务）。
+/// 「翻譯選中文字」快捷鍵在雲服務關著時不劫持：樣例詞庫沒配 predictor，Ctrl+Alt+T 不該要求讀選區，
+/// 而是走常規分派（帶 Ctrl/Alt 的鍵 Router 一律 Passthrough 交回應用）。真正的翻譯閉環靠真機測（要雲服務）。
 #[test]
 fn translate_combo_is_dormant_without_cloud() {
     let (client_end, server_end) = UnixStream::pair().unwrap();
     let server = spawn_server(server_end);
 
     let (mut client, _input) = EngineClient::open(client_end, SESSION, None).expect("open session");
-    // Ctrl+Alt+T（缺省 translate_selection）：character = 't'，修饰键 ctrl+alt。
+    // Ctrl+Alt+T（預設 translate_selection）：character = 't'，修飾鍵 ctrl+alt。
     let combo = KeyEvent::new(
         b'T' as u32,
         Some('t'),

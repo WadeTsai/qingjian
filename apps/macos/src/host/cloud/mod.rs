@@ -1,4 +1,4 @@
-//! 云端：测试连接的起停与轮询，联想的等待 / 取消 / 轮询与结果套用到当前页。
+//! 雲端：測試連線的起停與輪詢，聯想的等待 / 取消 / 輪詢與結果套用到當前頁。
 
 mod predict_monitor;
 mod test_monitor;
@@ -9,8 +9,8 @@ pub(super) use test_monitor::CloudTestMonitor;
 use super::*;
 
 impl Host {
-    /// 清空输入日志文件；开着的话重新打开继续记。
-    /// 「测试连接」：用当前配置发一条最小请求，结果回到偏好设置窗口底部的状态行。
+    /// 清空輸入日誌檔案；開著的話重新開啟繼續記。
+    /// 「測試連線」：用當前配置發一條最小請求，結果回到偏好設定視窗底部的狀態行。
     pub(super) fn start_cloud_test(&mut self) {
         let config = self.settings.config().predict.clone();
         match ConnectionTest::start(&config) {
@@ -31,7 +31,7 @@ impl Host {
         }
     }
 
-    /// 轮询定时器每 0.2 秒来一次：结果到了就显示并停表；等太久也停。
+    /// 輪詢定時器每 0.2 秒來一次：結果到了就顯示並停表；等太久也停。
     pub fn poll_cloud_test(&mut self) {
         let Some(test) = &self.cloud_test else {
             self.cloud_test_monitor.stop();
@@ -61,20 +61,20 @@ impl Host {
         }
     }
 
-    /// 已发出联想请求：清掉旧结果，开始轮询。
+    /// 已發出聯想請求：清掉舊結果，開始輪詢。
     pub fn await_prediction(&mut self) {
         self.sentence = None;
         self.monitor.start();
     }
 
-    /// 作废联想：不再轮询，丢掉已到的整句。
+    /// 作廢聯想：不再輪詢，丟掉已到的整句。
     pub fn cancel_prediction(&mut self) {
         self.engine.cancel_prediction();
         self.monitor.stop();
         self.sentence = None;
     }
 
-    /// 定时器回调：结果到了就画上去。云端词补进第一页末尾，整句挂在 preedit 右侧。
+    /// 定時器回撥：結果到了就畫上去。雲端詞補進第一頁末尾，整句掛在 preedit 右側。
     pub fn poll_prediction(&mut self) {
         let Some(prediction) = self.engine.poll_prediction() else {
             if self.monitor.expired() {
@@ -87,7 +87,7 @@ impl Host {
     }
 
     pub(super) fn apply_prediction(&mut self, prediction: Prediction) {
-        // 翻译选中文字：译文作为唯一候选摆进窗口，等用户回车替换或 Esc 放弃
+        // 翻譯選中文字：譯文作為唯一候選擺進視窗，等使用者回車替換或 Esc 放棄
         if let Some(job) = self.translation.as_mut() {
             match prediction.sentence {
                 Some(text) => {
@@ -105,8 +105,8 @@ impl Host {
         if self.engine.composition().is_empty() {
             return;
         }
-        // 云端词补进第一页末尾（前面的本地候选不动），整句挂在 preedit 右侧；云端词没有译文，先补上。
-        // 用户已经翻到后面的页、或高亮已经移到会被挪走的那几格时不补：那几格正被他看着 / 要选
+        // 雲端詞補進第一頁末尾（前面的本地候選不動），整句掛在 preedit 右側；雲端詞沒有譯文，先補上。
+        // 使用者已經翻到後面的頁、或高亮已經移到會被挪走的那幾格時不補：那幾格正被他看著 / 要選
         let layout = &self.session.layout;
         let untouched = cloud_slots_untouched(
             self.session.page,
@@ -132,10 +132,10 @@ impl Host {
     }
 }
 
-/// 用系统的 `open` 打开文件或目录；输入法进程没有自己的文档窗口，交给访达 / 默认编辑器最省事。
-/// 云端词到了还能不能补进第一页：用户还在第一页，且高亮没落在会被云端词顶掉的那几格上。
-/// 没有本地候选（问字模式）时整页都是云端的，谈不上挪走谁，永远能补——
-/// 之前没分这种情况，`page_size - capacity` 算出 0，问字的答案全被当成「会打扰用户」丢掉了。
+/// 用系統的 `open` 開啟檔案或目錄；輸入法程序沒有自己的文件視窗，交給訪達 / 預設編輯器最省事。
+/// 雲端詞到了還能不能補進第一頁：使用者還在第一頁，且高亮沒落在會被雲端詞頂掉的那幾格上。
+/// 沒有本地候選（問字模式）時整頁都是雲端的，談不上挪走誰，永遠能補——
+/// 之前沒分這種情況，`page_size - capacity` 算出 0，問字的答案全被當成「會打擾使用者」丟掉了。
 pub(super) fn cloud_slots_untouched(
     page: usize,
     highlighted: usize,
@@ -146,7 +146,7 @@ pub(super) fn cloud_slots_untouched(
     page == 0 && (local_empty || highlighted < page_size.saturating_sub(capacity))
 }
 
-/// 连通性测试的错误换成给用户看的中文；接口返回的原话保留，方便对着服务商文档查。
+/// 連通性測試的錯誤換成給使用者看的中文；介面返回的原話保留，方便對著服務商文件查。
 pub(super) fn describe_predict_error(error: &PredictError) -> String {
     match error {
         PredictError::MissingApiKey(env) => {
@@ -165,7 +165,7 @@ pub(super) fn describe_predict_error(error: &PredictError) -> String {
     }
 }
 
-/// 翻译窗口里的一行：译文（或占位文字）当作云端来源的候选画出来。
+/// 翻譯窗口裡的一行：譯文（或佔位文字）當作雲端來源的候選畫出來。
 pub(super) fn cloud_candidate(text: String) -> Candidate {
     Candidate {
         text,
@@ -181,9 +181,9 @@ pub(super) fn cloud_candidate(text: String) -> Candidate {
 mod tests {
     #[test]
     fn question_answers_fill_the_page_even_though_every_slot_is_cloud() {
-        // 问字：没有本地候选，capacity == page_size
+        // 問字：沒有本地候選，capacity == page_size
         assert!(super::cloud_slots_untouched(0, 0, true, 9, 9));
-        // 组句：高亮在前面的本地格上能补，高亮已在末尾两格（云端要占的位置）不补，翻页后不补
+        // 組句：高亮在前面的本地格上能補，高亮已在末尾兩格（雲端要佔的位置）不補，翻頁後不補
         assert!(super::cloud_slots_untouched(0, 0, false, 9, 2));
         assert!(!super::cloud_slots_untouched(0, 7, false, 9, 2));
         assert!(!super::cloud_slots_untouched(1, 0, false, 9, 2));

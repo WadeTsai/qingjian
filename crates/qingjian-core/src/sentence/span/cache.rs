@@ -5,22 +5,22 @@ use qingjian_dictionary::{SyllablePattern, canonical_syllable};
 
 use super::word::SpanWord;
 
-/// 缓存最多存多少个格子，超过就整个清掉（一次整句最多几百个格子，正常输入远到不了）。
+/// 快取最多存多少個格子，超過就整個清掉（一次整句最多幾百個格子，正常輸入遠到不了）。
 pub const MAX_SPAN_CACHE_ENTRIES: usize = 8192;
 
-/// 词图格子候选的缓存：键是格子的模式（各位置的写法与是否完整），值是排好、截好的候选。
+/// 詞圖格子候選的快取：鍵是格子的模式（各位置的寫法與是否完整），值是排好、截好的候選。
 ///
-/// 敲键是增量的：第 n+1 键只新增以它结尾的几个格子，其余格子上一键都算过，而格子查词是整句转换里最贵的一步
-/// （每个简拼位置都要在词库里逐音节块收窄）。候选与词库、用户词、用户选择次数、个人出现次数有关，
-/// 这些一变（上屏 / 学习）就整个清掉，由 Engine 负责。
+/// 敲鍵是增量的：第 n+1 鍵只新增以它結尾的幾個格子，其餘格子上一鍵都算過，而格子查詞是整句轉換裡最貴的一步
+/// （每個簡拼位置都要在詞庫裡逐音節塊收窄）。候選與詞庫、使用者詞、使用者選擇次數、個人出現次數有關，
+/// 這些一變（上屏 / 學習）就整個清掉，由 Engine 負責。
 #[derive(Debug, Default)]
 pub struct SpanCache {
-    /// 格子模式 → 候选。
+    /// 格子模式 → 候選。
     entries: HashMap<String, Arc<[SpanWord]>>,
 }
 
 impl SpanCache {
-    /// 格子的缓存键：每个位置的各种写法用 `|` 连、前缀写法带 `…`，位置之间空格。
+    /// 格子的快取鍵：每個位置的各種寫法用 `|` 連、字首寫法帶 `…`，位置之間空格。
     pub fn key(span: &[Vec<SyllablePattern<'_>>]) -> String {
         let mut key = String::with_capacity(span.len() * 8);
         for (index, position) in span.iter().enumerate() {
@@ -40,7 +40,7 @@ impl SpanCache {
         key
     }
 
-    /// 有就直接给，没有就算一次存起来。
+    /// 有就直接給，沒有就算一次存起來。
     pub fn get_or_insert_with(
         &mut self,
         key: String,
@@ -57,7 +57,7 @@ impl SpanCache {
         words
     }
 
-    /// 词库、用户词或学习数据变了：全部作废。
+    /// 詞庫、使用者詞或學習資料變了：全部作廢。
     pub fn clear(&mut self) {
         self.entries.clear();
     }

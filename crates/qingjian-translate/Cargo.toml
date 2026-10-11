@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-translate"
-description = "释义表与词汇等级表：候选旁的词性 + 译词，个人释义表"
+description = "釋義表與詞彙等級表：候選旁的詞性 + 譯詞，個人釋義表"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

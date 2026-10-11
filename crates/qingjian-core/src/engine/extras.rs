@@ -1,9 +1,9 @@
-//! 附加候选：日期时间等快捷项、中英混输的英文词与补全、emoji。
+//! 附加候選：日期時間等快捷項、中英混輸的英文詞與補全、emoji。
 
 use super::*;
 
 impl Engine {
-    /// 精确匹配自定义输入码时，数字键应选择候选。
+    /// 精確匹配自定義輸入碼時，數字鍵應選擇候選。
     pub(super) fn has_custom_phrase(&self) -> bool {
         !self.english_mode
             && self
@@ -12,7 +12,7 @@ impl Engine {
                 .any(|p| p.enabled && p.code == self.composition.scope())
     }
 
-    /// 所有普通候选完成排序后按输入码固定位置。
+    /// 所有普通候選完成排序後按輸入碼固定位置。
     pub(super) fn insert_custom_phrases(&self, items: &mut Vec<Candidate>) {
         if self.english_mode {
             return;
@@ -38,7 +38,7 @@ impl Engine {
         }
     }
 
-    /// 日期 / 时间 / 星期这类快捷候选插在本地首选之后：`rq` 首选仍是词库里的词，快捷写法紧随其后。
+    /// 日期 / 時間 / 星期這類快捷候選插在本地首選之後：`rq` 首選仍是詞庫裡的詞，快捷寫法緊隨其後。
     pub(super) fn insert_shortcuts(&self, items: &mut Vec<Candidate>, scope: &str) {
         let expression_char =
             if self.zhuyin && crate::zhuyin::layout::map_key(self.modes().expression).is_some() {
@@ -46,8 +46,8 @@ impl Engine {
             } else {
                 self.modes().expression
             };
-        // 嗯 的标准音 ng 不是拼音音节（音节表不收叹词写法）；整段正好是 ng 时按快捷候选给它，排第一。
-        // 只认全拼：双拼与注音里这两个键是别的音
+        // 嗯 的標準音 ng 不是拼音音節（音節表不收嘆詞寫法）；整段正好是 ng 時按快捷候選給它，排第一。
+        // 只認全拼：雙拼與注音裡這兩個鍵是別的音
         if scope == "ng" && self.shuangpin.is_none() && !self.zhuyin {
             items.insert(
                 0,
@@ -69,12 +69,12 @@ impl Engine {
         items.splice(position..position, shortcuts);
     }
 
-    /// 中英混输：整段输入是英文词就把它加进候选。
-    /// 缺省作为拼音「不像话」（切不动、或除末尾外还有声母缩写 / 残缺音节）时排第一，否则排第二；
-    /// 开了中文优先（`chinese_first`）整句 / 首个中文候选已经在前，英文词排第二。没有中文候选时总在第一。
-    /// 两字母的全大写缩写（`mp` → MP、`bm` → BM）是个例外：整段太短、几乎总是在打中文（门票 / 编码），
-    /// 这种让中文先；超过两个字母的正文英文（cargo / rust）照旧——按词频一刀切会把它们一起挤掉。
-    /// 例外只管**没选过**的英文词：用户选过的照旧排第一（选过 OK，下次敲 `ok` 还是 OK 在前）。
+    /// 中英混輸：整段輸入是英文詞就把它加進候選。
+    /// 預設作為拼音「不像話」（切不動、或除末尾外還有聲母縮寫 / 殘缺音節）時排第一，否則排第二；
+    /// 開了中文優先（`chinese_first`）整句 / 首箇中文候選已經在前，英文詞排第二。沒有中文候選時總在第一。
+    /// 兩字母的全大寫縮寫（`mp` → MP、`bm` → BM）是個例外：整段太短、幾乎總是在打中文（門票 / 編碼），
+    /// 這種讓中文先；超過兩個字母的正文英文（cargo / rust）照舊——按詞頻一刀切會把它們一起擠掉。
+    /// 例外只管**沒選過**的英文詞：使用者選過的照舊排第一（選過 OK，下次敲 `ok` 還是 OK 在前）。
     pub(super) fn insert_english(&self, items: &mut Vec<Candidate>, unlikely_pinyin: bool) {
         if !self.english_in_chinese {
             return;
@@ -96,17 +96,17 @@ impl Engine {
             aux_code: None,
         };
         let word = lists.iter().find_map(|words| words.get(text));
-        // 这段字母下用户选中文词（`key` → 可以）比选英文词的次数多：中文词留在第一，英文让到后面；
-        // 拼音再不像话也是他自己教的
+        // 這段字母下使用者選中文詞（`key` → 可以）比選英文詞的次數多：中文詞留在第一，英文讓到後面；
+        // 拼音再不像話也是他自己教的
         let chosen = items
             .first()
             .filter(|c| c.kind == CandidateKind::Chinese)
             .map_or(0, |c| self.learner.choice_weight(text, &c.text));
         let english_weight = word.map_or(0, |w| self.learner.weight(w));
-        // 两字母全大写缩写（mp → MP、bm → BM）让中文先：整段太短，几乎总是在打中文。
-        // 但**不压过学习记录**：`ok` / `pc` / `ll` 同样满足「两个字母的全大写缩写」，一刀切会把它们一起
-        // 翻成中文；而且选过 OK 的用户下次敲 `ok` 本该还是它排第一。所以这条只对用户**没选过**的英文词生效
-        //（`record` 对英文候选也记次数，所以 `english_weight` 就是「选过没有」）。
+        // 兩字母全大寫縮寫（mp → MP、bm → BM）讓中文先：整段太短，幾乎總是在打中文。
+        // 但**不壓過學習記錄**：`ok` / `pc` / `ll` 同樣滿足「兩個字母的全大寫縮寫」，一刀切會把它們一起
+        // 翻成中文；而且選過 OK 的使用者下次敲 `ok` 本該還是它排第一。所以這條只對使用者**沒選過**的英文詞生效
+        //（`record` 對英文候選也記次數，所以 `english_weight` 就是「選過沒有」）。
         let short_acronym = english_weight == 0
             && text.len() <= 2
             && word.is_some_and(|word| word.chars().all(|c| c.is_ascii_uppercase()));
@@ -121,8 +121,8 @@ impl Engine {
             items.insert(position, english_candidate(word));
             position += 1;
         }
-        // 英文补全：拼音不像话时（`compa` 切成 co'm'pa），整段多半是在打英文词的前面几个字母，补全紧跟在精确词之后；
-        // 个人词表在前，两张表里都有的只出一次。
+        // 英文補全：拼音不像話時（`compa` 切成 co'm'pa），整段多半是在打英文詞的前面幾個字母，補全緊跟在精確詞之後；
+        // 個人詞表在前，兩張表裡都有的只出一次。
         if unlikely_pinyin && text.len() >= MIN_COMPLETION_LETTERS {
             let mut budget = ENGLISH_COMPLETIONS;
             for words in &lists {
@@ -144,8 +144,8 @@ impl Engine {
         }
     }
 
-    /// 给英文候选用的词表，个人的在前、随包的在后；一张都没有就是空。
-    /// 整段作用域本身就是个英文词（`database`、`agent`）：用户多半在打那个词。
+    /// 給英文候選用的詞表，個人的在前、隨包的在後；一張都沒有就是空。
+    /// 整段作用域本身就是個英文詞（`database`、`agent`）：使用者多半在打那個詞。
     pub(in crate::engine) fn scope_is_english_word(&self) -> bool {
         let scope = self.composition.scope();
         self.english_in_chinese
@@ -164,8 +164,8 @@ impl Engine {
             .collect()
     }
 
-    /// emoji 候选：前几个中文候选里有配 emoji 的，emoji 紧跟在那个词后面，右侧标注它对应的词。
-    /// 词后面紧挨着的英文词候选（中文优先时 `key` → 可以、key）不被 emoji 挤开，emoji 排在它之后。
+    /// emoji 候選：前幾個中文候選裡有配 emoji 的，emoji 緊跟在那個詞後面，右側標註它對應的詞。
+    /// 詞後面緊挨著的英文詞候選（中文優先時 `key` → 可以、key）不被 emoji 擠開，emoji 排在它之後。
     pub(super) fn insert_emoji(&self, items: &mut Vec<Candidate>) {
         let Some(table) = self.emoji.as_ref().filter(|_| self.emoji_candidates) else {
             return;
@@ -183,7 +183,7 @@ impl Engine {
                 continue;
             }
             scanned += 1;
-            // 英文词按小写查英文表（smile → 😀）
+            // 英文詞按小寫查英文表（smile → 😀）
             let key = if item.kind == CandidateKind::English {
                 item.text.to_lowercase()
             } else {

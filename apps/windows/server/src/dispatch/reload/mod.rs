@@ -1,5 +1,5 @@
-//! 配置热加载：空闲时看 `config.toml` 的 mtime，改了就重读并应用（与 macOS 壳对齐）。
-//! 便宜的设置无条件重设；云联想 / 释义表按配置变化重建，附加词库也检查文件增删与更新。热加载状态在 [`ConfigReload`]。
+//! 配置熱載入：空閒時看 `config.toml` 的 mtime，改了就重讀並應用（與 macOS 殼對齊）。
+//! 便宜的設定無條件重設；雲聯想 / 釋義表按配置變化重建，附加詞庫也檢查檔案增刪與更新。熱載入狀態在 [`ConfigReload`]。
 
 mod state;
 
@@ -17,10 +17,10 @@ use qingjian_predict::{CloudGlossFiller, CloudPredictor, PredictConfig};
 pub(super) use self::state::ConfigReload;
 pub use self::state::DataDirs;
 
-/// 看配置文件 mtime 的最短间隔；工人循环空闲时按它等，重排的短节拍来得更勤时按这个节流。
+/// 看配置檔案 mtime 的最短間隔；工人迴圈空閒時按它等，重排的短節拍來得更勤時按這個節流。
 pub(super) const CONFIG_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-/// 检查更新的结果文件名，在用户数据目录下（见 `qingjian-update::UpdateState`）。
+/// 檢查更新的結果檔名，在使用者資料目錄下（見 `qingjian-update::UpdateState`）。
 const UPDATE_STATE_FILE: &str = "update.json";
 use super::{Router, RouterConfig};
 use crate::assembly;
@@ -31,7 +31,7 @@ fn mtime(path: &Path) -> Option<SystemTime> {
         .ok()
 }
 
-/// 按 `[predict]` 接云联想与释义兜底；关着或缺密钥就退回本地实现。启动与热加载共用。
+/// 按 `[predict]` 接雲聯想與釋義兜底；關著或缺金鑰就退回本地實現。啟動與熱載入共用。
 pub fn attach_cloud(engine: &mut Engine, predict: &PredictConfig) {
     if !predict.enabled {
         tracing::info!("云联想未开启（[predict] enabled = false）");
@@ -58,8 +58,8 @@ pub fn attach_cloud(engine: &mut Engine, predict: &PredictConfig) {
     }
 }
 
-/// 学习语言变了就换释义表：关是不翻译；换语言重装随包 + 个人释义表，没有这门语言的表或装不上就保持原样。
-/// 换成功（或关掉）返回 true。
+/// 學習語言變了就換釋義表：關是不翻譯；換語言重灌隨包 + 個人釋義表，沒有這門語言的表或裝不上就保持原樣。
+/// 換成功（或關掉）返回 true。
 fn swap_translator(
     engine: &mut Engine,
     language: Option<Language>,
@@ -92,7 +92,7 @@ fn swap_translator(
 }
 
 impl Router {
-    /// 检查更新查到了要提示的新版本（开关关着、本地开发包都不算）。
+    /// 檢查更新查到了要提示的新版本（開關關著、本地開發包都不算）。
     pub(super) fn update_available(&self) -> bool {
         self.reload.as_ref().is_some_and(|reload| {
             reload
@@ -102,16 +102,16 @@ impl Router {
         })
     }
 
-    /// `config.toml` 路径；没开热加载（测试）时为 `None`。
+    /// `config.toml` 路徑；沒開熱載入（測試）時為 `None`。
     pub(super) fn config_path(&self) -> Option<&Path> {
         self.reload
             .as_ref()
             .map(|reload| reload.config_path.as_path())
     }
 
-    /// 开启热加载：记下路径与当前已应用的 predict / dictionaries / aux_code / 学习语言，
-    /// 以及启动用的那批数据目录。目录必须与启动同款语义（`dicts/` / `codes/`），
-    /// 热加载才找得到文件。
+    /// 開啟熱載入：記下路徑與當前已應用的 predict / dictionaries / aux_code / 學習語言，
+    /// 以及啟動用的那批資料目錄。目錄必須與啟動同款語義（`dicts/` / `codes/`），
+    /// 熱載入才找得到檔案。
     pub fn watch_config(
         &mut self,
         config: &Config,
@@ -142,8 +142,8 @@ impl Router {
         });
     }
 
-    /// 空闲时调；一秒内只真正看一次。配置文件或用户 `codes/` 下的文件变了就重装；
-    /// 解析失败保持原配置，mtime 照记（不每秒重试同一个坏文件）。
+    /// 空閒時調；一秒內只真正看一次。配置檔案或使用者 `codes/` 下的檔案變了就重灌；
+    /// 解析失敗保持原配置，mtime 照記（不每秒重試同一個壞檔案）。
     pub fn poll_config_reload(&mut self) {
         let Some(reload) = &mut self.reload else {
             return;
@@ -155,15 +155,15 @@ impl Router {
         if let Some(updates) = &reload.updates {
             updates.poll(&reload.update);
         }
-        // 用户 `dicts/` 目录文件增删或更新：与配置改动无关，下一拍就生效
+        // 使用者 `dicts/` 目錄檔案增刪或更新：與配置改動無關，下一拍就生效
         let files = reload.dirs.dict_snapshot();
         if files != reload.dictionary_files {
-            // 配置损坏也继续使用上次有效的词库开关；文件变化不触发配置重试。
+            // 配置損壞也繼續使用上次有效的詞庫開關；檔案變化不觸發配置重試。
             self.engine
                 .set_extra_dictionaries(reload.load_dictionaries());
             reload.dictionary_files = files;
         }
-        // 用户主题文件改了：戳变了设置就不等，UI 线程重读主题当场换上（边改主题边看效果）
+        // 使用者主題檔案改了：戳變了設定就不等，UI 執行緒重讀主題當場換上（邊改主題邊看效果）
         if let Some(dir) = qingjian_platform::dirs::themes_dir() {
             let stamp = ThemeLibrary::stamp(&dir);
             if stamp != self.config.themes_stamp {
@@ -180,7 +180,7 @@ impl Router {
             reload.last_mtime = current;
             changed
         };
-        // 用户 `codes/` 下的文件增删或更新（设置页刚导入 / 移除一张码表）：不必等配置改动，下一拍就生效
+        // 使用者 `codes/` 下的檔案增刪或更新（設定頁剛匯入 / 移除一張碼錶）：不必等配置改動，下一拍就生效
         let codes_changed = {
             let current = reload.dirs.code_snapshot();
             let changed = current != reload.code_files;
@@ -203,19 +203,18 @@ impl Router {
         }
     }
 
-    /// 应用新配置。学习语言变了换释义表（词汇等级表启动时已全装，不用换）。
+    /// 應用新配置。學習語言變了換釋義表（詞彙等級表啟動時已全裝，不用換）。
     fn apply_config(&mut self, config: &Config) {
         self.engine.set_fuzzy(config.fuzzy);
-        // Windows 端此前漏装 custom_phrases（macOS 端 apply_config 有）；失败只记日志，保持原短语
+        // Windows 端此前漏裝 custom_phrases（macOS 端 apply_config 有）；失敗只記日誌，保持原短語
         if let Err(error) = self
             .engine
             .set_custom_phrases(config.custom_phrases.clone())
         {
             tracing::warn!(%error, "自定义短语配置未应用，保持原短语");
         }
-        // 拼音侧与形码侧一起装配（双拼 / 注音 / 混输都在里面）
+        // 拼音側與形碼側一起裝配（雙拼 / 注音 / 混輸都在裡面）
         self.reload_code_table(config.general.scheme(), config.general.wubi());
-        self.engine.set_traditional_mode(config.general.traditional);
         self.engine.set_learning(config.general.learning);
         self.engine.set_mode_keys(config.shortcut.mode);
         self.engine
@@ -236,6 +235,8 @@ impl Router {
         let themes_stamp = self.config.themes_stamp;
         self.config = RouterConfig::from(config);
         self.config.themes_stamp = themes_stamp;
+        // 繁體輸出要等新配置就位再算：它還看聚焦會話的語言 profile（見 session 的 traditional_output）
+        self.engine.set_traditional_mode(self.traditional_output());
         let settings = self.config.render_settings();
         if settings != previous {
             self.candidates.configure(settings);
@@ -273,7 +274,7 @@ impl Router {
         }
     }
 
-    /// 按当前配置重装辅码码表：`codes/` 目录变了或 `[aux_code]` 变了都走这里。
+    /// 按當前配置重灌輔碼碼錶：`codes/` 目錄變了或 `[aux_code]` 變了都走這裡。
     fn reload_aux_codes(&mut self) {
         let Some(reload) = &self.reload else {
             return;

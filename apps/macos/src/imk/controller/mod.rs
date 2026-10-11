@@ -1,7 +1,7 @@
-//! IMK 输入控制器：每个输入会话（每个应用的文本框）一个实例。
+//! IMK 輸入控制器：每個輸入會話（每個應用的文本框）一個例項。
 //!
-//! 只做两件事：把按键翻译成 Engine 的调用，把 Engine 返回的候选交给候选窗口。
-//! **这里不允许出现排序、词库或翻译逻辑。** 会话状态（候选、高亮、页码）在 [`crate::host::Session`]。
+//! 只做兩件事：把按鍵翻譯成 Engine 的呼叫，把 Engine 返回的候選交給候選視窗。
+//! **這裡不允許出現排序、詞庫或翻譯邏輯。** 會話狀態（候選、高亮、頁碼）在 [`crate::host::Session`]。
 
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::{AnyObject, Sel};
@@ -28,8 +28,8 @@ pub use click::click;
 
 define_class!(
     // SAFETY:
-    // - IMKInputController 允许子类化，Apple 文档的标准用法就是继承它。
-    // - 没有实现 Drop。
+    // - IMKInputController 允許子類化，Apple 文件的標準用法就是繼承它。
+    // - 沒有實現 Drop。
     #[unsafe(super(IMKInputController))]
     // 名字要和 Info.plist 的 InputMethodServerControllerClass 一致
     #[name = "QingjianInputController"]
@@ -37,7 +37,7 @@ define_class!(
     pub struct QingjianInputController;
 
     impl QingjianInputController {
-        /// IMKServer 为每个新会话调用的指定初始化方法，在这里放好 ivars。
+        /// IMKServer 為每個新會話呼叫的指定初始化方法，在這裡放好 ivars。
         #[unsafe(method_id(initWithServer:delegate:client:))]
         fn init_with_server(
             this: Allocated<Self>,
@@ -50,17 +50,17 @@ define_class!(
             unsafe { msg_send![super(this), initWithServer: server, delegate: delegate, client: client] }
         }
 
-        /// 所有按键事件都到这里（IMK 第一层协议）。IMK 按控制器实现了哪一层决定路线，实现了这个方法就不会再分发成
-        /// `inputText:client:` / `didCommandBySelector:client:`（父类缺省实现也不分发），所以自己分：
-        /// Option+数字上屏候选的译文（Option 会把数字键变成 ¡™£ 这类字符，只能按键码认）；命令键按键码映射成原来的选择器；
-        /// 其余按事件带的字符走文本路径。返回 true 表示已处理，系统不再把按键交给应用。
-        // define_class! 会把返回类型转成 ObjC BOOL，方法体里不能用 `return`，逻辑放在下面的 inherent impl
+        /// 所有按鍵事件都到這裡（IMK 第一層協議）。IMK 按控制器實現了哪一層決定路線，實現了這個方法就不會再分發成
+        /// `inputText:client:` / `didCommandBySelector:client:`（父類預設實現也不分發），所以自己分：
+        /// Option+數字上屏候選的譯文（Option 會把數字鍵變成 ¡™£ 這類字元，只能按鍵碼認）；命令鍵按鍵碼對映成原來的選擇器；
+        /// 其餘按事件帶的字元走文本路徑。返回 true 表示已處理，系統不再把按鍵交給應用。
+        // define_class! 會把返回型別轉成 ObjC BOOL，方法體裡不能用 `return`，邏輯放在下面的 inherent impl
         #[unsafe(method(handleEvent:client:))]
         fn handle_event(&self, event: Option<&NSEvent>, client: Option<&AnyObject>) -> bool {
             match (event, client) {
                 (Some(event), Some(client)) => {
                     let client = TextClient::new(client);
-                    // panic 拦下后把缓冲区原样上屏，这个按键交还给应用
+                    // panic 攔下後把緩衝區原樣上屏，這個按鍵交還給應用
                     catch_panic("handleEvent", || self.dispatch_event(event, client))
                         .unwrap_or_else(|| {
                             recover_from_panic(Some(client));
@@ -71,7 +71,7 @@ define_class!(
             }
         }
 
-        /// 应用要求立刻结束本次输入（切换焦点、切换输入法等）。
+        /// 應用要求立刻結束本次輸入（切換焦點、切換輸入法等）。
         #[unsafe(method(commitComposition:))]
         fn commit_composition(&self, client: Option<&AnyObject>) {
             let client = client.map(TextClient::new);
@@ -94,7 +94,7 @@ define_class!(
             tracing::info!("activateServer");
             self.set_active();
             let done = catch_panic("activateServer", || {
-                // 用户要往 [apps] 里加应用时，从这条日志抄 bundle identifier
+                // 使用者要往 [apps] 里加應用時，從這條日誌抄 bundle identifier
                 let bundle = sender.and_then(|s| TextClient::new(s).bundle_identifier());
                 if let Some(bundle) = &bundle {
                     tracing::debug!(%bundle, "当前应用");
@@ -112,13 +112,13 @@ define_class!(
             }
         }
 
-        /// 系统输入源菜单（菜单栏旗帜图标）每次展开前来取输入法自己的条目。
+        /// 系統輸入源選單（選單欄旗幟圖示）每次展開前來取輸入法自己的條目。
         #[unsafe(method_id(menu))]
         fn menu(&self) -> Option<Retained<NSMenu>> {
             host::with(|h| h.menu.ns_menu())
         }
 
-        /// 输入源菜单里点了条目：IMK 转发到控制器，sender 是带 IMKCommandMenuItem 的字典。
+        /// 輸入源選單裡點了條目：IMK 轉發到控制器，sender 是帶 IMKCommandMenuItem 的字典。
         #[unsafe(method(menuAction:))]
         fn menu_action(&self, sender: Option<&AnyObject>) {
             if let Some(action) = menubar::action_from_sender(sender) {
@@ -135,7 +135,7 @@ define_class!(
                 if let Some(client) = client {
                     self.commit_raw(client);
                 }
-                // 切换输入源时无论如何都收掉候选框，不能留一个孤儿窗口在屏幕上
+                // 切換輸入源時無論如何都收掉候選框，不能留一個孤兒視窗在螢幕上
                 host::with(|h| {
                     h.cancel_prediction();
                     h.window.hide();
@@ -148,7 +148,7 @@ define_class!(
             });
             if done.is_none() {
                 recover_from_panic(client);
-                // 善后里没做的收尾：学习数据还是要落盘
+                // 善後裡沒做的收尾：學習資料還是要落盤
                 host::with(|h| {
                     h.indicator.deactivate();
                     h.watch.stop();
@@ -161,16 +161,16 @@ define_class!(
     unsafe impl NSObjectProtocol for QingjianInputController {}
 );
 
-/// 翻译选中文字最多接受多少个字符：再长既慢又贵，也不是输入法该干的事。
+/// 翻譯選中文字最多接受多少個字元：再長既慢又貴，也不是輸入法該乾的事。
 const MAX_TRANSLATE_CHARS: usize = 500;
 
-/// 给本地整句模型看的光标前文最多读多少字符（Engine 自己再按它的前文长度截）。
+/// 給本地整句模型看的游標前文最多讀多少字元（Engine 自己再按它的前文長度截）。
 const RESCORE_LOOKBACK: usize = qingjian_core::RESCORE_CONTEXT_CHARS;
 
-/// 登录 / 锁屏窗口的 bundle identifier。
+/// 登入 / 鎖屏視窗的 bundle identifier。
 const LOGIN_WINDOW: &str = "com.apple.loginwindow";
 
-/// 数字行与小键盘的键码对应的数字 1–9（ANSI 布局的物理键）。
+/// 數字行與小鍵盤的鍵碼對應的數字 1–9（ANSI 佈局的物理鍵）。
 fn digit_key(key_code: u16) -> Option<usize> {
     Some(match key_code {
         18 | 83 => 1,
@@ -187,16 +187,16 @@ fn digit_key(key_code: u16) -> Option<usize> {
 }
 
 impl QingjianInputController {
-    /// 登录 / 锁屏窗口：输入源菜单里没有青简，loginwindow 却照样激活它，按键一律交还系统。
+    /// 登入 / 鎖屏視窗：輸入源選單裡沒有青簡，loginwindow 卻照樣啟用它，按鍵一律交還系統。
     ///
-    /// TODO(#190): 临时防护。现象是开机登录界面打不进模式键（u / i），推断为按键进了青简的组句；
-    /// 日志只证实 loginwindow 会激活青简，按键是否真的送来没有复现（开 FileVault 的机器进不到这个界面）。
-    /// 找到按键送进来的条件后改成针对它的判断，并确认别的系统界面有没有同样的情况。
+    /// TODO(#190): 臨時防護。現象是開機登入介面打不進模式鍵（u / i），推斷為按鍵進了青簡的組句；
+    /// 日誌只證實 loginwindow 會啟用青簡，按鍵是否真的送來沒有復現（開 FileVault 的機器進不到這個介面）。
+    /// 找到按鍵送進來的條件後改成針對它的判斷，並確認別的系統介面有沒有同樣的情況。
     fn in_login_window(&self) -> bool {
         host::with(|h| h.engine.application() == Some(LOGIN_WINDOW)).unwrap_or(false)
     }
 
-    /// 一个按键事件的分发：只管按下；Cmd / Ctrl 组合除 Cmd+左右外一律交给应用；命令键映射成选择器；其余按字符当文本。
+    /// 一個按鍵事件的分發：只管按下；Cmd / Ctrl 組合除 Cmd+左右外一律交給應用；命令鍵對映成選擇器；其餘按字元當文本。
     fn dispatch_event(&self, event: &NSEvent, client: TextClient<'_>) -> bool {
         if event.r#type() != NSEventType::KeyDown || self.in_login_window() {
             return false;
@@ -215,13 +215,13 @@ impl QingjianInputController {
             control,
             command,
         };
-        // 提示在显示：敲任何键先收掉，键照常处理
+        // 提示在顯示：敲任何鍵先收掉，鍵照常處理
         host::with(|h| h.clear_notice());
-        // 翻译选中文字进行中：回车 / 空格 / 1 接受，Esc 放弃，其他键放弃后照常交给应用
+        // 翻譯選中文字進行中：回車 / 空格 / 1 接受，Esc 放棄，其他鍵放棄後照常交給應用
         if host::with(|h| h.translation.is_some()).unwrap_or(false) {
             return self.handle_translation_review(key, client);
         }
-        // 翻译快捷键（不在组句中）：读应用里的选区，交给云端
+        // 翻譯快捷鍵（不在組句中）：讀應用裡的選區，交給雲端
         let typed = event
             .charactersIgnoringModifiers()
             .map(|c| c.to_string().to_ascii_lowercase());
@@ -232,10 +232,10 @@ impl QingjianInputController {
         {
             return self.translate_selection(client);
         }
-        // 修饰键 + 数字：按配置的两组组合上屏第一 / 第二个译词（缺省 ⌥ 与 ⇧⌥）、删候选（缺省 ⇧）。
-        // 只在组句中认：不在组句时 ⇧4 就是 `$`，得走下面的标点转换（中文模式出 ￥、⇧6 出 ……、⇧1 出 ！），
-        // 以前在这里被截走后原样还给应用，全角转换就没机会做了。
-        // 表达式模式（`v2^3`）里 ⇧+数字打的是 `^ * ( )`，不当快捷键
+        // 修飾鍵 + 數字：按配置的兩組組合上屏第一 / 第二個譯詞（預設 ⌥ 與 ⇧⌥）、刪候選（預設 ⇧）。
+        // 只在組句中認：不在組句時 ⇧4 就是 `$`，得走下面的標點轉換（中文模式出 ￥、⇧6 出 ……、⇧1 出 ！），
+        // 以前在這裡被截走後原樣還給應用，全形轉換就沒機會做了。
+        // 表示式模式（`v2^3`）裡 ⇧+數字打的是 `^ * ( )`，不當快捷鍵
         let composing = host::with(|h| !h.engine.composition().is_empty()).unwrap_or(false);
         let expression = composing && host::with(|h| h.engine.expression_mode()).unwrap_or(false);
         if composing

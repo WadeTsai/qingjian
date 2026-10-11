@@ -1,16 +1,16 @@
 use std::cmp::Ordering;
 
-/// 版本号，按语义化版本的规则比大小：`0.1.4-beta.1 < 0.1.4-beta.2 < 0.1.4-rc.1 < 0.1.4`。
+/// 版本號，按語義化版本的規則比大小：`0.1.4-beta.1 < 0.1.4-beta.2 < 0.1.4-rc.1 < 0.1.4`。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Version {
     core: [u64; 3],
 
-    /// 预发布后缀按 `.` 拆开的各段；空 = 正式版。
+    /// 預釋出字尾按 `.` 拆開的各段；空 = 正式版。
     pre: Vec<String>,
 }
 
 impl Version {
-    /// 解析 `主.次.补丁[-后缀]`；构建元数据（`+` 之后）丢掉。
+    /// 解析 `主.次.補丁[-字尾]`；構建後設資料（`+` 之後）丟掉。
     pub fn parse(text: &str) -> Option<Self> {
         let text = text.trim().split('+').next()?;
         let (core, pre) = match text.split_once('-') {
@@ -24,7 +24,7 @@ impl Version {
         }
         let pre = match pre {
             None => Vec::new(),
-            // `1.2.3-`、`1.2.3-beta.` 这种预发布段有空段的不是合法版本号
+            // `1.2.3-`、`1.2.3-beta.` 這種預釋出段有空段的不是合法版本號
             Some("") => return None,
             Some(pre) => {
                 let parts: Vec<String> = pre.split('.').map(str::to_owned).collect();
@@ -37,7 +37,7 @@ impl Version {
         Some(Self { core, pre })
     }
 
-    /// 本地开发包（`0.1.3-dev-1a2b3c4`）：不检查更新。
+    /// 本地開發包（`0.1.3-dev-1a2b3c4`）：不檢查更新。
     pub fn is_dev(&self) -> bool {
         self.pre.first().is_some_and(|part| part.starts_with("dev"))
     }
@@ -62,7 +62,7 @@ impl PartialOrd for Version {
     }
 }
 
-/// 逐段比：都是数字按数值，数字小于字母段，其余按字典序；前面都相同时段少的小。
+/// 逐段比：都是數字按數值，數字小於字母段，其餘按字典序；前面都相同時段少的小。
 fn compare_pre(left: &[String], right: &[String]) -> Ordering {
     for (a, b) in left.iter().zip(right) {
         let ordering = match (a.parse::<u64>(), b.parse::<u64>()) {

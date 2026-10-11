@@ -1,10 +1,10 @@
-//! 用 LLM 批量生成中文词的英文 / 日文 / 越南文释义表（词性 + 译词 + 日文假名读音），以及给多音字词标拼音。
+//! 用 LLM 批次生成中文詞的英文 / 日文 / 越南文釋義表（詞性 + 譯詞 + 日文假名讀音），以及給多音字詞標拼音。
 //!
-//! `generate` 从一元词频表挑词、分批问模型，结果逐行追加到 JSONL（中断了再跑会跳过已完成的词）；
-//! `export` 把 JSONL 转成输入法加载的 `glossary-en.tsv` / `glossary-ja.tsv` / `glossary-vi.tsv`；
-//! `pinyin` 给词表里的词标拼音（建词库时含多音字的词靠它定读音），结果 `pinyin-llm.jsonl`；
-//! `english` / `export-english` 给英文词写中文释义，导出 `glossary-zh.tsv`（英文候选右侧显示）。
-//! 密钥来自 `--api-key` 或环境变量 `QINGJIAN_API_KEY`（也读当前目录的 `.env`）。
+//! `generate` 從一元詞頻表挑詞、分批問模型，結果逐行追加到 JSONL（中斷了再跑會跳過已完成的詞）；
+//! `export` 把 JSONL 轉成輸入法載入的 `glossary-en.tsv` / `glossary-ja.tsv` / `glossary-vi.tsv`；
+//! `pinyin` 給詞表裡的詞標拼音（建詞庫時含多音字的詞靠它定讀音），結果 `pinyin-llm.jsonl`；
+//! `english` / `export-english` 給英文詞寫中文釋義，匯出 `glossary-zh.tsv`（英文候選右側顯示）。
+//! 金鑰來自 `--api-key` 或環境變數 `QINGJIAN_API_KEY`（也讀當前目錄的 `.env`）。
 
 mod args;
 mod batch;

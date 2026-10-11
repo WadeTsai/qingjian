@@ -1,4 +1,4 @@
-//! 记录原样读取前后学习接口调用，保证只读路径连查询都不触发。
+//! 記錄原樣讀取前後學習介面呼叫，保證只讀路徑連查詢都不觸發。
 use crate::{Candidate, Learner};
 use std::sync::{Arc, Mutex};
 

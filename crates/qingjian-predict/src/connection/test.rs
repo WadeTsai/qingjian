@@ -1,5 +1,5 @@
-//! 云服务连通性测试：偏好设置「云服务」页的「测试连接」按钮用。
-//! 起一个线程用当前配置发一条最小的聊天请求，结果经通道回来；调用方在主线程轮询 [`ConnectionTest::poll`]。
+//! 雲服務連通性測試：偏好設定「雲服務」頁的「測試連線」按鈕用。
+//! 起一個執行緒用當前配置發一條最小的聊天請求，結果經通道回來；呼叫方在主執行緒輪詢 [`ConnectionTest::poll`]。
 
 use std::sync::mpsc;
 use std::time::Instant;
@@ -9,23 +9,23 @@ use crate::chat_client::ChatClient;
 use crate::config::PredictConfig;
 use crate::error::PredictError;
 
-/// 系统提示：告诉模型这只是探活。
+/// 系統提示：告訴模型這只是探活。
 const SYSTEM_PROMPT: &str = "你是输入法的连通性测试。";
 
-/// 用户消息：要一个固定的 JSON，回复越短越好。
+/// 使用者訊息：要一個固定的 JSON，回覆越短越好。
 const USER_PROMPT: &str = "回复 JSON 对象 {\"ok\": true}，不要别的内容。";
 
-/// 回复 token 上限：只要几个字。
+/// 回覆 token 上限：只要幾個字。
 const MAX_TOKENS: u32 = 32;
 
-/// 一次进行中的连通性测试。
+/// 一次進行中的連通性測試。
 pub struct ConnectionTest {
-    /// 测试线程送回的结果；线程只发一次。
+    /// 測試執行緒送回的結果；執行緒只發一次。
     result: mpsc::Receiver<Result<ConnectionReport, PredictError>>,
 }
 
 impl ConnectionTest {
-    /// 按配置发起测试。密钥缺失、线程起不来这两种情况当场报错，其余错误从 [`poll`](Self::poll) 回来。
+    /// 按配置發起測試。金鑰缺失、執行緒起不來這兩種情況當場報錯，其餘錯誤從 [`poll`](Self::poll) 回來。
     pub fn start(config: &PredictConfig) -> Result<Self, PredictError> {
         let api_key = config
             .resolve_api_key()
@@ -46,19 +46,19 @@ impl ConnectionTest {
                     ),
                     Err(error) => tracing::warn!(error = ?error, "云服务连通性测试失败"),
                 }
-                // 收的一方不在了（窗口关了、又点了一次）就算了
+                // 收的一方不在了（視窗關了、又點了一次）就算了
                 let _ = sender.send(outcome);
             })?;
         Ok(Self { result })
     }
 
-    /// 结果到了就取走；没到返回 `None`。取走之后再调永远是 `None`。
+    /// 結果到了就取走；沒到返回 `None`。取走之後再調永遠是 `None`。
     pub fn poll(&self) -> Option<Result<ConnectionReport, PredictError>> {
         self.result.try_recv().ok()
     }
 }
 
-/// 在测试线程里跑：建一个单线程运行时，发一条请求，计时。
+/// 在測試執行緒裡跑：建一個單執行緒執行時，發一條請求，計時。
 fn run(client: &ChatClient, model: String) -> Result<ConnectionReport, PredictError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()

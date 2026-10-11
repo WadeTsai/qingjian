@@ -1,12 +1,12 @@
-//! 设置窗口的消息类型：导航切换与各页的「改动」，根组件的 `update` 据此落盘。
+//! 設定視窗的訊息型別：導航切換與各頁的「改動」，根元件的 `update` 據此落盤。
 
-/// 设置窗口的消息；「改动」消息带控件新值，`update` 据此落盘。
+/// 設定視窗的訊息；「改動」訊息帶控制元件新值，`update` 據此落盤。
 #[derive(Clone)]
 pub(crate) enum Message {
-    /// 导航切换分节（`None` 是取消选中，忽略）。
+    /// 導航切換分節（`None` 是取消選中，忽略）。
     Navigate(Option<String>),
 
-    // 通用页
+    // 通用頁
     LearningLanguage(Option<usize>),
     PageSize(Option<f64>),
     Scheme(Option<usize>),
@@ -17,37 +17,37 @@ pub(crate) enum Message {
     EnglishCandidates(bool),
     EnglishInChinese(bool),
     ChineseFirst(bool),
-    /// 中文模式下 Shift+字母：交给应用（缺省）还是进组句缓冲区。
+    /// 中文模式下 Shift+字母：交給應用（預設）還是進組句緩衝區。
     ShiftLetter(Option<usize>),
     FullWidthPunctuation(bool),
     EnglishFullWidthPunctuation(bool),
-    /// 组句中会转全角的标点先把高亮候选上屏再补标点。
+    /// 組句中會轉全形的標點先把高亮候選上屏再補標點。
     PunctCommits(bool),
-    /// 开=写入平台缺省白名单，关=写 `["*"]`（处处都给）。
+    /// 開=寫入平臺預設白名單，關=寫 `["*"]`（處處都給）。
     EnglishOnlyInApps(bool),
-    /// 勾上 / 去掉一个中英切换键。
+    /// 勾上 / 去掉一箇中英切換鍵。
     SwitchKey(qingjian_platform::SwitchKey, bool),
-    /// 内置英文模式总开关。
+    /// 內建英文模式總開關。
     EnglishMode(bool),
 
-    // 候选窗口页
+    // 候選視窗頁
     Appearance(Option<usize>),
     Theme(Option<usize>),
     Layout(Option<usize>),
     Preedit(Option<usize>),
     Renderer(Option<usize>),
-    /// 字体框里的文字变了：空或正好是某个字族名就落盘。
+    /// 字型框裡的文字變了：空或正好是某個字族名就落盤。
     FontQuery(String),
-    /// 从提示里选了一个字族。
+    /// 從提示裡選了一個字族。
     Font(String),
-    /// 字号框改了；清空为 `None`（用主题的）。
+    /// 字號框改了；清空為 `None`（用主題的）。
     CandidateFontSize(Option<f64>),
     AnnotationFontSize(Option<f64>),
     Animations(bool),
     ResetFontSizes,
     StatusBar(bool),
 
-    // 云服务页
+    // 雲服務頁
     LocalModel(bool),
     CloudEnabled(bool),
     CloudApiKey(String),
@@ -58,7 +58,7 @@ pub(crate) enum Message {
     TestConnection,
     CloudTestDone(Result<String, String>),
 
-    // 快捷键页
+    // 快捷鍵頁
     PageKeys(Option<usize>),
     ModeExpression(Option<usize>),
     ModeQuestion(Option<usize>),
@@ -66,56 +66,56 @@ pub(crate) enum Message {
     Translation(Option<usize>),
     TranslationSecond(Option<usize>),
     DeleteCandidate(Option<usize>),
-    /// 只换修饰键，字母键固定用当前的。
+    /// 只換修飾鍵，字母鍵固定用當前的。
     TranslateSelection(Option<usize>),
 
-    // 模糊音页
-    /// 配置键 + 新值。
+    // 模糊音頁
+    /// 配置鍵 + 新值。
     Fuzzy(&'static str, bool),
 
-    // 词库页
+    // 詞庫頁
     ToggleDomain(String, bool),
     ToggleUserDict(String, bool),
-    /// 挪进 dicts\removed，不真删。
+    /// 挪進 dicts\removed，不真刪。
     RemoveUserDict(String),
     ImportDictionary,
 
-    // 辅码页
-    /// 辅码总开关（`[aux_code] enabled`，缺省关）。
+    // 輔碼頁
+    /// 輔碼總開關（`[aux_code] enabled`，預設關）。
     AuxCodeEnabled(bool),
-    /// 候选上是否显示码。
+    /// 候選上是否顯示碼。
     AuxCodeShow(bool),
-    /// 码删空后是否留在辅码态（`[general] aux_code_keep_empty`）。
+    /// 碼刪空後是否留在輔碼態（`[general] aux_code_keep_empty`）。
     AuxCodeKeepEmpty(bool),
-    /// 点「录制」：进入等一个键的状态。
+    /// 點「錄製」：進入等一個鍵的狀態。
     AuxRecordStart,
-    /// 录制中放弃，保持原值。
+    /// 錄製中放棄，保持原值。
     AuxRecordCancel,
-    /// 录制框敲进来的文本，取第一个字符当新触发键。
+    /// 錄製框敲進來的文本，取第一個字元當新觸發鍵。
     AuxRecorded(String),
-    /// 码表开关（名字，开 / 关），关掉的进 `[aux_code] disabled`。
+    /// 碼錶開關（名字，開 / 關），關掉的進 `[aux_code] disabled`。
     ToggleAuxTable(String, bool),
-    /// 挪进 codes\removed，不真删。
+    /// 挪進 codes\removed，不真刪。
     RemoveAuxTable(String),
-    /// 打开文件选择器导入一张码表（Rime `.dict.yaml`）。
+    /// 開啟檔案選擇器匯入一張碼錶（Rime `.dict.yaml`）。
     ImportCodeTable,
 
-    // 高级页
+    // 進階頁
     VerboseLog(bool),
     InputLog(bool),
-    /// 学习输入习惯开关。
+    /// 學習輸入習慣開關。
     Learning(bool),
     OpenConfigFile,
     OpenDataDir,
     OpenLogDir,
-    /// 日志目录 + config.toml 打成 zip 放桌面。
+    /// 日誌目錄 + config.toml 打成 zip 放桌面。
     ExportLogs,
     ClearInputLog,
 
-    // 关于页
+    // 關於頁
     OpenWebsite,
 
-    // 关于页：检查更新（`UpdateChecked` 的 `None` = 本地开发版没查）
+    // 關於頁：檢查更新（`UpdateChecked` 的 `None` = 本地開發版沒查）
     UpdateCheck(bool),
     UpdateChannel(Option<usize>),
     CheckUpdateNow,

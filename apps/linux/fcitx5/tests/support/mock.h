@@ -1,4 +1,4 @@
-//! 可控 Server 夹具，只模拟返回帧，记录插件发送的框架事实。
+//! 可控 Server 夾具，只模擬返回幀，記錄外掛傳送的框架事實。
 #pragma once
 #include "wire.h"
 #include <cstring>
@@ -16,7 +16,7 @@ struct Mock {
 
     std::vector<Json> messages;
 
-    /// 收到的 Poll 次数；rescore 模式第一条回换序帧。
+    /// 收到的 Poll 次數；rescore 模式第一條回換序幀。
     int polls = 0;
 
     explicit Mock(const std::string &mode) {
@@ -45,7 +45,7 @@ struct Mock {
         int fd = accept(listener, nullptr, nullptr);
         auto opened = readMessage(fd).at("OpenSession");
         const auto session = opened.at("session");
-        assert(opened.at("protocol") == 8);
+        assert(opened.at("protocol") == 9);
         writeMessage(fd, {{"Update", {{"session", session}, {"linux_ui", {{"version", mode == "mismatch" ? 2 : 3}}}}}});
         if (mode == "mismatch") { close(fd); return; }
         auto identity = readMessage(fd).at("LinuxHello");
@@ -93,7 +93,7 @@ struct Mock {
             identity["revision"] = identity.at("revision").get<uint64_t>() + 1;
             writeMessage(fd, {{"KeyResult", {{"session", session}, {"identity", identity}, {"frame", frame}, {"commit", commit}, {"outcome", outcome}}}});
             if (mode == "failure" && event.contains("Key")) {
-                messages.push_back(readMessage(fd)); // 默认面板反馈。
+                messages.push_back(readMessage(fd)); // 預設面板反饋。
                 break;
             }
         }

@@ -1,7 +1,7 @@
-//! 导入码表：把用户给的 Rime `.dict.yaml`（含 `import_tables` 合表）或现成的 `.qj` 变成码表目录里的一个 `.qj`。
+//! 匯入碼錶：把使用者給的 Rime `.dict.yaml`（含 `import_tables` 合表）或現成的 `.qj` 變成碼錶目錄裡的一個 `.qj`。
 //!
-//! 与词库导入的差别：码表不能静默丢数据。有词没有码的行、码不是 `a-z` 的行都进统计返回给调用方，
-//! 一个可用条目都没有时直接报错（不是码表文件，或码列全是垃圾）。
+//! 與詞庫匯入的差別：碼錶不能靜默丟資料。有詞沒有碼的行、碼不是 `a-z` 的行都進統計返回給呼叫方，
+//! 一個可用條目都沒有時直接報錯（不是碼錶檔案，或碼列全是垃圾）。
 
 use std::path::{Path, PathBuf};
 
@@ -13,10 +13,10 @@ use super::report::AuxCodeTableImportReport;
 use super::table::AuxCodeTable;
 use crate::error::DictionaryError;
 
-/// `import_tables` 最多跟几层：互相引用时绕不出来，到这就停。
+/// `import_tables` 最多跟幾層：互相引用時繞不出來，到這就停。
 const MAX_IMPORT_DEPTH: usize = 8;
 
-/// 把 `source` 导入到 `dest_dir`，返回写出的文件、码表名与统计。
+/// 把 `source` 匯入到 `dest_dir`，返回寫出的檔案、碼錶名與統計。
 pub fn import_aux_code_table(
     source: &Path,
     dest_dir: &Path,
@@ -58,7 +58,7 @@ pub fn import_aux_code_table(
     })
 }
 
-/// 读主文件与它 `import_tables` 指到的其他码表，合并成一份解析结果与一份统计。
+/// 讀主檔案與它 `import_tables` 指到的其他碼錶，合併成一份解析結果與一份統計。
 fn read_all(source: &Path) -> Result<(ParsedTable, AuxCodeTableImportReport), DictionaryError> {
     let mut merged = ParsedTable::default();
     let mut report = AuxCodeTableImportReport::default();
@@ -94,7 +94,7 @@ fn read_all(source: &Path) -> Result<(ParsedTable, AuxCodeTableImportReport), Di
     Ok((merged, report))
 }
 
-/// `import_tables` 里的一条解析成路径：原样存在的先用，否则按 Rime 的惯例补 `.dict.yaml`。
+/// `import_tables` 裡的一條解析成路徑：原樣存在的先用，否則按 Rime 的慣例補 `.dict.yaml`。
 fn resolve_import(dir: &Path, name: &str) -> PathBuf {
     let candidate = dir.join(name);
     if candidate.exists() {

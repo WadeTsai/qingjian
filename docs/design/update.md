@@ -1,60 +1,60 @@
-# 检查更新
+# 檢查更新
 
-2026-09-17 定。0.1.3 只做「检查 + 提示 + 打开下载页」，下载与安装留给后面的版本。
+2026-09-17 定。0.1.3 只做「檢查 + 提示 + 開啟下載頁」，下載與安裝留給後面的版本。
 
-## 目标与边界
+## 目標與邊界
 
-- 用户不用再从群里拿包：发了新版，已装的青简一天内自己知道。测试者把渠道切到「测试版」就能收到 beta / rc。
-- 输入法不替换自己：只提示，点了打开 [下载页](https://qingjian.app/download)，安装仍由系统安装程序完成。
-- 更新通道等于远程代码执行通道，所以索引从第一版起就签名；客户端只认签过名的索引。
-- 隐私：请求是对静态文件的 GET，不带账号、设备标识或输入内容；`[update] check = false` 关掉后不联网。
+- 使用者不用再從群裡拿包：發了新版，已裝的青簡一天內自己知道。測試者把渠道切到「測試版」就能收到 beta / rc。
+- 輸入法不替換自己：只提示，點了開啟 [下載頁](https://qingjian.app/download)，安裝仍由系統安裝程式完成。
+- 更新通道等於遠端程式碼執行通道，所以索引從第一版起就簽名；客戶端只認簽過名的索引。
+- 隱私：請求是對靜態檔案的 GET，不帶賬號、裝置標識或輸入內容；`[update] check = false` 關掉後不聯網。
 
-## 数据流
+## 資料流
 
 ```
-发版（release.yml）
+發版（release.yml）
   releases_json.py → releases.json
-  qingjian-release-sign sign → releases.json.sig      私钥：CI 密钥 QINGJIAN_INDEX_SIGNING_KEY
-  两个文件挂到本次 Release 与 GitHub latest
-官网构建（qingjian-web scripts/sync-releases.mjs）
-  原样拷到 static/ → https://qingjian.app/releases.json 与 .sig
-客户端（crates/qingjian-update）
-  下载两者 → ed25519 验签 → 解析 → 按平台 / CPU / 渠道挑比当前新的最新版 → 写 update.json
+  qingjian-release-sign sign → releases.json.sig      私鑰：CI 金鑰 QINGJIAN_INDEX_SIGNING_KEY
+  兩個檔案掛到本次 Release 與 GitHub latest
+官網構建（qingjian-web scripts/sync-releases.mjs）
+  原樣拷到 static/ → https://qingjian.app/releases.json 與 .sig
+客戶端（crates/qingjian-update）
+  下載兩者 → ed25519 驗籤 → 解析 → 按平臺 / CPU / 渠道挑比當前新的最新版 → 寫 update.json
 ```
 
-索引放官网域名而不是直连 GitHub：国内访问 GitHub 不稳，官网是 Cloudflare 上的静态站（非浏览器 User-Agent 实测不被拦）。
-签名是对文件字节的分离签名，所以官网必须原样拷贝，不能经 JSON 重排。
+索引放官網域名而不是直連 GitHub：國內訪問 GitHub 不穩，官網是 Cloudflare 上的靜態站（非瀏覽器 User-Agent 實測不被攔）。
+簽名是對檔案位元組的分離簽名，所以官網必須原樣複製，不能經 JSON 重排。
 
-## 渠道与版本
+## 渠道與版本
 
-- 索引里每个版本的 `channel` 是更新渠道：定期发的版本 `stable`，中间放给测试者的 `alpha` / `beta` / `rc`（版本号带同名预发布后缀）。
-- 客户端两档：`stable` 只看 `stable`；`beta` 看全部，取版本号最大的，所以测试版用户在正式版出来后会升到正式版。
-- 版本按语义化版本比较（`0.1.4-beta.2 < 0.1.4-rc.1 < 0.1.4`）。
-- 本地开发包（`0.1.3-dev-<哈希>`）不检查。调试用环境变量：`QINGJIAN_UPDATE_VERSION` 顶替当前版本，`QINGJIAN_UPDATE_INDEX` 换索引地址（签名照验）；
-  `cargo run -p qingjian-update --example check -- 0.1.2 beta` 手动走一遍。
-- 只有带本机安装包（`platform` + `cpu`）的版本才算数：只发了 macOS 的版本不会提示 Windows 用户。
+- 索引裡每個版本的 `channel` 是更新渠道：定期發的版本 `stable`，中間放給測試者的 `alpha` / `beta` / `rc`（版本號帶同名預釋出字尾）。
+- 客戶端兩檔：`stable` 只看 `stable`；`beta` 看全部，取版本號最大的，所以測試版使用者在正式版出來後會升到正式版。
+- 版本按語義化版本比較（`0.1.4-beta.2 < 0.1.4-rc.1 < 0.1.4`）。
+- 本地開發包（`0.1.3-dev-<雜湊>`）不檢查。除錯用環境變數：`QINGJIAN_UPDATE_VERSION` 頂替當前版本，`QINGJIAN_UPDATE_INDEX` 換索引地址（簽名照驗）；
+  `cargo run -p qingjian-update --example check -- 0.1.2 beta` 手動走一遍。
+- 只有帶本機安裝包（`platform` + `cpu`）的版本才算數：只發了 macOS 的版本不會提示 Windows 使用者。
 
-## 调度
+## 排程
 
-壳在已有的每秒定时器里调 `Checker::poll`：开关开着、上次成功超过 24 小时（或换了渠道）、上次尝试超过 1 小时、没有正在查的，才起一个一次性线程去查。
-失败（断网、验签不过、格式版本不认识）只记日志。结果落在数据目录的 `update.json`，装上新版后旧结果因为「不比当前新」自然失效。
+殼在已有的每秒定時器裡調 `Checker::poll`：開關開著、上次成功超過 24 小時（或換了渠道）、上次嘗試超過 1 小時、沒有正在查的，才起一個一次性執行緒去查。
+失敗（斷網、驗籤不過、格式版本不認識）只記日誌。結果落在資料目錄的 `update.json`，裝上新版後舊結果因為「不比當前新」自然失效。
 
-- macOS 菜单的坑（2026-09-17）：「有新版本」这一行是可点的条目，必须放在「打开日志目录」那一组里。第一版把它放在最后一条分隔线之后、
-  夹在「配置文件有错误」与「青简 x.y.z」两个纯展示条目之间，结果 IMK 每次按键后都 `deactivateServer` 再新建控制器，
-  第二个字母盖掉第一个、候选框闪；与条目是否隐藏、标题、tag 都无关，挪个位置或去掉 action 就好（对照构建逐个验过）。
-- macOS：IMK 进程自己查；菜单里「有新版本 x.y.z…」一行与「关于」页的状态行，状态变了才刷界面。
-- Windows：Server 查并写 `update.json`（DLL 不联网）；设置程序的「关于」页读这个文件，「立即检查」在设置程序自己的后台线程里查。
-  任务栏「中 / 英」图标的右键菜单在查到新版本时多一项「有新版本，前往下载…」：Server 随 `ModeSync` 下发 `IndicatorState.update_available`，
-  点了发 `IndicatorCommand::OpenDownload`，由 Server 打开下载页（DLL 可能在 UWP 沙箱里起不了进程）。
+- macOS 選單的坑（2026-09-17）：「有新版本」這一行是可點的條目，必須放在「開啟日誌目錄」那一組裡。第一版把它放在最後一條分隔線之後、
+  夾在「配置檔案有錯誤」與「青簡 x.y.z」兩個純展示條目之間，結果 IMK 每次按鍵後都 `deactivateServer` 再新建控制器，
+  第二個字母蓋掉第一個、候選框閃；與條目是否隱藏、標題、tag 都無關，挪個位置或去掉 action 就好（對照構建逐個驗過）。
+- macOS：IMK 程序自己查；選單裡「有新版本 x.y.z…」一行與「關於」頁的狀態行，狀態變了才刷介面。
+- Windows：Server 查並寫 `update.json`（DLL 不聯網）；設定程式的「關於」頁讀這個檔案，「立即檢查」在設定程式自己的後臺執行緒裡查。
+  工作列「中 / 英」圖示的右鍵選單在查到新版本時多一項「有新版本，前往下載…」：Server 隨 `ModeSync` 下發 `IndicatorState.update_available`，
+  點了發 `IndicatorCommand::OpenDownload`，由 Server 開啟下載頁（DLL 可能在 UWP 沙箱裡起不了程序）。
 
-## 签名密钥
+## 簽名金鑰
 
-`tools/release-sign`：`keygen --out <文件>` 生成密钥对（私钥只写文件），`sign <文件>` 按环境变量里的私钥写 `.sig`，`verify <文件>` 按内置公钥验。
-公钥在 `crates/qingjian-update/src/index/signature.rs` 的 `PUBLIC_KEYS`，是个列表：换钥时新旧并列发一两个版本，等旧版本用户都升上来再去掉旧的。
-`sign` 会先核对私钥与内置公钥对得上，对不上当场失败；`release.yml` 的门禁在没配私钥时直接失败——签不了名的索引等于所有用户收不到更新。
+`tools/release-sign`：`keygen --out <檔案>` 生成金鑰對（私鑰只寫檔案），`sign <檔案>` 按環境變數裡的私鑰寫 `.sig`，`verify <檔案>` 按內建公鑰驗。
+公鑰在 `crates/qingjian-update/src/index/signature.rs` 的 `PUBLIC_KEYS`，是個列表：換鑰時新舊並列發一兩個版本，等舊版本使用者都升上來再去掉舊的。
+`sign` 會先核對私鑰與內建公鑰對得上，對不上當場失敗；`release.yml` 的門禁在沒配私鑰時直接失敗——籤不了名的索引等於所有使用者收不到更新。
 
-## 以后
+## 以後
 
-- 下载 + 校验 sha256（索引里已有）+ 调起安装程序（macOS 打开 pkg，Windows 静默跑安装包）。
-- 系统通知里的提示。
-- SignPath 要求「向非用户指定的系统发数据」的功能在安装时可关：安装向导里加一个「自动检查更新」勾选项。
+- 下載 + 校驗 sha256（索引裡已有）+ 調起安裝程式（macOS 開啟 pkg，Windows 靜默跑安裝包）。
+- 系統通知裡的提示。
+- SignPath 要求「向非使用者指定的系統發資料」的功能在安裝時可關：安裝嚮導里加一個「自動檢查更新」勾選項。

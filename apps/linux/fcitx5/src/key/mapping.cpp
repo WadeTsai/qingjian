@@ -1,4 +1,4 @@
-//! 字符交给 JSON 库转义；功能键转换成共享协议的 VK 值。
+//! 字元交給 JSON 庫轉義；功能鍵轉換成共享協議的 VK 值。
 #include "mapping.h"
 namespace qingjian {
 nlohmann::json mapKey(const fcitx::Key &key) {
@@ -30,7 +30,7 @@ nlohmann::json mapKey(const fcitx::Key &key) {
         if (key.sym() >= FcitxKey_KP_0 && key.sym() <= FcitxKey_KP_9) code = 0x60 + key.sym() - FcitxKey_KP_0;
         break;
     }
-    // Shift+数字的译词/删除快捷键按物理数字行识别，字符仍保留 !@# 等。
+    // Shift+數字的譯詞/刪除快捷鍵按物理數字行識別，字元仍保留 !@# 等。
     const std::string shiftedDigits = ")!@#$%^&*(";
     auto shifted = shiftedDigits.find(static_cast<char>(key.sym()));
     if (key.sym() < 128 && key.states().test(fcitx::KeyState::Shift) && shifted != std::string::npos) code = 0x30 + shifted;

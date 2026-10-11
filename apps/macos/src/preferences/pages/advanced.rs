@@ -1,4 +1,4 @@
-//! 「高级」页：打开配置文件、详细日志、学习开关、输入日志。
+//! 「進階」頁：開啟配置檔案、詳細日誌、學習開關、輸入日誌。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -13,13 +13,13 @@ use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
 pub struct AdvancedPage {
-    /// 详细日志（debug 级）。
+    /// 詳細日誌（debug 級）。
     verbose: Retained<NSButton>,
 
-    /// 学习输入习惯。
+    /// 學習輸入習慣。
     learning: Retained<NSButton>,
 
-    /// 记录输入日志。
+    /// 記錄輸入日誌。
     input_log: Retained<NSButton>,
 }
 

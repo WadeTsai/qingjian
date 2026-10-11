@@ -1,4 +1,4 @@
-//! 一条连接内的会话映射与独立协商状态。
+//! 一條連線內的會話對映與獨立協商狀態。
 use crate::protocol::DisplayIdentity;
 use qingjian_platform::protocol::SessionId;
 

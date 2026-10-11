@@ -1,4 +1,4 @@
-//! 同用户连接内复用独立会话，拒绝未协商输入，关闭通知不产生回包。
+//! 同用戶連線內複用獨立會話，拒絕未協商輸入，關閉通知不產生回包。
 use super::{NEXT_SESSION, Request, dispatch, dispatch_json, session::Session};
 use crate::protocol::{DisplayAcknowledged, DisplayIdentity, LINUX_UI_PROTOCOL, LinuxEvent};
 use qingjian_platform::protocol::{
@@ -93,7 +93,7 @@ pub(super) fn serve_connection(
             if ack.senses.len() > 128 {
                 break;
             }
-            // 已关闭或过期的展示回执是正常延迟通知，不破坏其他会话。
+            // 已關閉或過期的展示回執是正常延遲通知，不破壞其他會話。
             if let Some(session) = sessions.get(&ack.session)
                 && session.identity.as_ref().is_some_and(|i| {
                     i.context == ack.identity.context && i.generation == ack.identity.generation
@@ -117,7 +117,7 @@ pub(super) fn serve_connection(
                 break;
             };
             let Some(session) = sessions.get_mut(&local) else {
-                // 旧回调仍有同步调用者，明确返回忽略结果，不能遗留未读回包。
+                // 舊回撥仍有同步呼叫者，明確返回忽略結果，不能遺留未讀回包。
                 if write_message(&mut stream, &json!({"Ignored": {"session": local}})).is_err() {
                     break;
                 }

@@ -1,25 +1,25 @@
-//! 码表覆盖率：词库里的词有多少能查到码。
+//! 碼錶覆蓋率：詞庫裡的詞有多少能查到碼。
 //!
-//! 与导入统计同源：都用码表的 `AuxCodeLookup`，两段口径分别是「词频前 10,000」与「全库」。
+//! 與匯入統計同源：都用碼錶的 `AuxCodeLookup`，兩段口徑分別是「詞頻前 10,000」與「全庫」。
 
 use qingjian_core::Engine;
 
-/// 覆盖率只看词频最高的这么多条（缺省口径）。
+/// 覆蓋率只看詞頻最高的這麼多條（預設口徑）。
 pub const COVERAGE_TOP: usize = 10_000;
 
-/// 两段覆盖率的分子分母。
+/// 兩段覆蓋率的分子分母。
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Coverage {
-    /// 词频前 `COVERAGE_TOP` 条里能查到码的条数 / 总数。
+    /// 詞頻前 `COVERAGE_TOP` 條裡能查到碼的條數 / 總數。
     pub top_hits: usize,
     pub top_total: usize,
 
-    /// 全库能查到码的条数 / 总数。
+    /// 全庫能查到碼的條數 / 總數。
     pub all_hits: usize,
     pub all_total: usize,
 }
 
-/// 算一遍覆盖率；没装码表时返回 `None`（这条尺子只在 `--aux-table` 下才有意义）。
+/// 算一遍覆蓋率；沒裝碼錶時返回 `None`（這條尺子只在 `--aux-table` 下才有意義）。
 pub fn measure(engine: &Engine) -> Option<Coverage> {
     let tables = engine.aux_codes();
     if tables.is_empty() {

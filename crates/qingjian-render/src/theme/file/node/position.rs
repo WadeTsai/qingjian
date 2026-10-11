@@ -1,4 +1,4 @@
-//! 定位方式：缺省参与父框布局，`absolute` 不占位、按 `inset` 相对父框定位。
+//! 定位方式：預設參與父框佈局，`absolute` 不佔位、按 `inset` 相對父框定位。
 
 use serde::Deserialize;
 

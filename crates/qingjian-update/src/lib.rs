@@ -1,7 +1,7 @@
-//! 检查更新：读官网的版本索引 `releases.json`，验 ed25519 签名，按平台、CPU 与渠道挑出比当前新的版本。
+//! 檢查更新：讀官網的版本索引 `releases.json`，驗 ed25519 簽名，按平臺、CPU 與渠道挑出比當前新的版本。
 //!
-//! 只提示不安装。壳在自己的定时器里调 [`Checker::poll`]，到点了它起一个一次性线程去查，结果写进数据目录的 `update.json`；
-//! 菜单与设置页用 [`Checker::available`] 取要提示的版本。设计与发版侧的签名见 `docs/design/update.md`。
+//! 只提示不安裝。殼在自己的定時器裡調 [`Checker::poll`]，到點了它起一個一次性執行緒去查，結果寫進資料目錄的 `update.json`；
+//! 選單與設定頁用 [`Checker::available`] 取要提示的版本。設計與發版側的簽名見 `docs/design/update.md`。
 
 mod checker;
 mod error;
@@ -15,5 +15,5 @@ pub use index::{Asset, Index, PUBLIC_KEYS, Release, SCHEMA_VERSION, verify};
 pub use target::Target;
 pub use version::Version;
 
-/// 下载页，提示里点开的就是它。
+/// 下載頁，提示裡點開的就是它。
 pub const DOWNLOAD_URL: &str = "https://qingjian.app/download";

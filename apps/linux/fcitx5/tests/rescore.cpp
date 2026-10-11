@@ -1,4 +1,4 @@
-//! 组句期间轮询：Server 回新版本的换序帧就重画一次并回报，同版本不重画也不重复回报。
+//! 組句期間輪詢：Server 回新版本的換序幀就重畫一次並回報，同版本不重畫也不重複回報。
 #include "qingjian.h"
 #include "support/context.h"
 #include "support/mock.h"
@@ -18,10 +18,10 @@ int main() {
     assert(engine.process(&context, fcitx::Key(FcitxKey_n)));
     auto candidates = context.inputPanel().candidateList();
     assert(candidates && candidates->candidate(2).text().toString() == "你好");
-    // 事件循环只能 exec 一次：300 ms 时换序帧早到了（插件约每 80 ms Poll 一次，第一条就回换序帧），
-    // 断言后销毁上下文，再跑一拍让排队的 CloseSession 发出去。
+    // 事件迴圈只能 exec 一次：300 ms 時換序幀早到了（外掛約每 80 ms Poll 一次，第一條就回換序幀），
+    // 斷言後銷燬上下文，再跑一拍讓排隊的 CloseSession 發出去。
     int fired = 0;
-    // 精度给 1 ms：缺省的 250 ms 会让这一拍晚到，300 ms 内的 Poll 次数就数不准。
+    // 精度給 1 ms：預設的 250 ms 會讓這一拍晚到，300 ms 內的 Poll 次數就數不準。
     auto timer = instance.eventLoop().addTimeEvent(CLOCK_MONOTONIC, fcitx::now(CLOCK_MONOTONIC) + 300000, 1000,
         [&](fcitx::EventSourceTime *source, uint64_t) {
             if (++fired == 1) {
@@ -44,6 +44,6 @@ int main() {
         if (message.contains("DisplayAcknowledged")) ++acknowledged;
     }
     assert(polls >= 2);
-    // 按键那帧回报一次、换序那帧回报一次；同版本的 Poll 不重画也不重复回报。
+    // 按鍵那幀回報一次、換序那幀回報一次；同版本的 Poll 不重畫也不重複回報。
     assert(acknowledged == 2);
 }

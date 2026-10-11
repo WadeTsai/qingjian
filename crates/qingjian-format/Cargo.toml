@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-format"
-description = ".qj 数据容器：mmap 读取、写入、零拷贝表、文本池与哈希索引"
+description = ".qj 資料容器：mmap 讀取、寫入、零複製表、文本池與雜湊索引"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

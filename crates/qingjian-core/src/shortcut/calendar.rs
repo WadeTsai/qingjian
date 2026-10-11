@@ -1,4 +1,4 @@
-//! 日期、时间、星期的几种常用写法。
+//! 日期、時間、星期的幾種常用寫法。
 
 use jiff::Zoned;
 use jiff::civil::Weekday;
@@ -13,7 +13,7 @@ pub fn date_forms(now: &Zoned) -> Vec<String> {
     ]
 }
 
-/// `sj`：`19:06`、`19:06:23`、`19点06分`。
+/// `sj`：`19:06`、`19:06:23`、`19點06分`。
 pub fn time_forms(now: &Zoned) -> Vec<String> {
     let (hour, minute, second) = (now.hour(), now.minute(), now.second());
     vec![
@@ -23,7 +23,7 @@ pub fn time_forms(now: &Zoned) -> Vec<String> {
     ]
 }
 
-/// `xq`：`星期四`、`周四`。
+/// `xq`：`星期四`、`週四`。
 pub fn weekday_forms(now: &Zoned) -> Vec<String> {
     let name = match now.weekday() {
         Weekday::Monday => "一",

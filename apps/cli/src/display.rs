@@ -1,16 +1,16 @@
-//! 候选与耗时的终端排版。
+//! 候選與耗時的終端排版。
 
 use std::time::{Duration, Instant};
 
 use qingjian_core::{Candidate, Engine, Query};
 
-/// 等联想结果的轮询间隔与上限。CLI 是同步工具，等一等无妨；输入法里是定时器轮询、不等。
+/// 等聯想結果的輪詢間隔與上限。CLI 是同步工具，等一等無妨；輸入法裡是定時器輪詢、不等。
 const PREDICTION_POLL: Duration = Duration::from_millis(20);
 const PREDICTION_WAIT: Duration = Duration::from_secs(8);
 
-/// 查询并打印一段拼音的候选、译文和耗时。返回查询结果供后续上屏用。
+/// 查詢並列印一段拼音的候選、譯文和耗時。返回查詢結果供後續上屏用。
 ///
-/// 输入里的 `|` 表示光标位置（`ni|hao`），用来验证光标停在中间时的候选。
+/// 輸入裡的 `|` 表示游標位置（`ni|hao`），用來驗證游標停在中間時的候選。
 pub fn show(engine: &mut Engine, input: &str, limit: usize) -> Option<Query> {
     let cursor = input.find('|');
     feed(engine, &input.replace('|', ""));
@@ -21,7 +21,7 @@ pub fn show(engine: &mut Engine, input: &str, limit: usize) -> Option<Query> {
         }
     }
     let mut query = match engine.query() {
-        // 异步重打分：等后台的分回来再查一次，输出的就是重排后的
+        // 非同步重打分：等後臺的分回來再查一次，輸出的就是重排後的
         Ok(query) if crate::rescoring::settle(engine) => engine.query().unwrap_or(query),
         Ok(query) => query,
         Err(error) => {
@@ -84,8 +84,8 @@ pub fn show(engine: &mut Engine, input: &str, limit: usize) -> Option<Query> {
     Some(query)
 }
 
-/// 与壳一样逐个喂键：配的触发键进辅码态、之后的 `a-z` 进码段，其余进拼音缓冲区。
-/// 纯拼音输入下与 [`Engine::set_input`] 等价（触发键要求作用域能完整切分，字母永远不会触发）。
+/// 與殼一樣逐個喂鍵：配的觸發鍵進輔碼態、之後的 `a-z` 進碼段，其餘進拼音緩衝區。
+/// 純拼音輸入下與 [`Engine::set_input`] 等價（觸發鍵要求作用域能完整切分，字母永遠不會觸發）。
 pub fn feed(engine: &mut Engine, keys: &str) {
     engine.clear();
     for key in keys.chars() {
@@ -102,8 +102,8 @@ pub fn feed(engine: &mut Engine, keys: &str) {
     }
 }
 
-/// 逐键模式：`kaifa` 当作 k、ka、kai…… 五次按键，每个前缀都查一次并标注译文，
-/// 一行一键打印各阶段耗时和首候选。这是输入法每键的真实工作量（联想不算，它在后台线程）。
+/// 逐鍵模式：`kaifa` 當作 k、ka、kai…… 五次按鍵，每個字首都查一次並標註譯文，
+/// 一行一鍵列印各階段耗時和首候選。這是輸入法每鍵的真實工作量（聯想不算，它在後臺執行緒）。
 pub fn show_typing(engine: &mut Engine, input: &str) {
     println!(
         "  {:<16} {:>9} {:>9} {:>9} {:>9} {:>9}  首候选",
@@ -157,7 +157,7 @@ pub fn show_typing(engine: &mut Engine, input: &str) {
     engine.set_input("");
 }
 
-/// 发一次联想并等结果打印出来。没接 Predictor 时什么都不做。
+/// 發一次聯想並等結果打印出來。沒接 Predictor 時什麼都不做。
 pub fn show_prediction(engine: &mut Engine, candidates: &[Candidate]) {
     let Some(_sequence) = engine.request_prediction(None, candidates) else {
         return;
@@ -186,7 +186,7 @@ pub fn show_prediction(engine: &mut Engine, candidates: &[Candidate]) {
     println!("  ☁ （联想超时）");
 }
 
-/// 候选词左对齐，右侧是「词性 译文」，多条释义用 · 分隔。
+/// 候選詞左對齊，右側是「詞性 譯文」，多條釋義用 · 分隔。
 fn format_candidate(candidate: &Candidate, width: usize) -> String {
     let padding = " ".repeat(width.saturating_sub(display_width(&candidate.text)) + 2);
     let reading = candidate
@@ -201,7 +201,7 @@ fn format_candidate(candidate: &Candidate, width: usize) -> String {
             t.senses()
                 .iter()
                 .map(|s| {
-                    // 日文译词按汉字段注平假名：開発(かいはつ)する
+                    // 日文譯詞按漢欄位注平假名：開発(かいはつ)する
                     let text: String = s
                         .furigana()
                         .iter()
@@ -219,7 +219,7 @@ fn format_candidate(candidate: &Candidate, width: usize) -> String {
                 .join(" · ")
         })
         .unwrap_or_default();
-    // 辅码态命中的那条码跟在词后面，人工核对 `kaifa;kf` 时一眼能看到筛的是哪条
+    // 輔碼態命中的那條碼跟在詞後面，人工核對 `kaifa;kf` 時一眼能看到篩的是哪條
     let aux = candidate
         .aux_code
         .as_ref()
@@ -243,7 +243,7 @@ fn format_candidate(candidate: &Candidate, width: usize) -> String {
     .to_owned()
 }
 
-/// 终端显示宽度：CJK 算两格。够 CLI 对齐用，不引入 unicode-width。
+/// 終端顯示寬度：CJK 算兩格。夠 CLI 對齊用，不引入 unicode-width。
 fn display_width(text: &str) -> usize {
     text.chars()
         .map(|c| if c as u32 >= 0x2E80 { 2 } else { 1 })

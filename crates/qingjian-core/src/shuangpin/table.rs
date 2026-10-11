@@ -1,32 +1,32 @@
-/// 一套双拼方案的键位表。声母键里只列与字母本身不同的翘舌声母，
-/// 其余辅音键（含 `y` `w`）就是自己；非声母键不在此列。
+/// 一套雙拼方案的鍵位表。聲母鍵裡只列與字母本身不同的翹舌聲母，
+/// 其餘子音鍵（含 `y` `w`）就是自己；非聲母鍵不在此列。
 pub struct Table {
-    /// 翘舌声母映射（键 → 声母）。
+    /// 翹舌聲母對映（鍵 → 聲母）。
     pub digraph_initials: &'static [(char, &'static str)],
 
-    /// 韵母键 → 可能的韵母，按优先级排（同一键配同一声母能拼出两个合法音节时取前面的，如 `lve` 先于 `lue`）。
+    /// 韻母鍵 → 可能的韻母，按優先順序排（同一鍵配同一聲母能拼出兩個合法音節時取前面的，如 `lve` 先於 `lue`）。
     pub finals: &'static [(char, &'static [&'static str])],
 
-    /// 零声母音节 → 两键写法（可以有多种，第一种是主写法）。
+    /// 零聲母音節 → 兩鍵寫法（可以有多種，第一種是主寫法）。
     pub zero_initials: &'static [(&'static str, &'static [&'static str])],
 
-    /// 是否用到 `;` 键（微软 / 搜狗的 ing）。
+    /// 是否用到 `;` 鍵（微軟 / 搜狗的 ing）。
     pub semicolon: bool,
 }
 
-/// 三个占键的翘舌声母：小鹤、自然码、微软、搜狗一致。
+/// 三個佔鍵的翹舌聲母：小鶴、自然碼、微軟、搜狗一致。
 pub const DIGRAPH_INITIALS: [(char, &str); 3] = [('v', "zh"), ('i', "ch"), ('u', "sh")];
 
-/// 小浪双拼的翘舌声母：e 为 zh，i 为 ch，v 为 sh。
+/// 小浪雙拼的翹舌聲母：e 為 zh，i 為 ch，v 為 sh。
 pub const XIAOLANG_DIGRAPH_INITIALS: [(char, &str); 3] = [('e', "zh"), ('i', "ch"), ('v', "sh")];
 
-/// 智能 ABC 的翘舌声母：a 为 zh，e 为 ch，v 为 sh。
+/// 智慧 ABC 的翹舌聲母：a 為 zh，e 為 ch，v 為 sh。
 pub const ABC_DIGRAPH_INITIALS: [(char, &str); 3] = [('a', "zh"), ('e', "ch"), ('v', "sh")];
 
-/// 首道双拼的翘舌声母：v 为 zh，i 为 ch，e 为 sh。
+/// 首道雙拼的翹舌聲母：v 為 zh，i 為 ch，e 為 sh。
 pub const SHOUDAO_DIGRAPH_INITIALS: [(char, &str); 3] = [('v', "zh"), ('i', "ch"), ('e', "sh")];
 
-/// 小鹤双拼。
+/// 小鶴雙拼。
 pub const XIAOHE: Table = Table {
     digraph_initials: &DIGRAPH_INITIALS,
     finals: &[
@@ -74,7 +74,7 @@ pub const XIAOHE: Table = Table {
     semicolon: false,
 };
 
-/// 自然码。
+/// 自然碼。
 pub const ZIRANMA: Table = Table {
     digraph_initials: &DIGRAPH_INITIALS,
     finals: &[
@@ -122,7 +122,7 @@ pub const ZIRANMA: Table = Table {
     semicolon: false,
 };
 
-/// 微软 / 搜狗共用的零声母写法：`o` 加韵母键，`a` / `e` 开头的也接受双写元音的写法。
+/// 微軟 / 搜狗共用的零聲母寫法：`o` 加韻母鍵，`a` / `e` 開頭的也接受雙寫母音的寫法。
 const O_PREFIX_ZERO_INITIALS: &[(&str, &[&str])] = &[
     ("a", &["oa", "aa"]),
     ("ai", &["ol", "al"]),
@@ -138,7 +138,7 @@ const O_PREFIX_ZERO_INITIALS: &[(&str, &[&str])] = &[
     ("ou", &["ob", "ou"]),
 ];
 
-/// 微软双拼：ü 在 `y`，üe 在 `t`（`v` 也认），ing 在 `;`。
+/// 微軟雙拼：ü 在 `y`，üe 在 `t`（`v` 也認），ing 在 `;`。
 pub const MICROSOFT: Table = Table {
     digraph_initials: &DIGRAPH_INITIALS,
     finals: &[
@@ -174,7 +174,7 @@ pub const MICROSOFT: Table = Table {
     semicolon: true,
 };
 
-/// 搜狗双拼：与微软只差 `v` 键不兼作 üe。
+/// 搜狗雙拼：與微軟只差 `v` 鍵不兼作 üe。
 pub const SOGOU: Table = Table {
     digraph_initials: &DIGRAPH_INITIALS,
     finals: &[
@@ -210,7 +210,7 @@ pub const SOGOU: Table = Table {
     semicolon: true,
 };
 
-/// 智能 ABC 的零声母写法：`o` 加韵母键。不像微软 / 搜狗还认双写元音——`aa` / `ee` 在 ABC 里是 zha / che。
+/// 智慧 ABC 的零聲母寫法：`o` 加韻母鍵。不像微軟 / 搜狗還認雙寫母音——`aa` / `ee` 在 ABC 裡是 zha / che。
 const ABC_ZERO_INITIALS: &[(&str, &[&str])] = &[
     ("a", &["oa"]),
     ("ai", &["ol"]),
@@ -226,7 +226,7 @@ const ABC_ZERO_INITIALS: &[(&str, &[&str])] = &[
     ("ou", &["ob"]),
 ];
 
-/// 智能 ABC：翘舌声母在 `a` / `e` / `v`（zh / ch / sh），零声母一律 `o` 前缀。
+/// 智慧 ABC：翹舌聲母在 `a` / `e` / `v`（zh / ch / sh），零聲母一律 `o` 字首。
 pub const ABC: Table = Table {
     digraph_initials: &ABC_DIGRAPH_INITIALS,
     finals: &[
@@ -261,7 +261,7 @@ pub const ABC: Table = Table {
     semicolon: false,
 };
 
-/// 小浪双拼。
+/// 小浪雙拼。
 pub const XIAOLANG: Table = Table {
     digraph_initials: &XIAOLANG_DIGRAPH_INITIALS,
     finals: &[
@@ -308,8 +308,8 @@ pub const XIAOLANG: Table = Table {
     semicolon: false,
 };
 
-/// 首道双拼的零声母写法：a / o 开头的双写首字母或照全拼敲（ang 是 `ay`），`e` 键让给了 sh，
-/// 所以 e / ei / eng 改用 `u` 引导；`en` `er` 仍照全拼敲（sh 配不出 ian / ie，不撞）。
+/// 首道雙拼的零聲母寫法：a / o 開頭的雙寫首字母或照全拼敲（ang 是 `ay`），`e` 鍵讓給了 sh，
+/// 所以 e / ei / eng 改用 `u` 引導；`en` `er` 仍照全拼敲（sh 配不出 ian / ie，不撞）。
 const SHOUDAO_ZERO_INITIALS: &[(&str, &[&str])] = &[
     ("a", &["aa"]),
     ("ai", &["ai"]),
@@ -325,8 +325,8 @@ const SHOUDAO_ZERO_INITIALS: &[(&str, &[&str])] = &[
     ("ou", &["ou"]),
 ];
 
-/// 首道双拼：键位按作者公布的键位图（shoudaoshuangpin/shoudaoshouyouplus 的 `shoudao_layout.jpg`）。
-/// ue（jue / que / xue / yue）在 `l`，üe（lve / nve）单独在 `b`。
+/// 首道雙拼：鍵位按作者公佈的鍵點陣圖（shoudaoshuangpin/shoudaoshouyouplus 的 `shoudao_layout.jpg`）。
+/// ue（jue / que / xue / yue）在 `l`，üe（lve / nve）單獨在 `b`。
 pub const SHOUDAO: Table = Table {
     digraph_initials: &SHOUDAO_DIGRAPH_INITIALS,
     finals: &[

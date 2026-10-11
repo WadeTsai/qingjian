@@ -1,7 +1,7 @@
-//! JSONC：主题文件可以写 `//` 与 `/* */` 注释、对象与数组末尾多一个逗号（同 VS Code 的 `settings.json`）。
-//! 解析前把注释与多余的逗号换成空格（换行照留），再交给 serde_json；位置不变，报错的行号、列号仍对得上原文件。
+//! JSONC：主題檔案可以寫 `//` 與 `/* */` 註釋、物件與陣列末尾多一個逗號（同 VS Code 的 `settings.json`）。
+//! 解析前把註釋與多餘的逗號換成空格（換行照留），再交給 serde_json；位置不變，報錯的行號、列號仍對得上原檔案。
 
-/// 去掉注释与尾逗号。字符串里的 `//`、`,` 原样保留；没收尾的块注释吞到文件末尾，交给 JSON 解析报错。
+/// 去掉註釋與尾逗號。字串裡的 `//`、`,` 原樣保留；沒收尾的塊註釋吞到檔案末尾，交給 JSON 解析報錯。
 pub(super) fn strip(source: &str) -> String {
     let bytes = source.as_bytes();
     let mut out = bytes.to_vec();
@@ -23,11 +23,11 @@ pub(super) fn strip(source: &str) -> String {
             _ => i += 1,
         }
     }
-    // 换掉的是整个注释（字符边界上起止）或单个逗号，结果仍是合法 UTF-8
+    // 換掉的是整個註釋（字元邊界上起止）或單個逗號，結果仍是合法 UTF-8
     String::from_utf8(out).unwrap_or_else(|_| source.to_owned())
 }
 
-/// `start` 是开引号，返回收引号之后的位置。
+/// `start` 是開引號，返回收引號之後的位置。
 fn skip_string(bytes: &[u8], start: usize) -> usize {
     let mut i = start + 1;
     while i < bytes.len() {
@@ -40,7 +40,7 @@ fn skip_string(bytes: &[u8], start: usize) -> usize {
     bytes.len()
 }
 
-/// `start` 是注释的 `/`，返回注释之后的位置（行注释停在换行前）。
+/// `start` 是註釋的 `/`，返回註釋之後的位置（行註釋停在換行前）。
 fn comment_end(bytes: &[u8], start: usize) -> usize {
     if bytes[start + 1] == b'/' {
         bytes[start..]
@@ -55,7 +55,7 @@ fn comment_end(bytes: &[u8], start: usize) -> usize {
     }
 }
 
-/// 从 `i` 起跳过空白与注释后的第一个字节。
+/// 從 `i` 起跳過空白與註釋後的第一個位元組。
 fn next_significant(bytes: &[u8], mut i: usize) -> Option<u8> {
     while i < bytes.len() {
         match bytes[i] {
@@ -67,7 +67,7 @@ fn next_significant(bytes: &[u8], mut i: usize) -> Option<u8> {
     None
 }
 
-/// 换成空格，换行照留；多字节字符的每个字节都换，结果仍是合法 UTF-8，字节位置不变。
+/// 換成空格，換行照留；多位元組字元的每個位元組都換，結果仍是合法 UTF-8，位元組位置不變。
 fn blank(bytes: &mut [u8]) {
     for byte in bytes {
         if *byte != b'\n' && *byte != b'\r' {

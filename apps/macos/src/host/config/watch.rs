@@ -1,16 +1,16 @@
-//! 配置文件监视：输入法激活期间每秒看一眼 `config.toml` 的修改时间，变了就热加载。
-//! 一次 `stat` 的开销可以忽略，不值得为此引 FSEvents。同一个定时器顺带定期把学习数据落盘（`Host::tick`）。
+//! 配置檔案監視：輸入法啟用期間每秒看一眼 `config.toml` 的修改時間，變了就熱載入。
+//! 一次 `stat` 的開銷可以忽略，不值得為此引 FSEvents。同一個定時器順帶定期把學習資料落盤（`Host::tick`）。
 
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2::{MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
 use objc2_foundation::{NSObject, NSObjectProtocol, NSTimer};
 
-/// 检查间隔（秒）。
+/// 檢查間隔（秒）。
 const POLL_INTERVAL: f64 = 1.0;
 
 pub struct ConfigWatch {
-    /// 定时器；未激活时为 `None`。
+    /// 定時器；未啟用時為 `None`。
     timer: Option<Retained<NSTimer>>,
 
     mtm: MainThreadMarker,
@@ -46,7 +46,7 @@ impl ConfigWatch {
 }
 
 define_class!(
-    // SAFETY: NSObject 没有子类化要求；没有实现 Drop。
+    // SAFETY: NSObject 沒有子類化要求；沒有實現 Drop。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = ()]
@@ -55,7 +55,7 @@ define_class!(
     impl ConfigWatchTick {
         #[unsafe(method(tick:))]
         fn tick(&self, _timer: Option<&AnyObject>) {
-            // 定时器回调也是 ObjC 运行时直接调的，panic 同样不能穿出去
+            // 定時器回撥也是 ObjC 執行時直接調的，panic 同樣不能穿出去
             if crate::imk::catch_panic("定时器", || crate::host::with(|h| h.tick())).is_none() {
                 crate::imk::recover_from_panic(None);
             }

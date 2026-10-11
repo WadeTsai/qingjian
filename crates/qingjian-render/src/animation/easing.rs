@@ -1,4 +1,4 @@
-//! 缓动曲线：CSS 的几个命名曲线与 `cubic-bezier`。主题里写名字或 `[x1, y1, x2, y2]`。
+//! 緩動曲線：CSS 的幾個命名曲線與 `cubic-bezier`。主題裡寫名字或 `[x1, y1, x2, y2]`。
 
 use serde::{Deserialize, Deserializer};
 
@@ -15,12 +15,12 @@ pub(crate) enum Easing {
 
     EaseInOut,
 
-    /// 三次贝塞尔的两个控制点 `(x1, y1, x2, y2)`，端点固定在 (0, 0) 与 (1, 1)。
+    /// 三次貝塞爾的兩個控制點 `(x1, y1, x2, y2)`，端點固定在 (0, 0) 與 (1, 1)。
     Bezier([f32; 4]),
 }
 
 impl Easing {
-    /// 时间进度（0–1）→ 属性进度。
+    /// 時間進度（0–1）→ 屬性進度。
     pub(crate) fn apply(self, t: f32) -> f32 {
         let t = t.clamp(0.0, 1.0);
         let points = match self {
@@ -35,7 +35,7 @@ impl Easing {
     }
 }
 
-/// 解 `x(s) = t` 得参数 `s`（牛顿迭代，不收敛时二分），返回 `y(s)`。
+/// 解 `x(s) = t` 得引數 `s`（牛頓迭代，不收斂時二分），返回 `y(s)`。
 fn bezier([x1, y1, x2, y2]: [f32; 4], t: f32) -> f32 {
     let curve = |a: f32, b: f32, s: f32| {
         let u = 1.0 - s;
@@ -117,7 +117,7 @@ mod tests {
             let samples: Vec<f32> = (0..=20).map(|i| easing.apply(i as f32 / 20.0)).collect();
             assert!(samples.windows(2).all(|pair| pair[1] >= pair[0] - 1e-4));
         }
-        // ease-out 前快后慢
+        // ease-out 前快後慢
         assert!(Easing::EaseOut.apply(0.5) > 0.5);
         assert!(Easing::EaseIn.apply(0.5) < 0.5);
     }

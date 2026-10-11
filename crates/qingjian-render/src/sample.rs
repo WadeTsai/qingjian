@@ -1,9 +1,9 @@
-//! 样例帧：主题预览图（[`crate::preview`]）、离线预览（`examples/preview.rs`）与快照测试共用。
-//! 与真机上敲同样拼音看到的候选窗对照，内容要和引擎当时给的一致（人工从截图抄）。
+//! 樣例幀：主題預覽圖（[`crate::preview`]）、離線預覽（`examples/preview.rs`）與快照測試共用。
+//! 與真機上敲同樣拼音看到的候選窗對照，內容要和引擎當時給的一致（人工從截圖抄）。
 
 use crate::{Frame, Mode, Preedit, Row, Tone};
 
-/// 真机敲「nihao」看到的第一页（2026-09-13 从截图抄），拼音行带光标、译文、生词橙色、页码。
+/// 真機敲「nihao」看到的第一頁（2026-09-13 從截圖抄），拼音行帶游標、譯文、生詞橙色、頁碼。
 pub fn nihao() -> Frame {
     Frame {
         preedit: Some(Preedit::plain("ni'hao", 6)),
@@ -60,14 +60,14 @@ pub fn nihao() -> Frame {
     }
 }
 
-/// 横排真机截图那一次云端整句到了：拼音行右侧带云朵的整句补全。
+/// 橫排真機截圖那一次雲端整句到了：拼音行右側帶雲朵的整句補全。
 pub fn nihao_with_sentence() -> Frame {
     let mut frame = nihao();
     frame.sentence = Some("你好，很高兴认识你！".to_owned());
     frame
 }
 
-/// 一行候选：序号从 0 数，`annotation` 是译文各段与色调。
+/// 一行候選：序號從 0 數，`annotation` 是譯文各段與色調。
 pub fn annotated(index: usize, text: &str, annotation: &[(&str, Tone)], cloud: bool) -> Row {
     Row {
         index: (index + 1).to_string(),

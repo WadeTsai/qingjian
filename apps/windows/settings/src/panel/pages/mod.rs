@@ -1,4 +1,4 @@
-//! 各分节页：每个文件一个 `view(settings, context)`，页内常量（下拉选项等）与它同放。
+//! 各分節頁：每個檔案一個 `view(settings, context)`，頁內常量（下拉選項等）與它同放。
 
 pub(super) mod about;
 pub(super) mod advanced;

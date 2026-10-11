@@ -1,25 +1,25 @@
 use objc2_foundation::NSInteger;
 use qingjian_core::FuzzyRules;
 
-/// 模糊音条目的 tag 起点，后面加规则在 [`FuzzyRules::NAMES`] 里的下标。
+/// 模糊音條目的 tag 起點，後面加規則在 [`FuzzyRules::NAMES`] 裡的下標。
 const FUZZY_TAG_BASE: NSInteger = 100;
 
-/// 菜单能触发的动作。编码进 NSMenuItem 的 tag，派发时再解出来。
+/// 選單能觸發的動作。編碼進 NSMenuItem 的 tag，派發時再解出來。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuAction {
-    /// 开关云联想（写 `[predict] enabled`）。
+    /// 開關雲聯想（寫 `[predict] enabled`）。
     ToggleCloud,
 
-    /// 开关一条模糊音规则，值是 [`FuzzyRules::NAMES`] 的下标。
+    /// 開關一條模糊音規則，值是 [`FuzzyRules::NAMES`] 的下標。
     ToggleFuzzy(usize),
 
-    /// 打开偏好设置窗口。
+    /// 開啟偏好設定視窗。
     OpenPreferences,
 
-    /// 在访达里打开日志目录。
+    /// 在訪達裡開啟日誌目錄。
     OpenLogs,
 
-    /// 打开下载页（菜单里「有新版本」那一行）。
+    /// 開啟下載頁（選單裡「有新版本」那一行）。
     OpenDownload,
 }
 

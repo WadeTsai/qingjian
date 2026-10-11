@@ -1,4 +1,4 @@
-//! 按消息类型分派：会话开关、按键、轮询、失焦上屏、选区 / 光标矩形 / 中英模式的通知。
+//! 按訊息型別分派：會話開關、按鍵、輪詢、失焦上屏、選區 / 游標矩形 / 中英模式的通知。
 
 use qingjian_platform::protocol::{
     ClientMessage, Frame, KeyEvent, KeyOutcome, PROTOCOL_VERSION, SESSION_OPENED_SINCE,
@@ -27,7 +27,7 @@ impl Router {
                         "DLL 与 Server 的协议版本不同（应用还没重启、用着旧 DLL？），照常服务"
                     );
                 }
-                // 同一会话重开（DLL 断线重连）：从干净状态起。
+                // 同一會話重開（DLL 斷線重連）：從乾淨狀態起。
                 if self.focused == Some(session) {
                     self.reset_composition();
                     self.focused = None;
@@ -38,12 +38,13 @@ impl Router {
                         app,
                         private: false,
                         protocol,
+                        traditional: false,
                     },
                 );
-                // 按键行为设置回一次，让 DLL 不必自己读配置文件。**只回给会读这条回包的 DLL**：
-                // 更老的 DLL 的 `open` 是只写不读，多回一条会被它当成下一次 `Poll` 的应答而报错，
-                // 那条连接就废了（老 DLL 在没重启的应用里还会活很久）。它们从 `ModeSync` 那一拍
-                // 也能拿到同一份（新字段它直接忽略），只是慢一拍。
+                // 按鍵行為設定回一次，讓 DLL 不必自己讀配置檔案。**只回給會讀這條回包的 DLL**：
+                // 更老的 DLL 的 `open` 是隻寫不讀，多回一條會被它當成下一次 `Poll` 的應答而報錯，
+                // 那條連線就廢了（老 DLL 在沒重啟的應用裡還會活很久）。它們從 `ModeSync` 那一拍
+                // 也能拿到同一份（新欄位它直接忽略），只是慢一拍。
                 (protocol >= SESSION_OPENED_SINCE).then(|| ServerMessage::SessionOpened {
                     session,
                     input: self.input_settings(session),
@@ -77,7 +78,7 @@ impl Router {
                 None
             }
             ClientMessage::HideCandidates { session } => {
-                // 组句在 DLL 侧结束（应用终止组句 / 翻译评审失焦）：只收窗口；缓冲留给下一键的 Commit 清。
+                // 組句在 DLL 側結束（應用終止組句 / 翻譯評審失焦）：只收視窗；緩衝留給下一鍵的 Commit 清。
                 if self.focused == Some(session) {
                     self.end_translation();
                     self.hide_candidate_window();
@@ -101,6 +102,14 @@ impl Router {
             ClientMessage::ImeSwitched { session } => {
                 tracing::debug!(?session, "切成了别的输入法");
                 self.handle_ime_switched();
+                None
+            }
+            ClientMessage::Profile {
+                session,
+                traditional,
+            } => {
+                tracing::debug!(?session, traditional, "语言 profile");
+                self.set_profile(session, traditional);
                 None
             }
             ClientMessage::Indicator { session, command } => {
@@ -151,13 +160,13 @@ impl Router {
             Effect::Navigated => (None, KeyOutcome::Consumed),
             Effect::Passthrough => (None, KeyOutcome::Passthrough),
         };
-        // 点击上屏的字还没等到轮询就来了键：接在这次结果前面，免得丢
+        // 點選上屏的字還沒等到輪詢就來了鍵：接在這次結果前面，免得丟
         let commit = match (self.take_clicked(session), commit) {
             (Some(clicked), commit) => Some(clicked + commit.as_deref().unwrap_or_default()),
             (None, commit) => commit,
         };
         self.poll_prediction();
-        // 自绘窗吃未降级的帧；发给 DLL 的那份按老协议降级（见 composed 的 current_frame）
+        // 自繪窗吃未降級的幀；發給 DLL 的那份按老協議降級（見 composed 的 current_frame）
         let shown = self.self_drawn_frame();
         self.reconcile_candidates(&shown);
         ServerMessage::KeyResult {
@@ -168,7 +177,7 @@ impl Router {
         }
     }
 
-    /// 云联想轮询：聚焦会话拉一次异步结果回最新一帧，否则回空帧。释义兜底与本地整句模型也借这个节拍收。
+    /// 雲聯想輪詢：聚焦會話拉一次非同步結果回最新一幀，否則回空幀。釋義兜底與本地整句模型也借這個節拍收。
     fn handle_poll(&mut self, session: SessionId) -> ServerMessage {
         self.tick();
         let learned = self.engine.poll_glosses();

@@ -1,4 +1,4 @@
-//! 云联想 / 问字 / 翻译请求。
+//! 雲聯想 / 問字 / 翻譯請求。
 
 use super::*;
 
@@ -25,7 +25,7 @@ fn question_mode_asks_the_cloud_and_shows_answers_unvalidated() {
         sentence: true,
     };
     let mut engine = self::engine().with_predictor(Box::new(predictor));
-    // 缺省 `?` 不是入口：开了开关才进问字
+    // 預設 `?` 不是入口：開了開關才進問字
     assert!(!engine.takes_question_mark());
     engine.set_mode_keys(ModeKeys {
         question_mark: true,
@@ -51,7 +51,7 @@ fn question_mode_asks_the_cloud_and_shows_answers_unvalidated() {
     assert_eq!(request.letters, "mumumu");
     assert!(!request.want_sentence);
 
-    // 答案的拼音与敲的字母对不上，但问字模式不校验；复述问题的「答案」剔掉
+    // 答案的拼音與敲的字母對不上，但問字模式不校驗；複述問題的「答案」剔掉
     let prediction = engine.poll_prediction().unwrap();
     assert_eq!(prediction.words.len(), 1);
     assert_eq!(prediction.words[0].text, "森");
@@ -92,11 +92,11 @@ fn prediction_request_trims_context_and_only_fires_while_composing() {
     assert_eq!(request.max_items, 2);
     assert!(request.want_sentence);
 
-    // 拼音太短不发
+    // 拼音太短不發
     engine.set_input("k");
     assert_eq!(engine.request_prediction(None, &[]), None);
     engine.set_input("kaifa");
-    // 没有应用上下文也照发：词候选和整句都只靠拼音；本地历史不进请求
+    // 沒有應用上下文也照發：詞候選和整句都只靠拼音；本地歷史不進請求
     let kaifa = query.candidates.items[0].clone();
     engine.commit(&kaifa);
     engine.punctuate('.');
@@ -105,12 +105,12 @@ fn prediction_request_trims_context_and_only_fires_while_composing() {
     let request = submitted.borrow()[1].clone();
     assert!(request.before.is_empty());
     assert!(request.want_sentence);
-    // 上屏之后不联想
+    // 上屏之後不聯想
     engine.clear();
     assert_eq!(engine.request_prediction(None, &[]), None);
 }
 
-/// 简拼（半数以上音节是缩写）只问整句补全：模型按声母凑出来的词大多是生造词（复合语气、符号映射）。
+/// 簡拼（半數以上音節是縮寫）只問整句補全：模型按聲母湊出來的詞大多是生造詞（複合語氣、符號對映）。
 #[test]
 fn abbreviated_input_only_asks_for_the_sentence() {
     let submitted = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
@@ -130,7 +130,7 @@ fn abbreviated_input_only_asks_for_the_sentence() {
     assert_eq!(request.max_items, 0, "简拼不该要词");
     assert!(request.want_sentence, "整句补全照常要");
 
-    // 完整拼音照常要词
+    // 完整拼音照常要詞
     engine.set_input("zhongshi");
     let query = engine.query().unwrap();
     assert_eq!(
@@ -149,19 +149,19 @@ fn cursor_in_the_middle_scopes_candidates_and_prediction_to_the_left_part() {
     for _ in 0..3 {
         engine.move_cursor_left();
     }
-    // kaifa|zhe：候选只看 kaifa（与单独打 kaifa 一样），zhe 只画出来
+    // kaifa|zhe：候選只看 kaifa（與單獨打 kaifa 一樣），zhe 只畫出來
     let query = engine.query().unwrap();
     assert_eq!(query.candidates.items[0].text, "开发");
     assert_eq!(query.marked_text(), "kai'fa'zhe");
     assert_eq!(query.marked_cursor(), 6);
 
-    // 上屏 开发 后剩 zhe，光标落到末尾，接着打就是往后加
+    // 上屏 開發 後剩 zhe，游標落到末尾，接著打就是往後加
     let kaifa = query.candidates.items[0].clone();
     assert_eq!(engine.commit(&kaifa), "开发");
     assert_eq!(engine.composition().text(), "zhe");
     assert_eq!(engine.composition().cursor(), 3);
 
-    // 光标在开头时按整段算
+    // 游標在開頭時按整段算
     engine.set_input("kaifa");
     engine.move_cursor_home();
     assert_eq!(engine.query().unwrap().candidates.items[0].text, "开发");
@@ -215,11 +215,11 @@ fn stale_predictions_are_dropped_and_accept_clears_composition() {
     let prediction = engine.poll_prediction().unwrap();
     assert_eq!(prediction.sequence, 2);
     assert_eq!(prediction.sentence.as_deref(), Some("开发输入法"));
-    // 开花 的拼音对不上 kaifa，被过滤
+    // 開花 的拼音對不上 kaifa，被過濾
     assert_eq!(prediction.words, [cloud("凯发", &["kai", "fa"])]);
     assert_eq!(engine.poll_prediction(), None);
 
-    // 取消后连当前序号的结果也不要
+    // 取消後連當前序號的結果也不要
     engine.request_prediction(None, &[]);
     engine.cancel_prediction();
     assert_eq!(engine.poll_prediction(), None);
@@ -251,7 +251,7 @@ fn cloud_words_tolerate_typos_but_not_unrelated_words() {
         prediction.words,
         [cloud("这个东西吗", &["zhe", "ge", "dong", "xi", "ma"])]
     );
-    // 云端词上屏吃掉整段（按音节对不上的）拼音
+    // 雲端詞上屏吃掉整段（按音節對不上的）拼音
     let word = Candidate {
         text: "这个东西吗".into(),
         kind: CandidateKind::Cloud,
@@ -308,10 +308,10 @@ fn accepted_sentence_completion_feeds_the_personal_ngram_and_can_be_retracted() 
         assert_eq!(ngram.pair(Some("输入法"), "很"), 1);
         assert_eq!(ngram.pair(Some("很"), "好用"), 1);
     }
-    // 句尾是句号：下一个词按句首记
+    // 句尾是句號：下一個詞按句首記
     assert_eq!(engine.chain.previous(), None);
 
-    // 整句退格删光、同一段拼音重新选词：撤销这句记的转移
+    // 整句退格刪光、同一段拼音重新選詞：撤銷這句記的轉移
     for _ in 0.."开发输入法很好用。".chars().count() {
         engine.note_backspace();
     }
@@ -339,7 +339,7 @@ fn question_key_answers_code_points_locally_and_keeps_question_mark_alias() {
     assert_eq!(query.candidates.items[0].text, "一");
     assert_eq!(query.candidates.items[0].kind, CandidateKind::Shortcut);
     assert_eq!(query.tail, "u4e00");
-    // 码点本地就答，不问云端
+    // 碼點本地就答，不問雲端
     assert!(
         engine
             .request_prediction(None, &query.candidates.items)
@@ -355,10 +355,10 @@ fn question_key_answers_code_points_locally_and_keeps_question_mark_alias() {
     let body = query.tail.strip_prefix('u').unwrap().to_owned();
     assert!(!body.is_empty());
 
-    // `?` 缺省不是入口：`?sangemu` 是英文直输段而不是问题
+    // `?` 預設不是入口：`?sangemu` 是英文直輸段而不是問題
     engine.set_input("?sangemu");
     assert!(!engine.question_mode() && engine.raw_mode());
-    // 开了开关才是别名：同一个问题、同样的切分，只是前缀不同
+    // 開了開關才是別名：同一個問題、同樣的切分，只是字首不同
     engine.set_mode_keys(ModeKeys {
         question_mark: true,
         ..ModeKeys::default()
@@ -366,7 +366,7 @@ fn question_key_answers_code_points_locally_and_keeps_question_mark_alias() {
     assert!(engine.question_mode());
     assert_eq!(engine.query().unwrap().tail, format!("?{body}"));
 
-    // 换成 i 问字、v 表达式后 u 就是普通字母
+    // 換成 i 問字、v 表示式後 u 就是普通字母
     engine.set_mode_keys(ModeKeys {
         expression: 'v',
         question: 'i',
@@ -376,7 +376,7 @@ fn question_key_answers_code_points_locally_and_keeps_question_mark_alias() {
     assert!(!engine.question_mode());
     engine.set_input("i4e00");
     assert_eq!(engine.query().unwrap().candidates.items[0].text, "一");
-    // 非法组合退回缺省
+    // 非法組合退回預設
     engine.set_mode_keys(ModeKeys {
         expression: 'u',
         question: 'u',
@@ -407,7 +407,7 @@ fn committing_a_cloud_word_learns_it_and_it_ranks_first_next_time() {
     engine.set_input("zt");
     assert_eq!(texts_of(&engine)[0], "账套");
 
-    // 词库里已有的云端词不重复记
+    // 詞庫裡已有的雲端詞不重複記
     engine.set_input("kaifa");
     let mut kaifa = engine.query().unwrap().candidates.items[0].clone();
     kaifa.kind = CandidateKind::Cloud;
@@ -436,7 +436,7 @@ fn traditional_mode_preserves_original_text_across_queries() {
     let prediction = engine.poll_prediction().unwrap();
     let cloud_text = prediction.words[0].text.clone();
 
-    engine.query().unwrap(); // 第二次 query() 不应清空云端词的映射
+    engine.query().unwrap(); // 第二次 query() 不應清空雲端詞的對映
 
     let word = Candidate {
         text: cloud_text,
@@ -447,7 +447,7 @@ fn traditional_mode_preserves_original_text_across_queries() {
         aux_code: None,
     };
     assert_eq!(engine.commit(&word), "凱發");
-    // 检查词库里学到的是简体「凯发」
+    // 檢查詞庫裡學到的是簡體「凱發」
     assert!(engine.learner().weight("凯发") > 0);
     assert_eq!(engine.learner().weight("凱發"), 0);
 }
@@ -464,7 +464,7 @@ fn cloud_words_are_learned_with_the_typed_reading_when_it_fits() {
         aux_code: None,
     };
     let has = |engine: &Engine, text: &str| texts_of(engine).iter().any(|t| t == text);
-    // 模型把 先 的读音给成了 xia：敲的 kaixian 切得开、每个音节都是那个字的读音，按敲的学
+    // 模型把 先 的讀音給成了 xia：敲的 kaixian 切得開、每個音節都是那個字的讀音，按敲的學
     engine.set_input("kaixian");
     engine.commit(&cloud_word("开先", &["kai", "xia"]));
     engine.set_input("kaixian");
@@ -476,12 +476,12 @@ fn cloud_words_are_learned_with_the_typed_reading_when_it_fits() {
             .any(|m| m.exact && m.text == "开先")
     );
     assert!(!user.lookup(&["kai", "xia"], false).iter().any(|m| m.exact));
-    // 敲错了（kaixan 切不开）：模型的读音每个字都对得上，按模型的学
+    // 敲錯了（kaixan 切不開）：模型的讀音每個字都對得上，按模型的學
     engine.set_input("kaixan");
     engine.commit(&cloud_word("开想", &["kai", "xiang"]));
     engine.set_input("kaixiang");
     assert!(has(&engine, "开想"));
-    // 敲错了、模型的读音又不是这个字的：不学
+    // 敲錯了、模型的讀音又不是這個字的：不學
     engine.set_input("xiangxan");
     engine.commit(&cloud_word("想先", &["xiang", "xia"]));
     let user = engine.learner().user_words().unwrap();
@@ -529,7 +529,7 @@ fn translation_requests_carry_the_text_and_target_language() {
     assert_eq!(requests[0].text, "我想去吃饭");
     assert_eq!(requests[0].target_language, "en");
     drop(requests);
-    // 外文选区译回中文
+    // 外文選區譯回中文
     engine.request_translation("I want to eat.").unwrap();
     assert_eq!(sent.lock().unwrap()[1].target_language, "zh");
 }

@@ -8,24 +8,24 @@ use qingjian_platform::Config;
 use super::MenuAction;
 use super::target::MenuTarget;
 
-/// 菜单本体与需要按状态刷新的那几项。
+/// 選單本體與需要按狀態重新整理的那幾項。
 pub struct InputMenu {
-    /// 菜单。挂到状态项和 IMK `menu` 回调的是同一个对象。
+    /// 選單。掛到狀態項和 IMK `menu` 回撥的是同一個物件。
     menu: Retained<NSMenu>,
 
-    /// 「云联想」勾选项。
+    /// 「雲聯想」勾選項。
     cloud: Retained<NSMenuItem>,
 
-    /// 模糊音子菜单的九条勾选项，顺序同 [`FuzzyRules::NAMES`]。
+    /// 模糊音子選單的九條勾選項，順序同 [`FuzzyRules::NAMES`]。
     fuzzy: Vec<Retained<NSMenuItem>>,
 
-    /// 配置文件解析失败时显示的提示行，平时隐藏。
+    /// 配置檔案解析失敗時顯示的提示行，平時隱藏。
     error: Retained<NSMenuItem>,
 
-    /// 「有新版本 x.y.z…」，点了打开下载页；没有新版时隐藏。
+    /// 「有新版本 x.y.z…」，點了開啟下載頁；沒有新版時隱藏。
     update: Retained<NSMenuItem>,
 
-    /// 所有条目的 target，要和菜单活得一样久。
+    /// 所有條目的 target，要和選單活得一樣久。
     _target: Retained<MenuTarget>,
 }
 
@@ -33,7 +33,7 @@ impl InputMenu {
     pub fn new(mtm: MainThreadMarker, version: &str) -> Self {
         let target = MenuTarget::new(mtm);
         let menu = NSMenu::new(mtm);
-        // 不让 AppKit 按响应链判断可用性：它找不到 target 就会把整份菜单灰掉
+        // 不讓 AppKit 按響應鏈判斷可用性：它找不到 target 就會把整份選單灰掉
         menu.setAutoenablesItems(false);
 
         let cloud = action_item(mtm, "云联想", Some(MenuAction::ToggleCloud), &target);
@@ -72,7 +72,7 @@ impl InputMenu {
             Some(MenuAction::OpenLogs),
             &target,
         ));
-        // 可点的条目只能放在这一组：放到下面两个纯展示条目之间，IMK 会在每次按键后停用再新建会话，打不了字
+        // 可點的條目只能放在這一組：放到下面兩個純展示條目之間，IMK 會在每次按鍵後停用再新建會話，打不了字
         let update = action_item(mtm, "", Some(MenuAction::OpenDownload), &target);
         update.setHidden(true);
         menu.addItem(&update);
@@ -96,7 +96,7 @@ impl InputMenu {
         }
     }
 
-    /// 查到新版本就露出「有新版本」那一行，没有就藏起来。
+    /// 查到新版本就露出「有新版本」那一行，沒有就藏起來。
     pub fn sync_update(&self, available: Option<&str>) {
         match available {
             Some(version) => {
@@ -108,13 +108,13 @@ impl InputMenu {
         }
     }
 
-    /// 给状态项 / IMK 回调用的菜单对象。
+    /// 給狀態項 / IMK 回撥用的選單物件。
     pub fn ns_menu(&self) -> Retained<NSMenu> {
         self.menu.clone()
     }
 
-    /// 按当前配置刷新勾选状态。`cloud_active` 是 Engine 里真接上了 Predictor：
-    /// 配置开了但没接上（多半是没密钥）时不打勾，标题说明原因，不能显示开了实际没开。
+    /// 按當前配置重新整理勾選狀態。`cloud_active` 是 Engine 裡真接上了 Predictor：
+    /// 配置開了但沒接上（多半是沒金鑰）時不打勾，標題說明原因，不能顯示開了實際沒開。
     pub fn sync(&self, config: &Config, cloud_active: bool, error: Option<&str>) {
         let title = match (config.predict.enabled, cloud_active) {
             (true, false) => "云联想（启用失败，见日志）",
@@ -136,14 +136,14 @@ impl InputMenu {
     }
 }
 
-/// 建一个菜单项。`action` 为 `None` 的是纯展示项（子菜单父项、关于行）。
+/// 建一個選單項。`action` 為 `None` 的是純展示項（子選單父項、關於行）。
 fn action_item(
     mtm: MainThreadMarker,
     title: &str,
     action: Option<MenuAction>,
     target: &MenuTarget,
 ) -> Retained<NSMenuItem> {
-    // SAFETY: 选择器与 MenuTarget / 控制器上定义的 `menuAction:` 一致，签名 (id) -> void
+    // SAFETY: 選擇器與 MenuTarget / 控制器上定義的 `menuAction:` 一致，簽名 (id) -> void
     let item = unsafe {
         NSMenuItem::initWithTitle_action_keyEquivalent(
             mtm.alloc(),

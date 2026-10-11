@@ -1,6 +1,6 @@
-//! 「关于」页：版本与构建、检查更新、许可证、随包数据的来源与署名、隐私说明与反馈方式。
+//! 「關於」頁：版本與構建、檢查更新、許可證、隨包資料的來源與署名、隱私說明與反饋方式。
 //!
-//! 文案集中在这里的常量里，改措辞不用碰布局代码。第三方数据的许可证要求署名在分发物里可见，这一页就是放它的地方。
+//! 文案集中在這裡的常量裡，改措辭不用碰佈局程式碼。第三方資料的許可證要求署名在分發物裡可見，這一頁就是放它的地方。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -16,10 +16,10 @@ use crate::preferences::layout::{Layout, PAGE_PADDING, ROW_HEIGHT};
 use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
-/// 许可说明，与仓库根目录 `LICENSE` 一致。
+/// 許可說明，與倉庫根目錄 `LICENSE` 一致。
 pub const LICENSE_NOTE: &str = "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。官方渠道免费。";
 
-/// 随包数据的来源与许可证。改数据来源时同步改这里和 `apps/macos/scripts/bundle.sh` 里 `pack` 的署名。
+/// 隨包資料的來源與許可證。改資料來源時同步改這裡和 `apps/macos/scripts/bundle.sh` 裡 `pack` 的署名。
 pub const ATTRIBUTIONS: &[(&str, &str)] = &[
     (
         "词库",
@@ -45,34 +45,34 @@ pub const ATTRIBUTIONS: &[(&str, &str)] = &[
     ),
 ];
 
-/// 官网。
+/// 官網。
 pub const WEBSITE_URL: &str = "https://qingjian.app";
 
-/// 源码与问题反馈。
+/// 原始碼與問題反饋。
 pub const REPOSITORY_URL: &str = "https://github.com/qingjian-team";
 
-/// 隐私说明。
-pub const PRIVACY_NOTE: &str = "青简不上传任何数据。开着「自动检查更新」时每天向官网读一次版本列表，请求不带任何标识，上面可以关。开着云联想或翻译时，光标附近的文字与拼音会发给你在「云服务」页填的 AI 服务商（缺省 DeepSeek）的服务器，不经过作者。「高级」页的输入日志只写在这台电脑的数据目录里，可以关掉或清空。";
+/// 隱私說明。
+pub const PRIVACY_NOTE: &str = "青简不上传任何数据。开着「自动检查更新」时每天向官网读一次版本列表，请求不带任何标识，上面可以关。开着云联想或翻译时，光标附近的文字与拼音会发给你在「云服务」页填的 AI 服务商（預設 DeepSeek）的服务器，不经过作者。「高级」页的输入日志只写在这台电脑的数据目录里，可以关掉或清空。";
 
-/// 反馈方式。
-pub const FEEDBACK_NOTE: &str = "遇到问题点「打包日志到桌面」，把生成的 zip 发给作者即可（含日志与配置文件，不含密钥），再附上「复制诊断信息」的内容。缺省日志不含你敲的内容；排查排序问题时作者可能请你在「高级」页临时打开详细日志。";
+/// 反饋方式。
+pub const FEEDBACK_NOTE: &str = "遇到问题点「打包日志到桌面」，把生成的 zip 发给作者即可（含日志与配置文件，不含密钥），再附上「复制诊断信息」的内容。預設日志不含你敲的内容；排查排序问题时作者可能请你在「高级」页临时打开详细日志。";
 
-/// 检查更新的说明。
+/// 檢查更新的說明。
 pub const UPDATE_NOTE: &str = "每天向官网读一次版本列表，有新版在这里和菜单里提示，不会自动下载安装。测试版渠道还会提示 alpha / beta / rc 版本。";
 
-/// 「关于」页上检查更新那一行要显示的状态。
+/// 「關於」頁上檢查更新那一行要顯示的狀態。
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct UpdateStatus {
-    /// 查到的新版本号。
+    /// 查到的新版本號。
     pub available: Option<String>,
 
     /// 正在查。
     pub checking: bool,
 
-    /// 查过至少一次。
+    /// 查過至少一次。
     pub checked: bool,
 
-    /// 本地开发包，不检查。
+    /// 本地開發包，不檢查。
     pub dev_build: bool,
 }
 
@@ -89,7 +89,7 @@ impl UpdateStatus {
 }
 
 pub struct AboutPage {
-    /// 自动检查更新。
+    /// 自動檢查更新。
     check: Retained<NSButton>,
 
     /// 更新渠道。
@@ -98,7 +98,7 @@ pub struct AboutPage {
     /// 「已是最新版本」/「有新版本 x.y.z」。
     status: Retained<NSTextField>,
 
-    /// 「下载新版」，有新版才显示。
+    /// 「下載新版」，有新版才顯示。
     download: Retained<NSButton>,
 }
 
@@ -117,7 +117,7 @@ impl AboutPage {
     }
 }
 
-/// 把「关于」页的控件摆进 `layout`。
+/// 把「關於」頁的控制元件擺進 `layout`。
 pub fn build(
     layout: &mut Layout,
     mtm: MainThreadMarker,

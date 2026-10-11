@@ -1,4 +1,4 @@
-//! 只含一个 [`AttributeInfo`](super::info::AttributeInfo) 的显示属性枚举器。
+//! 只含一個 [`AttributeInfo`](super::info::AttributeInfo) 的顯示屬性列舉器。
 
 use core::cell::Cell;
 
@@ -10,10 +10,10 @@ use windows::core::{Error, Result, implement};
 
 use super::info;
 
-/// 只含一个 [`AttributeInfo`](super::info::AttributeInfo) 的枚举器。
+/// 只含一個 [`AttributeInfo`](super::info::AttributeInfo) 的列舉器。
 #[implement(IEnumTfDisplayAttributeInfo)]
 pub(super) struct AttributeEnum {
-    /// 唯一的属性是否已被取走。
+    /// 唯一的屬性是否已被取走。
     pub(super) done: Cell<bool>,
 }
 
@@ -40,7 +40,7 @@ impl IEnumTfDisplayAttributeInfo_Impl for AttributeEnum_Impl {
         if !pcfetched.is_null() {
             unsafe { *pcfetched = fetched };
         }
-        // 枚举器约定：取满 S_OK，不足 S_FALSE。
+        // 列舉器約定：取滿 S_OK，不足 S_FALSE。
         if fetched == ulcount {
             Ok(())
         } else {

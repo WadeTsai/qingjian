@@ -1,14 +1,14 @@
-//! 从纯文本语料统计词级一元 / 二元计数。
+//! 從純文本語料統計詞級一元 / 二元計數。
 //!
-//! 短语层（`assets/lexicon/phrases.tsv`，我的 / 不对 这类）不参与分词：它们进了词库，但语言模型里要是当 token 统计，
-//! 「而 + 是」的二元证据就没了，二十 会压过 而是。所以分词时把短语从词表里摘掉，统计完再给每条短语**合成**计数：
-//! 一元 = 成分二元计数 c(a,b)，前接 c(v,短语) = c(v,a)·c(a,b)/c(a)，后接 c(短语,w) = c(a,b)·c(b,w)/c(b)。
-//! 这样 P(短语|v) = P(a|v)·P(b|a)、P(w|短语) = P(w|b)，短语在整句词图和词级排序里的得分与原来走 a / b 两个词的路径一模一样，
-//! 只是多了一个能整块选的词。三词短语的一元按 c(a,b)·c(b,c)/c(b) 估。
+//! 短語層（`assets/lexicon/phrases.tsv`，我的 / 不對 這類）不參與分詞：它們進了詞庫，但語言模型裡要是當 token 統計，
+//! 「而 + 是」的二元證據就沒了，二十 會壓過 而是。所以分詞時把短語從詞表裡摘掉，統計完再給每條短語**合成**計數：
+//! 一元 = 成分二元計數 c(a,b)，前接 c(v,短語) = c(v,a)·c(a,b)/c(a)，後接 c(短語,w) = c(a,b)·c(b,w)/c(b)。
+//! 這樣 P(短語|v) = P(a|v)·P(b|a)、P(w|短語) = P(w|b)，短語在整句詞圖和詞級排序裡的得分與原來走 a / b 兩個詞的路徑一模一樣，
+//! 只是多了一個能整塊選的詞。三詞短語的一元按 c(a,b)·c(b,c)/c(b) 估。
 //!
-//! 分词用青简自己的词库做一元最大概率切分（与输入法词图同一套词表，统计出来的词才能在整句转换里用上）；
-//! 只统计连续的汉字段，段与段之间（标点、数字、字母）算句子边界，句首用 `<s>` 标记；空格忽略（预分词语料）。
-//! 词库里没有的字跳过，并切断前后的二元关系。
+//! 分詞用青簡自己的詞庫做一元最大機率切分（與輸入法詞圖同一套詞表，統計出來的詞才能在整句轉換裡用上）；
+//! 只統計連續的漢欄位，段與段之間（標點、數字、字母）算句子邊界，句首用 `<s>` 標記；空格忽略（預分詞語料）。
+//! 詞庫裡沒有的字跳過，並切斷前後的二元關係。
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -19,35 +19,35 @@ use crate::error::ConvertError;
 use crate::lexicon::pack::is_source_tsv;
 use crate::oov_filter::OovFilter;
 
-/// 句首标记。
+/// 句首標記。
 const SENTENCE_START: &str = "<s>";
 
-/// 品牌词次数里几分之一算在句首（请柬 的句首占比约 1/8）。
+/// 品牌詞次數里幾分之一算在句首（請柬 的句首佔比約 1/8）。
 const BRAND_START_SHARE: u32 = 8;
 
-/// 分词时一个词最多几个汉字。
+/// 分詞時一個詞最多幾個漢字。
 const MAX_WORD_CHARS: usize = 8;
 
-/// 词库里没有的单字的 log 概率（相对于词频 1 的词再扣这么多）。
+/// 詞庫裡沒有的單字的 log 機率（相對於詞頻 1 的詞再扣這麼多）。
 const UNKNOWN_PENALTY: f64 = -12.0;
 
-/// 分词用的词表：词 → 编号与 log 词频。
+/// 分詞用的詞表：詞 → 編號與 log 詞頻。
 pub(crate) struct Vocabulary {
-    /// 词 → 编号。
+    /// 詞 → 編號。
     pub(crate) ids: HashMap<String, u32>,
 
-    /// 编号 → 词。
+    /// 編號 → 詞。
     pub(crate) words: Vec<String>,
 
-    /// 编号 → log 概率：log(词频 + 1) − log(总词频)。不减总频的话多字词会输给它的单字。
+    /// 編號 → log 機率：log(詞頻 + 1) − log(總詞頻)。不減總頻的話多字詞會輸給它的單字。
     log_frequency: Vec<f64>,
 
-    /// 未知单字的 log 概率。
+    /// 未知單字的 log 機率。
     unknown: f64,
 }
 
 impl Vocabulary {
-    /// 词表文件：`path` 加上同目录 `dicts/` 下的领域词库（拆分后基础词库不含领域词，分词仍要用全部词）。
+    /// 詞表檔案：`path` 加上同目錄 `dicts/` 下的領域詞庫（拆分後基礎詞庫不含領域詞，分詞仍要用全部詞）。
     pub(crate) fn files(path: &Path) -> Vec<PathBuf> {
         let mut files = vec![path.to_path_buf()];
         if let Some(dir) = path.parent().map(|p| p.join("dicts"))
@@ -65,7 +65,7 @@ impl Vocabulary {
         files
     }
 
-    /// 读分词词表（见 [`Self::files`]）。
+    /// 讀分詞詞表（見 [`Self::files`]）。
     pub(crate) fn load(path: &Path) -> Result<Self, ConvertError> {
         let files = Self::files(path);
         let mut total = 0.0_f64;
@@ -94,7 +94,7 @@ impl Vocabulary {
             total += frequency;
             let log = (frequency + 1.0).ln();
             match ids.get(text) {
-                // 同一个词多个读音：取最高词频
+                // 同一個詞多個讀音：取最高詞頻
                 Some(&id) => {
                     if log > log_frequency[id as usize] {
                         log_frequency[id as usize] = log;
@@ -119,7 +119,7 @@ impl Vocabulary {
         })
     }
 
-    /// 一段连续汉字按最大概率切成词编号；词库里没有的字用 `None` 占位。
+    /// 一段連續漢字按最大機率切成詞編號；詞庫裡沒有的字用 `None` 佔位。
     pub(crate) fn segment(&self, run: &str, output: &mut Vec<Option<u32>>) {
         output.clear();
         let offsets: Vec<usize> = run
@@ -169,36 +169,36 @@ pub(crate) fn is_han(c: char) -> bool {
     matches!(c, '\u{4E00}'..='\u{9FFF}' | '\u{3400}'..='\u{4DBF}')
 }
 
-/// `mine` 的参数。
+/// `mine` 的引數。
 pub struct MineOptions {
-    /// 语料文件。
+    /// 語料檔案。
     pub corpus: Vec<PathBuf>,
 
-    /// 分词用的词库。
+    /// 分詞用的詞庫。
     pub dict: PathBuf,
 
-    /// 次数下限。
+    /// 次數下限。
     pub min_count: u32,
 
-    /// 最多几个字。
+    /// 最多幾個字。
     pub max_chars: usize,
 
     /// 一元表（算 PMI 用）。
     pub frequency: PathBuf,
 
-    /// PMI 下限，0 不过滤。
+    /// PMI 下限，0 不過濾。
     pub min_pmi: f64,
 
-    /// 只过滤这份现成的候选文件，不扫语料。
+    /// 只過濾這份現成的候選檔案，不掃語料。
     pub candidates: Option<PathBuf>,
 }
 
-/// 挖词库里没有的词：分词时连续落成单字的那一段（2–`max_chars` 个字）多半是一个词库没收的词，
-/// 按出现次数统计，出现 `min_count` 次以上的写到 `oov-candidates.tsv`（`词\t次数`），
-/// 再经 [`OovFilter`]（虚词规则 + 相邻字对 PMI）筛成 `oov-filtered.tsv` 与一行一词的 `oov-words.txt`，
-/// 后者交给 `gloss-gen pinyin` 标音、前者给 `lexicon --extra-words` 并进词库。
-/// 单字词本身在词库里（规范字全收了），所以这里只看「本可以成词却被拆成单字」的连续段：
-/// 段内每个字都是词库里的单字词、且整段不在词库里。
+/// 挖詞庫裡沒有的詞：分詞時連續落成單字的那一段（2–`max_chars` 個字）多半是一個詞庫沒收的詞，
+/// 按出現次數統計，出現 `min_count` 次以上的寫到 `oov-candidates.tsv`（`詞\t次數`），
+/// 再經 [`OovFilter`]（虛詞規則 + 相鄰字對 PMI）篩成 `oov-filtered.tsv` 與一行一詞的 `oov-words.txt`，
+/// 後者交給 `gloss-gen pinyin` 標音、前者給 `lexicon --extra-words` 並進詞庫。
+/// 單字詞本身在詞庫裡（規範字全收了），所以這裡只看「本可以成詞卻被拆成單字」的連續段：
+/// 段內每個字都是詞庫裡的單字詞、且整段不在詞庫裡。
 pub fn mine(options: &MineOptions, out_dir: &Path) -> Result<(), ConvertError> {
     std::fs::create_dir_all(out_dir)?;
     let counts = match &options.candidates {
@@ -247,7 +247,7 @@ pub fn mine(options: &MineOptions, out_dir: &Path) -> Result<(), ConvertError> {
     Ok(())
 }
 
-/// 读上一次写出的候选文件（`词\t次数`，`#` 注释）。
+/// 讀上一次寫出的候選檔案（`詞\t次數`，`#` 註釋）。
 fn read_candidates(path: &Path) -> Result<HashMap<String, u32>, ConvertError> {
     let mut counts = HashMap::new();
     for line in BufReader::new(File::open(path)?).lines() {
@@ -264,7 +264,7 @@ fn read_candidates(path: &Path) -> Result<HashMap<String, u32>, ConvertError> {
     Ok(counts)
 }
 
-/// 次数不低于 `min_count` 的候选，按次数降序、同次数按词排。
+/// 次數不低於 `min_count` 的候選，按次數降序、同次數按詞排。
 fn sorted_rows(counts: &HashMap<String, u32>, min_count: u32) -> Vec<(String, u32)> {
     let mut rows: Vec<(String, u32)> = counts
         .iter()
@@ -286,7 +286,7 @@ fn write_counts(path: &Path, header: &str, rows: &[(String, u32)]) -> Result<(),
     Ok(())
 }
 
-/// 扫语料，数连续单字段里 2–`max_chars` 字的子串。
+/// 掃語料，數連續單欄位裡 2–`max_chars` 字的子串。
 fn scan_single_runs(options: &MineOptions) -> Result<HashMap<String, u32>, ConvertError> {
     let MineOptions {
         corpus,
@@ -314,7 +314,7 @@ fn scan_single_runs(options: &MineOptions) -> Result<HashMap<String, u32>, Conve
             lines += 1;
             if lines.is_multiple_of(500_000) {
                 tracing::info!(lines, candidates = counts.len(), "进度");
-                // 内存兜底：候选太多先把只出现一次的扔掉
+                // 記憶體兜底：候選太多先把只出現一次的扔掉
                 if counts.len() > 20_000_000 {
                     counts.retain(|_, c| *c > 1);
                 }
@@ -325,7 +325,7 @@ fn scan_single_runs(options: &MineOptions) -> Result<HashMap<String, u32>, Conve
                     continue;
                 }
                 vocabulary.segment(run, &mut tokens);
-                // 连续单字段：token 是单字词编号的一串
+                // 連續單欄位：token 是單字詞編號的一串
                 let mut start = 0usize;
                 let chars: Vec<char> = run.chars().collect();
                 let mut position = 0usize;
@@ -357,7 +357,7 @@ fn scan_single_runs(options: &MineOptions) -> Result<HashMap<String, u32>, Conve
     Ok(counts)
 }
 
-/// 一段连续单字 `chars[start..end]` 里所有 2–`max_chars` 字的子串各计一次。
+/// 一段連續單字 `chars[start..end]` 裡所有 2–`max_chars` 字的子串各計一次。
 fn collect_runs(
     chars: &[char],
     start: usize,
@@ -388,7 +388,7 @@ pub fn convert(
 ) -> Result<(), ConvertError> {
     let mut vocabulary = Vocabulary::load(dict)?;
     tracing::info!(words = vocabulary.words.len(), "词表加载完成");
-    // 短语不参与分词：先摘掉，记下每条的成分，统计完再合成它们的计数
+    // 短語不參與分詞：先摘掉，記下每條的成分，統計完再合成它們的計數
     let mut phrase_parts = Vec::new();
     for path in phrases {
         phrase_parts.extend(phrase_components(path, &mut vocabulary)?);
@@ -406,7 +406,7 @@ pub fn convert(
             if lines.is_multiple_of(200_000) {
                 tracing::info!(lines, bigrams = bigram.len(), "进度");
             }
-            // LCCC 这类语料是按词用空格分好的；空格不是句子边界，去掉再切
+            // LCCC 這類語料是按詞用空格分好的；空格不是句子邊界，去掉再切
             let line: String = line.chars().filter(|c| *c != ' ').collect();
             for run in line.split(|c: char| !is_han(c)) {
                 if run.chars().count() < 2 {
@@ -439,8 +439,8 @@ pub fn convert(
         distinct_bigrams = bigram.len(),
         "统计完成"
     );
-    // 品牌词（青简）与中英混杂词（C盘）语料里没有：按文件给的次数写进一元，句首二元给八分之一（请柬 209 次里 25 次在句首，同一比例），
-    // 让词级排序不把它当模型不认识的词扣分、能与同音词（请柬）平起平坐，又不压过 请见 这种整句路径
+    // 品牌詞（青簡）與中英混雜詞（C盤）語料裡沒有：按檔案給的次數寫進一元，句首二元給八分之一（請柬 209 次裡 25 次在句首，同一比例），
+    // 讓詞級排序不把它當模型不認識的詞扣分、能與同音詞（請柬）平起平坐，又不壓過 請見 這種整句路徑
     for path in brand {
         let mut added = 0usize;
         for line in std::fs::read_to_string(path)?.lines() {
@@ -460,7 +460,7 @@ pub fn convert(
         tracing::info!(path = %path.display(), words = added, "品牌词一元与句首二元已写入");
     }
 
-    // 二元：按计数降序，砍掉低频与超出上限的；短语的合成行另加，不占真实行的名额
+    // 二元：按計數降序，砍掉低頻與超出上限的；短語的合成行另加，不佔真實行的名額
     let mut pairs: Vec<(u64, u32)> = bigram
         .iter()
         .map(|(k, c)| (*k, *c))
@@ -485,7 +485,7 @@ pub fn convert(
     }
     writer.flush()?;
 
-    // 一元：只输出出现过的词
+    // 一元：只輸出出現過的詞
     let unigram_path = out_dir.join("lm-unigram.tsv");
     let mut writer = BufWriter::new(File::create(&unigram_path)?);
     writeln!(
@@ -510,8 +510,8 @@ pub fn convert(
     Ok(())
 }
 
-/// 把 `path` 里的短语从分词词表摘掉（编号留着给合成的 token 用），返回每条短语的 (编号, 成分词编号)。
-/// 切不成两个以上词库词的短语跳过。
+/// 把 `path` 裡的短語從分詞詞表摘掉（編號留著給合成的 token 用），返回每條短語的 (編號, 成分詞編號)。
+/// 切不成兩個以上詞庫詞的短語跳過。
 fn phrase_components(
     path: &Path,
     vocabulary: &mut Vocabulary,
@@ -547,7 +547,7 @@ fn phrase_components(
     Ok(parts)
 }
 
-/// 给短语合成一元（写进 `unigram`）与前后接的二元计数（返回，算法见模块注释）。
+/// 給短語合成一元（寫進 `unigram`）與前後接的二元計數（返回，演算法見模組註釋）。
 fn synthesize_phrases(
     phrases: &[(u32, Vec<u32>)],
     unigram: &mut [u64],
@@ -555,7 +555,7 @@ fn synthesize_phrases(
     min_count: u32,
 ) -> Vec<(u64, u32)> {
     let key = |a: u32, b: u32| (u64::from(a) << 32) | u64::from(b);
-    // 按后词 / 前词索引一遍二元表，合成时按成分查前接与后接
+    // 按後詞 / 前詞索引一遍二元表，合成時按成分查前接與後接
     let mut by_second: HashMap<u32, Vec<(u32, u32)>> = HashMap::new();
     let mut by_first: HashMap<u32, Vec<(u32, u32)>> = HashMap::new();
     for (&k, &count) in bigram.iter() {
@@ -570,7 +570,7 @@ fn synthesize_phrases(
     let mut rows: Vec<(u64, u32)> = Vec::new();
     for (id, parts) in phrases {
         let (first, last) = (parts[0], parts[parts.len() - 1]);
-        // 短语自身的次数：两词就是成分二元，三词按链式估
+        // 短語自身的次數：兩詞就是成分二元，三詞按鏈式估
         let mut count = pair(bigram, parts[0], parts[1]);
         for window in parts.windows(2).skip(1) {
             let middle = unigram[window[0] as usize] as f64;

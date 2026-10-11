@@ -1,11 +1,11 @@
-//! 从一元词频表里挑要生成释义的词。
+//! 從一元詞頻表裡挑要生成釋義的詞。
 
 use std::path::Path;
 
 use crate::error::GlossError;
 
-/// 读 `词\t次数`（lm-unigram.tsv）或 `词\t拼音\t词频`（dict.tsv，取最后一列、同词多读音取最大），
-/// 只留全是汉字、不超过 `max_chars` 个字、次数不低于 `min_count` 的词，按次数降序，最多 `limit` 个。
+/// 讀 `詞\t次數`（lm-unigram.tsv）或 `詞\t拼音\t詞頻`（dict.tsv，取最後一列、同詞多讀音取最大），
+/// 只留全是漢字、不超過 `max_chars` 個字、次數不低於 `min_count` 的詞，按次數降序，最多 `limit` 個。
 pub fn select(
     path: &Path,
     min_count: u64,
@@ -47,7 +47,7 @@ pub fn select(
     Ok(words.into_iter().map(|(word, _)| word).collect())
 }
 
-/// 常用汉字区（基本区 + 扩展 A）。
+/// 常用漢字區（基本區 + 擴充套件 A）。
 fn is_han(c: char) -> bool {
     matches!(c, '\u{4e00}'..='\u{9fff}' | '\u{3400}'..='\u{4dbf}')
 }
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(select(&path, 200, 4, None).unwrap(), ["的", "开发"]);
         assert_eq!(select(&path, 200, 4, Some(1)).unwrap(), ["的"]);
         assert!(select(&path, 1000, 4, None).is_err());
-        // dict.tsv 三列格式：取最后一列，同词多读音取最大
+        // dict.tsv 三列格式：取最後一列，同詞多讀音取最大
         let dict = dir.join("dict.tsv");
         std::fs::write(
             &dict,

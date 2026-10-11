@@ -1,4 +1,4 @@
-//! 可打印字符的处理：中英文模式、直输段、表达式与问字模式的分流。
+//! 可列印字元的處理：中英文模式、直輸段、表示式與問字模式的分流。
 
 use super::*;
 
@@ -8,11 +8,11 @@ impl QingjianInputController {
         self.note_application(&client);
         let mut composing = host::with(|h| !h.engine.composition().is_empty()).unwrap_or(false);
         let english = modifiers::caps_lock_on();
-        // 不在白名单（`[apps] english_candidates_on`）里的应用，英文模式是纯直通
+        // 不在白名單（`[apps] english_candidates_on`）裡的應用，英文模式是純直通
         let english_candidates = english
             && host::with(|h| h.english_candidates_in(client.bundle_identifier().as_deref()))
                 .unwrap_or(false);
-        // 英文模式组词中 Caps Lock 灭了（或开关关了）：敲的字母先原样上屏，别把它们当拼音
+        // 英文模式組詞中 Caps Lock 滅了（或開關關了）：敲的字母先原樣上屏，別把它們當拼音
         if composing
             && !english_candidates
             && host::with(|h| h.engine.english_mode()).unwrap_or(false)
@@ -21,7 +21,7 @@ impl QingjianInputController {
             composing = false;
         }
         let [byte] = text.as_bytes() else {
-            // 多字符文本（如输入法联动、粘贴）：先把当前候选（英文模式下是敲的字母）上屏，再交给应用
+            // 多字元文本（如輸入法聯動、貼上）：先把當前候選（英文模式下是敲的字母）上屏，再交給應用
             if composing {
                 if host::with(|h| h.engine.english_mode()).unwrap_or(false) {
                     self.commit_raw(client);
@@ -33,8 +33,8 @@ impl QingjianInputController {
         };
         let c = char::from(*byte);
         host::with(|h| h.indicator.update());
-        // 缓冲区为空时敲 ? 先进问字模式（配置 `[shortcut] question_mark`，缺省关），中英文模式都行：
-        // 后面跟字母就是在问字，跟别的键就还原成问号
+        // 緩衝區為空時敲 ? 先進問字模式（配置 `[shortcut] question_mark`，預設關），中英文模式都行：
+        // 後面跟字母就是在問字，跟別的鍵就還原成問號
         if !composing
             && c == QUESTION_PREFIX
             && host::with(|h| h.engine.takes_question_mark()).unwrap_or(false)
@@ -43,7 +43,7 @@ impl QingjianInputController {
             self.refresh(client);
             return true;
         }
-        // 双拼下 Shift+V / Shift+U 进表达式 / 问字模式（全拼下的 v / u 被音节占了）
+        // 雙拼下 Shift+V / Shift+U 進表示式 / 問字模式（全拼下的 v / u 被音節佔了）
         if !composing && !english && host::with(|h| h.engine.takes_mode_letter(c)).unwrap_or(false)
         {
             host::with(|h| h.engine.push(c));
@@ -51,7 +51,7 @@ impl QingjianInputController {
             return true;
         }
         let question = composing && host::with(|h| h.engine.question_mode()).unwrap_or(false);
-        // 英文模式下问字：Caps Lock 让字母以大写送来，按小写收进问题
+        // 英文模式下問字：Caps Lock 讓字母以大寫送來，按小寫收進問題
         let c = if question && english && c.is_ascii_uppercase() {
             c.to_ascii_lowercase()
         } else {
@@ -60,9 +60,9 @@ impl QingjianInputController {
         host::with(|h| h.engine.set_english_mode(english_candidates && !question));
         let (page_previous, page_next) =
             host::with(|h| h.page_keys).unwrap_or(qingjian_platform::DEFAULT_PAGE_KEYS);
-        // Caps Lock 亮着 = 英文模式：不组句、不转标点，字母默认小写、按住 Shift 才大写
+        // Caps Lock 亮著 = 英文模式：不組句、不轉標點，字母預設小寫、按住 Shift 才大寫
         if english && !question {
-            // Caps Lock 亮着时 macOS 不管按没按 Shift 送来的都是大写，只能读 Shift 状态：按着才大写
+            // Caps Lock 亮著時 macOS 不管按沒按 Shift 送來的都是大寫，只能讀 Shift 狀態：按著才大寫
             let letter = if modifiers::shift_down() {
                 c.to_ascii_uppercase()
             } else {
@@ -80,10 +80,10 @@ impl QingjianInputController {
                 host::with(|h| h.engine.note_passthrough(c));
                 return false;
             }
-            // 英文候选：字母（以及组词中的 _ ' -）进缓冲区，候选来自英文词表。选词与中文模式一样：
-            // 空格选高亮（词上屏后空格照样交给应用，接着打下一个词）、数字选当前页第 N 个、翻页键翻页；
-            // 数字对应的格子没有候选（kubectl 这类词表没有的词、候选不足 N 个）时是标识符的一部分（foo1）。
-            // 回车、标点先把敲的字母原样上屏再交给应用
+            // 英文候選：字母（以及組詞中的 _ ' -）進緩衝區，候選來自英文詞表。選詞與中文模式一樣：
+            // 空格選高亮（詞上屏後空格照樣交給應用，接著打下一個詞）、數字選當前頁第 N 個、翻頁鍵翻頁；
+            // 數字對應的格子沒有候選（kubectl 這類詞表沒有的詞、候選不足 N 個）時是識別符號的一部分（foo1）。
+            // 回車、標點先把敲的字母原樣上屏再交給應用
             if composing
                 && let Some(offset) = c.to_digit(10).filter(|d| *d > 0)
                 && let Some(index) =
@@ -114,22 +114,22 @@ impl QingjianInputController {
             host::with(|h| h.engine.note_passthrough(c));
             return false;
         }
-        // 表达式模式（v 开头）：数字与运算符进缓冲区，不当选词 / 翻页键
+        // 表示式模式（v 開頭）：數字與運算子進緩衝區，不當選詞 / 翻頁鍵
         let expression = composing && host::with(|h| h.engine.expression_mode()).unwrap_or(false);
-        // 英文直输段（缓冲区里已有 `-` 这类字符）：可见字符一律追加，空格 / 回车整段原样上屏
+        // 英文直輸段（緩衝區裡已有 `-` 這類字元）：可見字元一律追加，空格 / 回車整段原樣上屏
         let raw = composing && host::with(|h| h.engine.raw_mode()).unwrap_or(false);
-        // 组句中敲 `-`：进入英文直输段（`no-way`）；配成翻页键（`[general] page_keys` 选 `-=`）时才翻页
+        // 組句中敲 `-`：進入英文直輸段（`no-way`）；配成翻頁鍵（`[general] page_keys` 選 `-=`）時才翻頁
         let hyphen = composing && !question && c == '-' && c != page_previous && c != page_next;
-        // 问字模式下敲的还可能是码点（`u4e00`、`u+1f600`）：数字与 `+` 进缓冲区而不是选词
+        // 問字模式下敲的還可能是碼點（`u4e00`、`u+1f600`）：數字與 `+` 進緩衝區而不是選詞
         let unicode = question && host::with(|h| h.engine.unicode_entry()).unwrap_or(false);
-        // 微软 / 搜狗双拼的 `;` 是 ing 键：末尾有落单声母时进缓冲区，其他时候还是标点
+        // 微軟 / 搜狗雙拼的 `;` 是 ing 鍵：末尾有落單聲母時進緩衝區，其他時候還是標點
         let semicolon =
             composing && c == ';' && host::with(|h| h.engine.takes_semicolon()).unwrap_or(false);
-        // 组句中敲不会转全角的符号（`/` `@`，`-` 由上面的 hyphen 接）：进缓冲区，整段成为英文直输段（`a@b`），
-        // 中文模式下也能打带符号的英文；翻页键除外；⇧+数字（! @ # …）在前面已被删候选 / 译词键截走。
-        // 会转全角的标点（`,` `.` `?` `!` 引号、括号这些）不进缓冲区：落到下方先把高亮候选上屏再补全角标点
-        //（`nihao,` 一气打完「你好，」），与 Windows / Linux 壳一致；这条上屏行为由 `[general] punct_commits`
-        // 控制（缺省开），关掉恢复老行为：标点也进缓冲区（英文直输段）。
+        // 組句中敲不會轉全形的符號（`/` `@`，`-` 由上面的 hyphen 接）：進緩衝區，整段成為英文直輸段（`a@b`），
+        // 中文模式下也能打帶符號的英文；翻頁鍵除外；⇧+數字（! @ # …）在前面已被刪候選 / 譯詞鍵截走。
+        // 會轉全形的標點（`,` `.` `?` `!` 引號、括號這些）不進緩衝區：落到下方先把高亮候選上屏再補全形標點
+        //（`nihao,` 一氣打完「你好，」），與 Windows / Linux 殼一致；這條上屏行為由 `[general] punct_commits`
+        // 控制（預設開），關掉恢復老行為：標點也進緩衝區（英文直輸段）。
         let punct_commits = host::with(|h| h.punct_commits).unwrap_or(false);
         let punctuation = composing
             && !question
@@ -151,21 +151,21 @@ impl QingjianInputController {
             self.refresh(client);
             return true;
         }
-        // 直输段里的空格：整段原样上屏，空格本身也交给应用（`hello, world` 里的空格要在）
+        // 直輸段裡的空格：整段原樣上屏，空格本身也交給應用（`hello, world` 裡的空格要在）
         if raw && c == ' ' {
             self.commit_highlighted(client);
             host::with(|h| h.engine.note_passthrough(c));
             return false;
         }
         if composing && self.restore_bare_question(client) {
-            // 空格只是「把这个 ? 上屏」，不再多打一个空格；其他键按非组句状态继续处理
+            // 空格只是「把這個 ? 上屏」，不再多打一個空格；其他鍵按非組句狀態繼續處理
             if c == ' ' {
                 return true;
             }
             return self.handle_text(text, client);
         }
-        // 按住 Shift 打的大写字母：缺省是临时打英文，先把拼音原样上屏，再把字母交给应用；
-        // `[general] shift_letter = "compose"` 时进缓冲区（Core 按小写匹配、原样上屏时还原大写）
+        // 按住 Shift 打的大寫字母：預設是臨時打英文，先把拼音原樣上屏，再把字母交給應用；
+        // `[general] shift_letter = "compose"` 時進緩衝區（Core 按小寫匹配、原樣上屏時還原大寫）
         if c.is_ascii_uppercase() {
             if host::with(|h| h.engine.shift_letter_compose()).unwrap_or(false) {
                 host::with(|h| h.engine.push(c));
@@ -186,8 +186,8 @@ impl QingjianInputController {
                     if let Some(index) = host::with(|h| h.session.index_on_page(offset)).flatten() {
                         return self.commit_index(index, client);
                     }
-                    // 这一页没有这一格（`gpt6` 只有三个候选）：数字当内容进缓冲区，成为英文直输段；
-                    // 问字模式里数字不是问题的一部分，不算
+                    // 這一頁沒有這一格（`gpt6` 只有三個候選）：數字當內容進緩衝區，成為英文直輸段；
+                    // 問字模式裡數字不是問題的一部分，不算
                     if !question {
                         host::with(|h| h.engine.push(c));
                         self.refresh(client);
@@ -196,13 +196,13 @@ impl QingjianInputController {
                 }
                 c if c == page_previous => return self.turn_page(-1, client),
                 c if c == page_next => return self.turn_page(1, client),
-                // 其他字符：把当前高亮候选上屏，再按非组句状态处理这个字符
+                // 其他字元：把當前高亮候選上屏，再按非組句狀態處理這個字元
                 _ => {
                     self.commit_highlighted(client);
                 }
             }
         }
-        // 中文模式下的全角标点；转不了的（数字、字母以外的其他键）原样交给应用
+        // 中文模式下的全形標點；轉不了的（數字、字母以外的其他鍵）原樣交給應用
         match host::with(|h| h.engine.punctuate(c)).flatten() {
             Some(full_width) => {
                 client.insert_text(full_width);

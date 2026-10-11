@@ -1,4 +1,4 @@
-//! 注音解码的音节或显式分隔单元。
+//! 注音解碼的音節或顯式分隔單元。
 /// 解碼的單一單元，對應一個注音音節或分隔符
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unit {

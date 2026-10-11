@@ -1,4 +1,4 @@
-//! 位图画布：tiny-skia `Pixmap` 之上的几个填充原语，加字形位图的逐像素 source-over 混合。坐标一律是像素、左上角原点。
+//! 點陣圖畫布：tiny-skia `Pixmap` 之上的幾個填充原語，加字形點陣圖的逐畫素 source-over 混合。座標一律是畫素、左上角原點。
 
 use tiny_skia::{
     BlendMode, FillRule, Mask, Paint, Path, PathBuilder, Pixmap, PixmapPaint, PremultipliedColorU8,
@@ -9,7 +9,7 @@ use crate::color::{Color, mul_u8, premultiply};
 use crate::error::RenderError;
 
 pub(crate) struct Canvas {
-    /// 预乘 RGBA。
+    /// 預乘 RGBA。
     pixmap: Pixmap,
 }
 
@@ -72,13 +72,13 @@ impl Canvas {
         );
     }
 
-    /// 按现成的画笔填路径（着色器、抗锯齿都由调用方定），可带遮罩。
+    /// 按現成的畫筆填路徑（著色器、抗鋸齒都由呼叫方定），可帶遮罩。
     pub(crate) fn fill_path_paint(&mut self, path: &Path, paint: &Paint, mask: Option<&Mask>) {
         self.pixmap
             .fill_path(path, paint, FillRule::Winding, Transform::identity(), mask);
     }
 
-    /// 按着色器（渐变、图片）填路径，可带遮罩（圆角裁切）。
+    /// 按著色器（漸變、圖片）填路徑，可帶遮罩（圓角裁切）。
     pub(crate) fn fill_path_with(&mut self, path: &Path, shader: Shader, mask: Option<&Mask>) {
         let paint = Paint {
             shader,
@@ -89,7 +89,7 @@ impl Canvas {
             .fill_path(path, &paint, FillRule::Winding, Transform::identity(), mask);
     }
 
-    /// 描路径（线宽像素）。
+    /// 描路徑（線寬畫素）。
     pub(crate) fn stroke_path(&mut self, path: &Path, width: f32, color: Color) {
         let stroke = Stroke {
             width,
@@ -104,7 +104,7 @@ impl Canvas {
         );
     }
 
-    /// 描字形轮廓：圆角接头与端点，描边不出尖角。
+    /// 描字形輪廓：圓角接頭與端點，描邊不出尖角。
     pub(crate) fn stroke_outline(&mut self, path: &Path, width: f32, color: Color) {
         let stroke = Stroke {
             width,
@@ -121,14 +121,14 @@ impl Canvas {
         );
     }
 
-    /// 与画布同大的遮罩，`path` 里面为不透明。
+    /// 與畫布同大的遮罩，`path` 裡面為不透明。
     pub(crate) fn mask(&self, path: &Path) -> Option<Mask> {
         let mut mask = Mask::new(self.width(), self.height())?;
         mask.fill_path(path, FillRule::Winding, true, Transform::identity());
         Some(mask)
     }
 
-    /// 把同大的离屏图层按不透明度合成上来。
+    /// 把同大的離屏圖層按不透明度合成上來。
     pub(crate) fn draw_layer(&mut self, layer: &Pixmap, opacity: f32) {
         let paint = PixmapPaint {
             opacity,
@@ -138,7 +138,7 @@ impl Canvas {
             .draw_pixmap(0, 0, layer.as_ref(), &paint, Transform::identity(), None);
     }
 
-    /// 另一张位图原样盖到 `(x, y)`（替换，不混合）；局部重画的结果写回整帧用。
+    /// 另一張點陣圖原樣蓋到 `(x, y)`（替換，不混合）；區域性重畫的結果寫回整幀用。
     pub(crate) fn replace(&mut self, x: i32, y: i32, other: &Pixmap) {
         let canvas_width = self.pixmap.width() as i32;
         let canvas_height = self.pixmap.height() as i32;
@@ -162,7 +162,7 @@ impl Canvas {
         }
     }
 
-    /// 另一张位图按变换叠上来（双线性采样，整数平移时 tiny-skia 自己退成最近邻）；循环动画的姿态用。
+    /// 另一張點陣圖按變換疊上來（雙線性取樣，整數平移時 tiny-skia 自己退成最近鄰）；迴圈動畫的姿態用。
     pub(crate) fn draw_transformed(&mut self, layer: &Pixmap, transform: Transform, opacity: f32) {
         let paint = PixmapPaint {
             opacity,
@@ -173,7 +173,7 @@ impl Canvas {
             .draw_pixmap(0, 0, layer.as_ref(), &paint, transform, None);
     }
 
-    /// 把另一张位图整张叠上来（左上角对齐到 `(x, y)`）。
+    /// 把另一張點陣圖整張疊上來（左上角對齊到 `(x, y)`）。
     pub(crate) fn blend_pixmap(&mut self, x: i32, y: i32, other: &Pixmap) {
         let width = other.width();
         for (i, pixel) in other.pixels().iter().enumerate() {
@@ -186,7 +186,7 @@ impl Canvas {
         }
     }
 
-    /// 8 位覆盖率遮罩（普通字形）按颜色叠上来。
+    /// 8 位覆蓋率遮罩（普通字形）按顏色疊上來。
     pub(crate) fn blend_mask(
         &mut self,
         x: i32,
@@ -196,7 +196,7 @@ impl Canvas {
         data: &[u8],
         color: Color,
     ) {
-        // 按行裁到画布内，逐像素的算法与 blend_pixel 相同（结果逐位一致），只是省掉每个像素的越界检查
+        // 按行裁到畫布內，逐畫素的演算法與 blend_pixel 相同（結果逐位一致），只是省掉每個畫素的越界檢查
         let canvas_width = self.pixmap.width() as i32;
         let canvas_height = self.pixmap.height() as i32;
         let col_start = (-x).max(0);
@@ -204,7 +204,7 @@ impl Canvas {
         if col_start >= col_end {
             return;
         }
-        // 覆盖率 → 预乘颜色查表（同 Skia 的 A8 遮罩），每像素只剩一次查表加一次混合
+        // 覆蓋率 → 預乘顏色查表（同 Skia 的 A8 遮罩），每畫素只剩一次查表加一次混合
         let table: Vec<PremultipliedColorU8> =
             (0..=255u8).map(|c| color.premultiplied(c)).collect();
         let pixels = self.pixmap.pixels_mut();
@@ -230,7 +230,7 @@ impl Canvas {
         }
     }
 
-    /// 直通 RGBA 位图（彩色 emoji）叠上来。
+    /// 直通 RGBA 點陣圖（彩色 emoji）疊上來。
     pub(crate) fn blend_rgba(&mut self, x: i32, y: i32, width: u32, height: u32, data: &[u8]) {
         for (i, px) in data.chunks_exact(4).enumerate() {
             if px[3] == 0 {
@@ -255,8 +255,8 @@ impl Canvas {
         *dst = source_over(src, *dst);
     }
 
-    /// 另一张位图按整数偏移叠上来（source-over）；缓存的画面贴回画布用。
-    /// 逐像素整数运算：不透明的直接拷、透明的跳过（tiny-skia 的 `draw_pixmap` 没有拷贝快路径，每像素走一遍高精度采样）。
+    /// 另一張點陣圖按整數偏移疊上來（source-over）；快取的畫面貼回畫布用。
+    /// 逐畫素整數運算：不透明的直接拷、透明的跳過（tiny-skia 的 `draw_pixmap` 沒有複製快路徑，每畫素走一遍高精度取樣）。
     pub(crate) fn composite(&mut self, x: i32, y: i32, other: &Pixmap) {
         let canvas_width = self.pixmap.width() as i32;
         let canvas_height = self.pixmap.height() as i32;
@@ -288,7 +288,7 @@ impl Canvas {
     }
 }
 
-/// source-over：`dst = src + dst × (1 − src.a)`，各通道不超过 alpha（保持预乘合法）。
+/// source-over：`dst = src + dst × (1 − src.a)`，各通道不超過 alpha（保持預乘合法）。
 fn source_over(src: PremultipliedColorU8, dst: PremultipliedColorU8) -> PremultipliedColorU8 {
     let inverse = 255 - src.alpha();
     let a = src.alpha().saturating_add(mul_u8(dst.alpha(), inverse));
@@ -307,13 +307,13 @@ fn paint(color: Color, blend: BlendMode) -> Paint<'static> {
     paint
 }
 
-/// 圆角矩形路径；圆角用三次贝塞尔近似四分之一圆。
+/// 圓角矩形路徑；圓角用三次貝塞爾近似四分之一圓。
 pub(crate) fn round_rect(x: f32, y: f32, width: f32, height: f32, radius: f32) -> Option<Path> {
     let r = radius.min(width / 2.0).min(height / 2.0).max(0.0);
     if r <= 0.0 {
         return Rect::from_xywh(x, y, width, height).map(PathBuilder::from_rect);
     }
-    // 四分之一圆的贝塞尔控制点系数
+    // 四分之一圓的貝塞爾控制點係數
     const KAPPA: f32 = 0.552_284_8;
     let k = r * KAPPA;
     let (right, bottom) = (x + width, y + height);

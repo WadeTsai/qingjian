@@ -1,132 +1,132 @@
 # TODO
 
-按「从自用到能给别人用」排。勾掉的移到 [roadmap.md](roadmap.md) 对应阶段。`★` 是当前建议的优先项。
-2026-09-06 状态：核心输入、翻译（中→英 / 日 24.9 万词、英→中 4.5 万词、注假名、修饰键上屏译词、翻译选中文字）、英文模式候选、
-自建词库（基础 8.7 万条 + 随包领域词库 11 本 13 万条，含语料挖出的高频词）、多词库与导入 / 移除 / 开关、偏好设置、`.qj` 容器（启动 50 ms）、
-个人 n-gram（二元 + 三元）、词图内敲错边、崩溃不丢、pkg 安装器、README 安装 / 隐私 / 许可都已完成并在自用。
-给测试者打包只剩：特殊应用验证（用户自己在各应用里试）；签名等 Developer ID 证书。
+按「從自用到能給別人用」排。勾掉的移到 [roadmap.md](roadmap.md) 對應階段。`★` 是當前建議的優先項。
+2026-09-06 狀態：核心輸入、翻譯（中→英 / 日 24.9 萬詞、英→中 4.5 萬詞、注假名、修飾鍵上屏譯詞、翻譯選中文字）、英文模式候選、
+自建詞庫（基礎 8.7 萬條 + 隨包領域詞庫 11 本 13 萬條，含語料挖出的高頻詞）、多詞庫與匯入 / 移除 / 開關、偏好設定、`.qj` 容器（啟動 50 ms）、
+個人 n-gram（二元 + 三元）、詞圖內敲錯邊、崩潰不丟、pkg 安裝器、README 安裝 / 隱私 / 許可都已完成並在自用。
+給測試者打包只剩：特殊應用驗證（使用者自己在各應用裡試）；簽名等 Developer ID 證書。
 
-## 〇、上线前必须做（不做就不能给别人）
+## 〇、上線前必須做（不做就不能給別人）
 
-- [ ] 词库质量（产品词库已自建，见 roadmap）：常用词表只有 5.6 万，语料挖出的 1.57 万高频词已并入（蚌埠 / 台州 / 高铁 / 吐槽 这类补上了），
-  网络用语目录还空着（`assets/lexicon/04_internet_slang`）；LLM 标注的多音字读音抽查；挖词过滤已进 `dict-convert mine`（2026-09-07，`oov_filter.rs`，与原脚本输出逐行一致）；
-  LM 表（TSV 48 MB / `lm.qj` 29 MB）不进 git，先按发布附件对待
-- [ ] ★ 首次运行体验：没有 `data/generated/` 时打进包里的样例词库只有几十条，等于不能用；随包数据（词库、LM 表、释义表、emoji）
-  要有一套发布版并定好体积（现在 `dict.qj` 3 MB + 领域词库 7 MB + `lm.qj` 29 MB + 释义表 `.qj` 39 MB + 英文词表 2 MB，pkg 34 MB；可再考虑变长编码）；
-  发布物 = pkg（`bundle.sh --pkg`），要么 CI 生成数据、要么把 `data/generated/` 当发布附件
-- [ ] 仓库瘦身（2026-09-07 决定：主仓库继续单库、官网独立仓库，不拆代码；要处理的是数据）。
-  已做：LLM 中间产物 `gloss-llm.jsonl`（30 MB）/ `gloss-en-llm.jsonl` / `pinyin-llm.jsonl` 移到 `data/generated/`（gitignore），仓库只留导出的 `glossary-*.tsv` 与词库源；
-  历史在同日压成 `v0.1.0` 单提交（完整开发历史在本地分支 `archive/dev-history`，不推），所以公开仓库里从没出现过这些文件。
-  还差：仓库推到 GitHub 后跑一次 `tools/release/data-bundle.sh`，把这三个 JSONL 与 `data/generated/*.qj` 传到 `data` 预发布 Release（现在只在本机与归档分支里有）；
-  正式开源后若 clone 太慢，再考虑把 `assets/lexicon` + `assets/glossary` 拆成数据仓库，现在不做
-- [ ] ★ 签名与公证：pkg 安装器、自动注册输入源、版本号 / 构建号已做（2026-09-06，`bundle.sh --pkg`）；
-  CI 已搭（2026-09-07，`docs/notes/release.md`）：推标签在 macOS runner 打 arm64 + x86_64 两个 pkg、建 Release、生成 `releases.json`，产品数据从 `data` 预发布 Release 下载。
-  还差：Apple Developer 账号的 Developer ID 证书（配齐 `release.yml` 头部的七个 Secrets 就自动签名公证）、仓库推上 GitHub 后第一次真跑验证（本机没跑过 workflow）、
-  官网改成读 `releases.json`（含 sha256 / 提交 / 构建时间的展示）并配 `QINGJIAN_WEB_TOKEN` 让发版与文档改动自动触发官网构建、更新检查
-- [ ] ★ 特殊应用逐个验证（2026-09-07 用户已验：Zed、Terminal 正常；JetBrains 系没装没验）：Secure Input（已有检测，验证密码框不组句、不发云端）、iTerm / Warp、VS Code / Electron、
-  浏览器地址栏、沙盒应用（App Store 版备忘录 / 微信）、全屏游戏；每个记录 preedit 模式建议（按应用的开关已有 `[apps]` 分节，
-  英文候选按应用关已做，preedit 模式按应用定可以接在同一分节）
-- [ ] 登录后不恢复成青简：2026-09-06 两次开机日志都显示登录后当前输入源是系统拼音 / ABC，要手动切回（进程没崩过，panic 与崩溃报告都是零；
-  Caps Lock 切 ABC 的系统开关已排除）。怀疑装在 `~/Library/Input Methods` 的 ad-hoc 包每次重装签名变、登录早期枚举没认上；等签名后装 `/Library` 再看，
-  或在 `--register` 之外登录时补一次 `TISSelectInputSource`
-- [ ] 卸载与重置：卸载脚本已随包（`uninstall.sh`，`--purge` 连数据删，README 有说明，2026-09-06）；还差偏好设置里的「重置学习数据」按钮、
-  配置文件版本迁移（新增键有缺省，改名键要迁）
-- [x] 许可证定稿（2026-09-07）：GPL-3.0-or-later，`LICENSE` 全文、`Cargo.toml` `license`、「关于」页、README 一致；名字与 logo 不授权。以后引入 JMdict 要补进署名清单
+- [ ] 詞庫質量（產品詞庫已自建，見 roadmap）：常用詞表只有 5.6 萬，語料挖出的 1.57 萬高頻詞已併入（蚌埠 / 台州 / 高鐵 / 吐槽 這類補上了），
+  網路用語目錄還空著（`assets/lexicon/04_internet_slang`）；LLM 標註的多音字讀音抽查；挖詞過濾已進 `dict-convert mine`（2026-09-07，`oov_filter.rs`，與原指令碼輸出逐行一致）；
+  LM 表（TSV 48 MB / `lm.qj` 29 MB）不進 git，先按釋出附件對待
+- [ ] ★ 首次執行體驗：沒有 `data/generated/` 時打進包裡的樣例詞庫只有幾十條，等於不能用；隨包資料（詞庫、LM 表、釋義表、emoji）
+  要有一套釋出版並定好體積（現在 `dict.qj` 3 MB + 領域詞庫 7 MB + `lm.qj` 29 MB + 釋義表 `.qj` 39 MB + 英文詞表 2 MB，pkg 34 MB；可再考慮變長編碼）；
+  釋出物 = pkg（`bundle.sh --pkg`），要麼 CI 生成資料、要麼把 `data/generated/` 當釋出附件
+- [ ] 倉庫瘦身（2026-09-07 決定：主倉庫繼續單庫、官網獨立倉庫，不拆程式碼；要處理的是資料）。
+  已做：LLM 中間產物 `gloss-llm.jsonl`（30 MB）/ `gloss-en-llm.jsonl` / `pinyin-llm.jsonl` 移到 `data/generated/`（gitignore），倉庫只留匯出的 `glossary-*.tsv` 與詞庫源；
+  歷史在同日壓成 `v0.1.0` 單提交（完整開發歷史在本地分支 `archive/dev-history`，不推），所以公開倉庫裡從沒出現過這些檔案。
+  還差：倉庫推到 GitHub 後跑一次 `tools/release/data-bundle.sh`，把這三個 JSONL 與 `data/generated/*.qj` 傳到 `data` 預釋出 Release（現在只在本機與歸檔分支裡有）；
+  正式開源後若 clone 太慢，再考慮把 `assets/lexicon` + `assets/glossary` 拆成資料倉儲，現在不做
+- [ ] ★ 簽名與公證：pkg 安裝器、自動註冊輸入源、版本號 / 構建號已做（2026-09-06，`bundle.sh --pkg`）；
+  CI 已搭（2026-09-07，`docs/notes/release.md`）：推標籤在 macOS runner 打 arm64 + x86_64 兩個 pkg、建 Release、生成 `releases.json`，產品資料從 `data` 預釋出 Release 下載。
+  還差：Apple Developer 賬號的 Developer ID 證書（配齊 `release.yml` 頭部的七個 Secrets 就自動簽名公證）、倉庫推上 GitHub 後第一次真跑驗證（本機沒跑過 workflow）、
+  官網改成讀 `releases.json`（含 sha256 / 提交 / 構建時間的展示）並配 `QINGJIAN_WEB_TOKEN` 讓發版與文件改動自動觸發官網構建、更新檢查
+- [ ] ★ 特殊應用逐個驗證（2026-09-07 使用者已驗：Zed、Terminal 正常；JetBrains 系沒裝沒驗）：Secure Input（已有檢測，驗證密碼框不組句、不發雲端）、iTerm / Warp、VS Code / Electron、
+  瀏覽器位址列、沙盒應用（App Store 版備忘錄 / 微信）、全屏遊戲；每個記錄 preedit 模式建議（按應用的開關已有 `[apps]` 分節，
+  英文候選按應用關已做，preedit 模式按應用定可以接在同一分節）
+- [ ] 登入後不恢復成青簡：2026-09-06 兩次開機日誌都顯示登入後當前輸入源是系統拼音 / ABC，要手動切回（程序沒崩過，panic 與崩潰報告都是零；
+  Caps Lock 切 ABC 的系統開關已排除）。懷疑裝在 `~/Library/Input Methods` 的 ad-hoc 包每次重灌簽名變、登入早期列舉沒認上；等簽名後裝 `/Library` 再看，
+  或在 `--register` 之外登入時補一次 `TISSelectInputSource`
+- [ ] 解除安裝與重置：解除安裝指令碼已隨包（`uninstall.sh`，`--purge` 連資料刪，README 有說明，2026-09-06）；還差偏好設定裡的「重置學習資料」按鈕、
+  配置檔案版本遷移（新增鍵有預設，改名鍵要遷）
+- [x] 許可證定稿（2026-09-07）：GPL-3.0-or-later，`LICENSE` 全文、`Cargo.toml` `license`、「關於」頁、README 一致；名字與 logo 不授權。以後引入 JMdict 要補進署名清單
 
 
-## 一、日常输入体验（决定自己会不会一直用）
+## 一、日常輸入體驗（決定自己會不會一直用）
 
-- [ ] 整句转换收尾：语料再补（现在是维基 + LCCC 微博对话，新闻 / 小说体还缺；bigram 只留次数 ≥ 6 的前 300 万对，
-  `wxqcf` 出 我想去蹭饭 就是「我想 → 去蹭饭」8 次进了表、「我想去 → 吃饭」没进的稀疏问题，简拼把读音放开后这类问题更显眼）；
-  个人 n-gram 已做（二元 + 三元），「按应用分别记」看用起来的效果再说
-- [ ] 释义兜底收尾：已做（2026-09-06，只对上屏的词库词 / 云端词查，个人释义表 `user-glossary-<语言>.tsv`）；还可以考虑停顿后高亮的候选也查、
-  偏好设置里看 / 清个人释义表、导入词库时批量预填
-- [ ] 候选窗口里超长释义要截断（CEDICT 表时 你 那条能拉到整屏宽；LLM 表已短，仍要兜底）
-- [ ] 翻译选中文字：译文很长时候选窗口的折行（读不到选区的提示已做）
-- [ ] 英文模式候选：把数据包的误拼对照表（typos，10 万对）喂进纠正，技术词（kubectl）没有 wordfreq 词频要给底值，两处编辑的纠正
-- [ ] 全角 / 半角切换，`。` 与 `．`（`-` `=` 非组句时的行为 2026-09-15 已定：仍是半角，但改由壳自己插入，
-  不再靠放行——放行在部分宿主里到不了应用，见 `candidate-ui.md` 的标点一节）
-- [ ] 快捷短语（`i` 前缀）：编码 → 短语表，用户可增删
-- [ ] 问字模式离线版：拆字表（IDS 数据）按部件查字，云端版已有
-- [ ] 双拼收尾：菜单栏增加方案切换
-- [ ] 双拼方案数据化：加方案不用改代码（放一张键位表就能用，与 #51 的方案导入一起定）；解码支持同码出多个读音——小浪的 `lk`（lai / lia）、`nm`（niang / nen）、`dk`（dai / dia）、`un`（en / eng）现在只解第一个，做完去掉 `every_syllable_round_trips` 里小浪的四个例外（#129）
-- [ ] 辅码（issue #8，设计见 [docs/design/aux-code.md](../design/aux-code.md)）：触发键（缺省 `;`，与「非拼音键进直输段 / 全角标点」排优先级）与逐键即筛、词级过滤、辅码态隐藏无码词；码表走 Rime yaml 导入（`columns` 必须解析、`import_tables` 跨文件合表、「有词无码」行要报警）；码表存**独立码索引**（两段式查询，别复用词库 Slot）；
-  原生表只带笔画（CNS11643 笔顺 + 大陆序覆盖表 `dict-convert stroke`，艹 3 / 辶 3 / 阝 2）；设置界面加「辅码」页（macOS 偏好设置 / Windows 设置程序：触发键、显示码、码表列表、导入）；第三方形码表（小鹤形 / 自然码形）不随包，走引导导入
-- [ ] 敲错边收尾：敲错四类代价与整段纠错代价 2026-09-12 已在冻结日志（12886 条可评）上扫过，都在峰上，不改（`docs/notes/constant-sweep.md`）；
-  个人折扣上限（3）回放从零学分不出好坏，等 `user-typos.tsv` 能带进回放（`--user-dict`）再看；
-  退格重打（组句内、跨上屏）已进输入日志 `retype` 事件（2026-09-12），攒够后先按 `docs/plan/model-eval.md` 的尺子算召回与误纠率，再决定喂不喂个人敲错表；
-  整段一处编辑那路仍是逐变体跑整句，长句慢（`nihoama` 1 ms、更长的几毫秒）
-- [x] 个人 n-gram 插值常数（λ 0.8 / K 8 / 上限 0.5 / D 0.75）2026-09-12 回放扫过：K 全平，λ 0.7–0.75 与 0.8 差 0.3 个点、带神经重排后无差，封顶 0.7 起掉；保留现值（`docs/notes/constant-sweep.md`）。
-  「挤掉了」要选四次才翻过「给掉了」是 K 与封顶合起来的设计（一次误选翻不过），不是常数没调
-- [x] 词库缺高频「代词 + 的」（我的 / 你的 / 他的）：2026-09-12 加了短语层 `assets/lexicon/phrases.tsv`（`dict-convert phrases`，语料相邻两三词、对话语料里 ≥ 2000 次、
-  边界规则，5400 条：我的 / 好的 / 不知道 / 有没有 / 那我），品牌词 `brand.tsv`（青简 210）；词典词头收不到的这一层以后按同一方法补
-- [x] 语料里少的领域词（对齐 / 后端 / 词库 / 候选框）：2026-09-12 从日志人工挑 48 条进 `assets/lexicon/domain_words.tsv`，语言模型走合成计数（`docs/notes/domain-words.md`）；
-  语料 0 次的（微软拼音 / 悬浮条）按规矩没进，要进得另立白名单
-- [x] 中英混杂词与英文专名（2026-09-15）：`assets/lexicon/mixed_words.tsv`（C盘 / B站 / U盘 / T恤 / A股…，`cpan`→C盘，`youpan`→U盘，
-  可进整句 `wozaibzhan`→我在B站）；`dict-convert english` 同编码优先大写专名（Windows ≠ windows），`07_display_forms.tsv` 补 VSCode / Bilibili 等；
-  产品 `dict.tsv` / `english.tsv` 已更新。句中英文仍只支持句末尾段，见「中英混输」。
-- [ ] 按输入串记的选择只认字面：`wod` 下选的 我的 惠及不到 `wode`；考虑同时按候选全拼记一份、查询取两者最大
-- [ ] 已经学进用户词的错读音云端词（`我的 wo di`、`我的哦 wo di e` 这类）没有清理入口：偏好设置词库页给「按读音核对用户词」，或一次性脚本
-- [ ] 正式版前的发布可信性（2026-09-12 外部 CI 检查，测试版先不做）：产品数据改不可变 tag 并在仓库锁版本 + SHA（2026-09-16 已做：`data-vN` Release + `tools/release/data.lock` + `data-fetch.sh`）；
-  安装包内容验证（pkg / Setup.exe 里词库、模型、许可齐不齐，`codesign --verify` / `signtool verify`）；`cargo deny`（许可证 + 来源）；`.qj` 读取器越界 fuzz、`qingjian-format` 跑 Miri
-- [ ] 本地整句模型（已进壳并随包发出，见 `docs/notes/neural-rescoring.md`；加载 12 秒是早期首次 Metal 编译的记录，2026-09-12 装机实测 102 ms，划掉）：
-  重排改了切分时应用里的行内拼音要到下一键才更新；日语
-- [ ] 个人微调（LoRA 挂在冻结基模上，基模更新后拿本地日志重训）：先在 train 仓库验证收益，再验 candle CPU 训练能不能跑通，都过了才进壳
-  （闲时门禁、加载时合并权重、开关与一键清除）；每个模型假设先按 `docs/plan/model-eval.md` 写尺子与基线
-- [ ] 个人英文词表没有衰减（2026-09-24 发现）：`learn_english` 只加不减，`insert_english` 里的 `choice_weight` 只决定
-  「要不要当第一」（`english_first`），位置只有 0 和 1 两档——用户选一百次中文候选，那条英文还是钉在词级候选第一位。
-  于是打不出来时原样上屏攒下的失败拼音（`houxuanshengcheng`、`shururizhi`）会永久占第一页一格，不危险但也不自愈。
-  合理的改法是让选择次数参与位置而不只是决定第一名，属于排序改动，先跑 `--replay` 冻结日志与整句评测再动。
-  现成出口：删候选快捷键（缺省 `Shift` + 数字）走的就是 `forget_english`。
-- [ ] 日语 emoji 要等有日语输入模式
+- [ ] 整句轉換收尾：語料再補（現在是維基 + LCCC 微博對話，新聞 / 小說體還缺；bigram 只留次數 ≥ 6 的前 300 萬對，
+  `wxqcf` 出 我想去蹭飯 就是「我想 → 去蹭飯」8 次進了表、「我想去 → 吃飯」沒進的稀疏問題，簡拼把讀音放開後這類問題更顯眼）；
+  個人 n-gram 已做（二元 + 三元），「按應用分別記」看用起來的效果再說
+- [ ] 釋義兜底收尾：已做（2026-09-06，只對上屏的詞庫詞 / 雲端詞查，個人釋義表 `user-glossary-<語言>.tsv`）；還可以考慮停頓後高亮的候選也查、
+  偏好設定裡看 / 清個人釋義表、匯入詞庫時批次預填
+- [ ] 候選窗口裡超長釋義要截斷（CEDICT 表時 你 那條能拉到整屏寬；LLM 表已短，仍要兜底）
+- [ ] 翻譯選中文字：譯文很長時候選視窗的折行（讀不到選區的提示已做）
+- [ ] 英文模式候選：把資料包的誤拼對照表（typos，10 萬對）喂進糾正，技術詞（kubectl）沒有 wordfreq 詞頻要給底值，兩處編輯的糾正
+- [ ] 全形 / 半形切換，`。` 與 `．`（`-` `=` 非組句時的行為 2026-09-15 已定：仍是半形，但改由殼自己插入，
+  不再靠放行——放行在部分宿主裡到不了應用，見 `candidate-ui.md` 的標點一節）
+- [ ] 快捷短語（`i` 字首）：編碼 → 短語表，使用者可增刪
+- [ ] 問字模式離線版：拆字表（IDS 資料）按部件查字，雲端版已有
+- [ ] 雙拼收尾：選單欄增加方案切換
+- [ ] 雙拼方案資料化：加方案不用改程式碼（放一張鍵位表就能用，與 #51 的方案匯入一起定）；解碼支援同碼出多個讀音——小浪的 `lk`（lai / lia）、`nm`（niang / nen）、`dk`（dai / dia）、`un`（en / eng）現在只解第一個，做完去掉 `every_syllable_round_trips` 裡小浪的四個例外（#129）
+- [ ] 輔碼（issue #8，設計見 [docs/design/aux-code.md](../design/aux-code.md)）：觸發鍵（預設 `;`，與「非拼音鍵進直輸段 / 全形標點」排優先順序）與逐鍵即篩、詞級過濾、輔碼態隱藏無碼詞；碼錶走 Rime yaml 匯入（`columns` 必須解析、`import_tables` 跨檔案合表、「有詞無碼」行要報警）；碼錶存**獨立碼索引**（兩段式查詢，別複用詞庫 Slot）；
+  原生表只帶筆畫（CNS11643 筆順 + 大陸序覆蓋表 `dict-convert stroke`，艹 3 / 辶 3 / 阝 2）；設定介面加「輔碼」頁（macOS 偏好設定 / Windows 設定程式：觸發鍵、顯示碼、碼錶列表、匯入）；第三方形碼錶（小鶴形 / 自然碼形）不隨包，走引導匯入
+- [ ] 敲錯邊收尾：敲錯四類代價與整段糾錯代價 2026-09-12 已在凍結日誌（12886 條可評）上掃過，都在峰上，不改（`docs/notes/constant-sweep.md`）；
+  個人折扣上限（3）回放從零學分不出好壞，等 `user-typos.tsv` 能帶進回放（`--user-dict`）再看；
+  退格重打（組句內、跨上屏）已進輸入日誌 `retype` 事件（2026-09-12），攢夠後先按 `docs/plan/model-eval.md` 的尺子算召回與誤糾率，再決定喂不喂個人敲錯表；
+  整段一處編輯那路仍是逐變體跑整句，長句慢（`nihoama` 1 ms、更長的幾毫秒）
+- [x] 個人 n-gram 插值常數（λ 0.8 / K 8 / 上限 0.5 / D 0.75）2026-09-12 回放掃過：K 全平，λ 0.7–0.75 與 0.8 差 0.3 個點、帶神經重排後無差，封頂 0.7 起掉；保留現值（`docs/notes/constant-sweep.md`）。
+  「擠掉了」要選四次才翻過「給掉了」是 K 與封頂合起來的設計（一次誤選翻不過），不是常數沒調
+- [x] 詞庫缺高頻「代詞 + 的」（我的 / 你的 / 他的）：2026-09-12 加了短語層 `assets/lexicon/phrases.tsv`（`dict-convert phrases`，語料相鄰兩三詞、對話語料裡 ≥ 2000 次、
+  邊界規則，5400 條：我的 / 好的 / 不知道 / 有沒有 / 那我），品牌詞 `brand.tsv`（青簡 210）；詞典詞頭收不到的這一層以後按同一方法補
+- [x] 語料裡少的領域詞（對齊 / 後端 / 詞庫 / 候選框）：2026-09-12 從日誌人工挑 48 條進 `assets/lexicon/domain_words.tsv`，語言模型走合成計數（`docs/notes/domain-words.md`）；
+  語料 0 次的（微軟拼音 / 懸浮條）按規矩沒進，要進得另立白名單
+- [x] 中英混雜詞與英文專名（2026-09-15）：`assets/lexicon/mixed_words.tsv`（C盤 / B站 / 隨身碟 / T恤 / A股…，`cpan`→C盤，`youpan`→隨身碟，
+  可進整句 `wozaibzhan`→我在B站）；`dict-convert english` 同編碼優先大寫專名（Windows ≠ windows），`07_display_forms.tsv` 補 VSCode / Bilibili 等；
+  產品 `dict.tsv` / `english.tsv` 已更新。句中英文仍只支援句末尾段，見「中英混輸」。
+- [ ] 按輸入串記的選擇只認字面：`wod` 下選的 我的 惠及不到 `wode`；考慮同時按候選全拼記一份、查詢取兩者最大
+- [ ] 已經學進使用者詞的錯讀音雲端詞（`我的 wo di`、`我的哦 wo di e` 這類）沒有清理入口：偏好設定詞庫頁給「按讀音核對使用者詞」，或一次性指令碼
+- [ ] 正式版前的釋出可信性（2026-09-12 外部 CI 檢查，測試版先不做）：產品資料改不可變 tag 並在倉庫鎖版本 + SHA（2026-09-16 已做：`data-vN` Release + `tools/release/data.lock` + `data-fetch.sh`）；
+  安裝包內容驗證（pkg / Setup.exe 裡詞庫、模型、許可齊不齊，`codesign --verify` / `signtool verify`）；`cargo deny`（許可證 + 來源）；`.qj` 讀取器越界 fuzz、`qingjian-format` 跑 Miri
+- [ ] 本地整句模型（已進殼並隨包發出，見 `docs/notes/neural-rescoring.md`；載入 12 秒是早期首次 Metal 編譯的記錄，2026-09-12 裝機實測 102 ms，劃掉）：
+  重排改了切分時應用裡的行內拼音要到下一鍵才更新；日語
+- [ ] 個人微調（LoRA 掛在凍結基模上，基模更新後拿本地日誌重訓）：先在 train 倉庫驗證收益，再驗 candle CPU 訓練能不能跑通，都過了才進殼
+  （閒時門禁、載入時合併權重、開關與一鍵清除）；每個模型假設先按 `docs/plan/model-eval.md` 寫尺子與基線
+- [ ] 個人英文詞表沒有衰減（2026-09-24 發現）：`learn_english` 只加不減，`insert_english` 裡的 `choice_weight` 只決定
+  「要不要當第一」（`english_first`），位置只有 0 和 1 兩檔——使用者選一百次中文候選，那條英文還是釘在詞級候選第一位。
+  於是打不出來時原樣上屏攢下的失敗拼音（`houxuanshengcheng`、`shururizhi`）會永久佔第一頁一格，不危險但也不自愈。
+  合理的改法是讓選擇次數參與位置而不只是決定第一名，屬於排序改動，先跑 `--replay` 凍結日誌與整句評測再動。
+  現成出口：刪候選快捷鍵（預設 `Shift` + 數字）走的就是 `forget_english`。
+- [ ] 日語 emoji 要等有日語輸入模式
 
-## 二、产品特色
+## 二、產品特色
 
-- [ ] 释义表收尾：覆盖面再扩（次数阈值降到 100 约 10 万词）；JMdict 校对假名与日文词性；等级表（CEFR / JLPT 已随包，见 `assets/levels/`）
-  也可做英→中、日→中方向的种子；四六级 / 商务英语词表要先找到许可干净的来源
-- [ ] 可选复习（Phase 4）：输入统计、生词识别、词汇统计（含 CEFR / JLPT 等级分布）已做（2026-09-06）；复习容易变成打扰，先不急
-- [ ] 云联想收尾（Phase 6）：密钥进钥匙串（等签名定了再做，ad-hoc 签名每次重装都弹授权）、按应用禁用、限流与用量统计
-- [ ] 个人模型（Phase 7）：小 Transformer 实验（有评测门槛），见 roadmap
+- [ ] 釋義表收尾：覆蓋面再擴（次數閾值降到 100 約 10 萬詞）；JMdict 校對假名與日文詞性；等級表（CEFR / JLPT 已隨包，見 `assets/levels/`）
+  也可做英→中、日→中方向的種子；四六級 / 商務英語詞表要先找到許可乾淨的來源
+- [ ] 可選複習（Phase 4）：輸入統計、生詞識別、詞彙統計（含 CEFR / JLPT 等級分佈）已做（2026-09-06）；複習容易變成打擾，先不急
+- [ ] 雲聯想收尾（Phase 6）：金鑰進鑰匙串（等簽名定了再做，ad-hoc 簽名每次重灌都彈授權）、按應用停用、限流與用量統計
+- [ ] 個人模型（Phase 7）：小 Transformer 實驗（有評測門檻），見 roadmap
 
-- [ ] ★ **主题与自绘渲染器 spike**（2026-09-13 定向，分支 `renderer-spike`，见 [design/rendering.md](../design/rendering.md)）：
-  tiny-skia + cosmic-text 画一行「青简 hello 🙂 日本語」+ 圆角阴影，Windows / macOS 与原生并排截图，验四条：彩色 emoji（sbix / COLRv0）、
-  中日字形回退按 locale、字体按需加载（不扫全系统）、灰度抗锯齿观感；首帧耗时与内存不劣于 GDI / AppKit。过了 Windows + macOS 一起换渲染器、主题文件 TOML；
-  不过退回各平台各自渲染（Windows 走 D2D）。设置程序不自绘。
+- [ ] ★ **主題與自繪渲染器 spike**（2026-09-13 定向，分支 `renderer-spike`，見 [design/rendering.md](../design/rendering.md)）：
+  tiny-skia + cosmic-text 畫一行「青簡 hello 🙂 日本語」+ 圓角陰影，Windows / macOS 與原生並排截圖，驗四條：彩色 emoji（sbix / COLRv0）、
+  中日字形回退按 locale、字型按需載入（不掃全系統）、灰度抗鋸齒觀感；首幀耗時與記憶體不劣於 GDI / AppKit。過了 Windows + macOS 一起換渲染器、主題檔案 TOML；
+  不過退回各平臺各自渲染（Windows 走 D2D）。設定程式不自繪。
 
-## 三、其他平台
+## 三、其他平臺
 
-- [~] Windows TSF（Phase 5）：真机自用中，候选窗已覆盖商店 / 任务栏搜索（`uiAccess` + 自签）。
-  与 mac 功能齐平尚缺（按价值排；工时=开发+真机验证合计，单人；真机来回是大头）：
-  - [~] **① 翻译选中文字 `translate_selection`**（★★★ / 中高 / 1.5–2 天）：**代码完成，待真机测**（2026-09-10）。
-    新增 `RequestSelection` / `Selection{text,rect}` 两协议消息；DLL 异步只读会话（`com/selection.rs`，`GetSelection`+`GetText`+`GetTextExt`）
-    读选区 → Server `request_translation`（`PredictionKind::Translate`）→ 自绘候选窗显示译文 → 回车 / 空格替换（回 `commit` 走 `InsertTextAtSelection` 替换选区）/ Esc 保留；
-    设置页「快捷键」加了翻译选中文字行（改修饰键）。mac 全绿 + windows-gnu 交叉编译 / clippy 过；沉浸式应用读选区、替换选区待真机验。
-  - [~] **② 生词「看到轮次」计数 `note_displayed`**（★★☆ / 低 / 0.5 天）：**代码完成，待真机测**（2026-09-10）。
-    `dispatch/mod.rs::reconcile_candidates` 里真正 show 那次按当前页调 `Engine::note_displayed`、收窗传空，对齐 macOS `render`；轮次推进、生词满 3 轮毕业。
-  - [~] **③ 悬浮状态条**（★★☆ / 中 / 1.5–2 天）：**代码完成，待真机测**（2026-09-10）。
-    Server 侧单例，跟候选窗同一条 UI 线程；分层窗合成器从候选窗 `surface.rs` 抽出成 `ui/layered.rs` 两边共用，绘制件（主题 / DPI / 深浅）复用；
-    状态条自己一个窗口类 + 窗口过程（`ui/status/`）：`WM_NCHITTEST`→`HTCAPTION` 整块可拖、`WM_MOUSEACTIVATE`→`MA_NOACTIVATE` 不抢焦点、
-    `WM_EXITSIZEMOVE` 把位置写回 `[status_bar] x/y`（`GWLP_USERDATA` 存自身指针）。新增协议 `ClientMessage::ModeChanged{english}`（fire-and-forget），
-    DLL 在 `update_mode_indicator` 推模式；Server 据此刷、会话关就收起；双拼方案 Server 从 `[general] shuangpin` 知道。配置加 `[status_bar]` 分节（`enabled`/`x`/`y`），
-    设置「候选窗口」页加开关。参考水杉 FTB 形态（它用 D2D 且不记位置），我们沿用 GDI 分层窗保持视觉一致并加了记位置。
-    mac 全绿（+3 状态条分派测试）+ windows-gnu 交叉编译 / clippy 过；拖动 / 记位置 / DPI / 深色 / 盖高 z-band 待真机验。
-  - [~] **④ 删候选屏幕提示**（★☆☆ / 低 / 0.5 天）：**代码完成，待真机测**（2026-09-11）。
-    `Frame` 加 `notice: Option<String>`（不参与 `is_empty`），`dispatch/shortcut.rs::forget_on_page` 填、`handle_key` 开头清（只活到下一次按键）；
-    自绘候选窗 `ui/candidates/view.rs` 画在拼音行下方（淡色小字）。host 测已加。
-  - [~] **⑤ 任务栏点中/英反同步**（★☆☆ / 低 / 0.5 天）：**代码完成，待真机测**（2026-09-11）。
-    激活时对转换模式 compartment 挂 `ITfCompartmentEventSink`（`com/conversion.rs`），`OnChange` 读回 `NATIVE` 位、与当前模式不同才翻转
-    （防回环），顺带刷指示器 + 上报 Server 让悬浮状态条也同步。纯 DLL 改动、无新协议。
-  - [ ] 发版：换 **Certum 开源代码签名证书**重签（开发全程自签 + 本机受信任根，见 `installer/sign-local.ps1`）、
-    `windows-v<版本>` 标签与 CI。
-  - [ ] **本地整句模型上 Windows**：Server 已接（`dispatch/rescore/`，CPU 推理，设置「云服务」页有开关，安装包带 `data\model`），待真机验：每次重排的耗时（前文 + 几条路径一次前向，CPU 上可能几十到一百多毫秒，超了就缩前文长度）、模型加载时间；
-    应用光标前文已接（DLL 起组句时读、密码框跳过；2026-09-12 真机验过记事本 / Edge / 终端都读得到，Edge 密码框按 `IS_PRIVATE` 识别），真机看沉浸式应用读不读得到；
-    模型单文件 `.qjm` 已做（2026-09-12，复用 `.qj` 容器 `Kind::Model`，`find_model` 先 `.qjm` 再三件套目录，`pack model` / `tools/release/pack-model.sh`，
-    data Release 传 `model.qjm`，bundle.sh / qingjian.iss 只带一个文件），待 mac 与 box 真机各装一次验加载与重排；
-    密码框已按 TSF 规范做（2026-09-12）：`KEYBOARD_DISABLED` compartment 整键放行不组句，`IS_PRIVATE` / 密码 / PIN 输入范围为私密（组句但不学不记不发云端，`ClientMessage::Privacy` → `Engine::set_private`），box 真机验过：Edge 密码框整键放行；InPrivate 网页文本框报 `IS_SEARCH` 不报 `IS_PRIVATE`，私密路径只靠单测覆盖；CI 两个 job 都从 `data` Release 取 `model.qjm`（已做）。
-- [ ] Linux Fcitx5 后续（默认面板与手动安装已实现）：native Wayland 验证、Server 自绘 / GNOME 位图、神经重排、自动启动与打包；配置同步、跨平台词库
+- [~] Windows TSF（Phase 5）：真機自用中，候選窗已覆蓋商店 / 工作列搜尋（`uiAccess` + 自籤）。
+  與 mac 功能齊平尚缺（按價值排；工時=開發+真機驗證合計，單人；真機來回是大頭）：
+  - [~] **① 翻譯選中文字 `translate_selection`**（★★★ / 中高 / 1.5–2 天）：**程式碼完成，待真機測**（2026-09-10）。
+    新增 `RequestSelection` / `Selection{text,rect}` 兩協議訊息；DLL 非同步只讀會話（`com/selection.rs`，`GetSelection`+`GetText`+`GetTextExt`）
+    讀選區 → Server `request_translation`（`PredictionKind::Translate`）→ 自繪候選窗顯示譯文 → 回車 / 空格替換（回 `commit` 走 `InsertTextAtSelection` 替換選區）/ Esc 保留；
+    設定頁「快捷鍵」加了翻譯選中文字行（改修飾鍵）。mac 全綠 + windows-gnu 交叉編譯 / clippy 過；沉浸式應用讀選區、替換選區待真機驗。
+  - [~] **② 生詞「看到輪次」計數 `note_displayed`**（★★☆ / 低 / 0.5 天）：**程式碼完成，待真機測**（2026-09-10）。
+    `dispatch/mod.rs::reconcile_candidates` 裡真正 show 那次按當前頁調 `Engine::note_displayed`、收窗傳空，對齊 macOS `render`；輪次推進、生詞滿 3 輪畢業。
+  - [~] **③ 懸浮狀態條**（★★☆ / 中 / 1.5–2 天）：**程式碼完成，待真機測**（2026-09-10）。
+    Server 側單例，跟候選窗同一條 UI 執行緒；分層窗合成器從候選窗 `surface.rs` 抽出成 `ui/layered.rs` 兩邊共用，繪製件（主題 / DPI / 深淺）複用；
+    狀態條自己一個視窗類 + 視窗過程（`ui/status/`）：`WM_NCHITTEST`→`HTCAPTION` 整塊可拖、`WM_MOUSEACTIVATE`→`MA_NOACTIVATE` 不搶焦點、
+    `WM_EXITSIZEMOVE` 把位置寫回 `[status_bar] x/y`（`GWLP_USERDATA` 存自身指標）。新增協議 `ClientMessage::ModeChanged{english}`（fire-and-forget），
+    DLL 在 `update_mode_indicator` 推模式；Server 據此刷、會話關就收起；雙拼方案 Server 從 `[general] shuangpin` 知道。配置加 `[status_bar]` 分節（`enabled`/`x`/`y`），
+    設定「候選視窗」頁加開關。參考水杉 FTB 形態（它用 D2D 且不記位置），我們沿用 GDI 分層窗保持視覺一致並加了記位置。
+    mac 全綠（+3 狀態條分派測試）+ windows-gnu 交叉編譯 / clippy 過；拖動 / 記位置 / DPI / 深色 / 蓋高 z-band 待真機驗。
+  - [~] **④ 刪候選螢幕提示**（★☆☆ / 低 / 0.5 天）：**程式碼完成，待真機測**（2026-09-11）。
+    `Frame` 加 `notice: Option<String>`（不參與 `is_empty`），`dispatch/shortcut.rs::forget_on_page` 填、`handle_key` 開頭清（只活到下一次按鍵）；
+    自繪候選窗 `ui/candidates/view.rs` 畫在拼音行下方（淡色小字）。host 測已加。
+  - [~] **⑤ 工作列點中/英反同步**（★☆☆ / 低 / 0.5 天）：**程式碼完成，待真機測**（2026-09-11）。
+    啟用時對轉換模式 compartment 掛 `ITfCompartmentEventSink`（`com/conversion.rs`），`OnChange` 讀回 `NATIVE` 位、與當前模式不同才翻轉
+    （防迴環），順帶刷指示器 + 上報 Server 讓懸浮狀態條也同步。純 DLL 改動、無新協議。
+  - [ ] 發版：換 **Certum 開原始碼簽名證書**重籤（開發全程自籤 + 本機受信任根，見 `installer/sign-local.ps1`）、
+    `windows-v<版本>` 標籤與 CI。
+  - [ ] **本地整句模型上 Windows**：Server 已接（`dispatch/rescore/`，CPU 推理，設定「雲服務」頁有開關，安裝包帶 `data\model`），待真機驗：每次重排的耗時（前文 + 幾條路徑一次前向，CPU 上可能幾十到一百多毫秒，超了就縮前文長度）、模型載入時間；
+    應用游標前文已接（DLL 起組句時讀、密碼框跳過；2026-09-12 真機驗過記事本 / Edge / 終端都讀得到，Edge 密碼框按 `IS_PRIVATE` 識別），真機看沉浸式應用讀不讀得到；
+    模型單檔案 `.qjm` 已做（2026-09-12，複用 `.qj` 容器 `Kind::Model`，`find_model` 先 `.qjm` 再三件套目錄，`pack model` / `tools/release/pack-model.sh`，
+    data Release 傳 `model.qjm`，bundle.sh / qingjian.iss 只帶一個檔案），待 mac 與 box 真機各裝一次驗載入與重排；
+    密碼框已按 TSF 規範做（2026-09-12）：`KEYBOARD_DISABLED` compartment 整鍵放行不組句，`IS_PRIVATE` / 密碼 / PIN 輸入範圍為私密（組句但不學不記不發雲端，`ClientMessage::Privacy` → `Engine::set_private`），box 真機驗過：Edge 密碼框整鍵放行；InPrivate 網頁文本框報 `IS_SEARCH` 不報 `IS_PRIVATE`，私密路徑只靠單測覆蓋；CI 兩個 job 都從 `data` Release 取 `model.qjm`（已做）。
+- [ ] Linux Fcitx5 後續（預設面板與手動安裝已實現）：native Wayland 驗證、Server 自繪 / GNOME 點陣圖、神經重排、自動啟動與打包；配置同步、跨平臺詞庫
 
-## 四、其他输入方案
+## 四、其他輸入方案
 
-- [ ] 五笔（86 版）：方案与分期见 [wubi.md](wubi.md)，第一期 Core + CLI + Windows；
-  `[general] scheme` 收敛与配置迁移一起做（顺带解掉〇里的「配置文件版本迁移」）
-- [ ] 复杂方案收尾（与上一条共用「输入方案」抽象）：注音只在 Core 与 Windows 接了，macOS 侧还没接；双拼的方案切换要等 `[general] scheme`
+- [ ] 五筆（86 版）：方案與分期見 [wubi.md](wubi.md)，第一期 Core + CLI + Windows；
+  `[general] scheme` 收斂與配置遷移一起做（順帶解掉〇裡的「配置檔案版本遷移」）
+- [ ] 複雜方案收尾（與上一條共用「輸入方案」抽象）：注音只在 Core 與 Windows 接了，macOS 側還沒接；雙拼的方案切換要等 `[general] scheme`

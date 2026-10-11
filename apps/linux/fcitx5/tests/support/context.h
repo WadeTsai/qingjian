@@ -1,4 +1,4 @@
-//! 默认面板回归使用的无应用输入上下文。
+//! 預設面板迴歸使用的無應用輸入上下文。
 #pragma once
 #include <fcitx/inputcontext.h>
 #include <functional>

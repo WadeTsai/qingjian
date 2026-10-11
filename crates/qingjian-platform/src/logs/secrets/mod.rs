@@ -1,5 +1,5 @@
-//! 日志里的密钥掩码：进程加载到密钥就登记一次，日志落盘前把登记过的值换成 `***`。
-//! 逐处「别把密钥记进日志」防不住第三方库的报错原文（dotenvy 带出过整行 `.env`），所以在写入口统一兜底。
+//! 日誌裡的金鑰掩碼：程序載入到金鑰就登記一次，日誌落盤前把登記過的值換成 `***`。
+//! 逐處「別把金鑰記進日誌」防不住第三方庫的報錯原文（dotenvy 帶出過整行 `.env`），所以在寫入口統一兜底。
 
 mod masking_writer;
 
@@ -8,14 +8,14 @@ use std::sync::RwLock;
 
 pub use self::masking_writer::MaskingWriter;
 
-/// 比这短的值不登记：太短的串会误伤正常日志，也不是真密钥。
+/// 比這短的值不登記：太短的串會誤傷正常日誌，也不是真金鑰。
 const MIN_SECRET_LEN: usize = 8;
 
 const MASK: &str = "***";
 
 static SECRETS: RwLock<Vec<String>> = RwLock::new(Vec::new());
 
-/// 登记一个密钥；重复登记、过短的值忽略。
+/// 登記一個金鑰；重複登記、過短的值忽略。
 pub fn register(secret: &str) {
     let secret = secret.trim();
     if secret.len() < MIN_SECRET_LEN {
@@ -29,7 +29,7 @@ pub fn register(secret: &str) {
     }
 }
 
-/// 把文本里登记过的密钥换成 `***`；没有命中就原样借回去。
+/// 把文本里登記過的金鑰換成 `***`；沒有命中就原樣借回去。
 pub fn mask(text: &str) -> Cow<'_, str> {
     let Ok(secrets) = SECRETS.read() else {
         return Cow::Borrowed(text);

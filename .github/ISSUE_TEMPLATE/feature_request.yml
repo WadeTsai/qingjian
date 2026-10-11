@@ -1,54 +1,54 @@
-name: 功能建议
-description: 希望新增的能力，或现有功能的改进
+name: 功能建議
+description: 希望新增的能力，或現有功能的改進
 labels: ["feature"]
 body:
   - type: markdown
     attributes:
       value: |
-        标题请用一句话写清想要什么，例如「候选窗口支持自定义字体」。
+        標題請用一句話寫清想要什麼，例如「候選視窗支援自定義字型」。
 
-        提建议前可以先搜一下已有 issue，已经有人提过的话在那条下面点个 👍 或补充场景即可，不必重开。
+        提建議前可以先搜一下已有 issue，已經有人提過的話在那條下面點個 👍 或補充場景即可，不必重開。
   - type: checkboxes
     id: checked
     attributes:
-      label: 提交前确认
+      label: 提交前確認
       options:
-        - label: 已搜索过现有 issue（包括已关闭的），没有重复
+        - label: 已搜尋過現有 issue（包括已關閉的），沒有重複
           required: true
-        - label: 已查过[使用说明](https://qingjian.app/docs)，里面没有答案
+        - label: 已查過[使用說明](https://qingjian.app/docs)，裡面沒有答案
           required: true
   - type: dropdown
     id: platform
     attributes:
-      label: 涉及平台
+      label: 涉及平臺
       multiple: true
       options:
         - macOS
         - Windows
         - Linux
-        - 全部平台
+        - 全部平臺
     validations:
       required: true
   - type: textarea
     id: problem
     attributes:
-      label: 想解决什么问题
-      description: 先说场景和困扰，而不是直接说方案。例如「写代码时经常想不起变量名的英文」。
+      label: 想解決什麼問題
+      description: 先說場景和困擾，而不是直接說方案。例如「寫程式碼時經常想不起變數名的英文」。
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
       label: 期望的做法
-      description: 你设想的交互方式，包括按键、设置项、候选的显示方式等。
+      description: 你設想的互動方式，包括按鍵、設定項、候選的顯示方式等。
     validations:
       required: true
   - type: textarea
     id: reference
     attributes:
-      label: 其他输入法的参考
-      description: 如果别的输入法（搜狗、微信、Rime、微软拼音等）已有类似功能，说一下它们怎么做的，有截图更好。
+      label: 其他輸入法的參考
+      description: 如果別的輸入法（搜狗、微信、Rime、微軟拼音等）已有類似功能，說一下它們怎麼做的，有截圖更好。
   - type: textarea
     id: extra
     attributes:
-      label: 补充
+      label: 補充

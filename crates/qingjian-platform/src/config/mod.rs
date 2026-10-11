@@ -53,44 +53,44 @@ pub use status_bar::StatusBarConfig;
 pub use switch_key::{SwitchKey, SwitchKeys};
 pub use update::{UpdateChannel, UpdateConfig};
 
-/// 用户配置文件（TOML）。所有平台同一份格式，缺省值全部在各分节的 `Default` 里。
+/// 使用者配置檔案（TOML）。所有平臺同一份格式，預設值全部在各分節的 `Default` 裡。
 ///
-/// 配置文件是唯一事实源：菜单、设置窗口、手改文件三个入口都只写这个文件，再由壳热加载。
+/// 配置檔案是唯一事實源：選單、設定視窗、手改檔案三個入口都只寫這個檔案，再由殼熱載入。
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
-    /// 常规：学习语言、每页候选数、翻页键、外观。
+    /// 常規：學習語言、每頁候選數、翻頁鍵、外觀。
     pub general: GeneralConfig,
 
-    /// 自定义短语；保存和读取均检查位置冲突。
+    /// 自定義短語；儲存和讀取均檢查位置衝突。
     #[serde(deserialize_with = "deserialize_phrases")]
     pub custom_phrases: Vec<qingjian_core::CustomPhrase>,
 
-    /// 快捷键：前缀模式键（表达式 / 问字）与上屏译词的修饰键组合。
+    /// 快捷鍵：字首模式鍵（表示式 / 問字）與上屏譯詞的修飾鍵組合。
     pub shortcut: ShortcutConfig,
 
-    /// 模糊音开关。
+    /// 模糊音開關。
     pub fuzzy: FuzzyRules,
 
-    /// 附加词库开关。
+    /// 附加詞庫開關。
     pub dictionaries: DictionariesConfig,
 
-    /// 辅码码表开关。
+    /// 輔碼碼錶開關。
     pub aux_code: AuxCodeConfig,
 
-    /// 按应用改行为（哪些应用里英文模式不给候选）。
+    /// 按應用改行為（哪些應用裡英文模式不給候選）。
     pub apps: AppsConfig,
 
-    /// 云联想。
+    /// 雲聯想。
     pub predict: PredictConfig,
 
-    /// 悬浮状态条（桌面上常驻、可拖动的中 / 英浮窗）。
+    /// 懸浮狀態條（桌面上常駐、可拖動的中 / 英浮窗）。
     pub status_bar: StatusBarConfig,
 
     /// 本地整句模型。
     pub model: LocalModelConfig,
 
-    /// 检查更新。
+    /// 檢查更新。
     pub update: UpdateConfig,
 }
 
@@ -102,8 +102,8 @@ fn deserialize_phrases<'de, D: serde::Deserializer<'de>>(
     Ok(phrases)
 }
 
-/// 模板的 `[apps]` 一节（Linux）：应用按 fcitx5 认到的名字（X11 是 WM_CLASS，Wayland 是 app_id）。
-/// 白名单要与 [`DEFAULT_ENGLISH_CANDIDATES_ON`] 一致，测试 `template_parses_to_defaults` 会核对。
+/// 模板的 `[apps]` 一節（Linux）：應用按 fcitx5 認到的名字（X11 是 WM_CLASS，Wayland 是 app_id）。
+/// 白名單要與 [`DEFAULT_ENGLISH_CANDIDATES_ON`] 一致，測試 `template_parses_to_defaults` 會核對。
 #[cfg(not(any(windows, target_os = "macos")))]
 macro_rules! template_apps {
     () => {
@@ -121,8 +121,8 @@ english_candidates_on = [
     };
 }
 
-/// 模板的 `[apps]` 一节（macOS）：应用按 bundle identifier 认。白名单要与 [`DEFAULT_ENGLISH_CANDIDATES_ON`] 一致，
-/// 测试 `template_parses_to_defaults` 会核对。用宏而不是常量，是因为 `concat!` 只收字面量。
+/// 模板的 `[apps]` 一節（macOS）：應用按 bundle identifier 認。白名單要與 [`DEFAULT_ENGLISH_CANDIDATES_ON`] 一致，
+/// 測試 `template_parses_to_defaults` 會核對。用宏而不是常量，是因為 `concat!` 只收字面量。
 #[cfg(target_os = "macos")]
 macro_rules! template_apps {
     () => {
@@ -141,7 +141,7 @@ english_candidates_on = [
     };
 }
 
-/// 模板的 `[apps]` 一节（Windows）：应用按宿主进程的 exe 文件名认。白名单要与 [`DEFAULT_ENGLISH_CANDIDATES_ON`] 一致。
+/// 模板的 `[apps]` 一節（Windows）：應用按宿主程序的 exe 檔名認。白名單要與 [`DEFAULT_ENGLISH_CANDIDATES_ON`] 一致。
 #[cfg(windows)]
 macro_rules! template_apps {
     () => {
@@ -159,11 +159,11 @@ english_candidates_on = [
     };
 }
 
-/// 模板 `[shortcut]` 一节里的修饰键组合（macOS 命名）。缺省值两个平台一样，只是写法与注释按平台的键名。
+/// 模板 `[shortcut]` 一節裡的修飾鍵組合（macOS 命名）。預設值兩個平臺一樣，只是寫法與註釋按平臺的鍵名。
 #[cfg(not(windows))]
 macro_rules! template_shortcut_keys {
     () => {
-        r#"# 中 / 英模式切换键（Windows 用），可多选：shift 单击（缺省）/ control 单击 / ctrl+alt+space 组合键；[] 不用键切换。
+        r#"# 中 / 英模式切换键（Windows 用），可多选：shift 单击（預設）/ control 单击 / ctrl+alt+space 组合键；[] 不用键切换。
 # macOS 的切换键是 Caps Lock（系统级），本项不生效
 switch_mode = ["shift"]
 # 数字键配这些修饰键上屏候选的译词：translation 第一个译词，translation_second 第二个（候选右侧有两个译词时）
@@ -179,15 +179,15 @@ delete_candidate = "shift"
     };
 }
 
-/// 模板 `[shortcut]` 一节里的修饰键组合（Windows 键名：alt / ctrl / win，读回来与 macOS 的 option / control / command 等价）。
+/// 模板 `[shortcut]` 一節裡的修飾鍵組合（Windows 鍵名：alt / ctrl / win，讀回來與 macOS 的 option / control / command 等價）。
 #[cfg(windows)]
 macro_rules! template_shortcut_keys {
     () => {
-        r#"# 中 / 英模式切换键，可多选：shift 单击（缺省，与微软拼音一致）/ control 单击 / ctrl+alt+space 组合键；[] 不用键切换，只剩按钮。
+        r#"# 中 / 英模式切换键，可多选：shift 单击（預設，与微软拼音一致）/ control 单击 / ctrl+alt+space 组合键；[] 不用键切换，只剩按钮。
 # 不提供 Ctrl + Space：中文 Windows 把它绑成系统的「输入法/非输入法切换」，系统先截走
 switch_mode = ["shift"]
 # 数字键配这些修饰键上屏候选的译词：translation 第一个译词，translation_second 第二个（候选右侧有两个译词时）
-# 任意修饰键组合（alt / shift / ctrl / win 用 + 连）。Alt+数字会被 Windows 当菜单快捷键截走，缺省用 Ctrl；组句时才拦，不打字时照常放行给应用
+# 任意修饰键组合（alt / shift / ctrl / win 用 + 连）。Alt+数字会被 Windows 当菜单快捷键截走，預設用 Ctrl；组句时才拦，不打字时照常放行给应用
 translation = "ctrl"
 translation_second = "shift+ctrl"
 # 把应用里选中的文字译成学习语言（要开着云服务）：译文先出现在候选窗口，回车替换选中的文字，Esc 保留原文
@@ -198,8 +198,8 @@ delete_candidate = "shift"
     };
 }
 
-/// 首次运行写出的模板：默认值全部列出并注释，用户改一处即可。`[shortcut]` 的修饰键与 `[apps]` 分平台，
-/// 见 [`template_shortcut_keys!`] / [`template_apps!`]。
+/// 首次執行寫出的模板：預設值全部列出並註釋，使用者改一處即可。`[shortcut]` 的修飾鍵與 `[apps]` 分平臺，
+/// 見 [`template_shortcut_keys!`] / [`template_apps!`]。
 pub const TEMPLATE: &str = concat!(
     r#"# 青简输入法配置。保存后自动生效；也可以在菜单栏的输入法菜单里改。
 
@@ -217,7 +217,7 @@ theme = "qingjian"
 # 候选窗口排布：vertical 竖排 / horizontal 横排（横排只给高亮候选显示译文）
 layout = "vertical"
 # 横排时 ↑ / ↓ 把单行展开成 6 行矩阵并换行（一行一页候选），← / → 改为在候选之间移动（拼音光标用 ⌥←/→、⌘←/→），
-# Esc 第一下先收回单行。缺省 false：横排下 ↑ / ↓ 逐个移动高亮、← / → 移动拼音光标，与以前一样。只有 macOS 用
+# Esc 第一下先收回单行。預設 false：横排下 ↑ / ↓ 逐个移动高亮、← / → 移动拼音光标，与以前一样。只有 macOS 用
 horizontal_grid = false
 # 候选窗口由谁绘制：qingjian 青简渲染器（各平台一致，主题走它）/ system 系统原生绘制（渲染器有问题时的退路）
 renderer = "qingjian"
@@ -235,13 +235,13 @@ english_candidates = true
 
 # 繁体输出模式。开启后上屏繁体，不影响词库和个人词频的简体记录。
 traditional = false
-# 中文模式下整段输入是英文词时（hello / key）是否让中文候选排第一、英文词第二；缺省 false：拼音不像话的输入英文词排第一
+# 中文模式下整段输入是英文词时（hello / key）是否让中文候选排第一、英文词第二；預設 false：拼音不像话的输入英文词排第一
 chinese_first = false
 # 中文模式下整段是英文词或英文词的开头时给英文候选与补全（hello、compa → company）；false 时中文模式只出中文，英文模式不受影响
 english_in_chinese = true
 # 候选后面配 emoji（kaixin → 开心 😄）；false 时候选里只有字词
 emoji = true
-# 中文模式下按住 Shift 敲的字母：passthrough 拼音原样上屏、字母交给应用（缺省，与以前一致）/ compose 收进组句
+# 中文模式下按住 Shift 敲的字母：passthrough 拼音原样上屏、字母交给应用（預設，与以前一致）/ compose 收进组句
 # 缓冲区参与匹配，这样 Cpan 与 cpan 一样能出「C盘」。英文模式与英文直输段（no-Way）不受影响
 shift_letter = "passthrough"
 # 内置英文模式：开着时单击切换键（[shortcut] switch_mode）或 Caps Lock 亮着进英文模式
@@ -252,12 +252,12 @@ full_width_punctuation = true
 # 英文模式下的同一件事，中英各记一份，状态条切的是当前模式那份；只有 Windows 用
 english_full_width_punctuation = false
 # 组句中敲会转全角的标点（, . ? ! 等，翻页键除外）先把高亮候选上屏、再补该标点（nihao, 一气打完「你好，」）；
-# 缺省 false：标点进英文直输段，与以前一致
+# 預設 false：标点进英文直输段，与以前一致
 punct_commits = false
-# 辅码触发键：拼音打完之后敲它进辅码态，之后敲的字母按码表缩小候选范围；缺省是分号
+# 辅码触发键：拼音打完之后敲它进辅码态，之后敲的字母按码表缩小候选范围；預設是分号
 # 单个可见字符，字母、数字与翻页键不能当触发键；微软 / 搜狗双拼里分号先当 ing 的韵母键
 aux_code_key = ";"
-# 候选上是否显示码（方括号紧跟在候选词后面，如「鹤[rbm] crane」）。缺省关
+# 候选上是否显示码（方括号紧跟在候选词后面，如「鹤[rbm] crane」）。預設关
 aux_code_show = false
 # 码段删空后是否留在辅码状态：true 删空后 ; 仍在、候选全部回来，再按一次退格才退出辅码；false 删空即回拼音状态
 aux_code_keep_empty = true
@@ -265,13 +265,13 @@ aux_code_keep_empty = true
 # zhuyin 大千注音 / none 关（只用形码，见下面的 wubi）。
 # 双拼与注音下 v / u / i 都是按键，表达式模式没有入口，问字只能靠 question_mark 打开后用 ? 进；微软、搜狗方案的 ; 键是 ing
 scheme = ""
-# 双拼方案下 preedit 显示原始按键（如 ljse）还是展开成全拼（lan'se）；缺省 false（展开成全拼）
+# 双拼方案下 preedit 显示原始按键（如 ljse）还是展开成全拼（lan'se）；預設 false（展开成全拼）
 shuangpin_raw_preedit = false
 # 五笔（86 版形码）：留空为关，wubi86 为开。**与上面的拼音方案同时开着就是混输**——
 # 两边都出候选，编码打全的五笔词在前、其次拼音（打不出的字直接打拼音）；候选旁的译文、生词记录与学习照常。
 # 只用五笔的话把 scheme 写成 none；第 5 个字母起五笔已经查不到东西，自动只剩拼音。
 wubi = ""
-# 日志级别：info 缺省 / debug 详细（会记录敲的拼音与上屏的文字，配合作者排查问题时再开）。日志在 ~/Library/Logs/Qingjian/
+# 日志级别：info 預設 / debug 详细（会记录敲的拼音与上屏的文字，配合作者排查问题时再开）。日志在 ~/Library/Logs/Qingjian/
 log_level = "info"
 # 输入日志：每次上屏记一行到数据目录的 input-log.jsonl（敲的键、看到的候选、选了什么），只写在这台电脑上，不上传；
 # 用来离线评测排序和训练个人模型。false 不记；「高级」页可以清空
@@ -375,7 +375,7 @@ channel = "stable"
 );
 
 impl Config {
-    /// 保存自定义短语列表，冲突时不修改文件。
+    /// 儲存自定義短語列表，衝突時不修改檔案。
     pub fn set_custom_phrases(
         path: &Path,
         phrases: &[qingjian_core::CustomPhrase],
@@ -393,7 +393,7 @@ impl Config {
             .cloned()
             .unwrap_or_default();
         let mut used = std::collections::BTreeSet::new();
-        // 先按输入码和位置匹配，重排或删除时注释跟随原规则。
+        // 先按輸入碼和位置匹配，重排或刪除時註釋跟隨原規則。
         let mut matches: Vec<_> = phrases
             .iter()
             .map(|p| {
@@ -412,7 +412,7 @@ impl Config {
                 found
             })
             .collect();
-        // 等长列表中修改了输入码或位置的条目，沿用其未被占用的原表。
+        // 等長列表中修改了輸入碼或位置的條目，沿用其未被佔用的原表。
         if old.len() == phrases.len() {
             for (i, matched) in matches.iter_mut().enumerate() {
                 if matched.is_none() && used.insert(i) {
@@ -440,7 +440,7 @@ impl Config {
                 }
                 t[key] = toml_edit::Item::Value(value);
             }
-            // 序列化按文档位置排序；统一锚点后，同组条目使用本次列表顺序。
+            // 序列化按文件位置排序；統一錨點後，同組條目使用本次列表順序。
             t.set_position(old.iter().filter_map(toml_edit::Table::position).min());
             tables.push(t);
         }
@@ -448,7 +448,7 @@ impl Config {
         write_file(path, &document.to_string()).map_err(|e| e.to_string())
     }
 
-    /// 读配置。文件不存在按默认值；存在但解析失败报错，不要静默吞掉用户的笔误。
+    /// 讀配置。檔案不存在按預設值；存在但解析失敗報錯，不要靜默吞掉使用者的筆誤。
     pub fn load(path: &Path) -> Result<Self, ConfigError> {
         let source = match std::fs::read_to_string(path) {
             Ok(source) => source,
@@ -466,21 +466,21 @@ impl Config {
             path: path.to_owned(),
             source: Box::new(source),
         })?;
-        // 配置或环境变量里的密钥登记给日志掩码；各进程都从这里加载配置，登记在这一处就够
+        // 配置或環境變數裡的金鑰登記給日誌掩碼；各程序都從這裡載入配置，登記在這一處就夠
         if let Some(key) = config.predict.resolve_api_key() {
             crate::logs::secrets::register(&key);
         }
         Ok(config)
     }
 
-    /// 原地改一个布尔键，见 [`Self::set_value`]。
+    /// 原地改一個布林鍵，見 [`Self::set_value`]。
     pub fn set_bool(path: &Path, section: &str, key: &str, value: bool) -> Result<(), ConfigError> {
         Self::set_value(path, section, key, value)
     }
 
-    /// 原地改一个键（`[section] key = value`），其余内容、注释与顺序原样保留：
-    /// 菜单和设置窗口落盘都走这里。文件不存在时从模板起步；文件有语法错误就报错不写，
-    /// 不能替用户「修复」成丢了注释的文件。
+    /// 原地改一個鍵（`[section] key = value`），其餘內容、註釋與順序原樣保留：
+    /// 選單和設定視窗落盤都走這裡。檔案不存在時從模板起步；檔案有語法錯誤就報錯不寫，
+    /// 不能替使用者「修復」成丟了註釋的檔案。
     pub fn set_value(
         path: &Path,
         section: &str,
@@ -501,11 +501,11 @@ impl Config {
             path: path.to_owned(),
             source: Box::new(source),
         })?;
-        // 分节不存在时先建成标准表，否则 toml_edit 会写成顶层的行内表 `predict = { enabled = true }`
+        // 分節不存在時先建成標準表，否則 toml_edit 會寫成頂層的行內表 `predict = { enabled = true }`
         if !document.get(section).is_some_and(|item| item.is_table()) {
             document[section] = toml_edit::table();
         }
-        // 旧写法（外观写在 theme 里）要在改键之前认出来：写的正是 theme 时，新值会把它盖掉
+        // 舊寫法（外觀寫在 theme 裡）要在改鍵之前認出來：寫的正是 theme 時，新值會把它蓋掉
         let legacy = (section == "general" && matches!(key, "appearance" | "theme"))
             .then(|| legacy_appearance(&document))
             .flatten();
@@ -513,12 +513,12 @@ impl Config {
         if let Some(old) = legacy {
             migrate_legacy_theme(&mut document, old);
         }
-        // 写临时文件再改名：输入法进程随时可能被杀，不能留半个配置文件
+        // 寫臨時檔案再改名：輸入法程序隨時可能被殺，不能留半個配置檔案
         write_file(path, &document.to_string())
     }
 
-    /// 原地把一个键改成字符串数组（`[section] key = ["a", "b"]`），其余内容、注释与顺序原样保留。
-    /// 设置界面改词库列表（`[dictionaries] domains` / `disabled`）走这里，[`Self::set_value`] 只能写标量。
+    /// 原地把一個鍵改成字串陣列（`[section] key = ["a", "b"]`），其餘內容、註釋與順序原樣保留。
+    /// 設定介面改詞庫列表（`[dictionaries] domains` / `disabled`）走這裡，[`Self::set_value`] 只能寫標量。
     pub fn set_array<S: AsRef<str>>(
         path: &Path,
         section: &str,
@@ -550,7 +550,7 @@ impl Config {
         write_file(path, &document.to_string())
     }
 
-    /// 文件不存在时写出模板（目录一并建），返回是否写了。
+    /// 檔案不存在時寫出模板（目錄一併建），返回是否寫了。
     pub fn write_template_if_missing(path: &Path) -> Result<bool, ConfigError> {
         if path.exists() {
             return Ok(false);
@@ -560,21 +560,21 @@ impl Config {
     }
 }
 
-/// 模板里 `appearance` 那一行上方的注释，旧配置迁移时照抄（有测试保证与 [`TEMPLATE`] 一致）。
+/// 模板裡 `appearance` 那一行上方的註釋，舊配置遷移時照抄（有測試保證與 [`TEMPLATE`] 一致）。
 const APPEARANCE_COMMENT: &str = "# 候选窗口外观：system 跟随系统 / light 浅色 / dark 深色\n";
 
-/// 模板里 `theme` 那一行上方的注释，同上。
+/// 模板裡 `theme` 那一行上方的註釋，同上。
 const THEME_COMMENT: &str = "# 候选窗口主题（主题 id）：qingjian 青简绿 / system-blue 系统蓝 / wechat 微信绿 / sakura 樱花。只对青简渲染器生效\n";
 
-/// 旧写法里 `theme` 写的外观；新写法（或没写）为 `None`。
+/// 舊寫法裡 `theme` 寫的外觀；新寫法（或沒寫）為 `None`。
 fn legacy_appearance(document: &DocumentMut) -> Option<Appearance> {
     let value = document.get("general")?.get("theme")?.as_str()?;
     Appearance::from_key(value.trim())
 }
 
-/// 写 `appearance` 或 `theme` 时顺手迁移旧写法（2026-09-18 之前外观写在 `theme` 里，旧值是 `old`）：
-/// 外观补写到 `appearance`（写的是 `theme` 时它还没有，不补就丢了），`theme` 还是外观词就换成内置主题，
-/// 两行注释换成模板里的，免得手改配置的人看到「外观」注释下面是 `theme`。迁过之后 `theme` 不再是外观词，不会再迁。
+/// 寫 `appearance` 或 `theme` 時順手遷移舊寫法（2026-09-18 之前外觀寫在 `theme` 裡，舊值是 `old`）：
+/// 外觀補寫到 `appearance`（寫的是 `theme` 時它還沒有，不補就丟了），`theme` 還是外觀詞就換成內建主題，
+/// 兩行註釋換成模板裡的，免得手改配置的人看到「外觀」註釋下面是 `theme`。遷過之後 `theme` 不再是外觀詞，不會再遷。
 fn migrate_legacy_theme(document: &mut DocumentMut, old: Appearance) {
     let Some(general) = document
         .get_mut("general")
@@ -600,7 +600,7 @@ fn migrate_legacy_theme(document: &mut DocumentMut, old: Appearance) {
     }
 }
 
-/// 原子写配置文件；数据目录还没有就先建（新账户第一次打开设置时输入法可能还没跑过）。
+/// 原子寫配置檔案；資料目錄還沒有就先建（新賬戶第一次開啟設定時輸入法可能還沒跑過）。
 fn write_file(path: &Path, text: &str) -> Result<(), ConfigError> {
     let write = || {
         if let Some(dir) = path.parent() {

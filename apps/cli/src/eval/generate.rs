@@ -1,7 +1,7 @@
-//! 实验：让 P2C 直接生成整句，不经过词图，也不经过重排。
+//! 實驗：讓 P2C 直接生成整句，不經過詞圖，也不經過重排。
 //!
-//! 产品路径是「Viterbi 前几条路径 → P2C 按分重排」，天花板就是那几条路径里有没有正确答案；
-//! 这把尺子绕开词图，量的是同一个模型自由生成能到哪，用来判断重排这层架构值不值得留。
+//! 產品路徑是「Viterbi 前幾條路徑 → P2C 按分重排」，天花板就是那幾條路徑裡有沒有正確答案；
+//! 這把尺子繞開詞圖，量的是同一個模型自由生成能到哪，用來判斷重排這層架構值不值得留。
 
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -12,30 +12,30 @@ use qingjian_neural::{CharScorer, P2c};
 
 use super::{EvalError, collect};
 
-/// 取前几条生成候选。
+/// 取前幾條生成候選。
 const BEAM: usize = 5;
 
-/// 生成长度上限（字）。
+/// 生成長度上限（字）。
 const MAX_CHARS: usize = 32;
 
-/// P2C 自由生成的评测结果。
+/// P2C 自由生成的評測結果。
 #[derive(Debug, Default)]
 pub struct GenerateReport {
-    /// 评了的句子数。
+    /// 評了的句子數。
     pub total: usize,
 
-    /// 生成失败（超出模型上下文等）的句子数。
+    /// 生成失敗（超出模型上下文等）的句子數。
     pub failed: usize,
 
-    /// 首选就是原句 / 原句在前五条里。
+    /// 首選就是原句 / 原句在前五條裡。
     pub top1: usize,
     pub top5: usize,
 
-    /// 首选与原句逐字比对。
+    /// 首選與原句逐字比對。
     pub chars_correct: usize,
     pub chars_total: usize,
 
-    /// 生成耗时之和与最大值。
+    /// 生成耗時之和與最大值。
     pub time: Duration,
     pub slowest: Duration,
 }

@@ -1,16 +1,16 @@
-/// 一次查询命中的词目，全部借用自词库。
+/// 一次查詢命中的詞目，全部借用自詞庫。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Match<'a> {
-    /// 词。
+    /// 詞。
     pub text: &'a str,
 
-    /// 空格分隔的音节。
+    /// 空格分隔的音節。
     pub pinyin: &'a str,
 
-    /// 静态词频。
+    /// 靜態詞頻。
     pub frequency: u32,
 
-    /// 音节数与查询模式的长度一致（而不是以查询为前缀的更长词）。
+    /// 音節數與查詢模式的長度一致（而不是以查詢為字首的更長詞）。
     pub exact: bool,
 }
 

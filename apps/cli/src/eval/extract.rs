@@ -1,22 +1,22 @@
-//! 从用户的中文文本里抽评测句：一行是一个段落，段落按非汉字（标点、英文、数字、空格）切成小句，
-//! 只留纯汉字、长度在范围内的小句，每句带上它在段落里前面的真实文本当上文。
+//! 從使用者的中文文本里抽評測句：一行是一個段落，段落按非漢字（標點、英文、數字、空格）切成小句，
+//! 只留純漢字、長度在範圍內的小句，每句帶上它在段落裡前面的真實文本當上文。
 
 use super::pair::MAX_CONTEXT_CHARS;
 
-/// 一句至少几个字：两个字大多是一个词，评不出整句。
+/// 一句至少幾個字：兩個字大多是一個詞，評不出整句。
 pub const MIN_SENTENCE_CHARS: usize = 3;
 
-/// 一句最多几个字：再长用户也会中途上屏，评它没有意义。
+/// 一句最多幾個字：再長使用者也會中途上屏，評它沒有意義。
 pub const MAX_SENTENCE_CHARS: usize = 20;
 
-/// 抽出来的一句：汉字与它前面的上文。
+/// 抽出來的一句：漢字與它前面的上文。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extracted {
     pub text: String,
     pub context: String,
 }
 
-/// 按段落抽句；同一段落里上文按原文累积（含标点），截到最后 [`MAX_CONTEXT_CHARS`] 个字符。
+/// 按段落抽句；同一段落裡上文按原文累積（含標點），截到最後 [`MAX_CONTEXT_CHARS`] 個字元。
 pub fn extract(text: &str) -> Vec<Extracted> {
     let mut out = Vec::new();
     for paragraph in text.lines() {
@@ -55,7 +55,7 @@ fn last_chars(text: &str, count: usize) -> String {
     text.chars().skip(total.saturating_sub(count)).collect()
 }
 
-/// 与 Core `sentence::text_segment::is_han` 同一套范围。
+/// 與 Core `sentence::text_segment::is_han` 同一套範圍。
 fn is_han(c: char) -> bool {
     matches!(c as u32, 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xF900..=0xFAFF | 0x20000..=0x323AF)
 }
@@ -69,7 +69,7 @@ mod tests {
         let text = "我今天想去上海，然后 call 一下老王。\n\n第二段太短了。\n";
         let got = extract(text);
         let texts: Vec<&str> = got.iter().map(|e| e.text.as_str()).collect();
-        // 两个字的「然后」不够长，不评
+        // 兩個字的「然後」不夠長，不評
         assert_eq!(texts, ["我今天想去上海", "一下老王", "第二段太短了"]);
         assert_eq!(got[0].context, "");
         assert_eq!(got[1].context, "我今天想去上海，然后 call ");

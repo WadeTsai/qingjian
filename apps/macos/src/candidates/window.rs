@@ -1,4 +1,4 @@
-//! 候选窗口：非激活的浮动 NSPanel，跟随光标，内容由 [`CandidateView`] 绘制。
+//! 候選視窗：非啟用的浮動 NSPanel，跟隨游標，內容由 [`CandidateView`] 繪製。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -14,26 +14,26 @@ use super::frame::Frame;
 use super::theme::Theme;
 use super::view::{CandidateView, ClickHandler};
 
-/// `kCGPopUpMenuWindowLevel`：浮在普通窗口和浮动面板之上，与系统输入法候选框同级。
+/// `kCGPopUpMenuWindowLevel`：浮在普通視窗和浮動面板之上，與系統輸入法候選框同級。
 const POPUP_MENU_LEVEL: NSWindowLevel = 101;
 
-/// 候选窗口与光标行之间的间隙。
+/// 候選視窗與游標行之間的間隙。
 const CARET_GAP: f64 = 4.0;
 
-/// 应用给不出光标位置时，拿鼠标位置当光标，按这个高度算一行。
+/// 應用給不出游標位置時，拿滑鼠位置當游標，按這個高度算一行。
 const FALLBACK_LINE_HEIGHT: f64 = 16.0;
 
 pub struct CandidateWindow {
-    /// 面板本体。不在当前 Space 时会整个换新（见 [`Self::order_front_on_active_space`]）。
+    /// 面板本體。不在當前 Space 時會整個換新（見 [`Self::order_front_on_active_space`]）。
     panel: Retained<NSPanel>,
 
-    /// 内容视图；换面板时搬过去。
+    /// 內容檢視；換面板時搬過去。
     view: Retained<CandidateView>,
 
-    /// 当前外观（跟随系统时为 `None`）；换面板时要重设。
+    /// 當前外觀（跟隨系統時為 `None`）；換面板時要重設。
     appearance: Option<Retained<NSAppearance>>,
 
-    /// 用来取屏幕尺寸。
+    /// 用來取螢幕尺寸。
     mtm: MainThreadMarker,
 }
 
@@ -49,7 +49,7 @@ impl CandidateWindow {
         }
     }
 
-    /// 显示一帧。`anchor` 是光标行的屏幕矩形，窗口贴在它下方，放不下就放上方。
+    /// 顯示一幀。`anchor` 是游標行的螢幕矩形，視窗貼在它下方，放不下就放上方。
     pub fn show(&mut self, frame: Frame, anchor: NSRect) {
         if frame.is_empty() {
             self.hide();
@@ -81,12 +81,12 @@ impl CandidateWindow {
         self.view.stop_animation();
     }
 
-    /// 排到最前，并确认真在当前 Space 上；不在就换一块新面板。
+    /// 排到最前，並確認真在當前 Space 上；不在就換一塊新面板。
     ///
-    /// collection behavior 是「所有 Space + 全屏辅助」，可 macOS 26 上 WindowServer 只把面板绑到它创建时已有的 Space：
-    /// 之后新开的全屏 Space（Zed 全屏就是一个）里没有它，候选框留在桌面那个 Space。用 CGS 查过，面板的 Space 列表只有桌面，
-    /// 而同样设置新建的面板会绑到全部 Space；重设 collection behavior、收起再排前都不会让它重算，只有新建有用。
-    /// `isOnActiveSpace` 能反映这个状态，所以每次显示后查一下，不在就把内容视图搬到新面板上。
+    /// collection behavior 是「所有 Space + 全屏輔助」，可 macOS 26 上 WindowServer 只把面板綁到它建立時已有的 Space：
+    /// 之後新開的全屏 Space（Zed 全屏就是一個）裡沒有它，候選框留在桌面那個 Space。用 CGS 查過，面板的 Space 列表只有桌面，
+    /// 而同樣設定新建的面板會綁到全部 Space；重設 collection behavior、收起再排前都不會讓它重算，只有新建有用。
+    /// `isOnActiveSpace` 能反映這個狀態，所以每次顯示後查一下，不在就把內容檢視搬到新面板上。
     fn order_front_on_active_space(&mut self) {
         self.panel.orderFrontRegardless();
         if self.panel.isOnActiveSpace() {
@@ -107,9 +107,9 @@ impl CandidateWindow {
         );
     }
 
-    /// 外观：跟随系统时不指定，否则强制浅色 / 深色。
+    /// 外觀：跟隨系統時不指定，否則強制淺色 / 深色。
     pub fn set_appearance(&mut self, mode: Appearance) {
-        // SAFETY: 只读 AppKit 导出的常量名
+        // SAFETY: 只讀 AppKit 匯出的常量名
         let name = unsafe {
             match mode {
                 Appearance::System => None,
@@ -122,35 +122,35 @@ impl CandidateWindow {
         self.appearance = appearance;
     }
 
-    /// 竖排 / 横排。下一帧生效。
+    /// 豎排 / 橫排。下一幀生效。
     pub fn set_layout(&self, layout: LayoutMode) {
         self.view.set_layout(layout);
     }
 
-    /// 青简渲染器 / 系统绘制。下一帧生效。青简渲染器的阴影由主题画进位图，系统阴影关掉；
-    /// 只有它给点击区域，所以也只有它收鼠标（系统绘制时点击穿过去）。
+    /// 青簡渲染器 / 系統繪製。下一幀生效。青簡渲染器的陰影由主題畫進點陣圖，系統陰影關掉；
+    /// 只有它給點選區域，所以也只有它收滑鼠（系統繪製時點選穿過去）。
     pub fn set_renderer(&self, renderer: CandidateRenderer) {
         self.view.set_renderer(renderer);
         self.panel.setHasShadow(!self.view.uses_bitmap());
         self.panel.setIgnoresMouseEvents(!self.view.uses_bitmap());
     }
 
-    /// 点中候选或译词时调谁。
+    /// 點中候選或譯詞時調誰。
     pub fn set_click_handler(&self, handler: ClickHandler) {
         self.view.set_click_handler(handler);
     }
 
-    /// 在用青简渲染器（而不是系统绘制）。
+    /// 在用青簡渲染器（而不是系統繪製）。
     pub fn uses_bitmap(&self) -> bool {
         self.view.uses_bitmap()
     }
 
-    /// 渲染器主题（按 `[general] theme` 从主题库取出的），只对青简渲染器生效。
+    /// 渲染器主題（按 `[general] theme` 從主題庫取出的），只對青簡渲染器生效。
     pub fn set_render_theme(&self, theme: qingjian_render::Theme) {
         self.view.set_render_theme(theme);
     }
 
-    /// 候选窗字体（字族名，空为系统字体），只对青简渲染器生效。
+    /// 候選窗字型（字族名，空為系統字型），只對青簡渲染器生效。
     pub fn set_font(&self, font: &str) {
         self.view.set_font(font);
     }
@@ -159,8 +159,8 @@ impl CandidateWindow {
         self.view.theme().max_rows
     }
 
-    /// 内容区左下角坐标：贴在光标行下方；下方放不下放上方；不出光标所在的那块屏幕。
-    /// 光标矩形是零或落在所有屏幕之外（应用不支持、或给的是胡话）时以鼠标位置为准，至少落在用户看着的屏幕上。
+    /// 內容區左下角座標：貼在游標行下方；下方放不下放上方；不出游標所在的那塊螢幕。
+    /// 游標矩形是零或落在所有螢幕之外（應用不支援、或給的是胡話）時以滑鼠位置為準，至少落在使用者看著的螢幕上。
     fn place(&self, size: NSSize, anchor: NSRect) -> NSPoint {
         let (anchor, screen) = match screen_containing(self.mtm, anchor.origin) {
             Some(screen) if !(anchor.size.height == 0.0 && anchor.origin == NSPoint::ZERO) => {
@@ -187,17 +187,17 @@ impl CandidateWindow {
         } else if above + size.height <= top {
             above
         } else {
-            // 上下都放不下（屏幕很矮或窗口很高）：贴屏幕底边，宁可盖住光标也别出屏
+            // 上下都放不下（螢幕很矮或視窗很高）：貼螢幕底邊，寧可蓋住游標也別出屏
             screen.origin.y
         };
-        // 无论怎么算，最后都要落在这块屏幕里：出屏等于不显示
+        // 無論怎麼算，最後都要落在這塊螢幕裡：出屏等於不顯示
         let max_y = (top - size.height).max(screen.origin.y);
         NSPoint::new(x, y.clamp(screen.origin.y, max_y))
     }
 }
 
-/// 建一块面板并把内容视图装进去：无边框、不抢焦点、透明背景带系统阴影（用青简渲染器时再关）、
-/// 先不吃鼠标（用青简渲染器时再开，见 [`CandidateWindow::set_renderer`]）。
+/// 建一塊麵板並把內容檢視裝進去：無邊框、不搶焦點、透明背景帶系統陰影（用青簡渲染器時再關）、
+/// 先不吃滑鼠（用青簡渲染器時再開，見 [`CandidateWindow::set_renderer`]）。
 fn build_panel(mtm: MainThreadMarker, view: &CandidateView) -> Retained<NSPanel> {
     let panel = NSPanel::initWithContentRect_styleMask_backing_defer(
         mtm.alloc::<NSPanel>(),
@@ -211,24 +211,24 @@ fn build_panel(mtm: MainThreadMarker, view: &CandidateView) -> Retained<NSPanel>
     panel.setHasShadow(true);
     panel.setBecomesKeyOnlyIfNeeded(true);
     panel.setIgnoresMouseEvents(true);
-    // NSPanel 缺省在应用失活时自动隐藏；输入法进程从来不是前台应用，不能靠这个
+    // NSPanel 預設在應用失活時自動隱藏；輸入法程序從來不是前臺應用，不能靠這個
     panel.setHidesOnDeactivate(false);
     panel.setCollectionBehavior(collection_behavior());
-    // 不要 setFloatingPanel(true)：它会把层级改回 NSFloatingWindowLevel（3），全屏应用的 Space 里就看不见了；
-    // 层级最后设，别被前面任何一项覆盖
+    // 不要 setFloatingPanel(true)：它會把層級改回 NSFloatingWindowLevel（3），全屏應用的 Space 裡就看不見了；
+    // 層級最後設，別被前面任何一項覆蓋
     panel.setLevel(POPUP_MENU_LEVEL);
     panel.setContentView(Some(view));
     panel
 }
 
-/// 面板的 Space 归属：出现在所有 Space 上、能与全屏应用同处一个 Space、Mission Control 里不动。
+/// 面板的 Space 歸屬：出現在所有 Space 上、能與全屏應用同處一個 Space、Mission Control 裡不動。
 fn collection_behavior() -> NSWindowCollectionBehavior {
     NSWindowCollectionBehavior::CanJoinAllSpaces
         | NSWindowCollectionBehavior::FullScreenAuxiliary
         | NSWindowCollectionBehavior::Stationary
 }
 
-/// 包含 `point` 的那块屏幕的可见区域；哪块都不包含返回 `None`。
+/// 包含 `point` 的那塊螢幕的可見區域；哪塊都不包含返回 `None`。
 fn screen_containing(mtm: MainThreadMarker, point: NSPoint) -> Option<NSRect> {
     let screens = NSScreen::screens(mtm);
     let hit = screens.iter().find(|screen| {
@@ -241,7 +241,7 @@ fn screen_containing(mtm: MainThreadMarker, point: NSPoint) -> Option<NSRect> {
     hit.map(|screen| screen.visibleFrame())
 }
 
-/// 主屏的可见区域；连主屏都没有时不限制。
+/// 主屏的可見區域；連主屏都沒有時不限制。
 fn main_screen_or_anywhere(mtm: MainThreadMarker) -> NSRect {
     NSScreen::mainScreen(mtm)
         .map(|s| s.visibleFrame())

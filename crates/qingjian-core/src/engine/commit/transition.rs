@@ -1,18 +1,18 @@
 use crate::sentence::Context;
 
-/// 记进个人 n-gram 的一条转移：上屏时记下来，用户紧接着退格删掉重选时原样退回。
+/// 記進個人 n-gram 的一條轉移：上屏時記下來，使用者緊接著退格刪掉重選時原樣退回。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transition {
-    /// 前一个词之前的那个词；`None` 表示前一个词在句首。
+    /// 前一個詞之前的那個詞；`None` 表示前一個詞在句首。
     pub earlier: Option<String>,
 
-    /// 前一个词；`None` 表示这个词在句首。
+    /// 前一個詞；`None` 表示這個詞在句首。
     pub previous: Option<String>,
 
-    /// 上屏的词。
+    /// 上屏的詞。
     pub word: String,
 
-    /// 记了几份（用户点选的双份，整句路径顺带的一份）。
+    /// 記了幾份（使用者點選的雙份，整句路徑順帶的一份）。
     pub times: u32,
 }
 
@@ -26,7 +26,7 @@ impl Transition {
         }
     }
 
-    /// 记录时的上文。
+    /// 記錄時的上文。
     pub fn context(&self) -> Context<'_> {
         Context {
             previous: self.previous.as_deref(),

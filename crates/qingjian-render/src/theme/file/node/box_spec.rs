@@ -1,4 +1,4 @@
-//! 节点的盒子：外边距、内边距、尺寸、定位、对齐。都可以不写；`use` 引用组件时写的会盖过组件根节点上的。
+//! 節點的盒子：外邊距、內邊距、尺寸、定位、對齊。都可以不寫；`use` 引用元件時寫的會蓋過元件根節點上的。
 
 use serde::Deserialize;
 
@@ -14,7 +14,7 @@ pub(crate) struct BoxSpec {
 
     pub(crate) padding: Option<Edges>,
 
-    /// 子节点之间的间距（点）。
+    /// 子節點之間的間距（點）。
     pub(crate) gap: Option<f32>,
 
     pub(crate) width: Option<f32>,
@@ -25,23 +25,23 @@ pub(crate) struct BoxSpec {
 
     pub(crate) position: Option<Position>,
 
-    /// 绝对定位时四边到父框的距离，`[上, 右, 下, 左]`。
+    /// 絕對定位時四邊到父框的距離，`[上, 右, 下, 左]`。
     pub(crate) inset: Option<Edges>,
 
     pub(crate) align_self: Option<Align>,
 
-    /// 表格里跨列。
+    /// 表格裡跨列。
     pub(crate) span: Option<Span>,
 
-    /// 不透明度（0–1），作用于节点连同子节点。
+    /// 不透明度（0–1），作用於節點連同子節點。
     pub(crate) opacity: Option<f32>,
 
-    /// 投影、内阴影。
+    /// 投影、內陰影。
     pub(crate) effects: Option<Vec<EffectSpec>>,
 }
 
 impl BoxSpec {
-    /// `over` 里写了的项盖过自己的。
+    /// `over` 裡寫了的項蓋過自己的。
     pub(crate) fn overridden_by(&self, over: &Self) -> Self {
         Self {
             margin: over.margin.or(self.margin),

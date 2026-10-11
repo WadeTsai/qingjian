@@ -5,140 +5,152 @@ use super::key::KeyEvent;
 use super::screen_rect::ScreenRect;
 use super::session::SessionId;
 
-/// DLL（客户端，每个应用进程里一个）发给 Server 的消息。
+/// DLL（客戶端，每個應用程序裡一個）發給 Server 的訊息。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ClientMessage {
-    /// 进入一个 TSF 文档，开一个会话。
+    /// 進入一個 TSF 文件，開一個會話。
     OpenSession {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
-        /// 宿主应用的 exe 文件名（`Code.exe`），DLL 加载在应用进程里直接取；取不到为 `None`。
-        /// Server 据此查 `[apps]` 分节的按应用设置（对应 macOS 的 bundle identifier）。
+        /// 宿主應用的 exe 檔名（`Code.exe`），DLL 載入在應用程序裡直接取；取不到為 `None`。
+        /// Server 據此查 `[apps]` 分節的按應用設定（對應 macOS 的 bundle identifier）。
         #[serde(default)]
         app: Option<String>,
 
-        /// DLL 编译时的 [`super::PROTOCOL_VERSION`]。升级安装后旧 DLL 仍留在没重启的应用里，
-        /// Server 对不上只记警告照常服务；老 DLL 不带此字段，读成 0。
+        /// DLL 編譯時的 [`super::PROTOCOL_VERSION`]。升級安裝後舊 DLL 仍留在沒重啟的應用裡，
+        /// Server 對不上只記警告照常服務；老 DLL 不帶此欄位，讀成 0。
         #[serde(default)]
         protocol: u32,
     },
 
-    /// 一次按键，等 Server 回 [`super::ServerMessage::KeyResult`]。
+    /// 一次按鍵，等 Server 回 [`super::ServerMessage::KeyResult`]。
     Key {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
-        /// 按键内容。
+        /// 按鍵內容。
         event: KeyEvent,
     },
 
-    /// 焦点离开 / 文档要求结束组句：Server 把缓冲区里的内容原样交出并清空，回 [`super::ServerMessage::Committed`]。
+    /// 焦點離開 / 文件要求結束組句：Server 把緩衝區裡的內容原樣交出並清空，回 [`super::ServerMessage::Committed`]。
     Commit {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
     },
 
-    /// 组句期间 DLL 定时轮询：取云联想的异步结果（云端候选 / 整句补全）。Server 拉一次
-    /// `poll_prediction`，把最新组句状态经 [`super::ServerMessage::Update`] 回给 DLL。传输仍是一问一答，
-    /// 云结果靠 DLL 侧定时器拉取，不需要 Server 主动推。
+    /// 組句期間 DLL 定時輪詢：取雲聯想的非同步結果（雲端候選 / 整句補全）。Server 拉一次
+    /// `poll_prediction`，把最新組句狀態經 [`super::ServerMessage::Update`] 回給 DLL。傳輸仍是一問一答，
+    /// 雲結果靠 DLL 側定時器拉取，不需要 Server 主動推。
     Poll {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
     },
 
-    /// 组句起始时 DLL 主动送来的应用光标前文，给本地整句模型当前文（对应 macOS 壳在组句第一键读 `surrounding_text`）。
-    /// 在起组句的那次编辑会话里顺手读，不另开会话、不回话；密码框 / 读不到时不发，Server 退回本会话历史。
+    /// 組句起始時 DLL 主動送來的應用游標前文，給本地整句模型當前文（對應 macOS 殼在組句第一鍵讀 `surrounding_text`）。
+    /// 在起組句的那次編輯會話裡順手讀，不另開會話、不回話；密碼框 / 讀不到時不發，Server 退回本會話歷史。
     Surrounding {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
-        /// 光标前最多 64 字。
+        /// 游標前最多 64 字。
         text: String,
     },
 
-    /// 输入框私密与否变了（DLL 起组句时按输入范围判：`IS_PRIVATE` / 密码 / PIN 类算私密，浏览器无痕窗口就是它）。
-    /// Server 让 Engine 进 / 出私密：不学习、不记输入日志、不发云端；前文 DLL 侧就不读。只在与上次报的不同时发，不回话。
-    /// 真正的密码框（`KEYBOARD_DISABLED` compartment）DLL 直接放行所有键、不组句，到不了这里。
+    /// 輸入框私密與否變了（DLL 起組句時按輸入範圍判：`IS_PRIVATE` / 密碼 / PIN 類算私密，瀏覽器無痕視窗就是它）。
+    /// Server 讓 Engine 進 / 出私密：不學習、不記輸入日誌、不發雲端；前文 DLL 側就不讀。只在與上次報的不同時發，不回話。
+    /// 真正的密碼框（`KEYBOARD_DISABLED` compartment）DLL 直接放行所有鍵、不組句，到不了這裡。
     Privacy {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
-        /// 现在是私密输入。
+        /// 現在是私密輸入。
         private: bool,
     },
 
-    /// 回应 [`super::ServerMessage::RequestSelection`]：应用当前选中的文字（供「翻译选中文字」）。
-    /// DLL 在读编辑会话里用 `GetSelection` + `GetText` 取；没有选区 / 读不到时 `text` 为空串。
+    /// 回應 [`super::ServerMessage::RequestSelection`]：應用當前選中的文字（供「翻譯選中文字」）。
+    /// DLL 在讀編輯會話裡用 `GetSelection` + `GetText` 取；沒有選區 / 讀不到時 `text` 為空串。
     Selection {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
-        /// 请求标识，对上是哪一次 [`super::ServerMessage::RequestSelection`]。
+        /// 請求標識，對上是哪一次 [`super::ServerMessage::RequestSelection`]。
         request: u64,
 
-        /// 选中的文字；没有选区时为空串。
+        /// 選中的文字；沒有選區時為空串。
         text: String,
 
-        /// 选区的屏幕矩形（拿翻译候选窗口摆在它下方，与组句候选窗一致）；取不到是鼠标处近似。
+        /// 選區的螢幕矩形（拿翻譯候選視窗擺在它下方，與組句候選窗一致）；取不到是滑鼠處近似。
         rect: ScreenRect,
     },
 
-    /// 组句更新后，DLL 在编辑会话里量到组句范围的屏幕矩形，发来让 Server 把候选窗口摆到光标下方。
-    /// 不等回话：候选窗口由 Server 进程自绘（搬出应用进程，才能盖过微软商店 / 任务栏搜索这些高 z-band 宿主）。
-    /// 组句结束 / 失焦时 Server 按空帧与 [`Commit`](Self::Commit) 自行收窗口，不必 DLL 再发。
+    /// 組句更新後，DLL 在編輯會話裡量到組句範圍的螢幕矩形，發來讓 Server 把候選視窗擺到游標下方。
+    /// 不等回話：候選視窗由 Server 程序自繪（搬出應用程序，才能蓋過微軟商店 / 工作列搜尋這些高 z-band 宿主）。
+    /// 組句結束 / 失焦時 Server 按空幀與 [`Commit`](Self::Commit) 自行收視窗，不必 DLL 再發。
     PositionCandidates {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
-        /// 组句范围的屏幕矩形（拿不到时是鼠标处的一个近似矩形）。
+        /// 組句範圍的螢幕矩形（拿不到時是滑鼠處的一個近似矩形）。
         rect: ScreenRect,
     },
 
-    /// 组句在 DLL 侧结束、而 Server 无从知晓时（应用强行终止组句 `OnCompositionTerminated`、断连兜底），
-    /// 让 Server 收起候选窗口。Server 按空帧 / [`Commit`](Self::Commit) 能自行收窗口的场合不需要这条。
-    /// 不等回话。
+    /// 組句在 DLL 側結束、而 Server 無從知曉時（應用強行終止組句 `OnCompositionTerminated`、斷連兜底），
+    /// 讓 Server 收起候選視窗。Server 按空幀 / [`Commit`](Self::Commit) 能自行收視窗的場合不需要這條。
+    /// 不等回話。
     HideCandidates {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
     },
 
-    /// 用户在这个应用里切了中英模式：DLL 报给 Server，成为全局模式（其余应用下次取模式时跟上，悬浮状态条同步）。
-    /// 不等回话。双拼方案 Server 从自己的配置里知道，不必带。
+    /// 使用者在這個應用裡切了中英模式：DLL 報給 Server，成為全域性模式（其餘應用下次取模式時跟上，懸浮狀態條同步）。
+    /// 不等回話。雙拼方案 Server 從自己的配置裡知道，不必帶。
     ModeChanged {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
 
         /// `true` 英文模式，`false` 中文模式。
         english: bool,
     },
 
-    /// 取全局中英模式：激活、得到焦点时各一次，前台、没在组句时再定时问（别的应用或悬浮状态条可能切过）。
-    /// 回 [`super::ServerMessage::ModeSync`]；有 DLL 来取也说明青简是当前输入法。
+    /// 取全域性中英模式：啟用、得到焦點時各一次，前臺、沒在組句時再定時問（別的應用或懸浮狀態條可能切過）。
+    /// 回 [`super::ServerMessage::ModeSync`]；有 DLL 來取也說明青簡是當前輸入法。
     SyncMode {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
     },
 
-    /// 宿主线程把输入法切成了别的（微软拼音等）：Server 收起悬浮状态条。应用退出时不发（那时状态条该留着），
-    /// 所以状态条的显隐不跟会话开关走。DLL 在被停用后才收到这个通知，用一条临时连接发；不等回话。
+    /// 宿主執行緒把輸入法切成了別的（微軟拼音等）：Server 收起懸浮狀態條。應用退出時不發（那時狀態條該留著），
+    /// 所以狀態條的顯隱不跟會話開關走。DLL 在被停用後才收到這個通知，用一條臨時連線發；不等回話。
     ImeSwitched {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
     },
 
-    /// 任务栏「中 / 英」图标右键菜单里点了一项（v7 起）。不等回话。
-    Indicator {
-        /// 会话标识。
+    /// 這個會話所線上程用的是青簡的哪個語言 profile（v9 起）：Windows 上青簡在「中文(簡體)」與「中文(台灣)」下各登記一個，
+    /// 「中文(台灣)」下的那個不看 `[general] traditional` 就出繁體（配置開著時兩個都出繁體）。
+    /// 開會話後是繁體 profile 才報一次，之後同一執行緒在兩個 profile 間切換再報；沒有 profile 概念的平臺（Linux）不發，
+    /// Server 按簡體 profile 算。不等回話。
+    Profile {
+        /// 會話標識。
         session: SessionId,
 
-        /// 点的是哪一项。
+        /// 當前是繁體的那個 profile（「中文(台灣)」下的青簡）。
+        traditional: bool,
+    },
+
+    /// 工作列「中 / 英」圖示右鍵選單裡點了一項（v7 起）。不等回話。
+    Indicator {
+        /// 會話標識。
+        session: SessionId,
+
+        /// 點的是哪一項。
         command: IndicatorCommand,
     },
 
-    /// 关闭会话，释放 Server 侧状态。
+    /// 關閉會話，釋放 Server 側狀態。
     CloseSession {
-        /// 会话标识。
+        /// 會話標識。
         session: SessionId,
     },
 }

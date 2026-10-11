@@ -1,9 +1,9 @@
-//! 音节级的敲错变体：一个完整音节一处编辑（相邻两键换位、敲到相邻键、多键、少键）之后还是合法音节的那些写法。
+//! 音節級的敲錯變體：一個完整音節一處編輯（相鄰兩鍵換位、敲到相鄰鍵、多鍵、少鍵）之後還是合法音節的那些寫法。
 //!
-//! 词图里每个完整音节除了敲的原样，还按这些变体查词，命中的词扣掉相应代价（见 `TypoCosts`），
-//! 让「每个音节都合法、整句却不通」的输入（`meiganxi`）也能出 没关系。整段一处编辑的纠错（`variants`）管切不干净的输入，两者互补。
+//! 詞圖裡每個完整音節除了敲的原樣，還按這些變體查詞，命中的詞扣掉相應代價（見 `TypoCosts`），
+//! 讓「每個音節都合法、整句卻不通」的輸入（`meiganxi`）也能出 沒關係。整段一處編輯的糾錯（`variants`）管切不乾淨的輸入，兩者互補。
 //!
-//! 表按音节表一次算好：每个音节的变体几十个，全部音节几千条。
+//! 表按音節表一次算好：每個音節的變體幾十個，全部音節幾千條。
 
 mod kind;
 
@@ -13,10 +13,10 @@ use std::sync::LazyLock;
 use crate::parser::{self, SYLLABLES};
 pub use kind::TypoKind;
 
-/// QWERTY 三排字母，算相邻键用。
+/// QWERTY 三排字母，算相鄰鍵用。
 const ROWS: [&str; 3] = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
-/// 全部音节的敲错变体：音节 → (变体, 类别)。同一变体只留代价最低的类别。
+/// 全部音節的敲錯變體：音節 → (變體, 類別)。同一變體只留代價最低的類別。
 static TABLE: LazyLock<HashMap<&'static str, Vec<(String, TypoKind)>>> = LazyLock::new(|| {
     SYLLABLES
         .iter()
@@ -24,17 +24,17 @@ static TABLE: LazyLock<HashMap<&'static str, Vec<(String, TypoKind)>>> = LazyLoc
         .collect()
 });
 
-/// `syllable` 的敲错变体；不是完整音节（简拼、没打完的前缀）或单字母音节没有变体。
+/// `syllable` 的敲錯變體；不是完整音節（簡拼、沒打完的字首）或單字母音節沒有變體。
 pub fn variants(syllable: &str) -> &'static [(String, TypoKind)] {
     TABLE.get(syllable).map_or(&[], Vec::as_slice)
 }
 
-/// `intended` 是不是 `typed` 的一处敲错变体（读取代价用 [`kind`]）。
+/// `intended` 是不是 `typed` 的一處敲錯變體（讀取代價用 [`kind`]）。
 pub fn is_variant(typed: &str, intended: &str) -> bool {
     kind(typed, intended).is_some()
 }
 
-/// 把 `typed` 敲成 `intended` 属于哪类敲错；不是一处敲错返回 `None`。
+/// 把 `typed` 敲成 `intended` 屬於哪類敲錯；不是一處敲錯返回 `None`。
 pub fn kind(typed: &str, intended: &str) -> Option<TypoKind> {
     variants(typed)
         .iter()
@@ -42,7 +42,7 @@ pub fn kind(typed: &str, intended: &str) -> Option<TypoKind> {
         .map(|(_, kind)| *kind)
 }
 
-/// 两个字母在键盘上是否相邻（同排隔壁，或上下排错位挨着的两个）。
+/// 兩個字母在鍵盤上是否相鄰（同排隔壁，或上下排錯位挨著的兩個）。
 pub fn adjacent(a: char, b: char) -> bool {
     let Some((row_a, col_a)) = position(a) else {
         return false;
@@ -56,7 +56,7 @@ pub fn adjacent(a: char, b: char) -> bool {
     if row_a.abs_diff(row_b) != 1 {
         return false;
     }
-    // 下一排整体向右错开半个键：上排第 i 个键的下面是下排第 i−1 与第 i 个
+    // 下一排整體向右錯開半個鍵：上排第 i 個鍵的下面是下排第 i−1 與第 i 個
     let (upper, lower) = if row_a < row_b {
         (col_a, col_b)
     } else {
@@ -71,7 +71,7 @@ fn position(letter: char) -> Option<(usize, usize)> {
         .find_map(|(row, keys)| keys.find(letter).map(|col| (row, col)))
 }
 
-/// 一个音节的全部一处编辑（换键只算相邻键）里仍是合法音节的那些。单字母音节（`a` / `e` / `o`）不算：一键之差就是另一个字，谈不上敲错。
+/// 一個音節的全部一處編輯（換鍵只算相鄰鍵）裡仍是合法音節的那些。單字母音節（`a` / `e` / `o`）不算：一鍵之差就是另一個字，談不上敲錯。
 fn compute_variants(syllable: &str) -> Vec<(String, TypoKind)> {
     let bytes = syllable.as_bytes();
     let n = bytes.len();
@@ -146,8 +146,8 @@ mod tests {
         assert!(gan.contains(&"guan"));
         assert!(gan.contains(&"gang"));
         assert!(gan.contains(&"an"));
-        assert!(gan.contains(&"han")); // g 与 h 相邻
-        assert!(!gan.contains(&"dan")); // g 与 d 不相邻
+        assert!(gan.contains(&"han")); // g 與 h 相鄰
+        assert!(!gan.contains(&"dan")); // g 與 d 不相鄰
         assert!(!gan.contains(&"gan"));
         assert!(gan.iter().all(|t| parser::is_syllable(t)));
         assert_eq!(kind("gan", "guan"), Some(TypoKind::Missing));
@@ -157,14 +157,14 @@ mod tests {
         assert_eq!(kind("ni", "mi"), Some(TypoKind::Substitute));
         assert_eq!(kind("ta", "da"), None);
         assert_eq!(kind("gan", "xi"), None);
-        // 单字母音节、简拼、前缀没有变体
+        // 單字母音節、簡拼、字首沒有變體
         assert!(variants("a").is_empty());
         assert!(variants("zh").is_empty());
         assert!(variants("xia").len() >= 3); // xian / xiao / xi
         assert!(!is_variant("k", "ka"));
     }
 
-    /// 同一变体能由多种编辑得到时留代价最低的：`shuo` → `shou` 既是换位也是两处换键，算换位。
+    /// 同一變體能由多種編輯得到時留代價最低的：`shuo` → `shou` 既是換位也是兩處換鍵，算換位。
     #[test]
     fn keeps_the_cheapest_kind_per_variant() {
         assert_eq!(kind("shuo", "shou"), Some(TypoKind::Transpose));

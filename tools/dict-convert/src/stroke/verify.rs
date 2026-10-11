@@ -1,14 +1,14 @@
-//! 对照验收：产物逐字对大陆规范，白名单之外一处不符即失败。
+//! 對照驗收：產物逐字對大陸規範，白名單之外一處不符即失敗。
 //!
-//! 两张对照表由 `mmh-reference` 生成、放在 `data/mmh/`（Arphic 派生，不进仓库，见 `assets/stroke/README.md`）；
-//! 找不到哪张就跳过哪张对照并提示：
+//! 兩張對照表由 `mmh-reference` 生成、放在 `data/mmh/`（Arphic 派生，不進倉庫，見 `assets/stroke/README.md`）；
+//! 找不到哪張就跳過哪張對照並提示：
 //!
-//! - 笔画数：按 `--stride` 抽样，比对 `--reference`；
-//! - 首笔：字表全量（不抽样），比对 `--first-reference` 的几何类别。几何类别是近似（竖撇走向近竖、
-//!   点的走向与撇 / 竖难分），但两岸笔顺的差异也落在这几类里，所以不按类别放行：不符的字都要在
-//!   `--first-whitelist` 里。
+//! - 筆畫數：按 `--stride` 抽樣，比對 `--reference`；
+//! - 首筆：字表全量（不抽樣），比對 `--first-reference` 的幾何類別。幾何類別是近似（豎撇走向近豎、
+//!   點的走向與撇 / 豎難分），但兩岸筆順的差異也落在這幾類裡，所以不按類別放行：不符的字都要在
+//!   `--first-whitelist` 裡。
 //!
-//! 白名单里是已知且接受的差异：规范裁定后保留的 CNS 结构性差异，与对照源分笔不同的假阳性。
+//! 白名單裡是已知且接受的差異：規範裁定後保留的 CNS 結構性差異，與對照源分筆不同的假陽性。
 
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
@@ -19,28 +19,28 @@ use crate::error::ConvertError;
 use crate::stroke::options::StrokeOptions;
 use crate::stroke::rules::{malformed, single_char};
 
-/// 首笔对照的结果计数。
+/// 首筆對照的結果計數。
 pub(super) struct FirstOutcome {
-    /// 有对照且可判的字数。
+    /// 有對照且可判的字數。
     pub(super) compared: usize,
 
-    /// 产物里没有的字数（生成时被丢掉的字）。
+    /// 產物裡沒有的字數（生成時被丟掉的字）。
     pub(super) absent: usize,
 
-    /// 对照表没收的字数。
+    /// 對照表沒收的字數。
     pub(super) unreferenced: usize,
 
-    /// 对照类别是 ?（几何上判不了）的字数。
+    /// 對照類別是 ?（幾何上判不了）的字數。
     pub(super) incomparable: usize,
 
-    /// 命中白名单的字。
+    /// 命中白名單的字。
     pub(super) used: HashSet<char>,
 
-    /// 白名单之外的不符数。
+    /// 白名單之外的不符數。
     pub(super) unmatched: usize,
 }
 
-/// 比对抽样表里的笔画数：返回（抽样数、命中的白名单字、白名单之外的不符数）。
+/// 比對抽樣表裡的筆畫數：返回（抽樣數、命中的白名單字、白名單之外的不符數）。
 pub(super) fn compare(
     sampled: &[char],
     produced: &HashMap<char, usize>,
@@ -69,7 +69,7 @@ pub(super) fn compare(
     (sampled.len(), used, unmatched)
 }
 
-/// 比对字表全量的首笔：类别不一致又不在白名单里的记不符。
+/// 比對字表全量的首筆：類別不一致又不在白名單裡的記不符。
 pub(super) fn compare_first(
     chars: &[char],
     produced: &HashMap<char, char>,
@@ -114,7 +114,7 @@ pub(super) fn compare_first(
     outcome
 }
 
-/// 按表序每 `stride` 字取一个。
+/// 按表序每 `stride` 字取一個。
 pub(super) fn sample(chars: &[char], stride: usize) -> Vec<char> {
     chars
         .iter()
@@ -124,7 +124,7 @@ pub(super) fn sample(chars: &[char], stride: usize) -> Vec<char> {
         .collect()
 }
 
-/// 跑一次对照：笔画数抽样、首笔全量，白名单之外有不符合就报错。
+/// 跑一次對照：筆畫數抽樣、首筆全量，白名單之外有不符合就報錯。
 pub fn run(options: &StrokeOptions, table: &Path) -> Result<(), ConvertError> {
     if options.stride == 0 {
         return Err(malformed(
@@ -200,7 +200,7 @@ pub fn run(options: &StrokeOptions, table: &Path) -> Result<(), ConvertError> {
     Ok(())
 }
 
-/// 读产物：字 → 序列长度。
+/// 讀產物：字 → 序列長度。
 fn read_lengths(path: &Path) -> Result<HashMap<char, usize>, ConvertError> {
     let mut lengths = HashMap::new();
     for (index, line) in BufReader::new(File::open(path)?).lines().enumerate() {
@@ -228,7 +228,7 @@ fn read_lengths(path: &Path) -> Result<HashMap<char, usize>, ConvertError> {
     Ok(lengths)
 }
 
-/// 读产物首笔：字 → 键位类别（1→h、2→s、3→p、5→z、n→n）。
+/// 讀產物首筆：字 → 鍵位類別（1→h、2→s、3→p、5→z、n→n）。
 fn read_firsts(path: &Path) -> Result<HashMap<char, char>, ConvertError> {
     let mut firsts = HashMap::new();
     for (index, line) in BufReader::new(File::open(path)?).lines().enumerate() {
@@ -267,7 +267,7 @@ fn read_firsts(path: &Path) -> Result<HashMap<char, char>, ConvertError> {
     Ok(firsts)
 }
 
-/// 读笔画数对照表：字 → 大陆笔画数。
+/// 讀筆畫數對照表：字 → 大陸筆畫數。
 fn read_reference(path: &Path) -> Result<HashMap<char, usize>, ConvertError> {
     let mut counts = HashMap::new();
     for (index, line) in BufReader::new(File::open(path)?).lines().enumerate() {
@@ -295,7 +295,7 @@ fn read_reference(path: &Path) -> Result<HashMap<char, usize>, ConvertError> {
     Ok(counts)
 }
 
-/// 读首笔对照表：字 → 几何类别（h / s / p / n / z / ?）。
+/// 讀首筆對照表：字 → 幾何類別（h / s / p / n / z / ?）。
 fn read_first_reference(path: &Path) -> Result<HashMap<char, char>, ConvertError> {
     let mut firsts = HashMap::new();
     for (index, line) in BufReader::new(File::open(path)?).lines().enumerate() {
@@ -327,7 +327,7 @@ fn read_first_reference(path: &Path) -> Result<HashMap<char, char>, ConvertError
     Ok(firsts)
 }
 
-/// 读抽样字表：一行一个字（第一列），表序即抽样序。
+/// 讀抽樣字表：一行一個字（第一列），表序即抽樣序。
 fn read_chars(path: &Path) -> Result<Vec<char>, ConvertError> {
     let mut chars = Vec::new();
     let mut seen = HashSet::new();
@@ -346,7 +346,7 @@ fn read_chars(path: &Path) -> Result<Vec<char>, ConvertError> {
     Ok(chars)
 }
 
-/// 读白名单里的字（第一列）。
+/// 讀白名單裡的字（第一列）。
 fn read_whitelist(path: &Path) -> Result<HashSet<char>, ConvertError> {
     Ok(read_chars(path)?.into_iter().collect::<HashSet<char>>())
 }

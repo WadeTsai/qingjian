@@ -1,4 +1,4 @@
-//! 场景图节点画什么：节点的盒子由布局算出，这里只描述在盒子里怎么画。
+//! 場景圖節點畫什麼：節點的盒子由佈局算出，這裡只描述在盒子裡怎麼畫。
 
 use super::box_paint::BoxPaint;
 use super::fill::Fill;
@@ -8,21 +8,21 @@ use crate::text::TextStyle;
 
 #[derive(Debug, Clone)]
 pub(crate) enum Visual {
-    /// 纯容器，自己不画。
+    /// 純容器，自己不畫。
     Group,
 
-    /// 盒子：填充、边框、圆角。
+    /// 盒子：填充、邊框、圓角。
     Box(BoxPaint),
 
-    /// 单行文字，盒子左上角是行框顶边；布局时按文字量宽高。
+    /// 單行文字，盒子左上角是行框頂邊；佈局時按文字量寬高。
     Text { text: String, style: TextStyle },
 
-    /// 图标：边长 `size`，在盒子里垂直居中、靠左。
+    /// 圖示：邊長 `size`，在盒子裡垂直居中、靠左。
     Icon { icon: Icon, size: f32, color: Color },
 }
 
 impl Visual {
-    /// 纯色（圆角）矩形；`radius` 为 0 时画直角。
+    /// 純色（圓角）矩形；`radius` 為 0 時畫直角。
     pub(crate) fn solid(color: Color, radius: f32) -> Self {
         Self::Box(BoxPaint {
             fill: Some(Fill::Solid(color)),

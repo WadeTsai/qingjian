@@ -1,7 +1,7 @@
-//! 平台层共用的、与具体窗口系统无关的部分：配置文件，以及将来 Core 与壳之间的协议类型。
+//! 平臺層共用的、與具體視窗系統無關的部分：配置檔案，以及將來 Core 與殼之間的協議型別。
 //!
-//! 这里的类型必须可序列化：macOS / Linux 上 Core 与壳同进程，Windows 上 Core 在独立
-//! Server 进程，同一套类型两边都用。
+//! 這裡的型別必須可序列化：macOS / Linux 上 Core 與殼同進程，Windows 上 Core 在獨立
+//! Server 程序，同一套型別兩邊都用。
 
 pub mod code_tables;
 mod config;

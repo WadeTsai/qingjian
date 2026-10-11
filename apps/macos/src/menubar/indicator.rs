@@ -1,12 +1,12 @@
-//! 菜单栏里的「中 / 英」状态项。
+//! 選單欄裡的「中 / 英」狀態項。
 //!
-//! 输入源图标（Info.plist 的 tsInputMethodIconFileKey）没法动态换，所以自己放一个 NSStatusItem。
-//! Caps Lock 的变化不会作为按键送到输入法，用一个定时器轮询系统状态刷新。
+//! 輸入源圖示（Info.plist 的 tsInputMethodIconFileKey）沒法動態換，所以自己放一個 NSStatusItem。
+//! Caps Lock 的變化不會作為按鍵送到輸入法，用一個定時器輪詢系統狀態重新整理。
 //!
-//! 状态项一旦创建就**不再隐藏**：`setVisible(false)` 再 `setVisible(true)` 会把它重新排到菜单栏最左边，用户 ⌘ 拖到输入法图标旁的位置就丢了
-//! （固定 autosave 名也保不住），而焦点每进出一次输入框 IMK 就 deactivate / activate 一轮。
-//! 停用时改成收成零宽、清空标题，并且延迟 [`COLLAPSE_DELAY`] 再收：焦点只是在输入框之间挪的话，半秒内就会再次激活，根本收不下去；
-//! 真换到别的输入法才收起来，切回来再展开，位置一直在。
+//! 狀態項一旦建立就**不再隱藏**：`setVisible(false)` 再 `setVisible(true)` 會把它重新排到選單欄最左邊，使用者 ⌘ 拖到輸入法圖示旁的位置就丟了
+//! （固定 autosave 名也保不住），而焦點每進出一次輸入框 IMK 就 deactivate / activate 一輪。
+//! 停用時改成收成零寬、清空標題，並且延遲 [`COLLAPSE_DELAY`] 再收：焦點只是在輸入框之間挪的話，半秒內就會再次啟用，根本收不下去；
+//! 真換到別的輸入法才收起來，切回來再展開，位置一直在。
 
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
@@ -16,29 +16,29 @@ use objc2_foundation::{NSObject, NSObjectProtocol, NSString, NSTimer, ns_string}
 
 use crate::imk::modifiers;
 
-/// 轮询 Caps Lock 状态的间隔。
+/// 輪詢 Caps Lock 狀態的間隔。
 const POLL_INTERVAL: f64 = 0.25;
 
-/// 停用后隔多久才把状态项收起：焦点在输入框之间挪动时 deactivate 与下一次 activate 只隔几十毫秒。
+/// 停用後隔多久才把狀態項收起：焦點在輸入框之間挪動時 deactivate 與下一次 activate 只隔幾十毫秒。
 const COLLAPSE_DELAY: f64 = 0.5;
 
 pub struct ModeIndicator {
-    /// 菜单栏状态项。
+    /// 選單欄狀態項。
     item: Retained<NSStatusItem>,
 
-    /// 轮询定时器；未激活时为 `None`。
+    /// 輪詢定時器；未啟用時為 `None`。
     timer: Option<Retained<NSTimer>>,
 
-    /// 停用后延迟收起的一次性定时器；再次激活时取消。
+    /// 停用後延遲收起的一次性定時器；再次啟用時取消。
     collapse_timer: Option<Retained<NSTimer>>,
 
-    /// 正展开着（输入法激活中）。收起时不刷新标题。
+    /// 正展開著（輸入法啟用中）。收起時不重新整理標題。
     shown: bool,
 
-    /// 上次显示的是否英文模式，避免每次轮询都重设标题。
+    /// 上次顯示的是否英文模式，避免每次輪詢都重設標題。
     english: Option<bool>,
 
-    /// 云联想开着：标题带云朵，让用户一眼知道上下文会发出去。
+    /// 雲聯想開著：標題帶雲朵，讓使用者一眼知道上下文會發出去。
     cloud: bool,
 
     mtm: MainThreadMarker,
@@ -60,7 +60,7 @@ impl ModeIndicator {
         }
     }
 
-    /// 输入法激活：展开状态项并开始轮询；停用时安排的收起取消。
+    /// 輸入法啟用：展開狀態項並開始輪詢；停用時安排的收起取消。
     pub fn activate(&mut self) {
         if let Some(timer) = self.collapse_timer.take() {
             timer.invalidate();
@@ -86,7 +86,7 @@ impl ModeIndicator {
         }
     }
 
-    /// 输入法停用：停止轮询，半秒后没再激活就收起。
+    /// 輸入法停用：停止輪詢，半秒後沒再啟用就收起。
     pub fn deactivate(&mut self) {
         if let Some(timer) = self.timer.take() {
             timer.invalidate();
@@ -107,7 +107,7 @@ impl ModeIndicator {
         self.collapse_timer = Some(timer);
     }
 
-    /// 收成零宽、清空标题；位置保留。
+    /// 收成零寬、清空標題；位置保留。
     pub fn collapse(&mut self) {
         self.collapse_timer = None;
         if !self.shown {
@@ -121,7 +121,7 @@ impl ModeIndicator {
         self.item.setLength(0.0);
     }
 
-    /// 点状态项弹出的菜单。
+    /// 點狀態項彈出的選單。
     pub fn set_menu(&self, menu: &NSMenu) {
         self.item.setMenu(Some(menu));
     }
@@ -131,7 +131,7 @@ impl ModeIndicator {
         self.english = None;
     }
 
-    /// 按当前 Caps Lock 状态刷新标题；收起时不动。
+    /// 按當前 Caps Lock 狀態重新整理標題；收起時不動。
     pub fn update(&mut self) {
         if !self.shown {
             return;
@@ -154,7 +154,7 @@ impl ModeIndicator {
 }
 
 define_class!(
-    // SAFETY: NSObject 没有子类化要求；没有实现 Drop。
+    // SAFETY: NSObject 沒有子類化要求；沒有實現 Drop。
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[ivars = ()]

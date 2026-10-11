@@ -1,4 +1,4 @@
-//! 配置热加载记的状态。
+//! 配置熱載入記的狀態。
 
 use std::path::PathBuf;
 use std::time::{Instant, SystemTime};
@@ -10,28 +10,28 @@ use qingjian_platform::{
 };
 use qingjian_predict::PredictConfig;
 
-/// 随包与用户数据目录：启动与热加载用的是同一批（词库、码表）。
-/// 分开传参数会越传越长，且热加载与原路径不一致时找不到文件。
+/// 隨包與使用者資料目錄：啟動與熱載入用的是同一批（詞庫、碼錶）。
+/// 分開傳引數會越傳越長，且熱載入與原路徑不一致時找不到檔案。
 #[derive(Debug, Clone, Default)]
 pub struct DataDirs {
-    /// 用户数据根目录（个人释义表在它下面；`dicts/` / `codes/` 的父目录）。
+    /// 使用者資料根目錄（個人釋義表在它下面；`dicts/` / `codes/` 的父目錄）。
     pub user_root: Option<PathBuf>,
 
-    /// 随包领域词库目录。
+    /// 隨包領域詞庫目錄。
     pub bundled_dicts: Option<PathBuf>,
 
-    /// 随包辅码码表目录（随包根 `data/generated/codes/`，与 `dicts/` 并列）。
+    /// 隨包輔碼碼錶目錄（隨包根 `data/generated/codes/`，與 `dicts/` 並列）。
     pub bundled_codes: Option<PathBuf>,
 
-    /// 用户导入词库目录（`<用户目录>/dicts`）。
+    /// 使用者匯入詞庫目錄（`<使用者目錄>/dicts`）。
     pub user_dicts: Option<PathBuf>,
 
-    /// 用户导入码表目录（`<用户目录>/codes`）。
+    /// 使用者匯入碼錶目錄（`<使用者目錄>/codes`）。
     pub user_codes: Option<PathBuf>,
 }
 
 impl DataDirs {
-    /// 用户 `codes/` 的逐文件快照（路径、mtime、长度）；没配目录为空。启动与热加载轮询共用。
+    /// 使用者 `codes/` 的逐檔案快照（路徑、mtime、長度）；沒配目錄為空。啟動與熱載入輪詢共用。
     pub(super) fn code_snapshot(&self) -> Vec<(PathBuf, Option<SystemTime>, u64)> {
         self.user_codes
             .as_deref()
@@ -39,7 +39,7 @@ impl DataDirs {
             .unwrap_or_default()
     }
 
-    /// 用户 `dicts/` 的同一份快照；没配目录为空。
+    /// 使用者 `dicts/` 的同一份快照；沒配目錄為空。
     pub(super) fn dict_snapshot(&self) -> Vec<(PathBuf, Option<SystemTime>, u64)> {
         self.user_dicts
             .as_deref()
@@ -48,51 +48,51 @@ impl DataDirs {
     }
 }
 
-/// 热加载状态。
+/// 熱載入狀態。
 pub(crate) struct ConfigReload {
-    /// `config.toml` 路径。
+    /// `config.toml` 路徑。
     pub(super) config_path: PathBuf,
 
-    /// 上次看文件的时间（节流用）。
+    /// 上次看檔案的時間（節流用）。
     pub(super) last_check: Instant,
 
-    /// 随包数据根目录（释义表在 `data/generated` 下）。
+    /// 隨包資料根目錄（釋義表在 `data/generated` 下）。
     pub(super) root: PathBuf,
 
-    /// 随包与用户数据目录。
+    /// 隨包與使用者資料目錄。
     pub(super) dirs: DataDirs,
 
-    /// 上次看到的码表文件快照（逐文件 mtime + 长度）：设置页刚导入一张表、或手工拷进半个
-    /// `.qj` 后补全，都靠它即时生效。
+    /// 上次看到的碼錶檔案快照（逐檔案 mtime + 長度）：設定頁剛匯入一張表、或手工拷進半個
+    /// `.qj` 後補全，都靠它即時生效。
     pub(super) code_files: Vec<(PathBuf, Option<SystemTime>, u64)>,
 
     /// 上次看到的 mtime。
     pub(super) last_mtime: Option<SystemTime>,
 
-    /// 已应用的 `[predict]`。
+    /// 已應用的 `[predict]`。
     pub(super) applied_predict: PredictConfig,
 
-    /// 已应用的 `[dictionaries]`。
+    /// 已應用的 `[dictionaries]`。
     pub(super) applied_dictionaries: DictionariesConfig,
 
-    /// 已应用的 `[aux_code]`。
+    /// 已應用的 `[aux_code]`。
     pub(super) applied_aux_code: AuxCodeConfig,
 
-    /// 已应用的学习语言（`None` 为关）。
+    /// 已應用的學習語言（`None` 為關）。
     pub(super) applied_language: Option<Language>,
 
-    /// 最近加载的用户词库文件快照（路径、修改时间、长度）。
+    /// 最近載入的使用者詞庫檔案快照（路徑、修改時間、長度）。
     pub(super) dictionary_files: Vec<(PathBuf, Option<SystemTime>, u64)>,
 
-    /// 当前的 `[update]`。
+    /// 當前的 `[update]`。
     pub(super) update: UpdateConfig,
 
-    /// 检查更新：结果写进用户目录的 `update.json`，设置程序的「关于」页读它；拿不到用户目录时没有。
+    /// 檢查更新：結果寫進使用者目錄的 `update.json`，設定程式的「關於」頁讀它；拿不到使用者目錄時沒有。
     pub(super) updates: Option<qingjian_update::Checker>,
 }
 
 impl ConfigReload {
-    /// 按上次有效配置装配词库，不把用户目录中的学习数据当作词库。
+    /// 按上次有效配置裝配詞庫，不把使用者目錄中的學習資料當作詞庫。
     pub(super) fn load_dictionaries(&self) -> Vec<Dictionary> {
         let dictionaries = extra_dictionaries::load(
             self.dirs.bundled_dicts.as_deref(),

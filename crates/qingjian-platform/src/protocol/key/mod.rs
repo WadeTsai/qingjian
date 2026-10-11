@@ -1,4 +1,4 @@
-//! 按键相关的协议类型：一次按键（[`KeyEvent`]）、它的修饰键（[`KeyModifiers`]）、Server 的处置（[`KeyOutcome`]）。
+//! 按鍵相關的協議型別：一次按鍵（[`KeyEvent`]）、它的修飾鍵（[`KeyModifiers`]）、Server 的處置（[`KeyOutcome`]）。
 
 mod event;
 mod modifiers;

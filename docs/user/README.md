@@ -1,45 +1,45 @@
-# 用户文档（官网「文档」页的内容源）
+# 使用者文件（官網「文件」頁的內容源）
 
-这个目录里的 Markdown 是给**用户**看的，官网（`qingjian-web`）构建时拉取整个目录，按目录结构渲染成文档页。
-`docs/` 下其他目录是给开发者看的工程文档，不渲染。
+這個目錄裡的 Markdown 是給**使用者**看的，官網（`qingjian-web`）構建時拉取整個目錄，按目錄結構渲染成文件頁。
+`docs/` 下其他目錄是給開發者看的工程文件，不渲染。
 
-这个 README 是维护约定，不渲染。
+這個 README 是維護約定，不渲染。
 
-## 结构
+## 結構
 
 ```text
 docs/user/
-├── index.md              # 文档首页
-├── getting-started/      # 开始使用：安装、第一次输入、按键与快捷键（两个平台并排的总表）
-├── input/                # 输入：英文模式、拼写纠错、模糊音与输入方案、快捷输入
-├── learning/             # 学习：译词与生词、统计
-├── cloud/                # 云联想（可选）
-├── settings/             # 设置：偏好设置、词库
-└── help/                 # 帮助：数据与日志、卸载、反馈
+├── index.md              # 文件首頁
+├── getting-started/      # 開始使用：安裝、第一次輸入、按鍵與快捷鍵（兩個平臺並排的總表）
+├── input/                # 輸入：英文模式、拼寫糾錯、模糊音與輸入方案、快捷輸入
+├── learning/             # 學習：譯詞與生詞、統計
+├── cloud/                # 雲聯想（可選）
+├── settings/             # 設定：偏好設定、詞庫
+└── help/                 # 幫助：資料與日誌、解除安裝、反饋
 ```
 
-- **一个文件夹是一个分组**，文件夹里的 `index.md` 给分组标题与顺序；文件夹里的其他 `.md` 是分组下的页面。
-- **一个 `.md` 是一页**。顶部 frontmatter：
+- **一個資料夾是一個分組**，資料夾裡的 `index.md` 給分組標題與順序；資料夾裡的其他 `.md` 是分組下的頁面。
+- **一個 `.md` 是一頁**。頂部 frontmatter：
 
   ```yaml
   ---
-  title: 安装            # 页面标题，也是侧栏里的名字
-  order: 1               # 同级排序，小的在前
-  description: 一句话     # 搜索引擎摘要与分享卡片用，40 字左右
+  title: 安裝            # 頁面標題，也是側欄裡的名字
+  order: 1               # 同級排序，小的在前
+  description: 一句話     # 搜尋引擎摘要與分享卡片用，40 字左右
   ---
   ```
 
-- **文件名与文件夹名用 ASCII**（小写、连字符），中文只写在 `title` 里；URL 就是路径：`getting-started/install.md` → `/docs/getting-started/install`。
-- **图片放在同一文件夹**，相对路径引用（`![候选窗口](candidate-window.png)`），构建时随文档一起拷走。截图用浅色外观、系统缺省字号、2x。
-- 正文第一行不再写 `# 标题`，标题来自 frontmatter；正文从 `##` 开始。
-- 跨页链接用相对路径指向 `.md` 文件（`[安装](../getting-started/install.md)`），渲染时改写成站内链接。
+- **檔名與資料夾名用 ASCII**（小寫、連字元），中文只寫在 `title` 裡；URL 就是路徑：`getting-started/install.md` → `/docs/getting-started/install`。
+- **圖片放在同一資料夾**，相對路徑引用（`![候選視窗](candidate-window.png)`），構建時隨文件一起拷走。截圖用淺色外觀、系統預設字號、2x。
+- 正文第一行不再寫 `# 標題`，標題來自 frontmatter；正文從 `##` 開始。
+- 跨頁連結用相對路徑指向 `.md` 檔案（`[安裝](../getting-started/install.md)`），渲染時改寫成站內連結。
 
-## 写法
+## 寫法
 
-- 说明书体：陈述句，不用「一下 / 多半 / 照常 / 免得」这类口语助词与副词，不拟人、不调侃；条件用「若…则」，可行用「可」，必要用「需」；术语固定（候选窗口、拼音行、上屏、组合键）。
-- 面向普通用户，不出现实现词（`config.toml`、marked text、Viterbi、panic、600 权限这类）。要指路时说「偏好设置 → 高级」，不说文件名；
-  数据文件位置只在 [help/data-and-logs.md](help/data-and-logs.md) 一处列出。
-- 按键按键帽写：`Space`、`Enter`、`Backspace`、`Delete`、`Esc`、`Tab`、`←` `→` `↑` `↓`、`Home` / `End`、`PageUp` / `PageDown`；
-  macOS 修饰键用符号（`⌥ + 数字`、`⌃⌥T`、`⇧ + Tab`），Windows 用单词（`Ctrl + 数字`、`Ctrl + Alt + T`）；菜单与页名用「」：「系统设置 → 隐私与安全性」。
-- 一个功能改了行为，同一个提交里改这里对应的页；README 的安装 / 基本用法 / 隐私一节与这里重复的内容以这里为准，README 只留概要。
-- 事实来源是代码与 `docs/design/candidate-ui.md`（按键约定）、`docs/design/architecture.md`；写之前对一遍，不凭印象。
+- 說明書體：陳述句，不用「一下 / 多半 / 照常 / 免得」這類口語助詞與副詞，不擬人、不調侃；條件用「若…則」，可行用「可」，必要用「需」；術語固定（候選視窗、拼音行、上屏、組合鍵）。
+- 面向普通使用者，不出現實現詞（`config.toml`、marked text、Viterbi、panic、600 許可權這類）。要指路時說「偏好設定 → 進階」，不說檔名；
+  資料檔案位置只在 [help/data-and-logs.md](help/data-and-logs.md) 一處列出。
+- 按鍵按鍵帽寫：`Space`、`Enter`、`Backspace`、`Delete`、`Esc`、`Tab`、`←` `→` `↑` `↓`、`Home` / `End`、`PageUp` / `PageDown`；
+  macOS 修飾鍵用符號（`⌥ + 數字`、`⌃⌥T`、`⇧ + Tab`），Windows 用單詞（`Ctrl + 數字`、`Ctrl + Alt + T`）；選單與頁名用「」：「系統設定 → 隱私與安全性」。
+- 一個功能改了行為，同一個提交裡改這裡對應的頁；README 的安裝 / 基本用法 / 隱私一節與這裡重複的內容以這裡為準，README 只留概要。
+- 事實來源是程式碼與 `docs/design/candidate-ui.md`（按鍵約定）、`docs/design/architecture.md`；寫之前對一遍，不憑印象。

@@ -1,12 +1,12 @@
-//! Server ↔ DLL 的 IPC 协议类型。
+//! Server ↔ DLL 的 IPC 協議型別。
 //!
-//! Windows 的 TSF DLL 会被加载进每一个应用进程，所以 [`qingjian_core::Engine`] 不能待在 DLL 里，
-//! 得跑在独立的 Server 进程；DLL 只做 IPC，把系统按键翻译成 [`ClientMessage`] 发给 Server，
-//! 把 Server 回的 [`ServerMessage`] 画到候选窗口。结构与 Weasel（WeaselServer）/ 水杉（Server 进程）一致。
+//! Windows 的 TSF DLL 會被載入進每一個應用程序，所以 [`qingjian_core::Engine`] 不能待在 DLL 裡，
+//! 得跑在獨立的 Server 程序；DLL 只做 IPC，把系統按鍵翻譯成 [`ClientMessage`] 發給 Server，
+//! 把 Server 回的 [`ServerMessage`] 畫到候選視窗。結構與 Weasel（WeaselServer）/ 水杉（Server 程序）一致。
 //!
-//! 这里的类型两端共用，必须可序列化（serde）。协议只描述「按键进、要画什么出」这一层，
-//! 不复制 Core 的排序 / 词库逻辑：候选直接用 [`qingjian_core::CandidateList`]，preedit 分段用
-//! [`PreeditSegment`]（Core 内部的 `MarkedSegment` 的可序列化镜像，避免协议耦合 Core 的内部枚举）。
+//! 這裡的型別兩端共用，必須可序列化（serde）。協議只描述「按鍵進、要畫什麼出」這一層，
+//! 不復制 Core 的排序 / 詞庫邏輯：候選直接用 [`qingjian_core::CandidateList`]，preedit 分段用
+//! [`PreeditSegment`]（Core 內部的 `MarkedSegment` 的可序列化映象，避免協議耦合 Core 的內部列舉）。
 
 mod client;
 mod codec;
@@ -15,18 +15,18 @@ mod screen_rect;
 mod server;
 mod session;
 
-/// 协议版本，DLL 开会话时带上。加消息 / 改字段语义时 +1，一个版本周期只升一次（本周期已升过就不再升；
-/// Linux 插件写死了这个数，升了一起改）；Server 只对不上时记警告（老 DLL 在没重启的
-/// 应用里还会活很久，serde 的缺省字段 / 忽略未知字段让两边仍能对话）。
+/// 協議版本，DLL 開會話時帶上。加訊息 / 改欄位語義時 +1，一個版本週期只升一次（本週期已升過就不再升；
+/// Linux 外掛寫死了這個數，升了一起改）；Server 只對不上時記警告（老 DLL 在沒重啟的
+/// 應用裡還會活很久，serde 的預設欄位 / 忽略未知欄位讓兩邊仍能對話）。
 ///
-/// **加枚举变体不在「仍能对话」之列**：`qingjian_core::Candidate` 是线上格式的一部分（见本模块文档），
-/// 给它加一个 `kind` 变体，老 DLL 解不出来会整条帧失败、按键直接放行——测试时看到的「输入法突然只出英文」
-/// 就是这么来的（`unknown variant `Code``）。加变体必须同时 +1 并重装 DLL，否则连警告都不会有。
-pub const PROTOCOL_VERSION: u32 = 8;
+/// **加列舉變體不在「仍能對話」之列**：`qingjian_core::Candidate` 是線上格式的一部分（見本模組文件），
+/// 給它加一個 `kind` 變體，老 DLL 解不出來會整條幀失敗、按鍵直接放行——測試時看到的「輸入法突然只出英文」
+/// 就是這麼來的（`unknown variant `Code``）。加變體必須同時 +1 並重裝 DLL，否則連警告都不會有。
+pub const PROTOCOL_VERSION: u32 = 9;
 
-/// 从哪个协议版本起 DLL 会在 `OpenSession` 后阻塞读一条 [`ServerMessage::SessionOpened`]。
-/// 门槛是固定值而不是当前版本：以后版本再升，没重启的应用里那些旧 DLL 仍在等这条回包，
-/// 不回它们会卡在 `open()` 里（宿主 UI 线程）。
+/// 從哪個協議版本起 DLL 會在 `OpenSession` 後阻塞讀一條 [`ServerMessage::SessionOpened`]。
+/// 門檻是固定值而不是當前版本：以後版本再升，沒重啟的應用裡那些舊 DLL 仍在等這條回包，
+/// 不回它們會卡在 `open()` 裡（宿主 UI 執行緒）。
 pub const SESSION_OPENED_SINCE: u32 = 6;
 
 pub mod frame;

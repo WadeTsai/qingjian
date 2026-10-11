@@ -1,4 +1,4 @@
-//! 「模糊音」页：九条规则的勾选框，三列排。
+//! 「模糊音」頁：九條規則的勾選框，三列排。
 
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
@@ -11,14 +11,14 @@ use crate::preferences::layout::{Layout, PAGE_PADDING, ROW_HEIGHT};
 use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
-/// 勾选框每行几个。
+/// 勾選框每行幾個。
 const FUZZY_COLUMNS: usize = 3;
 
-/// 勾选框的列距。
+/// 勾選框的列距。
 const FUZZY_COLUMN_WIDTH: f64 = 150.0;
 
 pub struct FuzzyPage {
-    /// 每条规则一个勾选框，顺序同 `FuzzyRules::NAMES`。
+    /// 每條規則一個勾選框，順序同 `FuzzyRules::NAMES`。
     buttons: Vec<Retained<NSButton>>,
 }
 

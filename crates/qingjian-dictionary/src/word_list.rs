@@ -3,14 +3,14 @@ use std::path::Path;
 
 use crate::error::DictionaryError;
 
-/// 英文词表：按小写编码查原样大小写的词，也能按前缀补全。
-/// 文件格式 TSV：`词\t编码[\t词频]`（编码缺省为词的小写，词频缺省 0）。
+/// 英文詞表：按小寫編碼查原樣大小寫的詞，也能按字首補全。
+/// 檔案格式 TSV：`詞\t編碼[\t詞頻]`（編碼預設為詞的小寫，詞頻預設 0）。
 #[derive(Debug, Default)]
 pub struct WordList {
-    /// 小写编码 → 在 `entries` 里的下标。
+    /// 小寫編碼 → 在 `entries` 裡的下標。
     by_code: HashMap<String, usize>,
 
-    /// (编码, 原样词, 词频)，按编码字节序排好，前缀补全二分定位。
+    /// (編碼, 原樣詞, 詞頻)，按編碼位元組序排好，字首補全二分定位。
     entries: Vec<(String, String, u32)>,
 }
 
@@ -45,14 +45,14 @@ impl WordList {
                     reason: "frequency is not a non-negative integer",
                 })?
                 .unwrap_or(0);
-            // 同一编码取第一个（词表按常用度排序时即最常用的写法）
+            // 同一編碼取第一個（詞表按常用度排序時即最常用的寫法）
             if by_code.contains_key(&code) {
                 continue;
             }
             by_code.insert(code.clone(), entries.len());
             entries.push((code, word.to_owned(), frequency));
         }
-        // 按编码排序后重建下标
+        // 按編碼排序後重建下標
         entries.sort_by(|a, b| a.0.cmp(&b.0));
         for (index, (code, _, _)) in entries.iter().enumerate() {
             by_code.insert(code.clone(), index);
@@ -65,19 +65,19 @@ impl WordList {
         Self::parse(&std::fs::read_to_string(path)?)
     }
 
-    /// 输入（已小写）对应的英文词。
+    /// 輸入（已小寫）對應的英文詞。
     pub fn get(&self, code: &str) -> Option<&str> {
         self.by_code
             .get(code)
             .map(|&index| self.entries[index].1.as_str())
     }
 
-    /// 输入（已小写）对应的词频；词表里没有为 `None`。
+    /// 輸入（已小寫）對應的詞頻；詞表裡沒有為 `None`。
     pub fn frequency(&self, code: &str) -> Option<u32> {
         self.by_code.get(code).map(|&index| self.entries[index].2)
     }
 
-    /// 以 `prefix` 开头（不含正好相等的）的词里词频最高的 `limit` 个，按词频降序。
+    /// 以 `prefix` 開頭（不含正好相等的）的詞裡詞頻最高的 `limit` 個，按詞頻降序。
     pub fn complete(&self, prefix: &str, limit: usize) -> Vec<&str> {
         if prefix.is_empty() || limit == 0 {
             return Vec::new();
@@ -97,7 +97,7 @@ impl WordList {
             .collect()
     }
 
-    /// 全部词目：(小写编码, 原样词, 词频)，按编码字节序。
+    /// 全部詞目：(小寫編碼, 原樣詞, 詞頻)，按編碼位元組序。
     pub fn entries(&self) -> impl Iterator<Item = (&str, &str, u32)> {
         self.entries
             .iter()

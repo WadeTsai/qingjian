@@ -1,4 +1,4 @@
-//! 冷启动实验错误：失败必须中断，不能静默跳过难例。
+//! 冷啟動實驗錯誤：失敗必須中斷，不能靜默跳過難例。
 
 #[derive(Debug, thiserror::Error)]
 pub enum ColdError {

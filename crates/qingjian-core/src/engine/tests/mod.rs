@@ -1,4 +1,4 @@
-//! Engine 的测试：共用的样例词库、辅助函数与 mock 在这里，用例按主题分文件。
+//! Engine 的測試：共用的樣例詞庫、輔助函式與 mock 在這裡，用例按主題分檔案。
 
 mod aux_code;
 mod cloud;
@@ -47,7 +47,7 @@ fn xiaohe() -> Engine {
     engine
 }
 
-/// 与 [`Engine::take_raw`] 里的判断一致：原样上屏的串要不要记成英文词。
+/// 與 [`Engine::take_raw`] 裡的判斷一致：原樣上屏的串要不要記成英文詞。
 fn looks_like_english_word_in(engine: &Engine) -> bool {
     let raw = engine.composition().text();
     looks_like_english_word(raw, false) && engine.decode(raw).is_none_or(|d| !d.is_complete())
@@ -138,14 +138,14 @@ impl Translator for FixedTranslator {
     }
 }
 
-/// 把请求记下来、按序号原样回一条结果的假联想器。
+/// 把請求記下來、按序號原樣回一條結果的假聯想器。
 struct EchoPredictor {
     submitted: std::rc::Rc<std::cell::RefCell<Vec<PredictionRequest>>>,
     replies: Vec<Prediction>,
     sentence: bool,
 }
 
-// 测试里单线程用，Rc 不 Send 但 trait 要求 Send；这里只在本线程访问
+// 測試裡單執行緒用，Rc 不 Send 但 trait 要求 Send；這裡只在本執行緒訪問
 unsafe impl Send for EchoPredictor {}
 
 impl Predictor for EchoPredictor {
@@ -176,7 +176,7 @@ fn cloud(text: &str, syllables: &[&str]) -> CloudWord {
     }
 }
 
-/// 记请求、按需吐结果的假释义兜底。
+/// 記請求、按需吐結果的假釋義兜底。
 #[derive(Default)]
 struct MemoryFiller {
     requested: Arc<Mutex<Vec<String>>>,
@@ -194,7 +194,7 @@ impl GlossFiller for MemoryFiller {
     }
 }
 
-/// 会记住学到的释义的译者：随包只有 开发。
+/// 會記住學到的釋義的譯者：隨包只有 開發。
 #[derive(Default)]
 struct LearningTranslator(HashMap<String, Translation>);
 
@@ -215,10 +215,10 @@ impl Translator for LearningTranslator {
     }
 }
 
-/// (看到轮次, 上屏次数, 用过次数)。
+/// (看到輪次, 上屏次數, 用過次數)。
 type VocabularyCounts = HashMap<(Language, String), (u32, u32, u32)>;
 
-/// 记在内存里的词汇记录。
+/// 記在記憶體裡的詞彙記錄。
 #[derive(Default)]
 struct MemoryVocabulary(Arc<Mutex<VocabularyCounts>>);
 
@@ -248,7 +248,7 @@ impl VocabularyTracker for MemoryVocabulary {
     }
 }
 
-/// 把输入统计攒起来的假累计方。
+/// 把輸入統計攢起來的假累計方。
 struct MemoryMeter(Arc<Mutex<Vec<Usage>>>);
 
 impl UsageMeter for MemoryMeter {
@@ -257,7 +257,7 @@ impl UsageMeter for MemoryMeter {
     }
 }
 
-/// 把输入日志条目攒起来的假落盘方。
+/// 把輸入日誌條目攢起來的假落盤方。
 struct MemoryLogger(Arc<Mutex<Vec<InputLogEntry>>>);
 
 impl InputLogger for MemoryLogger {
@@ -280,7 +280,7 @@ impl LanguageModel for SentenceModel {
     }
 }
 
-/// 记用户词与词转移的假学习器；`shared` 让测试从外面看到记了什么。
+/// 記使用者詞與詞轉移的假學習器；`shared` 讓測試從外面看到記了什麼。
 #[derive(Default)]
 struct WordLearner {
     words: Vec<(String, Vec<String>)>,
@@ -348,7 +348,7 @@ impl Learner for WordLearner {
     }
 }
 
-/// 只认「做了 → 吧」与句首 把 的假模型。
+/// 只認「做了 → 吧」與句首 把 的假模型。
 struct BaModel;
 
 impl LanguageModel for BaModel {

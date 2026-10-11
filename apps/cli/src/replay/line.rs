@@ -1,10 +1,10 @@
 use qingjian_core::InputLogEntry;
 use serde::Deserialize;
 
-/// 日志文件里的一行：时间戳 + 条目。与 `qingjian-learning` 写出的格式对应。
+/// 日誌檔案裡的一行：時間戳 + 條目。與 `qingjian-learning` 寫出的格式對應。
 #[derive(Debug, Deserialize)]
 pub struct Line {
-    /// 本机时间戳，回放不用。
+    /// 本機時間戳，回放不用。
     #[serde(default)]
     #[allow(dead_code)]
     pub t: String,

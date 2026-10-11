@@ -1,4 +1,4 @@
-//! `Learner` trait 的实现：Engine 上屏 / 撤销 / 删候选时调进来的记账。
+//! `Learner` trait 的實現：Engine 上屏 / 撤銷 / 刪候選時調進來的記賬。
 
 use super::*;
 

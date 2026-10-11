@@ -1,4 +1,4 @@
-//! 组句的展示状态：缓冲变化时重查候选并重建 [`Composed`]，云端词异步并入，高亮 / 翻页，按状态生成给 DLL 的帧。
+//! 組句的展示狀態：緩衝變化時重查候選並重建 [`Composed`]，雲端詞非同步併入，高亮 / 翻頁，按狀態生成給 DLL 的幀。
 
 mod state;
 
@@ -9,7 +9,7 @@ pub(super) use self::state::{Composed, TypedKeys};
 use super::Router;
 
 impl Router {
-    /// 缓冲变化后：按 Engine 状态重建 [`Composed`]，发一次云联想请求，归零高亮与整句补全。
+    /// 緩衝變化後：按 Engine 狀態重建 [`Composed`]，發一次雲聯想請求，歸零高亮與整句補全。
     pub(super) fn recompose(&mut self) {
         self.highlight = 0;
         self.navigated = false;
@@ -50,7 +50,7 @@ impl Router {
         self.schedule_rescoring();
     }
 
-    /// 拉一次云联想结果：云端词并进候选布局，整句补全记下；翻译评审时结果是译文。
+    /// 拉一次雲聯想結果：雲端詞並進候選佈局，整句補全記下；翻譯評審時結果是譯文。
     pub(super) fn poll_prediction(&mut self) {
         if !self.engine.prediction_enabled() {
             return;
@@ -89,7 +89,7 @@ impl Router {
         }
     }
 
-    /// 高亮移动 `delta`，夹在 `[0, 末尾]`，到页边自然换页。
+    /// 高亮移動 `delta`，夾在 `[0, 末尾]`，到頁邊自然換頁。
     pub(super) fn move_highlight(&mut self, delta: isize) {
         let count = self.candidate_count();
         if count == 0 {
@@ -101,7 +101,7 @@ impl Router {
         self.highlight = next;
     }
 
-    /// 整页翻 `step`，高亮落到目标页第一个候选。
+    /// 整頁翻 `step`，高亮落到目標頁第一個候選。
     pub(super) fn page(&mut self, step: isize) {
         let count = self.candidate_count();
         if count == 0 {
@@ -126,7 +126,7 @@ impl Router {
         }
     }
 
-    /// 候选布局里第 `index` 个（跨页下标）。
+    /// 候選佈局裡第 `index` 個（跨頁下標）。
     pub(super) fn layout_candidate(&self, index: usize) -> Option<Candidate> {
         match &self.composed {
             Some(Composed::Candidates { layout, .. }) => layout.candidate(index).cloned(),
@@ -139,8 +139,8 @@ impl Router {
         Some(self.engine.commit(&candidate))
     }
 
-    /// 按当前状态生成一帧：翻译评审优先；没在组句给空帧；否则给高亮所在的那一页。
-    /// 焦点会话的 DLL 比 Server 老时按老协议降级（见 [`Self::downgrade_for_old_dll`]）。
+    /// 按當前狀態生成一幀：翻譯評審優先；沒在組句給空幀；否則給高亮所在的那一頁。
+    /// 焦點會話的 DLL 比 Server 老時按老協議降級（見 [`Self::downgrade_for_old_dll`]）。
     pub(super) fn current_frame(&self) -> Frame {
         let mut frame = self.raw_frame();
         self.show_typed_keys(&mut frame);
@@ -148,7 +148,7 @@ impl Router {
         frame
     }
 
-    /// 给 DLL 的帧只管应用输入框：双拼「输入框显示原始按键」开着时换成敲的键，拼音行由 Server 自绘照旧全拼。
+    /// 給 DLL 的幀只管應用輸入框：雙拼「輸入框顯示原始按鍵」開著時換成敲的鍵，拼音行由 Server 自繪照舊全拼。
     fn show_typed_keys(&self, frame: &mut Frame) {
         if self.translation.is_some() {
             return;
@@ -167,12 +167,12 @@ impl Router {
         frame.cursor = keys.cursor;
     }
 
-    /// 自绘候选窗用的帧：不做老 DLL 降级，码段照常画。
+    /// 自繪候選窗用的幀：不做老 DLL 降級，碼段照常畫。
     pub(super) fn self_drawn_frame(&self) -> Frame {
         self.raw_frame()
     }
 
-    /// 协议比 Server 老的 DLL 不认识 `AuxCode` 段，收到会整条消息解析失败；给它的码段降级成普通拼音段。
+    /// 協議比 Server 老的 DLL 不認識 `AuxCode` 段，收到會整條訊息解析失敗；給它的碼段降級成普通拼音段。
     fn downgrade_for_old_dll(&self, frame: &mut Frame) {
         if self.focused_dll_protocol() >= PROTOCOL_VERSION {
             return;
@@ -184,7 +184,7 @@ impl Router {
         }
     }
 
-    /// 焦点会话的 DLL 协议版本；没有焦点会话时按最新（不必降级）。
+    /// 焦點會話的 DLL 協議版本；沒有焦點會話時按最新（不必降級）。
     pub(super) fn focused_dll_protocol(&self) -> u32 {
         self.focused
             .and_then(|session| self.sessions.get(&session))
@@ -249,8 +249,8 @@ impl Router {
     }
 }
 
-/// 一次查询的拼音行分段与光标，以及输入框另显示原始按键时的那一串。
-/// 光标用 Core 的映射：自动补的 `'` 会让显示串比敲的长。
+/// 一次查詢的拼音行分段與游標，以及輸入框另顯示原始按鍵時的那一串。
+/// 游標用 Core 的對映：自動補的 `'` 會讓顯示串比敲的長。
 pub(super) fn marked_parts(query: &Query) -> (Vec<PreeditSegment>, usize, Option<TypedKeys>) {
     let preedit = query.marked_segments().iter().map(Into::into).collect();
     let typed_keys = query.shuangpin_raw_preedit.then(|| TypedKeys {

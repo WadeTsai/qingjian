@@ -1,5 +1,5 @@
-//! Windows 的字体登记（DirectWrite）：按字族名找出字体文件给渲染器只加载这几个，再列出字族名给设置页。
-//! 与 macOS 壳里走 CoreText 的 `font_files.rs` 对应。
+//! Windows 的字型登記（DirectWrite）：按字族名找出字型檔案給渲染器只加載這幾個，再列出字族名給設定頁。
+//! 與 macOS 殼裡走 CoreText 的 `font_files.rs` 對應。
 
 use std::path::PathBuf;
 
@@ -9,9 +9,9 @@ use ::windows::Win32::Graphics::DirectWrite::{
 };
 use ::windows::core::{BOOL, HSTRING, Interface};
 
-/// 系统字体集合；DirectWrite 不可用时为 `None`。
+/// 系統字型集合；DirectWrite 不可用時為 `None`。
 fn system_collection() -> Option<IDWriteFontCollection> {
-    // SAFETY: 共享工厂随进程存活；出参按文档传指针。
+    // SAFETY: 共享工廠隨程序存活；出參按文件傳指標。
     unsafe {
         let factory: IDWriteFactory = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED).ok()?;
         let mut collection = None;
@@ -22,13 +22,13 @@ fn system_collection() -> Option<IDWriteFontCollection> {
     }
 }
 
-/// 某字族所有面的文件路径，去重；系统里没有这个字族返回空。
+/// 某字族所有面的檔案路徑，去重；系統裡沒有這個字族返回空。
 pub fn family_files(family: &str) -> Vec<PathBuf> {
     let mut files: Vec<PathBuf> = Vec::new();
     let Some(collection) = system_collection() else {
         return files;
     };
-    // SAFETY: 都是 DirectWrite 的只读查询；出参缓冲按它报的长度分配。
+    // SAFETY: 都是 DirectWrite 的只讀查詢；出參緩衝按它報的長度分配。
     unsafe {
         let mut index = 0u32;
         let mut exists = BOOL(0);
@@ -69,9 +69,9 @@ pub fn family_files(family: &str) -> Vec<PathBuf> {
     files
 }
 
-/// 本机字体文件的路径；网络 / 内存字体（不是本地加载器）返回 `None`。
+/// 本機字型檔案的路徑；網路 / 記憶體字型（不是本地載入器）返回 `None`。
 fn file_path(file: &IDWriteFontFile) -> Option<PathBuf> {
-    // SAFETY: 引用键由 DirectWrite 持有、随 file 存活；路径缓冲按报的长度加终止符分配。
+    // SAFETY: 引用鍵由 DirectWrite 持有、隨 file 存活；路徑緩衝按報的長度加終止符分配。
     unsafe {
         let mut key = std::ptr::null_mut();
         let mut size = 0u32;
@@ -85,13 +85,13 @@ fn file_path(file: &IDWriteFontFile) -> Option<PathBuf> {
     }
 }
 
-/// 系统里全部字族名（英文名，没有英文名取第一个），按名字排序。
+/// 系統裡全部字族名（英文名，沒有英文名取第一個），按名字排序。
 pub fn families() -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
     let Some(collection) = system_collection() else {
         return names;
     };
-    // SAFETY: 只读查询。
+    // SAFETY: 只讀查詢。
     unsafe {
         for i in 0..collection.GetFontFamilyCount() {
             let name = collection
@@ -110,9 +110,9 @@ pub fn families() -> Vec<String> {
     names
 }
 
-/// 本地化字符串里的英文名，没有就取第 0 条。
+/// 本地化字串裡的英文名，沒有就取第 0 條。
 fn localized(strings: &IDWriteLocalizedStrings) -> Option<String> {
-    // SAFETY: 只读查询；缓冲按报的长度加终止符分配。
+    // SAFETY: 只讀查詢；緩衝按報的長度加終止符分配。
     unsafe {
         let mut index = 0u32;
         let mut exists = BOOL(0);

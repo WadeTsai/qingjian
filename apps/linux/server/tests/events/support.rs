@@ -1,4 +1,4 @@
-//! Linux 事件测试构造器。
+//! Linux 事件測試建構子。
 use qingjian_core::Engine;
 use qingjian_dictionary::Dictionary;
 use qingjian_linux_server::{Router, RouterConfig};

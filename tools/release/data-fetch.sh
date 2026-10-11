@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# 按 tools/release/data.lock 下载并校验单包产品数据；旧锁仍可读取分离的模型附件。
+# 按 tools/release/data.lock 下載並校驗單包產品資料；舊鎖仍可讀取分離的模型附件。
 #
-#   tools/release/data-fetch.sh            # 下载 + 校验 + 解开
-#   tools/release/data-fetch.sh --verify   # 只校验 target/release-data/ 里已下载的文件
+#   tools/release/data-fetch.sh            # 下載 + 校驗 + 解開
+#   tools/release/data-fetch.sh --verify   # 只校驗 target/release-data/ 裡已下載的檔案
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -63,7 +63,7 @@ else
     echo "产品数据包缺少词库或含章模型（$TAG）" >&2; exit 1;
   }
 fi
-# 解出来的 mtime 比 checkout 出来的 TSV 旧，bundle.sh 会以为要重打
+# 解出來的 mtime 比 checkout 出來的 TSV 舊，bundle.sh 會以為要重打
 find data/generated -type f -exec touch {} +
 touch "$MODEL_SOURCE"
 [[ -n "$P2C_MODEL_SOURCE" ]] && touch "$P2C_MODEL_SOURCE"

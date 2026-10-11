@@ -1,4 +1,4 @@
-//! 呈现：删候选、按应用关英文候选、翻译选区的起止、提示气泡、会话重置与候选窗口绘制。
+//! 呈現：刪候選、按應用關英文候選、翻譯選區的起止、提示氣泡、會話重置與候選視窗繪製。
 
 mod notice;
 mod translation_job;
@@ -10,7 +10,7 @@ use super::cloud::cloud_candidate;
 use super::*;
 
 impl Host {
-    /// 删掉当前页第 `offset` 格的候选：用户词整个删、词库词清学习。返回给用户看的一句话；那格没有候选返回 `None`。
+    /// 刪掉當前頁第 `offset` 格的候選：使用者詞整個刪、詞庫詞清學習。返回給使用者看的一句話；那格沒有候選返回 `None`。
     pub fn forget_candidate(&mut self, offset: usize) -> Option<String> {
         let index = self.session.index_on_page(offset)?;
         let candidate = self.session.candidate(index)?;
@@ -25,12 +25,12 @@ impl Host {
         })
     }
 
-    /// 这个应用里英文模式给不给候选：全局开关开着，且应用在 `[apps] english_candidates_on` 白名单里。
+    /// 這個應用裡英文模式給不給候選：全域性開關開著，且應用在 `[apps] english_candidates_on` 白名單裡。
     pub fn english_candidates_in(&self, bundle: Option<&str>) -> bool {
         self.english_candidates && self.apps.english_candidates_on(bundle)
     }
 
-    /// 开始一次翻译：记下选区，窗口先显示「翻译中…」。调用方已发出请求。
+    /// 開始一次翻譯：記下選區，視窗先顯示「翻譯中…」。呼叫方已發出請求。
     pub fn begin_translation(&mut self, range: objc2_foundation::NSRange) {
         self.translation = Some(TranslationJob {
             range,
@@ -41,7 +41,7 @@ impl Host {
         self.render();
     }
 
-    /// 在候选窗口里显示一行提示，几秒后自动收起（敲键也收）。
+    /// 在候選窗口裡顯示一行提示，幾秒後自動收起（敲鍵也收）。
     pub fn show_notice(&mut self, text: &str, anchor: NSRect) {
         self.anchor = anchor;
         self.reset_session(None, vec![cloud_candidate(text.to_owned())]);
@@ -50,7 +50,7 @@ impl Host {
         self.notice = Some(Notice::schedule(mtm));
     }
 
-    /// 收起提示；没在显示就什么都不做。
+    /// 收起提示；沒在顯示就什麼都不做。
     pub fn clear_notice(&mut self) {
         if self.notice.take().is_some() && self.translation.is_none() {
             self.reset_session(None, Vec::new());
@@ -58,7 +58,7 @@ impl Host {
         }
     }
 
-    /// 翻译结束（接受、放弃或失败）：收窗、停轮询。
+    /// 翻譯結束（接受、放棄或失敗）：收窗、停輪詢。
     pub fn end_translation(&mut self) {
         if self.translation.take().is_some() {
             self.cancel_prediction();
@@ -67,13 +67,13 @@ impl Host {
         }
     }
 
-    /// 横排矩阵这套按键是否生效：开关开着（`[general] horizontal_grid`）、排布是横排，而且在用系统绘制。
-    /// 青简渲染器还没有矩阵窗口，用它时不展开，横排照单行走（见 `docs/notes/crate-notes.md`）。
+    /// 橫排矩陣這套按鍵是否生效：開關開著（`[general] horizontal_grid`）、排布是橫排，而且在用系統繪製。
+    /// 青簡渲染器還沒有矩陣視窗，用它時不展開，橫排照單行走（見 `docs/notes/crate-notes.md`）。
     pub fn grid_keys(&self) -> bool {
         self.horizontal_grid && self.layout == LayoutMode::Horizontal && !self.window.uses_bitmap()
     }
 
-    /// 新一轮候选：每页格数取配置与窗口能画的行数中较小者，云端槽位数取配置。
+    /// 新一輪候選：每頁格數取配置與視窗能畫的行數中較小者，雲端槽位數取配置。
     pub fn reset_session(&mut self, preedit: Option<Preedit>, candidates: Vec<Candidate>) {
         self.status = None;
         let page_size = self.page_size.min(self.window.max_rows()).max(1);
@@ -81,11 +81,11 @@ impl Host {
             .reset(preedit, candidates, page_size, self.cloud_slots);
     }
 
-    /// 按会话状态画候选窗口。候选为空且没有 preedit 时收窗。
+    /// 按會話狀態畫候選視窗。候選為空且沒有 preedit 時收窗。
     pub fn render(&mut self) {
         let size = self.session.layout.page_size();
         let page = self.session.page;
-        // 横排展开成矩阵时画视口里的几行，序号只标在高亮所在那一行（数字键选的就是它）；单行时只画当前页
+        // 橫排展開成矩陣時畫視口裡的幾行，序號只標在高亮所在那一行（數字鍵選的就是它）；單行時只畫當前頁
         let grid = self.session.grid_cells();
         let first = self.session.grid.map_or(page, |grid| grid.top()) * size;
         let (cells, columns) = match &grid {
@@ -105,7 +105,7 @@ impl Host {
                 };
                 let Some(candidate) = cell.candidate() else {
                     return Row {
-                        // 矩阵里的空位什么都不画；单行里的空位留着序号
+                        // 矩陣裡的空位什麼都不畫；單行裡的空位留著序號
                         index: if columns == 0 { index } else { String::new() },
                         text: String::new(),
                         annotation: Vec::new(),
@@ -118,10 +118,10 @@ impl Host {
                 row
             })
             .collect();
-        // 页上的译词告诉 Engine：用户上屏那一刻它们在屏幕上，算「见过」（词汇记录）；窗口收起时传空
+        // 頁上的譯詞告訴 Engine：使用者上屏那一刻它們在螢幕上，算「見過」（詞彙記錄）；視窗收起時傳空
         self.engine
             .note_displayed(cells.iter().copied().filter_map(Cell::candidate));
-        // 配置成只在行内显示时，窗口顶部不画拼音行
+        // 配置成只在行內顯示時，視窗頂部不畫拼音行
         let preedit = self
             .preedit_mode
             .in_window()
@@ -151,7 +151,7 @@ impl Host {
         self.window.show(frame, self.anchor);
     }
 
-    /// 给候选窗口主题显示的输入状态：中英看 Caps Lock（与菜单栏一致），其余看配置；英文模式标点是半角。
+    /// 給候選視窗主題顯示的輸入狀態：中英看 Caps Lock（與選單欄一致），其餘看配置；英文模式標點是半形。
     fn input_mode(&self) -> qingjian_render::Mode {
         let general = &self.settings.config().general;
         let english = crate::imk::modifiers::caps_lock_on();

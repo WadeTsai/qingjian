@@ -1,7 +1,7 @@
-//! 框：flex 排子节点；带 `table` 时排成表格——`repeat` 出来的每份组件是一行，它的子节点依次是各列。
+//! 框：flex 排子節點；帶 `table` 時排成表格——`repeat` 出來的每份元件是一行，它的子節點依次是各列。
 //!
-//! 表格各列取各行最宽，最后补一列 `1fr` 吃掉剩余宽度，这样 `span: row` 的节点（高亮条）能横跨整个表格宽；
-//! 列间距由各格的外边距给（grid 的 gap 会让补的那一列也多出一个间距）。
+//! 表格各列取各行最寬，最後補一列 `1fr` 吃掉剩餘寬度，這樣 `span: row` 的節點（高亮條）能橫跨整個表格寬；
+//! 列間距由各格的外邊距給（grid 的 gap 會讓補的那一列也多出一個間距）。
 
 use taffy::prelude::{FromFr, TaffyAuto, TaffyGridLine, minmax};
 use taffy::{
@@ -55,7 +55,7 @@ impl Builder<'_> {
                 let style = Style {
                     display: Display::Grid,
                     grid_template_columns: template,
-                    // 行高至少是主题写的（随设置里的候选字号缩放），内容更高时撑开，不会压到下一行
+                    // 行高至少是主題寫的（隨設定裡的候選字號縮放），內容更高時撐開，不會壓到下一行
                     grid_auto_rows: vec![minmax(
                         MinTrackSizingFunction::length(
                             table.row_height * self.theme.candidate_scale() * self.scale,
@@ -84,7 +84,7 @@ impl Builder<'_> {
         Ok(())
     }
 
-    /// 填充写法 → 画法：颜色按数据与外观解析，图片从主题素材取（没有就不画；SVG 不管 `scale`，它的单位就是点）。
+    /// 填充寫法 → 畫法：顏色按資料與外觀解析，圖片從主題素材取（沒有就不畫；SVG 不管 `scale`，它的單位就是點）。
     fn fill(&self, fill: &FillSpec, ctx: Context) -> Option<Fill> {
         let stops = |stops: &[StopSpec]| -> Vec<(Color, f32)> {
             let last = stops.len().saturating_sub(1).max(1) as f32;
@@ -126,7 +126,7 @@ impl Builder<'_> {
         })
     }
 
-    /// 表格的格子（已放好行列）与列数。
+    /// 表格的格子（已放好行列）與列數。
     fn table_cells(
         &mut self,
         children: &[NodeSpec],

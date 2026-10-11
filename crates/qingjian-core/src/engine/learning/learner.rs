@@ -4,101 +4,101 @@ use super::Forgotten;
 use crate::candidate::Candidate;
 use crate::sentence::{Context, UserNgram};
 
-/// 用户词频学习。
+/// 使用者詞頻學習。
 pub trait Learner: Send {
-    /// 用户上屏了某个候选。
+    /// 使用者上屏了某個候選。
     fn record(&mut self, candidate: &Candidate);
 
-    /// 该词被用户选择过的次数，没记录返回 0。
+    /// 該詞被使用者選擇過的次數，沒記錄返回 0。
     fn weight(&self, text: &str) -> u32;
 
-    /// 用户在输入串 `input`（候选覆盖的那段拼音，不含分隔符）下选了 `text`。
-    /// 词级排序里同一输入串下选过的词排最前（`mgs` 选过 美国式，下次 `mgs` 它就是首选），与不分输入的 [`Self::weight`] 分开记：
-    /// `ba` 下选的是 吧，`bazhege` 下选的是 把，混在一起数就分不清。
+    /// 使用者在輸入串 `input`（候選覆蓋的那段拼音，不含分隔符）下選了 `text`。
+    /// 詞級排序裡同一輸入串下選過的詞排最前（`mgs` 選過 美國式，下次 `mgs` 它就是首選），與不分輸入的 [`Self::weight`] 分開記：
+    /// `ba` 下選的是 吧，`bazhege` 下選的是 把，混在一起數就分不清。
     fn record_choice(&mut self, _input: &str, _text: &str) {}
 
-    /// `text` 在输入串 `input` 下被选过的次数，没记录返回 0。
+    /// `text` 在輸入串 `input` 下被選過的次數，沒記錄返回 0。
     fn choice_weight(&self, _input: &str, _text: &str) -> u32 {
         0
     }
 
-    /// 用户对输入串 `input` 按了回车原样上屏，而当时拼写纠错正生效：这个串就是要原样打的，以后不纠。
+    /// 使用者對輸入串 `input` 按了回車原樣上屏，而當時拼寫糾錯正生效：這個串就是要原樣打的，以後不糾。
     fn record_raw(&mut self, _input: &str) {}
 
-    /// `input` 被原样上屏过几次（见 [`Self::record_raw`]）。
+    /// `input` 被原樣上屏過幾次（見 [`Self::record_raw`]）。
     fn raw_count(&self, _input: &str) -> u32 {
         0
     }
 
-    /// 撤销一次 [`Self::record`]：用户上屏后马上整个删掉重选了别的词，刚才那次不算数。
+    /// 撤銷一次 [`Self::record`]：使用者上屏後馬上整個刪掉重選了別的詞，剛才那次不算數。
     fn unrecord(&mut self, _text: &str) {}
 
-    /// 撤销一次 [`Self::record_choice`]。
+    /// 撤銷一次 [`Self::record_choice`]。
     fn unrecord_choice(&mut self, _input: &str, _text: &str) {}
 
-    /// 撤销 `times` 份 [`Self::record_transition`]。
+    /// 撤銷 `times` 份 [`Self::record_transition`]。
     fn unrecord_transition(&mut self, _context: Context<'_>, _word: &str, _times: u32) {}
 
-    /// 记一个词库里没有的词（来自云联想或以后的自动造词），带全拼音节；下次直接从本地出。
+    /// 記一個詞庫裡沒有的詞（來自雲聯想或以後的自動造詞），帶全拼音節；下次直接從本地出。
     fn learn_word(&mut self, _text: &str, _syllables: &[String]) {}
 
-    /// 用户词组成的小词库，与主词库一起查；没有就返回 `None`。
+    /// 使用者片語成的小詞庫，與主詞庫一起查；沒有就返回 `None`。
     fn user_words(&self) -> Option<&Dictionary> {
         None
     }
 
-    /// 用户原样上屏了一个像英文词的字母串（中文模式按回车、英文模式空格 / 回车直通），或选了一个英文候选：
-    /// 记进个人英文词表，下次它就是英文候选，而且排在随包词表的同形词前面。随包词表里没有的词（`gist`）只能靠这里学。
+    /// 使用者原樣上屏了一個像英文詞的字母串（中文模式按回車、英文模式空格 / 回車直通），或選了一個英文候選：
+    /// 記進個人英文詞表，下次它就是英文候選，而且排在隨包詞表的同形詞前面。隨包詞表裡沒有的詞（`gist`）只能靠這裡學。
     fn learn_english(&mut self, _word: &str) {}
 
-    /// 个人英文词表，与随包词表一起给英文候选（它在前）；没有就返回 `None`。
+    /// 個人英文詞表，與隨包詞表一起給英文候選（它在前）；沒有就返回 `None`。
     fn user_english(&self) -> Option<&WordList> {
         None
     }
 
-    /// 记一条词序列转移：`word` 在上文 `context`（前一个词与再前一个词，句首都是 `None`）之后上屏。
-    /// 整句上屏按路径上的词逐条记，连续选词上屏也记；喂个人 n-gram（二元与三元一起记）。
-    /// `times` 是这次记几份：用户自己点选的词记双份（[`EXPLICIT_TRANSITION_WEIGHT`]），整句路径里顺带的记一份，
-    /// 否则一次误按空格上屏的整句要用户改选两次才能翻回来。
+    /// 記一條詞序列轉移：`word` 在上文 `context`（前一個詞與再前一個詞，句首都是 `None`）之後上屏。
+    /// 整句上屏按路徑上的詞逐條記，連續選詞上屏也記；喂個人 n-gram（二元與三元一起記）。
+    /// `times` 是這次記幾份：使用者自己點選的詞記雙份（[`EXPLICIT_TRANSITION_WEIGHT`]），整句路徑裡順帶的記一份，
+    /// 否則一次誤按空格上屏的整句要使用者改選兩次才能翻回來。
     ///
     /// [`EXPLICIT_TRANSITION_WEIGHT`]: super::EXPLICIT_TRANSITION_WEIGHT
     fn record_transition(&mut self, _context: Context<'_>, _word: &str, _times: u32) {}
 
-    /// 个人 n-gram，整句转换与词级排序用它与静态模型插值；没有就返回 `None`。
+    /// 個人 n-gram，整句轉換與詞級排序用它與靜態模型插值；沒有就返回 `None`。
     fn user_ngram(&self) -> Option<&UserNgram> {
         None
     }
 
-    /// 用户接受了一处音节级的敲错纠正：把 `typed`（敲的那段字母）当成了 `intended`（候选的音节）上屏。
-    /// 记进个人敲错表，以后词图里这条边更便宜（见 `correction::TypoCosts::typo_cost`）。
+    /// 使用者接受了一處音節級的敲錯糾正：把 `typed`（敲的那段字母）當成了 `intended`（候選的音節）上屏。
+    /// 記進個人敲錯表，以後詞圖裡這條邊更便宜（見 `correction::TypoCosts::typo_cost`）。
     fn record_typo(&mut self, _typed: &str, _intended: &str) {}
 
-    /// 撤销一次 [`Self::record_typo`]。
+    /// 撤銷一次 [`Self::record_typo`]。
     fn unrecord_typo(&mut self, _typed: &str, _intended: &str) {}
 
-    /// `typed` 被当成 `intended` 接受过几次。
+    /// `typed` 被當成 `intended` 接受過幾次。
     fn typo_count(&self, _typed: &str, _intended: &str) -> u32 {
         0
     }
 
-    /// 用户要求删掉这个词：它是用户词就删掉，同时清掉选择次数、各输入串下的选择、个人 n-gram 里与它有关的转移。
-    /// 返回实际清掉了什么。
+    /// 使用者要求刪掉這個詞：它是使用者詞就刪掉，同時清掉選擇次數、各輸入串下的選擇、個人 n-gram 裡與它有關的轉移。
+    /// 返回實際清掉了什麼。
     fn forget(&mut self, _text: &str) -> Forgotten {
         Forgotten::default()
     }
 
-    /// 用户要求删掉一个个人英文词。返回是否真有这个词。
+    /// 使用者要求刪掉一個個人英文詞。返回是否真有這個詞。
     fn forget_english(&mut self, _word: &str) -> bool {
         false
     }
 
-    /// 把学习数据落盘。壳在退出或停用输入法时调用；内存实现留空即可。
+    /// 把學習資料落盤。殼在退出或停用輸入法時呼叫；記憶體實現留空即可。
     ///
-    /// 失败只记日志不返回错误：输入优先于学习，持久化失败不该影响壳的流程。
+    /// 失敗只記日誌不返回錯誤：輸入優先於學習，持久化失敗不該影響殼的流程。
     fn flush(&mut self) {}
 }
 
-/// 不学习。
+/// 不學習。
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoLearner;
 

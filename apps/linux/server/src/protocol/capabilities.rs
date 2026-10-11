@@ -1,4 +1,4 @@
-//! 框架能力事实；输入策略由 Server 决定。
+//! 框架能力事實；輸入策略由 Server 決定。
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

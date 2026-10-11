@@ -1,12 +1,12 @@
-//! 形码（五笔）：编码直接查码表，不走拼音的切分与整句。
+//! 形碼（五筆）：編碼直接查碼錶，不走拼音的切分與整句。
 
 use super::*;
 
-/// 五笔 86 的一小段：一级简码 V 是 发，`ggll` 是 一。
-/// `甲` 的编码故意取成 `kai`、`乙丙` 取成 `kaik`——与拼音的 开 同形，用来验混输时的排序。
+/// 五筆 86 的一小段：一級簡碼 V 是 發，`ggll` 是 一。
+/// `甲` 的編碼故意取成 `kai`、`乙丙` 取成 `kaik`——與拼音的 開 同形，用來驗混輸時的排序。
 const CODES: &str = "一\tggll\t90000\n发\tv\t30000\n到\tgc\t20000\n来\tgo\t15000\n开\tga\t5000\n开发\tgant\t900\n甲\tkai\t1000\n乙丙\tkaik\t800\n";
 
-/// 只用形码：拼音侧关掉，候选只从码表来。
+/// 只用形碼：拼音側關掉，候選只從碼錶來。
 fn wubi() -> Engine {
     let mut engine = engine();
     engine.set_code_table(Some(CodeTable::parse(CODES).unwrap()));
@@ -14,7 +14,7 @@ fn wubi() -> Engine {
     engine
 }
 
-/// 混输：形码与拼音两边都出候选。
+/// 混輸：形碼與拼音兩邊都出候選。
 fn mixed() -> Engine {
     let mut engine = engine();
     engine.set_code_table(Some(CodeTable::parse(CODES).unwrap()));
@@ -29,14 +29,14 @@ fn code_texts(engine: &mut Engine, input: &str) -> Vec<String> {
 #[test]
 fn looks_up_by_code_prefix_and_prefers_the_finished_code() {
     let mut engine = wubi();
-    // 编码打全的 开 排在同前缀的 开发 前面
+    // 編碼打全的 開 排在同字首的 開發 前面
     assert_eq!(code_texts(&mut engine, "ga"), ["开", "开发"]);
-    // 没打全时只按词频
+    // 沒打全時只按詞頻
     assert_eq!(
         code_texts(&mut engine, "g"),
         ["一", "到", "来", "开", "开发"]
     );
-    // preedit 原样显示敲的编码，没有拼音切分
+    // preedit 原樣顯示敲的編碼，沒有拼音切分
     engine.set_input("ga");
     let query = engine.query().unwrap();
     assert_eq!(query.marked_text(), "ga");
@@ -65,11 +65,11 @@ fn commits_the_whole_code_and_empties_the_buffer() {
 #[test]
 fn takes_no_part_in_the_pinyin_machinery() {
     let mut engine = wubi();
-    // `v` 是字根键，不当表达式模式的前缀
+    // `v` 是字根鍵，不當表示式模式的字首
     assert_eq!(code_texts(&mut engine, "v"), ["发"]);
-    // 快捷候选按拼音键认，形码下不出
+    // 快捷候選按拼音鍵認，形碼下不出
     assert!(code_texts(&mut engine, "rq").is_empty());
-    // 模糊音不参与：`ga` 不会命中并不存在的 `ka`
+    // 模糊音不參與：`ga` 不會命中並不存在的 `ka`
     engine.set_fuzzy(FuzzyRules::ALL);
     assert_eq!(code_texts(&mut engine, "ga"), ["开", "开发"]);
 }
@@ -110,8 +110,8 @@ fn code_candidates_get_translations_like_pinyin_ones() {
 
 #[test]
 fn code_commits_still_feed_translations_vocabulary_and_usage() {
-    // 形码换的是「怎么按键出候选」，不是「上屏之后算什么」：释义标注、生词判定、词汇记录与输入统计
-    // 都按上屏的词工作，与方案无关。这条用例把这句话钉住。
+    // 形碼換的是「怎麼按鍵出候選」，不是「上屏之後算什麼」：釋義標註、生詞判定、詞彙記錄與輸入統計
+    // 都按上屏的詞工作，與方案無關。這條用例把這句話釘住。
     let usage = Arc::new(Mutex::new(Vec::new()));
     let vocabulary = Arc::new(Mutex::new(VocabularyCounts::default()));
     let mut engine = wubi()
@@ -124,17 +124,17 @@ fn code_commits_still_feed_translations_vocabulary_and_usage() {
     engine.annotate(&mut query.candidates);
     let kaifa = query.candidates.items[0].clone();
     assert_eq!(kaifa.text, "开发");
-    // 释义照常标注；这条译词一个轮次都没见过，标成生词
+    // 釋義照常標註；這條譯詞一個輪次都沒見過，標成生詞
     let sense = &kaifa.translation.as_ref().unwrap().senses()[0];
     assert_eq!(sense.text, "develop");
     assert!(sense.fresh);
 
     engine.commit(&kaifa);
-    // 输入统计：一个中文词、两个汉字（形码一次上屏就是一个词）
+    // 輸入統計：一箇中文詞、兩個漢字（形碼一次上屏就是一個詞）
     let usage = usage.lock().unwrap();
     assert_eq!(usage.len(), 1);
     assert_eq!((usage[0].words, usage[0].hanzi), (1, 2));
-    // 词汇记录：上屏带译词的中文候选，那条译词记「上屏过」；没按修饰键打出来过，不是「用过」
+    // 詞彙記錄：上屏帶譯詞的中文候選，那條譯詞記「上屏過」；沒按修飾鍵打出來過，不是「用過」
     let counts = vocabulary.lock().unwrap();
     let entry = counts
         .get(&(Language::English, "develop".to_owned()))
@@ -145,12 +145,12 @@ fn code_commits_still_feed_translations_vocabulary_and_usage() {
 #[test]
 fn mixed_input_orders_finished_codes_then_pinyin_then_code_prefixes() {
     let mut engine = mixed();
-    // `kai`：编码打全的 甲 在最前，拼音的 开 一族居中，只命中前缀的 乙丙（`kaik`）垫后
+    // `kai`：編碼打全的 甲 在最前，拼音的 開 一族居中，只命中字首的 乙丙（`kaik`）墊後
     let texts = code_texts(&mut engine, "kai");
     assert_eq!(texts.first().map(String::as_str), Some("甲"));
     let position = |text: &str| texts.iter().position(|t| t == text).unwrap();
     assert!(position("开") < position("乙丙"));
-    // `ka`：没有打全的编码，拼音的首选不被前缀命中的形码词顶掉
+    // `ka`：沒有打全的編碼，拼音的首選不被字首命中的形碼詞頂掉
     let texts = code_texts(&mut engine, "ka");
     assert_ne!(texts.first().map(String::as_str), Some("甲"));
     assert!(texts.contains(&"甲".to_owned()));
@@ -158,7 +158,7 @@ fn mixed_input_orders_finished_codes_then_pinyin_then_code_prefixes() {
 
 #[test]
 fn mixed_input_keeps_the_shifted_mode_letters() {
-    // 混输下小写 v / u 是字根键，表达式与问字同双拼一样改用大写进
+    // 混輸下小寫 v / u 是字根鍵，表示式與問字同雙拼一樣改用大寫進
     let mut engine = mixed();
     assert!(engine.takes_mode_letter('V') && engine.takes_mode_letter('U'));
     engine.set_input("V1+2");
@@ -179,7 +179,7 @@ fn turning_the_pinyin_side_off_leaves_only_the_code_table() {
 
 #[test]
 fn a_longer_input_drops_the_code_side_by_itself() {
-    // 五笔码最长 4 位：从第 5 个字母起形码查不到东西，混输下自然只剩拼音
+    // 五筆碼最長 4 位：從第 5 個字母起形碼查不到東西，混輸下自然只剩拼音
     let mut engine = mixed();
     let texts = code_texts(&mut engine, "kaifa");
     assert!(texts.contains(&"开发".to_owned()));
@@ -188,7 +188,7 @@ fn a_longer_input_drops_the_code_side_by_itself() {
 
 #[test]
 fn mixed_input_falls_back_to_the_code_side_when_pinyin_cannot_read_it() {
-    // `ggll` 切不成音节，但码表有 一：混输不该因为拼音读不出来就整个失败
+    // `ggll` 切不成音節，但碼錶有 一：混輸不該因為拼音讀不出來就整個失敗
     let mut engine = mixed();
     assert_eq!(code_texts(&mut engine, "ggll"), ["一"]);
 }
@@ -204,8 +204,8 @@ fn keys_outside_the_code_alphabet_fall_back_to_raw() {
 
 #[test]
 fn letters_never_start_a_mode_under_wubi() {
-    // 形码下每个字母都是字根键，连大写也让位（双拼那套 Shift+V / Shift+U 在这里不适用）：
-    // 字母一律进缓冲区，表达式与问字模式只剩 `?` 这一个人口。
+    // 形碼下每個字母都是字根鍵，連大寫也讓位（雙拼那套 Shift+V / Shift+U 在這裡不適用）：
+    // 字母一律進緩衝區，表示式與問字模式只剩 `?` 這一個人口。
     let mut engine = wubi();
     assert!(!engine.takes_mode_letter('V') && !engine.takes_mode_letter('U'));
     engine.set_input("V1+2");

@@ -3,22 +3,22 @@ use std::sync::Arc;
 
 use memmap2::Mmap;
 
-/// 一段 UTF-8 文本（arena）：从 TSV 解析出来时是自己的 `String`，从 `.qj` 打开时是映射文件里的一段，
-/// 打开时校验过一次 UTF-8。对外都是 `&str`。
+/// 一段 UTF-8 文本（arena）：從 TSV 解析出來時是自己的 `String`，從 `.qj` 開啟時是對映檔案裡的一段，
+/// 開啟時校驗過一次 UTF-8。對外都是 `&str`。
 #[derive(Debug)]
 pub enum Text {
-    /// 内存里自己的。
+    /// 記憶體裡自己的。
     Owned(String),
 
-    /// 映射文件里 `offset..offset + len` 的字节。
+    /// 對映檔案裡 `offset..offset + len` 的位元組。
     Mapped {
-        /// 整个文件的映射，多个分节共享。
+        /// 整個檔案的對映，多個分節共享。
         map: Arc<Mmap>,
 
         /// 正文起始偏移。
         offset: usize,
 
-        /// 正文字节数。
+        /// 正文位元組數。
         len: usize,
     },
 }
@@ -30,7 +30,7 @@ impl Default for Text {
 }
 
 impl Text {
-    /// 从映射里取一段并校验 UTF-8。
+    /// 從對映裡取一段並校驗 UTF-8。
     pub(crate) fn mapped(map: Arc<Mmap>, offset: usize, len: usize) -> Option<Self> {
         let bytes = map.get(offset..offset + len)?;
         std::str::from_utf8(bytes).ok()?;
@@ -46,8 +46,8 @@ impl Deref for Text {
             Self::Owned(text) => text,
             Self::Mapped { map, offset, len } => {
                 let bytes = &map[*offset..*offset + *len];
-                // SAFETY: `Text::mapped` 构造时对这段字节做过 UTF-8 校验；数据文件只整体替换（写临时文件再改名）、
-                // 从不就地修改，映射内容在生命周期内不变。这里不能再用带校验的版本：每次取 `&str` 都扫一遍几十 MB 的 arena。
+                // SAFETY: `Text::mapped` 構造時對這段位元組做過 UTF-8 校驗；資料檔案只整體替換（寫臨時檔案再改名）、
+                // 從不就地修改，對映內容在生命週期內不變。這裡不能再用帶校驗的版本：每次取 `&str` 都掃一遍幾十 MB 的 arena。
                 unsafe { std::str::from_utf8_unchecked(bytes) }
             }
         }

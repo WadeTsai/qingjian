@@ -2,7 +2,7 @@
 """从 CHANGELOG.md 与 GitHub Releases 生成官网下载页用的 releases.json。
 
   releases_json.py --changelog CHANGELOG.md --repo owner/name --api-json releases.api.json --meta-dir meta/ --out releases.json
-  releases_json.py --changelog CHANGELOG.md --notes-for 0.1.0      # 只打印某版本的更新日志（给 gh release create 用）
+  releases_json.py --changelog CHANGELOG.md --notes-for 0.1.0      # 只打印某版本的更新日誌（給 gh release create 用）
 
 CHANGELOG.md 的格式（一个版本一节，日期与发布渠道写在标题里，正文是一行一条的列表）：
 
@@ -50,16 +50,16 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-HEADING = re.compile(r"^##\s+(?P<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)\s*·\s*(?P<date>\d{4}-\d{2}-\d{2}|未发布)\s*·\s*(?P<channel>\S+)\s*$")
+HEADING = re.compile(r"^##\s+(?P<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)\s*·\s*(?P<date>\d{4}-\d{2}-\d{2}|未釋出)\s*·\s*(?P<channel>\S+)\s*$")
 MIRROR_LINE = re.compile(r"^网盘[：:]")
 MIRROR_LINK = re.compile(r"\[(?P<name>[^\]]+)\]\((?P<url>https?://[^)\s]+)\)")
 TAG = re.compile(r"^(?:(?:macos|windows|linux)-)?v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)$")
 CHANNELS = ("alpha", "beta", "rc", "stable")
-# 只加字段不用动；改了已有字段的含义或结构才加一，旧客户端见到不认识的号就不读
+# 只加欄位不用動；改了已有欄位的含義或結構才加一，舊客戶端見到不認識的號就不讀
 SCHEMA_VERSION = 1
 
-# 安装包文件名 → 平台、架构说明（给人看）、CPU（给程序比对）；不匹配的附件不进列表。
-# 0.1.3 起文件名是 qingjian-<版本>-<平台>-<cpu>[-setup].<扩展名>，后三条认 0.1.2 及更早的旧名。
+# 安裝包檔名 → 平臺、架構說明（給人看）、CPU（給程式比對）；不匹配的附件不進列表。
+# 0.1.3 起檔名是 qingjian-<版本>-<平臺>-<cpu>[-setup].<副檔名>，後三條認 0.1.2 及更早的舊名。
 ASSET_KINDS = [
     (re.compile(r"^qingjian-.+-macos-arm64\.pkg$"), "macos", "Apple Silicon", "arm64"),
     (re.compile(r"^qingjian-.+-macos-x86_64\.pkg$"), "macos", "Intel", "x86_64"),
@@ -80,7 +80,7 @@ def parse_changelog(path: Path) -> dict[str, dict]:
         if line.startswith("## "):
             m = HEADING.match(line)
             if not m:
-                sys.exit(f"CHANGELOG 标题格式不对，应为「## 版本 · YYYY-MM-DD/未发布 · 渠道」：{line}")
+                sys.exit(f"CHANGELOG 标题格式不对，应为「## 版本 · YYYY-MM-DD/未釋出 · 渠道」：{line}")
             if m["channel"] not in CHANNELS:
                 sys.exit(f"渠道只能是 {' / '.join(CHANNELS)}：{line}")
             if m["date"] == "未发布":
@@ -98,7 +98,7 @@ def parse_changelog(path: Path) -> dict[str, dict]:
 def semver_key(version: str) -> tuple:
     core, _, pre = version.partition("-")
     nums = tuple(int(x) for x in core.split("."))
-    # 带预发布后缀的排在同号正式版前面
+    # 帶預釋出字尾的排在同號正式版前面
     return (*nums, 0 if pre else 1, pre)
 
 
@@ -195,10 +195,10 @@ def main() -> None:
     ap.add_argument("--repo", help="owner/name，写进输出")
     ap.add_argument("--api-json", type=Path, help="gh api repos/<repo>/releases --paginate 的输出")
     ap.add_argument("--meta-dir", type=Path, help="每个 tag 一个子目录，放 SHA256SUMS 与 build-info.json")
-    ap.add_argument("--out", type=Path, help="releases.json 输出路径，缺省打印到 stdout")
+    ap.add_argument("--out", type=Path, help="releases.json 输出路径，預設打印到 stdout")
     ap.add_argument("--notes-for", metavar="VERSION", help="只打印这个版本的更新日志（Markdown 列表）")
     args = ap.parse_args()
-    # Windows 上 stdout 缺省是 cp1252，打印中文更新日志会 UnicodeEncodeError；这里的输出全走 UTF-8。
+    # Windows 上 stdout 預設是 cp1252，列印中文更新日誌會 UnicodeEncodeError；這裡的輸出全走 UTF-8。
     sys.stdout.reconfigure(encoding="utf-8")
 
     changelog = parse_changelog(args.changelog)

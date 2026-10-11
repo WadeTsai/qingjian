@@ -1,10 +1,10 @@
-//! 主题库：内置主题加用户主题目录里的主题，设置界面列出的就是它。
+//! 主題庫：內建主題加使用者主題目錄裡的主題，設定介面列出的就是它。
 //!
-//! 用户主题放在 `<主题目录>/<id>/theme.json`（主题目录由壳给，在配置目录下的 `themes/`）。目录名必须等于 `meta.id`；
-//! 不能与内置主题重名（想改内置主题就 `extends` 它、换个 id），外观词 `system` / `light` / `dark` 也不能当 id。
-//! 读不进来的主题跳过并记警告，不影响其他主题。
+//! 使用者主題放在 `<主題目錄>/<id>/theme.json`（主題目錄由殼給，在配置目錄下的 `themes/`）。目錄名必須等於 `meta.id`；
+//! 不能與內建主題重名（想改內建主題就 `extends` 它、換個 id），外觀詞 `system` / `light` / `dark` 也不能當 id。
+//! 讀不進來的主題跳過並記警告，不影響其他主題。
 //!
-//! 热加载：壳在已有的每秒检查里调 [`ThemeLibrary::refresh`]，目录里 `theme.json` 的增删改（按修改时间与大小）会重读。
+//! 熱載入：殼在已有的每秒檢查裡調 [`ThemeLibrary::refresh`]，目錄裡 `theme.json` 的增刪改（按修改時間與大小）會重讀。
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -12,25 +12,25 @@ use std::path::{Path, PathBuf};
 
 use super::Theme;
 
-/// 用户主题的描述文件名。
+/// 使用者主題的描述檔名。
 const THEME_FILE: &str = "theme.json";
 
-/// 外观的写法，不能当主题 id（旧配置里 `theme` 写的是它们）。
+/// 外觀的寫法，不能當主題 id（舊配置裡 `theme` 寫的是它們）。
 const RESERVED_IDS: [&str; 3] = ["system", "light", "dark"];
 
 pub struct ThemeLibrary {
-    /// 内置主题在前、用户主题按 id 排在后，都是浅色那一份。
+    /// 內建主題在前、使用者主題按 id 排在後，都是淺色那一份。
     themes: Vec<Theme>,
 
-    /// 用户主题目录；`None` 只有内置主题。
+    /// 使用者主題目錄；`None` 只有內建主題。
     dir: Option<PathBuf>,
 
-    /// 上次读目录时的戳，见 [`Self::stamp`]。
+    /// 上次讀目錄時的戳，見 [`Self::stamp`]。
     stamp: u64,
 }
 
 impl ThemeLibrary {
-    /// 读内置主题与 `dir` 里的用户主题。目录不存在就只有内置主题。
+    /// 讀內建主題與 `dir` 裡的使用者主題。目錄不存在就只有內建主題。
     pub fn load(dir: Option<&Path>) -> Self {
         let stamp = dir.map_or(0, Self::stamp);
         let mut themes = Theme::builtins().to_vec();
@@ -44,23 +44,23 @@ impl ThemeLibrary {
         }
     }
 
-    /// 全部主题（浅色），内置在前。
+    /// 全部主題（淺色），內建在前。
     pub fn themes(&self) -> &[Theme] {
         &self.themes
     }
 
-    /// 按 id 取主题并换成对应外观；没有这个 id 时退回缺省主题并记警告。
+    /// 按 id 取主題並換成對應外觀；沒有這個 id 時退回預設主題並記警告。
     pub fn resolve(&self, id: &str, dark: bool) -> Theme {
         match self.themes.iter().find(|theme| theme.id() == id) {
             Some(theme) => theme.with_dark(dark),
             None => {
-                tracing::warn!(id, "没有这个主题，用缺省主题");
+                tracing::warn!(id, "没有这个主题，用預設主题");
                 Theme::light().with_dark(dark)
             }
         }
     }
 
-    /// 用户主题目录有变化就重读，返回是否重读了。
+    /// 使用者主題目錄有變化就重讀，返回是否重讀了。
     pub fn refresh(&mut self) -> bool {
         let Some(dir) = &self.dir else {
             return false;
@@ -73,8 +73,8 @@ impl ThemeLibrary {
         true
     }
 
-    /// 目录戳：各主题子目录名与 `theme.json` 的修改时间、大小合成一个数，任何一个变了它就变。
-    /// 只 `stat` 不读内容，每秒查一次的开销可以忽略。
+    /// 目錄戳：各主題子目錄名與 `theme.json` 的修改時間、大小合成一個數，任何一個變了它就變。
+    /// 只 `stat` 不讀內容，每秒查一次的開銷可以忽略。
     pub fn stamp(dir: &Path) -> u64 {
         let mut hasher = DefaultHasher::new();
         for (name, path) in theme_dirs(dir) {
@@ -88,7 +88,7 @@ impl ThemeLibrary {
     }
 }
 
-/// 主题目录下的子目录（名字、路径），按名字排序。
+/// 主題目錄下的子目錄（名字、路徑），按名字排序。
 fn theme_dirs(dir: &Path) -> Vec<(String, PathBuf)> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
@@ -102,7 +102,7 @@ fn theme_dirs(dir: &Path) -> Vec<(String, PathBuf)> {
     dirs
 }
 
-/// 读用户主题，读不进来或不合规矩的跳过并记警告。
+/// 讀使用者主題，讀不進來或不合規矩的跳過並記警告。
 fn read_user_themes(dir: &Path) -> Vec<Theme> {
     let mut themes = Vec::new();
     for (name, path) in theme_dirs(dir) {

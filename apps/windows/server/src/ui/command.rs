@@ -1,24 +1,24 @@
-//! 交给 UI 线程执行的命令。
+//! 交給 UI 執行緒執行的命令。
 
 use qingjian_platform::protocol::{Frame, ScreenRect};
 use qingjian_render::Mode;
 
 use crate::dispatch::{RenderSettings, StatusView};
 
-/// 交给 UI 线程执行的命令。`Frame` 较大，装箱免得枚举过胖。
+/// 交給 UI 執行緒執行的命令。`Frame` 較大，裝箱免得列舉過胖。
 pub(super) enum UiCommand {
-    /// 把候选窗口摆到组句矩形下方并按帧重绘。
+    /// 把候選視窗擺到組句矩形下方並按幀重繪。
     Show(Box<(Frame, Mode, ScreenRect)>),
 
-    /// 收起候选窗口。
+    /// 收起候選視窗。
     Hide,
 
-    /// 显示 / 更新悬浮状态条。
+    /// 顯示 / 更新懸浮狀態條。
     StatusShow(Box<StatusView>),
 
-    /// 收起悬浮状态条。
+    /// 收起懸浮狀態條。
     StatusHide,
 
-    /// 换画法（渲染器 / 字体）。
+    /// 換畫法（渲染器 / 字型）。
     Configure(RenderSettings),
 }

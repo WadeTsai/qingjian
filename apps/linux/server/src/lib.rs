@@ -1,4 +1,4 @@
-//! Linux Server：持有 Core Engine，通过 Unix domain socket 服务多个 Fcitx5 会话。
+//! Linux Server：持有 Core Engine，通過 Unix domain socket 服務多個 Fcitx5 會話。
 pub mod assembly;
 pub mod dispatch;
 pub mod error;

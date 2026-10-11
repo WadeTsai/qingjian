@@ -1,4 +1,4 @@
-//! 真实 VocabularyBook 的私密选词与译词快捷键回归。
+//! 真實 VocabularyBook 的私密選詞與譯詞快捷鍵迴歸。
 use qingjian_core::Engine;
 use qingjian_dictionary::Dictionary;
 use qingjian_learning::VocabularyBook;

@@ -98,14 +98,14 @@ fn rejects_malformed_line() {
     assert!(matches!(error, DictionaryError::Line { line: 1, .. }));
 }
 
-/// 与线性扫描版对拍：随机词库、随机模式（含每个位置多种写法），结果集必须完全一致（顺序按键排序后比较）。
+/// 與線性掃描版對拍：隨機詞庫、隨機模式（含每個位置多種寫法），結果集必須完全一致（順序按鍵排序後比較）。
 #[test]
 fn narrowing_agrees_with_linear_scan() {
     const SYLLABLES: [&str; 14] = [
         "a", "an", "ang", "ka", "kai", "kan", "kang", "fa", "fan", "fang", "fei", "shi", "sha",
         "shang",
     ];
-    // 简单的线性同余随机数，测试可复现
+    // 簡單的線性同餘隨機數，測試可復現
     let mut state: u64 = 0x2545_F491_4F6C_DD1D;
     let mut next = move |bound: usize| {
         state = state
@@ -140,7 +140,7 @@ fn narrowing_agrees_with_linear_scan() {
                 let mut position: Vec<SyllablePattern<'_>> = Vec::new();
                 for _ in 0..alternatives {
                     let candidate = random_pattern(&mut next);
-                    // 契约：同一位置的写法不能互相覆盖
+                    // 契約：同一位置的寫法不能互相覆蓋
                     let overlaps = position.iter().any(|p| {
                         (!p.complete && candidate.text.starts_with(p.text))
                             || (!candidate.complete && p.text.starts_with(candidate.text))

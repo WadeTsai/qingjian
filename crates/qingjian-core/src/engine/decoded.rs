@@ -1,4 +1,4 @@
-//! 双拼 / 注音的解码结果：两种方案解出来的东西在引擎里走同一条路，这里把它们收成一个枚举。
+//! 雙拼 / 注音的解碼結果：兩種方案解出來的東西在引擎裡走同一條路，這裡把它們收成一個列舉。
 
 pub(super) enum EngineDecoded {
     Shuangpin(crate::shuangpin::Decoded),

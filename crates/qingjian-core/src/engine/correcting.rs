@@ -1,16 +1,16 @@
-//! 整段拼写纠错：找一处编辑的纠正并按个人敲错表打折。
+//! 整段拼寫糾錯：找一處編輯的糾正並按個人敲錯表打折。
 
 use super::*;
 
 impl Engine {
-    /// 这段作用域生效的拼写纠正（带缓存）：拼音不像话、用户没对它回车原样上屏过、
-    /// 且一处编辑后能凑出至少一个两音节词时，取整句转换得分最高的那个纠正。
+    /// 這段作用域生效的拼寫糾正（帶快取）：拼音不像話、使用者沒對它回車原樣上屏過、
+    /// 且一處編輯後能湊出至少一個兩音節詞時，取整句轉換得分最高的那個糾正。
     pub(super) fn active_correction(&self, scope: &str) -> Option<Correction> {
-        // 双拼敲错一个键换掉的是整个声母 / 韵母，全拼那套「一处编辑」的纠错模型不适用
+        // 雙拼敲錯一個鍵換掉的是整個聲母 / 韻母，全拼那套「一處編輯」的糾錯模型不適用
         if self.shuangpin.is_some() {
             return None;
         }
-        // 形码敲的是字根编码，不是拼音；混输下四码以内可能是编码，超过四码才只剩拼音
+        // 形碼敲的是字根編碼，不是拼音；混輸下四碼以內可能是編碼，超過四碼才只剩拼音
         if self.code.is_some() && (!self.phonetic || scope.len() <= MAX_CODE_LENGTH) {
             return None;
         }
@@ -28,7 +28,7 @@ impl Engine {
         if !correction::eligible(scope) || self.learner.raw_count(scope) > 0 {
             return None;
         }
-        // 整段就是个英文词（hello）：用户多半在打英文，别把它「纠」成 喝了哦
+        // 整段就是個英文詞（hello）：使用者多半在打英文，別把它「糾」成 喝了哦
         if self
             .english
             .as_ref()
@@ -37,7 +37,7 @@ impl Engine {
             return None;
         }
         let (segmentations, tail) = segment_longest_prefix(scope).ok()?;
-        // 不像话的拼音试全部一处编辑；末尾单字母的只试相邻换位（`mingtain` → `mingtian`），其余合法拼音不碰
+        // 不像話的拼音試全部一處編輯；末尾單字母的只試相鄰換位（`mingtain` → `mingtian`），其餘合法拼音不碰
         let candidates = if correction::unlikely_pinyin(segmentations.first(), tail) {
             correction::candidates(scope)
         } else if correction::trailing_single_letter(segmentations.first()) {
@@ -45,8 +45,8 @@ impl Engine {
         } else {
             return None;
         };
-        // 噪声信道：原串按原样能转出的整句得分 vs 纠正后的整句得分扣掉一次编辑的代价，后者高才纠。
-        // 原串切不干净（有尾巴）就没有原样得分，任何能转出整句的纠正都胜出
+        // 噪聲通道：原串按原樣能轉出的整句得分 vs 糾正後的整句得分扣掉一次編輯的代價，後者高才糾。
+        // 原串切不乾淨（有尾巴）就沒有原樣得分，任何能轉出整句的糾正都勝出
         let raw_score = if tail.is_empty() {
             segmentations
                 .first()
@@ -56,17 +56,17 @@ impl Engine {
         } else {
             None
         };
-        // 每个纠正扣一次编辑的代价，接受过同样的 (敲的, 要的) 音节对越多次扣得越少（个人敲错表）。
-        // 相邻换位的折扣只在纠正之间比较时用（`mignti` 换位成 `mingti` 胜过换字母成 `mianti`），
-        // 与原样比时不打这个折：要不要纠的门槛不因编辑类型而降（`zhongwne` 原样说得通就不纠成 中文）
+        // 每個糾正扣一次編輯的代價，接受過同樣的 (敲的, 要的) 音節對越多次扣得越少（個人敲錯表）。
+        // 相鄰換位的折扣只在糾正之間比較時用（`mignti` 換位成 `mingti` 勝過換字母成 `mianti`），
+        // 與原樣比時不打這個折：要不要糾的門檻不因編輯型別而降（`zhongwne` 原樣說得通就不糾成 中文）
         let mut best: Option<(f64, f64, Correction)> = None;
         for candidate in candidates {
-            // 「删掉刚敲的最后一个字母」不算纠正：用户可能还没敲完，尾巴留着等下一键
+            // 「刪掉剛敲的最後一個字母」不算糾正：使用者可能還沒敲完，尾巴留著等下一鍵
             if matches!(candidate.edit, correction::Edit::Delete { index, .. } if index + 1 == scope.len())
             {
                 continue;
             }
-            // 纠正后的拼音上不再猜第二处敲错：变体本来就是一处编辑之外的读法，再叠一层既慢又几乎不会赢
+            // 糾正後的拼音上不再猜第二處敲錯：變體本來就是一處編輯之外的讀法，再疊一層既慢又幾乎不會贏
             let Some(conversion) = self.convert_sentence(&candidate.segmentation.patterns(), false)
             else {
                 continue;

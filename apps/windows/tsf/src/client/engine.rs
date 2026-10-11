@@ -8,21 +8,21 @@ use qingjian_platform::protocol::{
 use super::{KeyReply, KeyResponse, ModeSyncReply};
 use crate::error::ClientError;
 
-/// 连 Server 的一个会话客户端，开在一条已连好的双工流上（Windows 下是命名管道，测试里是内存流）。
-/// 传输是一问一答；开关会话与通知类消息单向发。
+/// 連 Server 的一個會話客戶端，開在一條已連好的雙工流上（Windows 下是命名管道，測試裡是記憶體流）。
+/// 傳輸是一問一答；開關會話與通知類訊息單向發。
 pub struct EngineClient<S> {
     stream: S,
 
-    /// 本会话标识，随每条消息带上。
+    /// 本會話標識，隨每條訊息帶上。
     session: SessionId,
 
-    /// 上次报给 Server 的私密状态；`None` 是还没报过（Server 按不私密起算）。
+    /// 上次報給 Server 的私密狀態；`None` 是還沒報過（Server 按不私密起算）。
     private: Option<bool>,
 }
 
 impl<S: Read + Write> EngineClient<S> {
-    /// 开一个会话；Server 随即回一次按键行为设置（切换键、内置英文模式），带出来交给调用方。
-    /// `app` 是宿主应用的 exe 文件名，Server 据此查按应用的设置。
+    /// 開一個會話；Server 隨即回一次按鍵行為設定（切換鍵、內建英文模式），帶出來交給呼叫方。
+    /// `app` 是宿主應用的 exe 檔名，Server 據此查按應用的設定。
     pub fn open(
         mut stream: S,
         session: SessionId,
@@ -54,14 +54,14 @@ impl<S: Read + Write> EngineClient<S> {
         self.session
     }
 
-    /// 在一条临时流上通知 Server「本线程切成了别的输入法」（状态条收起）。不开会话、不回话。
+    /// 在一條臨時流上通知 Server「本執行緒切成了別的輸入法」（狀態條收起）。不開會話、不回話。
     pub fn notify_ime_switched(mut stream: S, session: SessionId) -> Result<(), ClientError> {
         write_message(&mut stream, &ClientMessage::ImeSwitched { session })?;
         Ok(())
     }
 
-    /// 送一个按键等结果。触发「翻译选中文字」快捷键时回 [`KeyReply::NeedSelection`]，
-    /// 调用方须读当前选区再用 [`Self::selection`] 回给 Server。
+    /// 送一個按鍵等結果。觸發「翻譯選中文字」快捷鍵時回 [`KeyReply::NeedSelection`]，
+    /// 呼叫方須讀當前選區再用 [`Self::selection`] 回給 Server。
     pub fn key(&mut self, event: KeyEvent) -> Result<KeyReply, ClientError> {
         let message = ClientMessage::Key {
             session: self.session,
@@ -85,7 +85,7 @@ impl<S: Read + Write> EngineClient<S> {
         }
     }
 
-    /// 把读到的选区发给 Server，等它回翻译候选帧。空选区时 Server 不进入翻译、回空帧。
+    /// 把讀到的選區發給 Server，等它回翻譯候選幀。空選區時 Server 不進入翻譯、回空幀。
     pub fn selection(
         &mut self,
         request: u64,
@@ -113,7 +113,7 @@ impl<S: Read + Write> EngineClient<S> {
         }
     }
 
-    /// 组句期间定时拉一次云联想的异步结果，回最新一帧，外加鼠标点候选窗口上屏的文本（没点过为 `None`）。
+    /// 組句期間定時拉一次雲聯想的非同步結果，回最新一幀，外加滑鼠點候選視窗上屏的文本（沒點過為 `None`）。
     pub fn poll(&mut self) -> Result<(Frame, Option<String>), ClientError> {
         match self.call(&ClientMessage::Poll {
             session: self.session,
@@ -123,7 +123,7 @@ impl<S: Read + Write> EngineClient<S> {
         }
     }
 
-    /// 让 Server 清空缓冲，拿回要原样上屏的文本（没在组句时为 `None`）。
+    /// 讓 Server 清空緩衝，拿回要原樣上屏的文本（沒在組句時為 `None`）。
     pub fn commit(&mut self) -> Result<Option<String>, ClientError> {
         match self.call(&ClientMessage::Commit {
             session: self.session,
@@ -133,7 +133,7 @@ impl<S: Read + Write> EngineClient<S> {
         }
     }
 
-    /// 组句起始时把应用光标前的文字送给 Server（本地整句模型的前文）。不回话。
+    /// 組句起始時把應用游標前的文字送給 Server（本地整句模型的前文）。不回話。
     pub fn surrounding(&mut self, text: String) -> Result<(), ClientError> {
         self.send(&ClientMessage::Surrounding {
             session: self.session,
@@ -141,7 +141,7 @@ impl<S: Read + Write> EngineClient<S> {
         })
     }
 
-    /// 起组句时报输入框私密与否；与上次报的相同就不发（Server 缺省按不私密）。不回话。
+    /// 起組句時報輸入框私密與否；與上次報的相同就不發（Server 預設按不私密）。不回話。
     pub fn set_private(&mut self, private: bool) -> Result<(), ClientError> {
         if self.private == Some(private) || (self.private.is_none() && !private) {
             self.private = Some(private);
@@ -155,7 +155,7 @@ impl<S: Read + Write> EngineClient<S> {
         Ok(())
     }
 
-    /// 报组句范围的屏幕矩形，Server 据此摆候选窗口。不回话。
+    /// 報組句範圍的螢幕矩形，Server 據此擺候選視窗。不回話。
     pub fn position_candidates(&mut self, rect: ScreenRect) -> Result<(), ClientError> {
         self.send(&ClientMessage::PositionCandidates {
             session: self.session,
@@ -163,7 +163,7 @@ impl<S: Read + Write> EngineClient<S> {
         })
     }
 
-    /// 问 Server 有没有待处理的目标模式，顺路取回最新的按键行为设置（每一拍都带）。
+    /// 問 Server 有沒有待處理的目標模式，順路取回最新的按鍵行為設定（每一拍都帶）。
     pub fn sync_mode(&mut self) -> Result<ModeSyncReply, ClientError> {
         match self.call(&ClientMessage::SyncMode {
             session: self.session,
@@ -182,7 +182,7 @@ impl<S: Read + Write> EngineClient<S> {
         }
     }
 
-    /// 把当前会话的中英模式推给 Server（悬浮状态条）。不回话。
+    /// 把當前會話的中英模式推給 Server（懸浮狀態條）。不回話。
     pub fn mode_changed(&mut self, english: bool) -> Result<(), ClientError> {
         self.send(&ClientMessage::ModeChanged {
             session: self.session,
@@ -190,7 +190,15 @@ impl<S: Read + Write> EngineClient<S> {
         })
     }
 
-    /// 任务栏图标右键菜单里点的项交给 Server。不回话。
+    /// 報本執行緒用的是不是繁體那個語言 profile（「中文(台灣)」下的青簡）；Server 開會話時按簡體算。不回話。
+    pub fn profile(&mut self, traditional: bool) -> Result<(), ClientError> {
+        self.send(&ClientMessage::Profile {
+            session: self.session,
+            traditional,
+        })
+    }
+
+    /// 工作列圖示右鍵選單裡點的項交給 Server。不回話。
     pub fn indicator(&mut self, command: IndicatorCommand) -> Result<(), ClientError> {
         self.send(&ClientMessage::Indicator {
             session: self.session,
@@ -198,14 +206,14 @@ impl<S: Read + Write> EngineClient<S> {
         })
     }
 
-    /// 让 Server 收起候选窗口（组句在 DLL 侧结束、Server 无从知晓时用）。不回话。
+    /// 讓 Server 收起候選視窗（組句在 DLL 側結束、Server 無從知曉時用）。不回話。
     pub fn hide_candidates(&mut self) -> Result<(), ClientError> {
         self.send(&ClientMessage::HideCandidates {
             session: self.session,
         })
     }
 
-    /// 关闭会话，释放 Server 侧状态。不回话。
+    /// 關閉會話，釋放 Server 側狀態。不回話。
     pub fn close(mut self) -> Result<(), ClientError> {
         self.send(&ClientMessage::CloseSession {
             session: self.session,
@@ -217,7 +225,7 @@ impl<S: Read + Write> EngineClient<S> {
         Ok(())
     }
 
-    /// 一问一答；对端在帧边界关闭算 [`ClientError::Closed`]。
+    /// 一問一答；對端在幀邊界關閉算 [`ClientError::Closed`]。
     fn call(&mut self, message: &ClientMessage) -> Result<ServerMessage, ClientError> {
         self.send(message)?;
         read_message(&mut self.stream)?.ok_or(ClientError::Closed)

@@ -1,59 +1,59 @@
-//! 可挂起的会话输入状态；词库与用户学习服务仍由同一个 Engine 持有。
+//! 可掛起的會話輸入狀態；詞庫與使用者學習服務仍由同一個 Engine 持有。
 
 use super::commit::CommitChain;
 use super::{Engine, LastCommit, Transition};
 use crate::{Composition, InputHistory, Language, Punctuation};
 use std::time::Instant;
 
-/// 一个输入上下文的组句、标点配对和学习链；不复制词库或落盘服务。
+/// 一個輸入上下文的組句、標點配對和學習鏈；不復制詞庫或落盤服務。
 #[derive(Default)]
 pub struct EngineSession {
-    /// 拼音与光标位置。
+    /// 拼音與游標位置。
     composition: Composition,
 
-    /// 当前中英文模式。
+    /// 當前中英文模式。
     english_mode: bool,
 
-    /// 中文标点与引号配对。
+    /// 中文標點與引號配對。
     punctuation: Punctuation,
 
-    /// 最近上屏记录，供撤销错误学习。
+    /// 最近上屏記錄，供撤銷錯誤學習。
     recent_commits: Vec<LastCommit>,
 
-    /// 本次上屏记录的词转移。
+    /// 本次上屏記錄的詞轉移。
     recording: Vec<Transition>,
 
-    /// 首次退格前的输入，供重敲记录。
+    /// 首次退格前的輸入，供重敲記錄。
     retype_snapshot: Option<String>,
 
-    /// 等待写入日志的直通字符。
+    /// 等待寫入日誌的直通字元。
     passthrough_pending: String,
 
-    /// 本轮候选翻页次数。
+    /// 本輪候選翻頁次數。
     page_turns: u32,
 
-    /// 本轮组句开始时刻。
+    /// 本輪組句開始時刻。
     composition_started: Option<Instant>,
 
-    /// 当前输入应用标识。
+    /// 當前輸入應用標識。
     application: Option<String>,
 
-    /// 上次学习链断开后是否已有上屏。
+    /// 上次學習鏈斷開後是否已有上屏。
     committed_since_break: bool,
 
-    /// 当前可见候选的译词。
+    /// 當前可見候選的譯詞。
     displayed: Vec<(Language, String)>,
 
-    /// 本会话最近的上屏前文。
+    /// 本會話最近的上屏前文。
     history: InputHistory,
 
-    /// 本会话连续上屏的学习链。
+    /// 本會話連續上屏的學習鏈。
     chain: CommitChain,
 }
 
 impl Engine {
-    /// 切换保存的输入上下文。调用方还应恢复该上下文的私密状态。
-    /// 异步结果与查询缓存不跨上下文复用，用户词频和词库仍是进程内唯一实例。
+    /// 切換儲存的輸入上下文。呼叫方還應恢復該上下文的私密狀態。
+    /// 非同步結果與查詢快取不跨上下文複用，使用者詞頻和詞庫仍是程序內唯一例項。
     pub fn swap_session(&mut self, session: &mut EngineSession) {
         self.cancel_prediction();
         self.set_rescoring_context(None);
@@ -87,7 +87,7 @@ impl Engine {
 }
 
 impl EngineSession {
-    /// 丢弃本上下文的输入状态，不写日志、不学习，也不把私密文本带到下一次普通输入。
+    /// 丟棄本上下文的輸入狀態，不寫日誌、不學習，也不把私密文本帶到下一次普通輸入。
     pub fn discard_input(&mut self) {
         self.composition.clear();
         self.english_mode = false;
@@ -106,8 +106,8 @@ impl EngineSession {
 }
 
 impl Engine {
-    /// 在隐私边界丢弃当前装入的输入状态。与 [`Self::set_private`] 分开，避免平台壳
-    /// 在组句第一帧后报告隐私状态时意外清掉新输入。
+    /// 在隱私邊界丟棄當前裝入的輸入狀態。與 [`Self::set_private`] 分開，避免平臺殼
+    /// 在組句第一幀後報告隱私狀態時意外清掉新輸入。
     pub fn discard_input(&mut self) {
         self.cancel_prediction();
         self.composition.clear();

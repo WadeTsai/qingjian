@@ -1,8 +1,8 @@
-//! 拼音切分：把无分隔的拼音串切成音节序列。
+//! 拼音切分：把無分隔的拼音串切成音節序列。
 //!
-//! 支持全拼、简拼（声母缩写 `kf` → `k f`）与两者混用（`kaif`、`kfa`），输入允许用 `'` 强制分隔（`xi'an`）。
-//! 末尾允许一个未打完的音节前缀（`zho` → `zho…`）。每种切分里每个音节标记是否完整，
-//! 查词时完整音节精确匹配、不完整音节按前缀匹配。双拼、模糊音后续在这里扩展，接口保持不变。
+//! 支援全拼、簡拼（聲母縮寫 `kf` → `k f`）與兩者混用（`kaif`、`kfa`），輸入允許用 `'` 強制分隔（`xi'an`）。
+//! 末尾允許一個未打完的音節字首（`zho` → `zho…`）。每種切分裡每個音節標記是否完整，
+//! 查詞時完整音節精確匹配、不完整音節按字首匹配。雙拼、模糊音後續在這裡擴充套件，介面保持不變。
 
 mod error;
 mod segmentation;
@@ -22,13 +22,13 @@ pub fn is_syllable(s: &str) -> bool {
     SYLLABLE_TRIE.contains(s)
 }
 
-/// `s` 是否为某个合法音节的**真**前缀（不包含它自己就是完整音节的情况）。
+/// `s` 是否為某個合法音節的**真**字首（不包含它自己就是完整音節的情況）。
 pub fn is_syllable_prefix(s: &str) -> bool {
     SYLLABLE_TRIE.is_proper_prefix(s)
 }
 
-/// `text` 能否切成每个音节都完整的拼音。只回答是否，不产生切分、不分配音节：
-/// 纠错要对上千个变体逐个问这个问题，先用它过滤，剩下的几个再做真正的切分。只认小写字母。
+/// `text` 能否切成每個音節都完整的拼音。只回答是否，不產生切分、不分配音節：
+/// 糾錯要對上千個變體逐個問這個問題，先用它過濾，剩下的幾個再做真正的切分。只認小寫字母。
 pub fn is_fully_segmentable(text: &str) -> bool {
     let n = text.len();
     if n == 0 {
@@ -47,10 +47,10 @@ pub fn is_fully_segmentable(text: &str) -> bool {
     reachable[n]
 }
 
-/// 切分上限。简拼让歧义切分数量指数增长，每个位置只保留这么多种最优切分。
+/// 切分上限。簡拼讓歧義切分數量指數增長，每個位置只保留這麼多種最優切分。
 const MAX_SEGMENTATIONS: usize = 8;
 
-/// 切分。返回按「音节少、不完整音节少、前面的音节长」排序的切分，最多 [`MAX_SEGMENTATIONS`] 种。
+/// 切分。返回按「音節少、不完整音節少、前面的音節長」排序的切分，最多 [`MAX_SEGMENTATIONS`] 種。
 pub fn segment(input: &str) -> Result<Vec<Segmentation>, ParseError> {
     let input = input.trim();
     if input.is_empty() {
@@ -65,7 +65,7 @@ pub fn segment(input: &str) -> Result<Vec<Segmentation>, ParseError> {
         }
     }
 
-    // 按 `'` 切成若干段，各段独立切分后做笛卡尔积；只有最后一段允许残缺音节。
+    // 按 `'` 切成若干段，各段獨立切分後做笛卡爾積；只有最後一段允許殘缺音節。
     let chunks: Vec<&str> = input.split('\'').filter(|c| !c.is_empty()).collect();
     if chunks.is_empty() {
         return Err(ParseError::NoSegmentation);
@@ -93,14 +93,14 @@ pub fn segment(input: &str) -> Result<Vec<Segmentation>, ParseError> {
     Ok(results)
 }
 
-/// 排序并截断到 [`MAX_SEGMENTATIONS`]。
+/// 排序並截斷到 [`MAX_SEGMENTATIONS`]。
 fn prune(segmentations: &mut Vec<Segmentation>) {
     segmentations.sort_by_cached_key(sort_key);
     segmentations.dedup();
     segmentations.truncate(MAX_SEGMENTATIONS);
 }
 
-/// 音节少的优先；同音节数时不完整音节少的优先；再同则前面的音节越长越优先（贪心的结果排最前）。
+/// 音節少的優先；同音節數時不完整音節少的優先；再同則前面的音節越長越優先（貪心的結果排最前）。
 fn sort_key(segmentation: &Segmentation) -> (usize, usize, Vec<Reverse<usize>>) {
     (
         segmentation.syllables.len(),
@@ -113,8 +113,8 @@ fn sort_key(segmentation: &Segmentation) -> (usize, usize, Vec<Reverse<usize>>) 
     )
 }
 
-/// 切分不含 `'` 的一段：按位置做动态规划，每个位置只保留最优的几种前缀切分。
-/// `allow_partial` 为真时末尾允许留一个残缺音节。
+/// 切分不含 `'` 的一段：按位置做動態規劃，每個位置只保留最優的幾種字首切分。
+/// `allow_partial` 為真時末尾允許留一個殘缺音節。
 fn segment_chunk(chunk: &str, allow_partial: bool) -> Vec<Segmentation> {
     let n = chunk.len();
     let mut best: Vec<Vec<Segmentation>> = vec![Vec::new(); n + 1];
@@ -128,14 +128,14 @@ fn segment_chunk(chunk: &str, allow_partial: bool) -> Vec<Segmentation> {
         prune(&mut best[start]);
         let rest = &chunk[start..];
         let matches = SYLLABLE_TRIE.matches(rest);
-        // (长度, 是否完整音节)
+        // (長度, 是否完整音節)
         let mut tokens: Vec<(usize, bool)> = matches.lengths().map(|len| (len, true)).collect();
         for len in initial_lengths(rest) {
             if !tokens.contains(&(len, true)) {
                 tokens.push((len, false));
             }
         }
-        // 整个剩余部分作为未打完的音节（`zho` → zhong / zhou …）。它本身是完整音节或纯声母时已经在上面了。
+        // 整個剩餘部分作為未打完的音節（`zho` → zhong / zhou …）。它本身是完整音節或純聲母時已經在上面了。
         let rest_is_complete = matches.lengths().next_back() == Some(rest.len());
         if allow_partial
             && matches.whole_is_prefix

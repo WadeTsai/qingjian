@@ -1,4 +1,4 @@
-//! 「词库」页：导入按钮，加一个可滚动的列表，每本一行（勾选框开关 + 非随包的「移除」）。
+//! 「詞庫」頁：匯入按鈕，加一個可滾動的列表，每本一行（勾選框開關 + 非隨包的「移除」）。
 
 use std::cell::RefCell;
 
@@ -15,26 +15,26 @@ use crate::preferences::layout::{Layout, PAGE_PADDING, PAGE_WIDTH, ROW_HEIGHT};
 use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
-/// 列表里一行的高度。
+/// 列表裡一行的高度。
 const ROW: f64 = ROW_HEIGHT + 6.0;
 
-/// 列表区的最小高度（约放得下 8 本）；窗口更高时撑到页底，装不下的滚。
+/// 列表區的最小高度（約放得下 8 本）；視窗更高時撐到頁底，裝不下的滾。
 const LIST_HEIGHT: f64 = 10.0 * ROW;
 
 pub struct DictionariesPage {
-    /// 列表的文档视图，行都加在它上面。
+    /// 列表的文件檢視，行都加在它上面。
     list: Retained<NSView>,
 
-    /// 装列表的滚动视图。
+    /// 裝列表的滾動檢視。
     scroll: Retained<NSScrollView>,
 
-    /// 当前的行控件，重建时先移除。
+    /// 當前的行控制元件，重建時先移除。
     rows: RefCell<Vec<Retained<NSView>>>,
 
-    /// 一本都没有时的提示。
+    /// 一本都沒有時的提示。
     empty: Retained<NSTextField>,
 
-    /// 行控件的 target；建行时用。
+    /// 行控制元件的 target；建行時用。
     target: Retained<PreferencesTarget>,
 
     mtm: MainThreadMarker,
@@ -56,7 +56,7 @@ impl DictionariesPage {
         );
         layout.space(GROUP_GAP);
         let list = NSView::initWithFrame(mtm.alloc(), NSRect::ZERO);
-        // 列表放在滚动视图里：随包 11 本加导入的可能超过一屏，全部列出、可以滚，不再只显示前几本
+        // 列表放在滾動視圖裡：隨包 11 本加匯入的可能超過一屏，全部列出、可以滾，不再只顯示前幾本
         let scroll = NSScrollView::initWithFrame(mtm.alloc(), NSRect::ZERO);
         scroll.setHasVerticalScroller(true);
         scroll.setDrawsBackground(false);
@@ -79,7 +79,7 @@ impl DictionariesPage {
         }
     }
 
-    /// 按当前词库清单重建列表：每本一行，勾选框（名字 · 条数 · 许可证）+「移除」按钮。
+    /// 按當前詞庫清單重建列表：每本一行，勾選框（名字 · 條數 · 許可證）+「移除」按鈕。
     pub fn rebuild(&self, dictionaries: &[DictionaryInfo]) {
         let mtm = self.mtm;
         for view in self.rows.borrow_mut().drain(..) {
@@ -87,7 +87,7 @@ impl DictionariesPage {
         }
         self.empty.setHidden(!dictionaries.is_empty());
         let width = PAGE_WIDTH - 2.0 * PAGE_PADDING;
-        // 文档视图按行数撑高（至少一屏），行从顶部往下排；滚动条要留出位置
+        // 文件檢視按行數撐高（至少一屏），行從頂部往下排；捲軸要留出位置
         let visible_height = self.scroll.contentSize().height.max(LIST_HEIGHT);
         let document_height = (ROW * dictionaries.len() as f64).max(visible_height);
         let content_width = self.scroll.contentSize().width.min(width);
@@ -123,7 +123,7 @@ impl DictionariesPage {
             ));
             self.list.addSubview(&toggle);
             rows.push(Retained::into_super(Retained::into_super(toggle)));
-            // 随包词库只能开关，不能移除
+            // 隨包詞庫只能開關，不能移除
             if !info.builtin {
                 let remove = button(mtm, "移除", Setting::DictionaryRemove(index), &self.target);
                 remove.setFrame(NSRect::new(
@@ -134,7 +134,7 @@ impl DictionariesPage {
                 rows.push(Retained::into_super(Retained::into_super(remove)));
             }
         }
-        // 非翻转坐标系的文档视图默认停在底部，滚回顶部让第一本在最上面
+        // 非翻轉座標系的文件檢視預設停在底部，滾回頂部讓第一本在最上面
         let clip = self.scroll.contentView();
         clip.scrollToPoint(NSPoint::new(
             0.0,

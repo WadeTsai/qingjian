@@ -1,4 +1,4 @@
-//! 释义表：`词\t[词性. ]译文[|读音]\t…` 的 TSV，或打包好的 `.qj`（mmap 零拷贝，启动不用解析 20 多万行）。
+//! 釋義表：`詞\t[詞性. ]譯文[|讀音]\t…` 的 TSV，或打包好的 `.qj`（mmap 零複製，啟動不用解析 20 多萬行）。
 
 mod entry_record;
 mod sense_record;
@@ -15,19 +15,19 @@ use entry_record::EntryRecord;
 use sense_record::SenseRecord;
 use storage::Storage;
 
-/// `.qj` 里的分节：字符串 arena、词条表、释义表、哈希索引。
+/// `.qj` 裡的分節：字串 arena、詞條表、釋義表、雜湊索引。
 const TEXT_TAG: [u8; 4] = *b"TEXT";
 const ENTRIES_TAG: [u8; 4] = *b"ENTR";
 const SENSES_TAG: [u8; 4] = *b"SENS";
 const HASH_TAG: [u8; 4] = *b"HASH";
 
-/// 释义表，一个实例对应一种学习语言。
+/// 釋義表，一個例項對應一種學習語言。
 #[derive(Debug)]
 pub struct Glossary {
-    /// 本表的学习语言。
+    /// 本表的學習語言。
     language: Language,
 
-    /// 词 → 译文。
+    /// 詞 → 譯文。
     storage: Storage,
 }
 
@@ -80,7 +80,7 @@ impl Glossary {
         })
     }
 
-    /// 按文件内容选加载方式：`.qj` 直接映射，否则当 TSV 解析。
+    /// 按檔案內容選載入方式：`.qj` 直接對映，否則當 TSV 解析。
     pub fn from_path(language: Language, path: impl AsRef<Path>) -> Result<Self, GlossaryError> {
         let path = path.as_ref();
         if Container::is_qj(path) {
@@ -90,7 +90,7 @@ impl Glossary {
         }
     }
 
-    /// 打开 `.qj` 释义表，逐条校验偏移落在 arena 内、在字符边界上。
+    /// 開啟 `.qj` 釋義表，逐條校驗偏移落在 arena 內、在字元邊界上。
     pub fn open_qj(language: Language, path: &Path) -> Result<Self, GlossaryError> {
         let container = Container::open(path, Kind::Glossary)?;
         let text = container.text(TEXT_TAG)?;
@@ -140,7 +140,7 @@ impl Glossary {
         })
     }
 
-    /// 写成 `.qj`：词按字节序排，字符串进一个 arena，词条 / 释义各一张定长表，外加哈希索引。
+    /// 寫成 `.qj`：詞按位元組序排，字串進一個 arena，詞條 / 釋義各一張定長表，外加雜湊索引。
     pub fn write_qj(&self, path: &Path, metadata: &Metadata) -> Result<(), GlossaryError> {
         let mut words: Vec<(&str, Translation)> = self.all_entries();
         words.sort_by(|a, b| a.0.cmp(b.0));
@@ -202,7 +202,7 @@ impl Glossary {
         Ok(())
     }
 
-    /// 全部条目（落盘用）。
+    /// 全部條目（落盤用）。
     fn all_entries(&self) -> Vec<(&str, Translation)> {
         match &self.storage {
             Storage::Owned(map) => map.iter().map(|(k, v)| (k.as_str(), v.clone())).collect(),
@@ -223,7 +223,7 @@ impl Glossary {
         self.len() == 0
     }
 
-    /// 映射表里第 `id` 个词。
+    /// 對映表裡第 `id` 個詞。
     fn mapped_word(&self, id: u32) -> Option<&str> {
         let Storage::Mapped { text, entries, .. } = &self.storage else {
             return None;
@@ -232,7 +232,7 @@ impl Glossary {
         text.get(e.word_start as usize..e.word_start as usize + usize::from(e.word_len))
     }
 
-    /// 映射表里第 `id` 个词的译文。
+    /// 對映表裡第 `id` 個詞的譯文。
     fn mapped_translation(&self, id: u32) -> Option<Translation> {
         let Storage::Mapped {
             text,
@@ -267,7 +267,7 @@ impl Glossary {
     }
 }
 
-/// `v. develop` → 词性 + 译文；识别不出词性缩写时整段都是译文。译文后面 `|` 接的是读音（`n. 開発|かいはつ`）。
+/// `v. develop` → 詞性 + 譯文；識別不出詞性縮寫時整段都是譯文。譯文後面 `|` 接的是讀音（`n. 開発|かいはつ`）。
 pub(crate) fn parse_sense(field: &str) -> Sense {
     let (field, reading) = match field.split_once('|') {
         Some((text, reading)) if !reading.trim().is_empty() => {

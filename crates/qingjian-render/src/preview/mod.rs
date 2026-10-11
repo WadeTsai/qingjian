@@ -1,5 +1,5 @@
-//! 主题预览图：用样例帧把一个主题目录画成投稿用的截图，写进它的 `preview/`。
-//! 两个壳的 `--theme-preview <主题目录>` 调它，主题仓库的 `tools/preview.py` 再调壳；规则见主题仓库 README「提交主题」。
+//! 主題預覽圖：用樣例幀把一個主題目錄畫成投稿用的截圖，寫進它的 `preview/`。
+//! 兩個殼的 `--theme-preview <主題目錄>` 調它，主題倉庫的 `tools/preview.py` 再調殼；規則見主題倉庫 README「提交主題」。
 
 mod error;
 mod shot;
@@ -12,14 +12,14 @@ pub use shot::Shot;
 use crate::sample::{nihao, nihao_with_sentence};
 use crate::{FontLibrary, Frame, Layout, Renderer, Theme};
 
-/// 2 倍图：与 Retina 截屏一样清楚，单张在主题仓库的 500 KB 上限以内。
+/// 2 倍圖：與 Retina 截圖一樣清楚，單張在主題倉庫的 500 KB 上限以內。
 const SCALE: f32 = 2.0;
 
-/// 命令行 `--theme-preview` 的命令名。
+/// 命令列 `--theme-preview` 的命令名。
 pub const FLAG: &str = "--theme-preview";
 
-/// 壳的命令行入口：把 `theme_dir` 的预览图写进 `theme_dir/preview/`，逐张打印结果，返回进程退出码。
-/// 至少写出一张算成功（缺的那张单独列出来，不让整个命令失败）；主题读不进来或一张都没写出是 1。
+/// 殼的命令列入口：把 `theme_dir` 的預覽圖寫進 `theme_dir/preview/`，逐張列印結果，返回程序退出碼。
+/// 至少寫出一張算成功（缺的那張單獨列出來，不讓整個命令失敗）；主題讀不進來或一張都沒寫出是 1。
 pub fn run(theme_dir: &Path, family_files: impl FnMut(&str) -> Vec<PathBuf>) -> i32 {
     let shots = match write_previews(theme_dir, &theme_dir.join("preview"), family_files) {
         Ok(shots) => shots,
@@ -47,9 +47,9 @@ pub fn run(theme_dir: &Path, family_files: impl FnMut(&str) -> Vec<PathBuf>) -> 
     0
 }
 
-/// 画 `theme_dir` 的竖排、横排截图（主题没锁定外观时再加一张深色竖排），写到 `out_dir`，同名文件覆盖。
-/// 某一张画坏了记在它的 [`Shot`] 里、其余照画；主题读不进来或字体库建不起来才整体失败。
-/// `family_files` 是壳按字族名找系统字体文件的函数，与候选窗加载主题字体时同一个。
+/// 畫 `theme_dir` 的豎排、橫排截圖（主題沒鎖定外觀時再加一張深色豎排），寫到 `out_dir`，同名檔案覆蓋。
+/// 某一張畫壞了記在它的 [`Shot`] 裡、其餘照畫；主題讀不進來或字型庫建不起來才整體失敗。
+/// `family_files` 是殼按字族名找系統字型檔案的函式，與候選窗載入主題字型時同一個。
 pub fn write_previews(
     theme_dir: &Path,
     out_dir: &Path,
@@ -96,7 +96,7 @@ fn draw(
     layout: Layout,
     path: &Path,
 ) -> Result<PathBuf, ShotError> {
-    // 每张独立，不和上一张配对播过渡
+    // 每張獨立，不和上一張配對播過渡
     renderer.forget();
     let rendered = renderer.render(frame, layout, theme, SCALE)?;
     rendered

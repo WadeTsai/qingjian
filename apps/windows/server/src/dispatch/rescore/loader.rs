@@ -1,4 +1,4 @@
-//! 模型的后台加载：加载并预热要几百毫秒到几秒，不能挡住按键；加载完由 Router 在下一次消息时接上。
+//! 模型的後臺載入：載入並預熱要幾百毫秒到幾秒，不能擋住按鍵；載入完由 Router 在下一次訊息時接上。
 
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, TryRecvError, channel};
@@ -6,25 +6,25 @@ use std::sync::mpsc::{Receiver, TryRecvError, channel};
 use qingjian_core::sentence::SentenceScorer;
 use qingjian_neural::{CharScorer, NeuralError, P2cScorer};
 
-/// 一次进行中的加载。
+/// 一次進行中的載入。
 pub(crate) struct ModelLoader {
     result: Receiver<Result<Box<dyn SentenceScorer>, NeuralError>>,
 }
 
-/// 一次加载的结局。
+/// 一次載入的結局。
 pub(super) enum Loaded {
-    /// 还在加载。
+    /// 還在載入。
     Pending,
 
-    /// 加载好了（或失败了）。
+    /// 載入好了（或失敗了）。
     Done(Result<Box<dyn SentenceScorer>, NeuralError>),
 
-    /// 加载线程没了（起不来 / panic）。
+    /// 載入執行緒沒了（起不來 / panic）。
     Gone,
 }
 
 impl ModelLoader {
-    /// 起线程加载 `path`（`.qjm` 或三件套目录）并预热一次；线程起不来返回 `None`。
+    /// 起執行緒載入 `path`（`.qjm` 或三件套目錄）並預熱一次；執行緒起不來返回 `None`。
     pub(super) fn spawn(path: &Path) -> Option<Self> {
         let path: PathBuf = path.to_path_buf();
         let (tx, result) = channel();
@@ -61,7 +61,7 @@ impl ModelLoader {
         }
     }
 
-    /// 看一眼有没有结果，不阻塞。
+    /// 看一眼有沒有結果，不阻塞。
     pub(super) fn poll(&self) -> Loaded {
         match self.result.try_recv() {
             Ok(result) => Loaded::Done(result),

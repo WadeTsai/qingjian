@@ -1,7 +1,7 @@
-//! 配置文件的运行时状态：路径、当前生效的值、上次读取时的修改时间。
+//! 配置檔案的執行時狀態：路徑、當前生效的值、上次讀取時的修改時間。
 //!
-//! 启动、菜单开关、切回输入法时的热加载都从这里拿 `Config`，壳只认这一份。
-//! 解析失败不让输入法退出（输入优先于一切附加功能）：保留上一份能用的配置，把错误留给菜单显示。
+//! 啟動、選單開關、切回輸入法時的熱載入都從這裡拿 `Config`，殼只認這一份。
+//! 解析失敗不讓輸入法退出（輸入優先於一切附加功能）：保留上一份能用的配置，把錯誤留給選單顯示。
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -12,21 +12,21 @@ use qingjian_platform::Config;
 use super::paths;
 
 pub struct Settings {
-    /// 配置文件路径；拿不到用户目录时为 `None`，此时一切按默认值、菜单开关不落盘。
+    /// 配置檔案路徑；拿不到使用者目錄時為 `None`，此時一切按預設值、選單開關不落盤。
     path: Option<PathBuf>,
 
-    /// 当前生效的配置。
+    /// 當前生效的配置。
     config: Config,
 
-    /// 上次成功读取时文件的修改时间，用来判断用户有没有手改过。
+    /// 上次成功讀取時檔案的修改時間，用來判斷使用者有沒有手改過。
     modified: Option<SystemTime>,
 
-    /// 最近一次读取失败的原因；成功后清掉。
+    /// 最近一次讀取失敗的原因；成功後清掉。
     error: Option<String>,
 }
 
 impl Settings {
-    /// 首次加载：先读同目录的 `.env`，文件不存在就写模板，再读配置。
+    /// 首次載入：先讀同目錄的 `.env`，檔案不存在就寫模板，再讀配置。
     pub fn load() -> Self {
         let mut settings = Self {
             path: paths::config_file(),
@@ -54,12 +54,12 @@ impl Settings {
         self.path.as_deref()
     }
 
-    /// 最近一次读取的错误文案，给菜单显示。
+    /// 最近一次讀取的錯誤文案，給選單顯示。
     pub fn error(&self) -> Option<&str> {
         self.error.as_deref()
     }
 
-    /// 文件的修改时间和上次读的不一样就重读；返回是否重读了（重读失败也算，配置没变但错误状态变了）。
+    /// 檔案的修改時間和上次讀的不一樣就重讀；返回是否重讀了（重讀失敗也算，配置沒變但錯誤狀態變了）。
     pub fn reload_if_changed(&mut self) -> bool {
         let Some(path) = self.path.clone() else {
             return false;
@@ -71,7 +71,7 @@ impl Settings {
         true
     }
 
-    /// 强制重读，`.env` 也再读一遍（不覆盖已有的环境变量，只补新加的）。
+    /// 強制重讀，`.env` 也再讀一遍（不覆蓋已有的環境變數，只補新加的）。
     pub fn reload(&mut self) {
         if let Some(path) = self.path.clone() {
             load_dotenv(&path);
@@ -79,12 +79,12 @@ impl Settings {
         }
     }
 
-    /// 原地改一个布尔键并重读，见 [`Self::set_value`]。
+    /// 原地改一個布林鍵並重讀，見 [`Self::set_value`]。
     pub fn set_bool(&mut self, section: &str, key: &str, value: bool) -> bool {
         self.set_value(section, key, value)
     }
 
-    /// 原地改一个键并重读。写失败只记日志，返回 `false`。
+    /// 原地改一個鍵並重讀。寫失敗只記日誌，返回 `false`。
     pub fn set_value(
         &mut self,
         section: &str,
@@ -105,14 +105,14 @@ impl Settings {
         true
     }
 
-    /// 把一个环境变量（密钥）写进配置同目录的 `.env` 并立即注入当前进程。
-    /// 文件仅本用户可读；值不进日志。返回是否成功。
+    /// 把一個環境變數（金鑰）寫進配置同目錄的 `.env` 並立即注入當前程序。
+    /// 檔案僅本使用者可讀；值不進日誌。返回是否成功。
     pub fn set_env_var(&self, name: &str, value: &str) -> bool {
         let Some(path) = &self.path else {
             tracing::warn!("没有配置目录，密钥无处可存");
             return false;
         };
-        // 先登记再动文件：后面哪一步失败，日志里都不会出现这个值
+        // 先登記再動檔案：後面哪一步失敗，日誌裡都不會出現這個值
         qingjian_platform::logs::secrets::register(value);
         let env_file = path.with_file_name(".env");
         let existing = std::fs::read_to_string(&env_file).unwrap_or_default();
@@ -124,7 +124,7 @@ impl Settings {
         let entry = format!("{prefix}{value}");
         lines.push(&entry);
         let content = format!("{}\n", lines.join("\n"));
-        // 原子写且仅本用户可读（0600）
+        // 原子寫且僅本使用者可讀（0600）
         let written = qingjian_core::storage::write_atomic_private(&env_file, |file| {
             file.write_all(content.as_bytes())
         });
@@ -132,7 +132,7 @@ impl Settings {
             tracing::warn!(%error, path = %env_file.display(), "写 .env 失败");
             return false;
         }
-        // 解析错误的原文里带着出错的那一行（含密钥），不进日志
+        // 解析錯誤的原文裡帶著出錯的那一行（含金鑰），不進日誌
         if dotenvy::from_path_override(&env_file).is_err() {
             tracing::warn!(path = %env_file.display(), ".env 写入后重新加载失败");
             return false;
@@ -158,18 +158,18 @@ impl Settings {
                 self.error = Some(error.to_string());
             }
         }
-        // 失败也记时间：同一份坏文件不用每次激活都重读一遍
+        // 失敗也記時間：同一份壞檔案不用每次啟用都重讀一遍
         self.modified = modified_time(path);
     }
 }
 
-/// 输入法进程由 launchd 拉起，看不到 shell 的环境变量：配置同目录的 `.env`（如 `QINGJIAN_API_KEY=...`）先读进环境。
+/// 輸入法程序由 launchd 拉起，看不到 shell 的環境變數：配置同目錄的 `.env`（如 `QINGJIAN_API_KEY=...`）先讀進環境。
 fn load_dotenv(config_path: &Path) {
     let env_file = config_path.with_file_name(".env");
     match dotenvy::from_path(&env_file) {
         Ok(()) => tracing::info!(path = %env_file.display(), "已加载 .env"),
         Err(dotenvy::Error::Io(error)) if error.kind() == std::io::ErrorKind::NotFound => {}
-        // 解析错误的原文里带着出错的那一行（含密钥），只记是哪一类错
+        // 解析錯誤的原文裡帶著出錯的那一行（含金鑰），只記是哪一類錯
         Err(dotenvy::Error::LineParse(_, position)) => {
             tracing::warn!(path = %env_file.display(), position, ".env 有一行格式不对，整个文件没读进来");
         }

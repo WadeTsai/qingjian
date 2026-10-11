@@ -1,13 +1,13 @@
-//! 振り仮名：把日文译词的整体假名读音对到各段汉字上（`開発する` + `かいはつする` → 開発(かいはつ)する）。
+//! 振り仮名：把日文譯詞的整體假名讀音對到各段漢字上（`開発する` + `かいはつする` → 開発(かいはつ)する）。
 //!
-//! 译词里的假名段在读音里原样出现，拿它们当锚点，锚点之间的假名就是相邻汉字段的读音；
-//! 多种对法时取第一种可行的。对不上（读音与写法的假名不一致）就整体注在后面。
+//! 譯詞裡的假名段在讀音裡原樣出現，拿它們當錨點，錨點之間的假名就是相鄰漢欄位的讀音；
+//! 多種對法時取第一種可行的。對不上（讀音與寫法的假名不一致）就整體注在後面。
 
 mod segment;
 
 pub use segment::FuriganaSegment;
 
-/// 把 `text` 切成汉字段与非汉字段，汉字段带上从 `reading` 里对出来的假名。读音与写法一样（纯假名词）时只有一段、不带读音。
+/// 把 `text` 切成漢欄位與非漢欄位，漢欄位帶上從 `reading` 裡對出來的假名。讀音與寫法一樣（純假名詞）時只有一段、不帶讀音。
 pub fn furigana(text: &str, reading: &str) -> Vec<FuriganaSegment> {
     let runs = split_runs(text);
     let reading_chars: Vec<char> = reading.chars().map(to_hiragana).collect();
@@ -34,7 +34,7 @@ pub fn furigana(text: &str, reading: &str) -> Vec<FuriganaSegment> {
     }
 }
 
-/// 连续的汉字为一段、连续的非汉字为一段：(段, 是否汉字)。
+/// 連續的漢字為一段、連續的非漢字為一段：(段, 是否漢字)。
 fn split_runs(text: &str) -> Vec<(String, bool)> {
     let mut runs: Vec<(String, bool)> = Vec::new();
     for c in text.chars() {
@@ -47,7 +47,7 @@ fn split_runs(text: &str) -> Vec<(String, bool)> {
     runs
 }
 
-/// 回溯对齐：非汉字段必须与读音里对应位置逐字相同（假名先统一成平假名），汉字段取到下一个锚点之间的假名，至少一个。
+/// 回溯對齊：非漢欄位必須與讀音裡對應位置逐字相同（假名先統一成平假名），漢欄位取到下一個錨點之間的假名，至少一個。
 fn align(
     runs: &[(String, bool)],
     reading: &[char],
@@ -68,7 +68,7 @@ fn align(
         }
         return false;
     }
-    // 最后一段汉字吃掉剩下的全部；中间的汉字段从短到长试，让后面的锚点决定边界
+    // 最後一段漢字吃掉剩下的全部；中間的漢欄位從短到長試，讓後面的錨點決定邊界
     if rest.is_empty() {
         if position < reading.len() {
             out.push(Some(reading[position..].iter().collect()));
@@ -86,12 +86,12 @@ fn align(
     false
 }
 
-/// 汉字（含 々 〆）。
+/// 漢字（含 々 〆）。
 fn is_kanji(c: char) -> bool {
     matches!(c, '\u{4e00}'..='\u{9fff}' | '\u{3400}'..='\u{4dbf}' | '々' | '〆')
 }
 
-/// 片假名统一成平假名，长音符等原样。
+/// 片假名統一成平假名，長音符等原樣。
 fn to_hiragana(c: char) -> char {
     match c {
         '\u{30a1}'..='\u{30f6}' => char::from_u32(c as u32 - 0x60).unwrap_or(c),
@@ -128,10 +128,10 @@ mod tests {
 
     #[test]
     fn kana_words_and_mismatches() {
-        // 纯假名词不注
+        // 純假名詞不注
         assert_eq!(render("こんにちは", "こんにちは"), "こんにちは");
         assert_eq!(render("ウィーチャット", "うぃーちゃっと"), "ウィーチャット");
-        // 读音与写法里的假名对不上：整体注在后面
+        // 讀音與寫法裡的假名對不上：整體注在後面
         assert_eq!(render("開発する", "かいはつ"), "開発する(かいはつ)");
         assert_eq!(render("開発する", "かいはつした"), "開発する(かいはつした)");
     }

@@ -1,23 +1,23 @@
-//! 部件模式在笔画序列里的匹配位置。
+//! 部件模式在筆畫序列裡的匹配位置。
 
-/// 模式在序列里的匹配位置。
+/// 模式在序列裡的匹配位置。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Anchor {
-    /// 序列里任意一处（取最左一处）。
+    /// 序列裡任意一處（取最左一處）。
     Any,
 
-    /// 只在序列开头。
+    /// 只在序列開頭。
     Prefix,
 
-    /// 只在序列结尾。
+    /// 只在序列結尾。
     Suffix,
 
-    /// 开头或结尾，先看结尾。
+    /// 開頭或結尾，先看結尾。
     Both,
 }
 
 impl Anchor {
-    /// 解析覆盖表里写的锚点名，认不出返回 `None`。
+    /// 解析覆蓋表裡寫的錨點名，認不出返回 `None`。
     pub(super) fn parse(text: &str) -> Option<Self> {
         match text {
             "any" => Some(Self::Any),
@@ -28,7 +28,7 @@ impl Anchor {
         }
     }
 
-    /// 按位置把序列里的一处 `from` 换成 `to`，没命中返回 `None`。
+    /// 按位置把序列裡的一處 `from` 換成 `to`，沒命中返回 `None`。
     pub(super) fn rewrite(self, seq: &str, from: &str, to: &str) -> Option<String> {
         match self {
             Self::Any => {

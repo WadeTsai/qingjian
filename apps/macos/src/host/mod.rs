@@ -1,9 +1,9 @@
-//! 进程级单例：一个 Engine + 一个候选窗口，所有输入会话共用。
+//! 程序級單例：一個 Engine + 一個候選視窗，所有輸入會話共用。
 //!
-//! IMK 的所有回调都在主线程，所以用 `thread_local` 而不是锁；从别的线程访问会拿到 `None`。
+//! IMK 的所有回撥都在主執行緒，所以用 `thread_local` 而不是鎖；從別的執行緒訪問會拿到 `None`。
 //!
-//! 配置只有一条通路：[`Host::apply_config`] 把当前 `Config` 推给 Engine 与界面。启动、菜单开关、
-//! 设置窗口、手改文件被监视到，全都走它；三个入口都只写 `config.toml`，不各存一套状态。
+//! 配置只有一條通路：[`Host::apply_config`] 把當前 `Config` 推給 Engine 與介面。啟動、選單開關、
+//! 設定視窗、手改檔案被監視到，全都走它；三個入口都只寫 `config.toml`，不各存一套狀態。
 
 mod cloud;
 mod config;
@@ -56,140 +56,140 @@ pub use presenting::TranslationJob;
 pub use session::Session;
 
 pub struct Host {
-    /// 输入内核。平台层只能通过它的公开 API 拿候选，不允许碰词库或排序。
+    /// 輸入核心。平臺層只能通過它的公開 API 拿候選，不允許碰詞庫或排序。
     pub engine: Engine,
 
-    /// 候选窗口。
+    /// 候選視窗。
     pub window: CandidateWindow,
 
-    /// 菜单栏的中 / 英状态项。
+    /// 選單欄的中 / 英狀態項。
     pub indicator: ModeIndicator,
 
-    /// 输入法菜单，挂在状态项和系统输入源菜单上。
+    /// 輸入法選單，掛在狀態項和系統輸入源選單上。
     pub menu: InputMenu,
 
-    /// 偏好设置窗口。
+    /// 偏好設定視窗。
     pub preferences: PreferencesWindow,
 
-    /// 配置文件的当前值与修改时间。
+    /// 配置檔案的當前值與修改時間。
     pub settings: Settings,
 
-    /// 配置文件监视定时器，激活期间跑。
+    /// 配置檔案監視定時器，啟用期間跑。
     pub watch: ConfigWatch,
 
-    /// 内置主题与用户主题目录里的主题；激活期间随配置定时器一起看目录有没有变。
+    /// 內建主題與使用者主題目錄裡的主題；啟用期間隨配置定時器一起看目錄有沒有變。
     pub themes: qingjian_render::ThemeLibrary,
 
-    /// 上次把学习数据落盘的时间；激活期间的定时器按 [`LEARNING_FLUSH_INTERVAL`] 再刷一次。
+    /// 上次把學習資料落盤的時間；啟用期間的定時器按 [`LEARNING_FLUSH_INTERVAL`] 再刷一次。
     pub last_flush: std::time::Instant,
 
-    /// 当前 Predictor 是按哪份 `[predict]` 建的；配置没变就不重建（重建会起新线程、丢缓存）。
+    /// 當前 Predictor 是按哪份 `[predict]` 建的；配置沒變就不重建（重建會起新執行緒、丟快取）。
     applied_predict: PredictConfig,
 
-    /// 附加词库是按哪份 `[dictionaries]` 装的；开关变了才重新加载。
+    /// 附加詞庫是按哪份 `[dictionaries]` 裝的；開關變了才重新載入。
     applied_dictionaries: DictionariesConfig,
 
-    /// 偏好设置「词库」页显示的列表，勾选框 / 移除按钮的下标对着它。
+    /// 偏好設定「詞庫」頁顯示的列表，勾選框 / 移除按鈕的下標對著它。
     dictionary_list: Vec<DictionaryInfo>,
 
-    /// 当前学习语言；`None` 为关（不显示译文）。
+    /// 當前學習語言；`None` 為關（不顯示譯文）。
     learning_language: Option<Language>,
 
-    /// 打进包里的释义表语言，设置窗口按这个顺序列。
+    /// 打進包裡的釋義表語言，設定視窗按這個順序列。
     languages: Vec<Language>,
 
-    /// 版本号与构建标识，诊断信息里用。
+    /// 版本號與構建標識，診斷資訊裡用。
     version: String,
 
-    /// 见 [`BundleInfo::build`]。
+    /// 見 [`BundleInfo::build`]。
     build: String,
 
-    /// 每页候选数（配置 `[general] page_size`，已夹到 1–9）。
+    /// 每頁候選數（配置 `[general] page_size`，已夾到 1–9）。
     pub page_size: usize,
 
-    /// 候选窗口第一页末尾留给云端词的格数（配置 `[predict] slots`）。
+    /// 候選視窗第一頁末尾留給雲端詞的格數（配置 `[predict] slots`）。
     pub cloud_slots: usize,
 
-    /// 翻页键对（上一页、下一页）。
+    /// 翻頁鍵對（上一頁、下一頁）。
     pub page_keys: (char, char),
 
-    /// 组句中敲会转全角的标点先把高亮候选上屏、再补该标点（配置 `[general] punct_commits`，缺省关）。
+    /// 組句中敲會轉全形的標點先把高亮候選上屏、再補該標點（配置 `[general] punct_commits`，預設關）。
     pub punct_commits: bool,
 
-    /// 配数字键上屏第一 / 第二个译词的修饰键组合（配置 `[shortcut] translation` / `translation_second`）。
+    /// 配數字鍵上屏第一 / 第二個譯詞的修飾鍵組合（配置 `[shortcut] translation` / `translation_second`）。
     pub translation_keys: (Modifiers, Modifiers),
 
-    /// 配数字键删候选的修饰键（配置 `[shortcut] delete_candidate`）。
+    /// 配數字鍵刪候選的修飾鍵（配置 `[shortcut] delete_candidate`）。
     pub delete_keys: Modifiers,
 
-    /// 候选窗口顶行显示的一句临时状态（删了什么词），下一次查询就没了。
+    /// 候選視窗頂行顯示的一句臨時狀態（刪了什麼詞），下一次查詢就沒了。
     pub status: Option<String>,
 
-    /// 输入日志是否在记（配置 `[general] input_log`），换了才重开文件。
+    /// 輸入日誌是否在記（配置 `[general] input_log`），換了才重開檔案。
     input_log_enabled: Option<bool>,
 
-    /// 翻译选中文字的快捷键（配置 `[shortcut] translate_selection`）。
+    /// 翻譯選中文字的快捷鍵（配置 `[shortcut] translate_selection`）。
     pub translate_keys: KeyCombo,
 
-    /// 进行中的「翻译选中文字」；有它时候选窗口显示的是译文（或「翻译中…」），按键先归它处理。
+    /// 進行中的「翻譯選中文字」；有它時候選視窗顯示的是譯文（或「翻譯中…」），按鍵先歸它處理。
     pub translation: Option<TranslationJob>,
 
-    /// 正在显示的提示（候选窗口里一行字，几秒后自动收）。
+    /// 正在顯示的提示（候選窗口裡一行字，幾秒後自動收）。
     pub notice: Option<Notice>,
 
-    /// 组句中的拼音显示在行内、候选窗口还是两处。
+    /// 組句中的拼音顯示在行內、候選視窗還是兩處。
     pub preedit_mode: PreeditMode,
 
-    /// 候选窗口竖排 / 横排（配置 `[general] layout`）。
+    /// 候選視窗豎排 / 橫排（配置 `[general] layout`）。
     pub layout: LayoutMode,
 
-    /// 横排时上下键展开成矩阵的开关（配置 `[general] horizontal_grid`，缺省关）。
+    /// 橫排時上下鍵展開成矩陣的開關（配置 `[general] horizontal_grid`，預設關）。
     pub horizontal_grid: bool,
 
-    /// 英文模式是否给英文候选（配置 `[general] english_candidates`）。
+    /// 英文模式是否給英文候選（配置 `[general] english_candidates`）。
     pub english_candidates: bool,
 
-    /// 上次从系统读到的文本替换（激活输入法时重读），`[general] system_text_replacements` 开着时并进自定义短语。
+    /// 上次從系統讀到的文本替換（啟用輸入法時重讀），`[general] system_text_replacements` 開著時並進自定義短語。
     text_replacements: Vec<TextReplacement>,
 
-    /// 按应用的行为（配置 `[apps]`）：哪些应用里英文模式不给候选。
+    /// 按應用的行為（配置 `[apps]`）：哪些應用裡英文模式不給候選。
     pub apps: AppsConfig,
 
-    /// 联想结果轮询定时器。
+    /// 聯想結果輪詢定時器。
     pub monitor: PredictMonitor,
 
-    /// 进行中的云服务连通性测试（「云服务」页「测试连接」按钮）；没在测为 `None`。
+    /// 進行中的雲服務連通性測試（「雲服務」頁「測試連線」按鈕）；沒在測為 `None`。
     cloud_test: Option<ConnectionTest>,
 
-    /// 连通性测试的轮询定时器。
+    /// 連通性測試的輪詢定時器。
     cloud_test_monitor: CloudTestMonitor,
 
-    /// 本地整句模型的防抖与轮询定时器。
+    /// 本地整句模型的防抖與輪詢定時器。
     rescore: RescoreMonitor,
 
-    /// 正在后台加载的模型；加载完接到 Engine 上就清掉。
+    /// 正在後臺載入的模型；載入完接到 Engine 上就清掉。
     model_loader: Option<
         std::sync::mpsc::Receiver<
             Result<Box<dyn qingjian_core::sentence::SentenceScorer>, qingjian_neural::NeuralError>,
         >,
     >,
 
-    /// 上次套用的 `[model]`，变了才重载 / 卸载。
+    /// 上次套用的 `[model]`，變了才過載 / 解除安裝。
     applied_model: Option<LocalModelConfig>,
 
-    /// 检查更新；拿不到数据目录时没有。
+    /// 檢查更新；拿不到資料目錄時沒有。
     updates: Option<qingjian_update::Checker>,
 
-    /// 菜单与「关于」页上正显示的更新状态，变了才刷界面。
+    /// 選單與「關於」頁上正顯示的更新狀態，變了才刷介面。
     update_status: UpdateStatus,
 
-    /// 当前会话的候选、高亮、页码、preedit。
+    /// 當前會話的候選、高亮、頁碼、preedit。
     pub session: Session,
 
-    /// 组句中到达的整句补全，Tab 接受。
+    /// 組句中到達的整句補全，Tab 接受。
     pub sentence: Option<String>,
 
-    /// 最近一次绘制时的光标矩形，联想结果到达后在同一位置重画。
+    /// 最近一次繪製時的游標矩形，聯想結果到達後在同一位置重畫。
     pub anchor: NSRect,
 }
 
@@ -197,19 +197,19 @@ thread_local! {
     static HOST: RefCell<Option<Host>> = const { RefCell::new(None) };
 }
 
-/// 激活期间学习数据最多隔这么久落一次盘。
+/// 啟用期間學習資料最多隔這麼久落一次盤。
 const LEARNING_FLUSH_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
 
-/// 输入统计文件名，与学习数据同目录（按天一行，见 `qingjian-learning::UsageStats`）。
+/// 輸入統計檔名，與學習資料同目錄（按天一行，見 `qingjian-learning::UsageStats`）。
 const USAGE_FILE: &str = "usage.tsv";
 
-/// 检查更新的结果文件名，与学习数据同目录（见 `qingjian-update::UpdateState`）。
+/// 檢查更新的結果檔名，與學習資料同目錄（見 `qingjian-update::UpdateState`）。
 const UPDATE_STATE_FILE: &str = "update.json";
 
-/// 词汇记录文件名，与学习数据同目录（一个译词一行，见 `qingjian-learning::VocabularyBook`）。
+/// 詞彙記錄檔名，與學習資料同目錄（一個譯詞一行，見 `qingjian-learning::VocabularyBook`）。
 const VOCABULARY_FILE: &str = "user-vocab.tsv";
 
-/// 可能打进包里的释义表语言，按这个顺序在设置里列出；文件不存在的不列。
+/// 可能打進包裡的釋義表語言，按這個順序在設定裡列出；檔案不存在的不列。
 const GLOSSARY_LANGUAGES: [Language; 4] = [
     Language::English,
     Language::Japanese,
@@ -217,11 +217,11 @@ const GLOSSARY_LANGUAGES: [Language; 4] = [
     Language::Vietnamese,
 ];
 
-/// 在单例上执行操作。未初始化、不在主线程、或正处在另一次 `with` 之内（重入）时返回 `None`。
+/// 在單例上執行操作。未初始化、不在主執行緒、或正處在另一次 `with` 之內（重入）時返回 `None`。
 ///
-/// 重入是真会发生的：闭包里若碰了应用那边的东西（读上下文、取光标位置、插入文字），IMK 会在等应用回话时
-/// 跑一轮 run loop，`deactivateServer:` 这类回调就可能在这时进来；这时再 `borrow_mut` 就是 panic 加进程退出。
-/// 所以借不到就记一条日志放过这次调用，调用方本来就都按 `None` 处理；根治靠把 IPC 放在借用之外。
+/// 重入是真會發生的：閉包裡若碰了應用那邊的東西（讀上下文、取游標位置、插入文字），IMK 會在等應用回話時
+/// 跑一輪 run loop，`deactivateServer:` 這類回撥就可能在這時進來；這時再 `borrow_mut` 就是 panic 加程序退出。
+/// 所以借不到就記一條日誌放過這次呼叫，呼叫方本來就都按 `None` 處理；根治靠把 IPC 放在借用之外。
 pub fn with<R>(f: impl FnOnce(&mut Host) -> R) -> Option<R> {
     HOST.with(|host| match host.try_borrow_mut() {
         Ok(mut guard) => guard.as_mut().map(f),

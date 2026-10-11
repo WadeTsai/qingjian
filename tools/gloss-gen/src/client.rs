@@ -10,21 +10,21 @@ use async_openai::types::chat::{
 
 use crate::error::GlossError;
 
-/// 一批词的回复上限：40 个词、每个不到 100 token。
+/// 一批詞的回覆上限：40 個詞、每個不到 100 token。
 const MAX_TOKENS: u32 = 6000;
 
-/// 词典条目要稳定。
+/// 詞典條目要穩定。
 const TEMPERATURE: f32 = 0.2;
 
-/// OpenAI 兼容聊天接口：一段 system + 一段 user 进，JSON 文本出。
+/// OpenAI 相容聊天介面：一段 system + 一段 user 進，JSON 文本出。
 pub struct LlmClient {
-    /// 底层客户端。
+    /// 底層客戶端。
     client: Client<OpenAIConfig>,
 
     /// 模型名。
     model: String,
 
-    /// 单个请求超时。
+    /// 單個請求超時。
     timeout: Duration,
 }
 
@@ -45,7 +45,7 @@ impl LlmClient {
             ChatCompletionRequestSystemMessage::from(system).into(),
             ChatCompletionRequestUserMessage::from(user).into(),
         ];
-        // DeepSeek V4 缺省思考，词典条目不需要，关掉省钱省时间
+        // DeepSeek V4 預設思考，詞典條目不需要，關掉省錢省時間
         let body = CreateChatCompletionRequestArgs::default()
             .model(&self.model)
             .messages(messages)

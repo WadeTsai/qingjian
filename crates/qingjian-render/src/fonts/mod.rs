@@ -1,7 +1,7 @@
-//! 字体库：不扫系统字体目录（fontdb 全扫几百毫秒、几十 MB），按平台清单只加载界面字体、中文、日文、emoji 几个文件。
+//! 字型庫：不掃系統字型目錄（fontdb 全掃幾百毫秒、幾十 MB），按平臺清單隻載入介面字型、中文、日文、emoji 幾個檔案。
 //!
-//! 文件走 fontdb 的 mmap 加载，只解析名字表与 cmap，Apple Color Emoji 那种 190 MB 的文件也只在用到字形时才读页。
-//! 中日同形字按 locale 回退（cosmic-text 的平台回退表：zh-CN → PingFang SC，ja → Hiragino Sans）。
+//! 檔案走 fontdb 的 mmap 載入，只解析名字表與 cmap，Apple Color Emoji 那種 190 MB 的檔案也只在用到字形時才讀頁。
+//! 中日同形字按 locale 回退（cosmic-text 的平臺回退表：zh-CN → PingFang SC，ja → Hiragino Sans）。
 
 #[cfg(target_os = "windows")]
 pub mod directwrite;
@@ -34,10 +34,10 @@ use linux as platform;
 use macos as platform;
 
 pub struct FontLibrary {
-    /// 已加载的字体。
+    /// 已載入的字型。
     db: Database,
 
-    /// 界面字体的字族名（`SansSerif` 映射到它）。
+    /// 介面字型的字族名（`SansSerif` 對映到它）。
     ui_family: String,
 
     /// 中日同形字回退用的 locale，如 `zh-CN`。
@@ -45,12 +45,12 @@ pub struct FontLibrary {
 }
 
 impl FontLibrary {
-    /// 按平台清单加载系统字体。`locale` 决定 Han 字形选哪家（`zh-CN` / `zh-TW` / `ja`）。
+    /// 按平臺清單載入系統字型。`locale` 決定 Han 字形選哪家（`zh-CN` / `zh-TW` / `ja`）。
     pub fn system(locale: &str) -> Result<Self, RenderError> {
         Self::build(locale, None)
     }
 
-    /// 界面字体换成用户指定的字族，系统字体仍加载在后面当回退；指定的字体一个文件都没加载到或名字对不上就退回系统字体。
+    /// 介面字型換成使用者指定的字族，系統字型仍載入在後面當回退；指定的字型一個檔案都沒載入到或名字對不上就退回系統字型。
     pub fn with_ui_font(locale: &str, ui_font: &UiFont) -> Result<Self, RenderError> {
         Self::build(locale, Some(ui_font))
     }
@@ -86,8 +86,8 @@ impl FontLibrary {
                 .unwrap_or_else(|| "sans-serif".to_owned())
         });
         db.set_sans_serif_family(ui_family.clone());
-        // 中文脚本字体必须真有 swash 能栅格化的轮廓（macOS 26+ 的苹方是私有的 hvgl 可变轮廓，读不出字形）；
-        // emoji 走 sbix 位图、没有轮廓表，不做这项检查
+        // 中文指令碼字型必須真有 swash 能柵格化的輪廓（macOS 26+ 的蘋方是私有的 hvgl 可變輪廓，讀不出字形）；
+        // emoji 走 sbix 點陣圖、沒有輪廓表，不做這項檢查
         for path in platform::script_fonts(locale) {
             load_outline_font(&mut db, &path);
         }
@@ -107,7 +107,7 @@ impl FontLibrary {
         })
     }
 
-    /// 已加载的字族名，按加载顺序去重。
+    /// 已載入的字族名，按載入順序去重。
     pub fn families(&self) -> Vec<String> {
         let mut names: Vec<String> = Vec::new();
         for face in self.db.faces() {
@@ -120,7 +120,7 @@ impl FontLibrary {
         names
     }
 
-    /// 已加载的字体文件，按加载顺序去重。快照测试拿它判断字体环境变没变。
+    /// 已載入的字型檔案，按載入順序去重。快照測試拿它判斷字型環境變沒變。
     pub fn font_files(&self) -> Vec<PathBuf> {
         let mut files: Vec<PathBuf> = Vec::new();
         for face in self.db.faces() {
@@ -139,7 +139,7 @@ impl FontLibrary {
         &self.ui_family
     }
 
-    /// 交给 cosmic-text。
+    /// 交給 cosmic-text。
     pub(crate) fn into_font_system(self) -> FontSystem {
         let mut db = self.db;
         db.set_sans_serif_family(self.ui_family);
@@ -147,10 +147,10 @@ impl FontLibrary {
     }
 }
 
-/// 界面字体用的字族。
+/// 介面字型用的字族。
 pub(crate) const UI_FAMILY: Family<'static> = Family::SansSerif;
 
-/// 依次尝试，加载成功的第一个文件的第一张面。
+/// 依次嘗試，載入成功的第一個檔案的第一張面。
 fn load_first(db: &mut Database, paths: &[PathBuf]) -> Option<cosmic_text::fontdb::ID> {
     paths.iter().find_map(|path| {
         let before: Vec<_> = db.faces().map(|f| f.id).collect();
@@ -160,7 +160,7 @@ fn load_first(db: &mut Database, paths: &[PathBuf]) -> Option<cosmic_text::fontd
     })
 }
 
-/// 文件存在且能解析就加载；返回是否加载了。
+/// 檔案存在且能解析就載入；返回是否載入了。
 fn load(db: &mut Database, path: &Path) -> bool {
     if !path.is_file() {
         return false;
@@ -174,7 +174,7 @@ fn load(db: &mut Database, path: &Path) -> bool {
     }
 }
 
-/// 存在、能解析、且至少有一张面带 swash 能栅格化的轮廓（`glyf` / `CFF `）才加载。
+/// 存在、能解析、且至少有一張面帶 swash 能柵格化的輪廓（`glyf` / `CFF `）才載入。
 fn load_outline_font(db: &mut Database, path: &Path) {
     let outline = File::open(path).and_then(|mut file| has_rasterizable_outline(&mut file));
     match outline {
@@ -190,13 +190,13 @@ fn load_outline_font(db: &mut Database, path: &Path) {
     }
 }
 
-/// 文件里任一面的轮廓表是 swash 能栅格化的 `glyf` / `CFF `。macOS 26+ 的苹方（PingFangUI.ttc）把轮廓
-/// 换成了私有的 `hvgl`（可变字体，无公开文档，googlefonts/fontations#1369 在跟进支持），swash 读不出
-/// 任何字形，中文候选会画成空白；这种文件不加载，让回退落到清单里还能栅格化的字体上。
+/// 檔案裡任一面的輪廓表是 swash 能柵格化的 `glyf` / `CFF `。macOS 26+ 的蘋方（PingFangUI.ttc）把輪廓
+/// 換成了私有的 `hvgl`（可變字型，無公開文件，googlefonts/fontations#1369 在跟進支援），swash 讀不出
+/// 任何字形，中文候選會畫成空白；這種檔案不載入，讓回退落到清單裡還能柵格化的字型上。
 fn has_rasterizable_outline(file: &mut (impl Read + Seek)) -> std::io::Result<bool> {
     let mut head = [0; 12];
     file.read_exact(&mut head)?;
-    // TTC：tag(4) 版本(4) 面数(4) 后跟每张面 sfnt 头的偏移；单 sfnt 文件只有开头一张面
+    // TTC：tag(4) 版本(4) 面數(4) 後跟每張面 sfnt 頭的偏移；單 sfnt 檔案只有開頭一張面
     let face_offsets: Vec<u64> = if head.starts_with(b"ttcf") {
         let count = u32::from_be_bytes(head[8..].try_into().expect("head 有 12 字节")).min(4096);
         (0..count)
@@ -233,7 +233,7 @@ mod tests {
 
     use std::io::Cursor;
 
-    /// 最小 sfnt：12 字节头（版本 + 表数 + 三个检索字段）+ 只填 tag 的表记录，偏移与长度本函数不看。
+    /// 最小 sfnt：12 位元組頭（版本 + 表數 + 三個檢索欄位）+ 只填 tag 的表記錄，偏移與長度本函式不看。
     fn sfnt(version: u32, tags: &[&[u8]]) -> Vec<u8> {
         let mut out = Vec::new();
         out.extend_from_slice(&version.to_be_bytes());
@@ -246,7 +246,7 @@ mod tests {
         out
     }
 
-    /// 只有头的 TTC，面偏移由调用方按真实布局给。
+    /// 只有頭的 TTC，面偏移由呼叫方按真實佈局給。
     fn ttc(face_offsets: [u32; 2]) -> Vec<u8> {
         let mut out = Vec::new();
         out.extend_from_slice(b"ttcf");
@@ -269,7 +269,7 @@ mod tests {
             u32::from_be_bytes(*b"OTTO"),
             &[b"CFF ", b"head"]
         )));
-        // macOS 26+ 苹方：可变字体，轮廓在私有的 hvgl 表里
+        // macOS 26+ 蘋方：可變字型，輪廓在私有的 hvgl 表裡
         assert!(!rasterizable(&sfnt(
             0x0001_0000,
             &[b"hvgl", b"fvar", b"cmap", b"head"]

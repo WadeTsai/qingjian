@@ -1,3 +1,3 @@
-# Fcitx5 插件
+# Fcitx5 外掛
 
-使用 Fcitx5 默认预编辑和候选面板。用户安装见 [Linux](../../../docs/user/getting-started/linux.md)，构建、协议和测试见 [工程说明](../../../docs/notes/linux-fcitx5.md)。
+使用 Fcitx5 預設預編輯和候選面板。使用者安裝見 [Linux](../../../docs/user/getting-started/linux.md)，構建、協議和測試見 [工程說明](../../../docs/notes/linux-fcitx5.md)。

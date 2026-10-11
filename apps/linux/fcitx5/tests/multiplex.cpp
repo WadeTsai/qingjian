@@ -1,4 +1,4 @@
-//! 真实插件到 Rust Server：128 活跃会话、交错组句、重入、重启和键盘来源。
+//! 真實外掛到 Rust Server：128 活躍會話、交錯組句、重入、重啟和鍵盤來源。
 #include "qingjian.h"
 #include "key/mapping.h"
 #include "support/server.h"
@@ -23,7 +23,7 @@ int main() {
         contexts.push_back(std::make_unique<Input>(instance.inputContextManager()));
         type(*contexts.back(), i % 2 ? "hao" : "ni");
     }
-    assert(server.sockets() == 2); // 一条监听 socket + 一条插件连接。
+    assert(server.sockets() == 2); // 一條監聽 socket + 一條外掛連線。
     for (size_t i = 0; i < contexts.size(); ++i) {
         assert(engine.process(contexts[i].get(), fcitx::Key(FcitxKey_space)));
         assert(contexts[i]->committed == (i % 2 ? "好" : "你"));
@@ -37,7 +37,7 @@ int main() {
     a.preeditHook = [&] { type(b, "hao"); assert(engine.process(&b, fcitx::Key(FcitxKey_space))); };
     assert(engine.process(&a, fcitx::Key(FcitxKey_space)));
     assert(a.committed == "你" && b.committed == "好");
-    // 同一上下文 Reset 重入撤销旧提交，已消费按键仍返回 consumed。
+    // 同一上下文 Reset 重入撤銷舊提交，已消費按鍵仍返回 consumed。
     a.committed.clear(); type(a, "ni");
     a.preeditHook = [&] { fcitx::InputContextEvent event(&a, fcitx::EventType::InputContextReset); engine.reset(entry, event); };
     assert(engine.process(&a, fcitx::Key(FcitxKey_space))); assert(a.committed.empty());
@@ -56,12 +56,12 @@ int main() {
     type(b, "ni"); assert(engine.process(&b, fcitx::Key(FcitxKey_space))); assert(b.committed == "好你");
     tapShift(); a.committed.clear(); type(a, "ni"); assert(engine.process(&a, fcitx::Key(FcitxKey_space))); assert(a.committed == "你");
     b.committed = "好";
-    // 单一上下文的显示回调可以销毁它自己，旧按键仍算消费且无悬空访问。
+    // 單一上下文的顯示回撥可以銷燬它自己，舊按鍵仍算消費且無懸空訪問。
     auto doomed = std::make_unique<Input>(instance.inputContextManager());
     type(*doomed, "ni"); auto *doomedPointer = doomed.get();
     doomed->preeditHook = [&] { doomed.reset(); };
     assert(engine.process(doomedPointer, fcitx::Key(FcitxKey_space)));
-    // 小键盘来源、运算符与 NumLock 关闭导航键。
+    // 小鍵盤來源、運算子與 NumLock 關閉導航鍵。
     for (int digit = 0; digit <= 9; ++digit) {
         auto key = qingjian::mapKey(fcitx::Key(static_cast<fcitx::KeySym>(FcitxKey_KP_0 + digit)));
         assert(key["virtual_key"] == 0x60 + digit && key["character"] == std::string(1, '0' + digit));
@@ -73,13 +73,13 @@ int main() {
                         FcitxKey_KP_3, FcitxKey_KP_Multiply, FcitxKey_KP_4, FcitxKey_KP_Divide,
                         FcitxKey_KP_5, FcitxKey_KP_Decimal, FcitxKey_KP_0}) {
         assert(!engine.process(&a, fcitx::Key(symbol)));
-        a.commitString(fcitx::Key::keySymToUTF8(symbol)); // 应用接收透传键的实际字符。
+        a.commitString(fcitx::Key::keySymToUTF8(symbol)); // 應用接收透傳鍵的實際字元。
     }
     assert(a.committed == "1+2-3*4/5.0");
     type(a, "hao"); assert(engine.process(&a, fcitx::Key(FcitxKey_KP_Enter)));
     assert(a.committed == "1+2-3*4/5.0hao");
     assert(a.preedit().empty());
-    // A 私密，B 普通；密码/禁用 C 不创建新的连接或污染 B。
+    // A 私密，B 普通；密碼/停用 C 不建立新的連線或汙染 B。
     a.setCapabilityFlags(fcitx::CapabilityFlags(fcitx::CapabilityFlag::Preedit) | fcitx::CapabilityFlag::Sensitive);
     type(a, "privateprobe"); type(b, "ni");
     auto *disabledSession = static_cast<qingjian::Session *>(contexts[2]->property("qingjian-session"));
@@ -90,7 +90,7 @@ int main() {
     contexts[2]->setCapabilityFlags(fcitx::CapabilityFlag::Preedit);
     type(*contexts[2], "ni");
     assert(static_cast<qingjian::Session *>(contexts[2]->property("qingjian-session"))->id > disabledId);
-    // 保留旧列表再销毁，旧回调不能提交到后来创建的上下文。
+    // 保留舊列表再銷燬，舊回撥不能提交到後來建立的上下文。
     contexts[3]->focusIn(); type(*contexts[3], "ni");
     auto old = contexts[3]->inputPanel().candidateList(); contexts[3].reset();
     auto replacement = std::make_unique<Input>(instance.inputContextManager());
@@ -118,7 +118,7 @@ int main() {
     auto timer = instance.eventLoop().addTimeEvent(CLOCK_MONOTONIC, fcitx::now(CLOCK_MONOTONIC) + 30000, 0,
         [&](fcitx::EventSourceTime *, uint64_t) { instance.eventLoop().exit(); return false; });
     instance.eventLoop().exec();
-    assert(shared->retired.empty()); // 最后销毁后的空闲回收不依赖后续按键。
+    assert(shared->retired.empty()); // 最後銷燬後的空閒回收不依賴後續按鍵。
     timer.reset();
     const auto finalCommit = replacement->committed;
     engineOwner.reset();

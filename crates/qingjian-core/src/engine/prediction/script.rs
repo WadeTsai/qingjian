@@ -1,9 +1,9 @@
-//! 翻译选中文字的方向：看选区里的文字主要是哪种文字，决定译成学习语言还是译回中文。
+//! 翻譯選中文字的方向：看選區裡的文字主要是哪種文字，決定譯成學習語言還是譯回中文。
 
 use crate::candidate::Language;
 
-/// 选中的文字该译成什么语言：主要是汉字 → 学习语言（学习语言是中文时退到英文）；
-/// 有假名，或者拉丁字母不少于汉字 → 中文。只按字符统计，不猜语种细节，剩下的交给模型（提示词里写了「已是目标语言就译成中文」）。
+/// 選中的文字該譯成什麼語言：主要是漢字 → 學習語言（學習語言是中文時退到英文）；
+/// 有假名，或者拉丁字母不少於漢字 → 中文。只按字元統計，不猜語種細節，剩下的交給模型（提示詞裡寫了「已是目標語言就譯成中文」）。
 pub fn translation_target(text: &str, learning: Language) -> Language {
     let mut han = 0usize;
     let mut kana = 0usize;
@@ -36,7 +36,7 @@ fn is_kana(c: char) -> bool {
     matches!(c as u32, 0x3041..=0x309F | 0x30A0..=0x30FF | 0x31F0..=0x31FF | 0xFF66..=0xFF9F)
 }
 
-/// 带变音符的拉丁字母（café、naïve）也算字母。
+/// 帶變音符的拉丁字母（café、naïve）也算字母。
 fn is_latin_extended(c: char) -> bool {
     matches!(c as u32, 0x00C0..=0x024F) && c.is_alphabetic()
 }
@@ -55,7 +55,7 @@ mod tests {
             translation_target("我想去吃饭。", Language::Japanese),
             Language::Japanese
         );
-        // 没接释义表时学习语言是中文，译成英文
+        // 沒接釋義表時學習語言是中文，譯成英文
         assert_eq!(
             translation_target("我想去吃饭", Language::Chinese),
             Language::English
@@ -92,7 +92,7 @@ mod tests {
             translation_target("Rust 的 borrow checker", Language::English),
             Language::Chinese
         );
-        // 纯标点 / 数字：没有字母也没有汉字，按「不是中文」算，译成中文（模型会原样返回）
+        // 純標點 / 數字：沒有字母也沒有漢字，按「不是中文」算，譯成中文（模型會原樣返回）
         assert_eq!(
             translation_target("2026-09-05", Language::English),
             Language::Chinese

@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-/// Server 对一次按键的处置：DLL 据此决定 TSF 里 `OnKeyDown` 返回吃掉还是放行。
+/// Server 對一次按鍵的處置：DLL 據此決定 TSF 裡 `OnKeyDown` 返回吃掉還是放行。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KeyOutcome {
-    /// 输入法消费了这次按键（进了组句缓冲或触发了上屏 / 翻页等）；DLL 吃掉，应用收不到。
+    /// 輸入法消費了這次按鍵（進了組句緩衝或觸發了上屏 / 翻頁等）；DLL 吃掉，應用收不到。
     Consumed,
 
-    /// 输入法不处理（如没在组句时的普通字符、快捷键）；DLL 放行给应用。
+    /// 輸入法不處理（如沒在組句時的普通字元、快捷鍵）；DLL 放行給應用。
     Passthrough,
 }

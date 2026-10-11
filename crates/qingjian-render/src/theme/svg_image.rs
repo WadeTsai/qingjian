@@ -1,17 +1,17 @@
-//! 主题里的 SVG 图片：加载主题时解析一次，画的时候按要的像素尺寸栅格成位图（缓存几种尺寸），之后与 PNG 走同一条贴图路径。
+//! 主題裡的 SVG 圖片：載入主題時解析一次，畫的時候按要的畫素尺寸柵格成點陣圖（快取幾種尺寸），之後與 PNG 走同一條貼圖路徑。
 //!
-//! SVG 的单位当作点。不读任何外部文件（`<image href="…">` 的路径一律不解析），内嵌位图不解码，`<text>` 不画：
-//! 主题的位图另用 PNG，文字导出前转成轮廓。
+//! SVG 的單位當作點。不讀任何外部檔案（`<image href="…">` 的路徑一律不解析），內嵌點陣圖不解碼，`<text>` 不畫：
+//! 主題的點陣圖另用 PNG，文字匯出前轉成輪廓。
 
 use std::sync::{Arc, Mutex};
 
 use resvg::usvg;
 use tiny_skia::{Pixmap, Transform};
 
-/// 栅格结果最多留几种尺寸：动画中途尺寸会变，旧的按先进先出丢掉。
+/// 柵格結果最多留幾種尺寸：動畫中途尺寸會變，舊的按先進先出丟掉。
 const RASTER_CACHE: usize = 8;
 
-/// 栅格过的尺寸（像素宽高）与位图，新的在后。
+/// 柵格過的尺寸（畫素寬高）與點陣圖，新的在後。
 type Rasters = Vec<((u32, u32), Arc<Pixmap>)>;
 
 pub(crate) struct SvgImage {
@@ -35,13 +35,13 @@ impl SvgImage {
         })
     }
 
-    /// 原始尺寸（SVG 的宽高，当作点）。
+    /// 原始尺寸（SVG 的寬高，當作點）。
     pub(crate) fn size(&self) -> (f32, f32) {
         let size = self.tree.size();
         (size.width(), size.height())
     }
 
-    /// 整张拉伸到 `width` × `height` 像素的位图；尺寸为 0 时为 `None`。
+    /// 整張拉伸到 `width` × `height` 畫素的點陣圖；尺寸為 0 時為 `None`。
     pub(crate) fn raster(&self, width: u32, height: u32) -> Option<Arc<Pixmap>> {
         let mut rasters = self
             .rasters
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn external_files_are_not_read() {
-        // 引用磁盘上真实存在的红色 SVG（SVG 不需要位图解码，读了就画得出来）：不读，画出来什么都没有
+        // 引用磁碟上真實存在的紅色 SVG（SVG 不需要點陣圖解碼，讀了就畫得出來）：不讀，畫出來什麼都沒有
         let outside = std::env::temp_dir().join("qingjian-svg-outside.svg");
         std::fs::write(&outside, SQUARE).unwrap();
         let source = format!(

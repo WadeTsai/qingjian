@@ -1,10 +1,10 @@
-//! 框的填充：纯色（颜色写法同 `color`，可带条件）、线性 / 径向渐变、图片（拉伸或九宫格）。
+//! 框的填充：純色（顏色寫法同 `color`，可帶條件）、線性 / 徑向漸變、圖片（拉伸或九宮格）。
 //!
-//! - 线性：`{ "linear": 90, "stops": ["@a", "@b"] }`，角度同 CSS（0 自下而上、90 自左而右），渐变线长到盒子对角。
-//! - 径向：`{ "radial": [0.5, 0.5], "stops": [...] }`，圆心按盒子宽高的比例，半径到最远的角。
-//! - 色标：颜色（均分），或 `["@a", 0.3]` 带位置（0–1）。
-//! - 图片：`{ "image": "images/bg.png", "slice": [24, 24, 24, 24], "scale": 2 }`，路径相对 `theme.json`；
-//!   `slice` 是九宫格四边切进去的图片像素（上右下左），不写就整张拉伸；`scale` 是一个点对几个图片像素（2 倍图写 2），缺省 1。
+//! - 線性：`{ "linear": 90, "stops": ["@a", "@b"] }`，角度同 CSS（0 自下而上、90 自左而右），漸變線長到盒子對角。
+//! - 徑向：`{ "radial": [0.5, 0.5], "stops": [...] }`，圓心按盒子寬高的比例，半徑到最遠的角。
+//! - 色標：顏色（均分），或 `["@a", 0.3]` 帶位置（0–1）。
+//! - 圖片：`{ "image": "images/bg.png", "slice": [24, 24, 24, 24], "scale": 2 }`，路徑相對 `theme.json`；
+//!   `slice` 是九宮格四邊切進去的圖片畫素（上右下左），不寫就整張拉伸；`scale` 是一個點對幾個圖片畫素（2 倍圖寫 2），預設 1。
 
 use serde::Deserialize;
 
@@ -21,20 +21,20 @@ pub(crate) enum FillSpec {
     },
 
     Radial {
-        /// 圆心，盒子宽高的比例。
+        /// 圓心，盒子寬高的比例。
         radial: [f32; 2],
 
         stops: Vec<StopSpec>,
     },
 
     Image {
-        /// 相对 `theme.json` 的路径。
+        /// 相對 `theme.json` 的路徑。
         image: String,
 
-        /// 九宫格切边（图片像素，上右下左）。
+        /// 九宮格切邊（圖片畫素，上右下左）。
         slice: Option<[f32; 4]>,
 
-        /// 一个点对几个图片像素。
+        /// 一個點對幾個圖片畫素。
         #[serde(default = "default_scale")]
         scale: f32,
     },
@@ -42,14 +42,14 @@ pub(crate) enum FillSpec {
     Color(ColorSpec),
 }
 
-/// 渐变的一个色标。
+/// 漸變的一個色標。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(untagged)]
 pub(crate) enum StopSpec {
-    /// 带位置（0–1）。
+    /// 帶位置（0–1）。
     At(ColorSpec, f32),
 
-    /// 不带位置，按顺序均分。
+    /// 不帶位置，按順序均分。
     Even(ColorSpec),
 }
 
@@ -58,7 +58,7 @@ fn default_scale() -> f32 {
 }
 
 impl FillSpec {
-    /// 用到的全部颜色（校验用）。
+    /// 用到的全部顏色（校驗用）。
     pub(crate) fn colors(&self) -> Vec<&ColorSpec> {
         match self {
             Self::Linear { stops, .. } | Self::Radial { stops, .. } => {

@@ -23,7 +23,7 @@ def main() -> None:
     args = parser.parse_args()
     rows = 0
     with open(args.word_list, encoding="utf-8") as src, open(args.output, "w", encoding="utf-8") as out:
-        out.write("# 编码\t词频（wordfreq 英文 Zipf × 1000）\n")
+        out.write("# 編碼\t詞頻（wordfreq 英文 Zipf × 1000）\n")
         for line in src:
             line = line.rstrip("\n")
             if not line or line.startswith("#"):

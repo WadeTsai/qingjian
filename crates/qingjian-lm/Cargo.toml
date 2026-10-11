@@ -1,6 +1,6 @@
 [package]
 name = "qingjian-lm"
-description = "二元语言模型：从 .qj 或 TSV 加载，供整句转换打分"
+description = "二元語言模型：從 .qj 或 TSV 載入，供整句轉換打分"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

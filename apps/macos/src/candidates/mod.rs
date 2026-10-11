@@ -1,4 +1,4 @@
-//! 候选窗口：自绘 NSPanel 与视图、一帧的数据（preedit / 行 / 页脚）、主题。
+//! 候選視窗：自繪 NSPanel 與檢視、一幀的資料（preedit / 行 / 頁尾）、主題。
 
 mod animation;
 mod bitmap;

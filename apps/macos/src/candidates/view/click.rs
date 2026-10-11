@@ -1,5 +1,5 @@
-//! 鼠标点候选窗口：按位图渲染器给的点击区域认出点中的候选或译词，交给 host 注册的回调上屏。
-//! AppKit 逐项绘制的旧路径没有点击区域，点了不动。
+//! 滑鼠點候選視窗：按點陣圖渲染器給的點選區域認出點中的候選或譯詞，交給 host 註冊的回撥上屏。
+//! AppKit 逐項繪製的舊路徑沒有點選區域，點了不動。
 
 use objc2::DefinedClass;
 use objc2_app_kit::NSEvent;
@@ -7,7 +7,7 @@ use qingjian_render::HitTarget;
 
 use super::CandidateView;
 
-/// 点中候选或译词时调的回调。
+/// 點中候選或譯詞時調的回撥。
 pub type ClickHandler = Box<dyn Fn(HitTarget)>;
 
 impl CandidateView {
@@ -17,7 +17,7 @@ impl CandidateView {
 
     pub(super) fn clicked(&self, event: &NSEvent) {
         let point = self.convertPoint_fromView(event.locationInWindow(), None);
-        // 先放掉位图的借用：回调里上屏会重画这个视图
+        // 先放掉點陣圖的借用：回撥裡上屏會重畫這個檢視
         let target = self
             .ivars()
             .bitmap

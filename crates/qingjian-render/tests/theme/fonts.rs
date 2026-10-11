@@ -1,11 +1,11 @@
-//! 主题字体：样式写的系统字族由壳查文件交给渲染器加载，随主题带的字体从主题目录加载；回退链挑第一个装了的。
-//! 用系统自带的 Georgia 当样例，系统里没有时跳过。
+//! 主題字型：樣式寫的系統字族由殼查檔案交給渲染器載入，隨主題帶的字型從主題目錄載入；回退鏈挑第一個裝了的。
+//! 用系統自帶的 Georgia 當樣例，系統裡沒有時跳過。
 
 use std::path::{Path, PathBuf};
 
 use qingjian_render::{FontLibrary, Renderer, Theme};
 
-/// 这个平台上 Georgia 的文件。
+/// 這個平臺上 Georgia 的檔案。
 fn georgia() -> Option<PathBuf> {
     [
         "/System/Library/Fonts/Supplemental/Georgia.ttf",
@@ -89,7 +89,7 @@ fn bundled_font_loads_from_the_theme_directory() {
 
     let theme = Theme::from_dir(&dir, false).unwrap();
     assert_eq!(theme.font_files(), [dir.join("fonts/bundled.ttf")]);
-    // 随包字体先加载，字体库里有了 Georgia 就不再向壳查
+    // 隨包字型先載入，字型庫裡有了 Georgia 就不再向殼查
     renderer.load_theme_fonts(&theme, |family| panic!("不该查 {family}"));
     assert_eq!(renderer.trace_families("Abc", &theme), ["Georgia"]);
     assert!(Path::new(&theme.font_files()[0]).starts_with(&dir));

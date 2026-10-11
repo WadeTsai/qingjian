@@ -1,23 +1,23 @@
 use serde::{Deserialize, Serialize};
 
-/// 中文模式下按住 Shift 敲的字母怎么处理（`[general] shift_letter`）。
+/// 中文模式下按住 Shift 敲的字母怎麼處理（`[general] shift_letter`）。
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ShiftLetter {
-    /// 拼音原样上屏、这个字母交给应用——两个平台原本的行为。缺省：换掉老用户的习惯得让人自己选。
+    /// 拼音原樣上屏、這個字母交給應用——兩個平臺原本的行為。預設：換掉老使用者的習慣得讓人自己選。
     #[default]
     Passthrough,
 
-    /// 字母进组句缓冲区，按小写参与匹配、原样上屏（回车 / 无候选）时还原大写，
-    /// 所以 `Cpan` 与 `cpan` 一样出「C盘」。英文模式与英文直输段保持原样大小写。
+    /// 字母進組句緩衝區，按小寫參與匹配、原樣上屏（回車 / 無候選）時還原大寫，
+    /// 所以 `Cpan` 與 `cpan` 一樣出「C盤」。英文模式與英文直輸段保持原樣大小寫。
     Compose,
 }
 
 impl ShiftLetter {
-    /// 全部取值，设置界面按这个顺序列出。
+    /// 全部取值，設定介面按這個順序列出。
     pub const ALL: [Self; 2] = [Self::Passthrough, Self::Compose];
 
-    /// 配置文件里的写法。
+    /// 配置檔案裡的寫法。
     pub fn key(self) -> &'static str {
         match self {
             Self::Passthrough => "passthrough",
@@ -25,7 +25,7 @@ impl ShiftLetter {
         }
     }
 
-    /// 界面上的名字。
+    /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
             Self::Passthrough => "交给应用",
@@ -33,7 +33,7 @@ impl ShiftLetter {
         }
     }
 
-    /// 会不会把大写字母收进组句缓冲区。
+    /// 會不會把大寫字母收進組句緩衝區。
     pub fn compose(self) -> bool {
         matches!(self, Self::Compose)
     }

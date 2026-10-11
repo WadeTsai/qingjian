@@ -1,4 +1,4 @@
-//! 真实插件与 Server 的 watcher、UI、提交重入；检查消费结果及应用最终文本。
+//! 真實外掛與 Server 的 watcher、UI、提交重入；檢查消費結果及應用最終文本。
 #include "qingjian.h"
 #include "support/server.h"
 #include "support/input.h"
@@ -16,7 +16,7 @@ qingjian::Session *session(Input &context) {
     return static_cast<qingjian::Session *>(context.property("qingjian-session"));
 }
 }
-// 和既有虚拟键盘测试相同，仅控制桌面可见性；IPC 与 Rust Server 均为真实实现。
+// 和既有虛擬鍵盤測試相同，僅控制桌面可見性；IPC 與 Rust Server 均為真實實現。
 bool fcitx::UserInterfaceManager::isVirtualKeyboardVisible() const { return keyboardVisible; }
 
 int main(int argc, char **argv) {
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         type(engine, *a, "n"); type(engine, *b, "h");
         const auto generation = session(*b)->generation;
         if (scenario == "vkeyboard-focusout") {
-            a->focusOut(); // 框架负责 clientPreedit 的唯一一次提交。
+            a->focusOut(); // 框架負責 clientPreedit 的唯一一次提交。
             fcitx::FocusOutEvent event(a.get()); engine.deactivate(entry, event);
         } else {
             fcitx::InputContextEvent event(a.get(), fcitx::EventType::InputContextInputMethodDeactivated);
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         a->preeditHook = [&] {
             reached = true;
             assert(session(*a)->capabilities.value("sensitive", false) && a->preedit().empty() && a->committed.empty());
-            a.reset(); // capability watcher → syncPrivacy → clear 的当前上下文销毁。
+            a.reset(); // capability watcher → syncPrivacy → clear 的當前上下文銷燬。
         };
         a->setCapabilityFlags(fcitx::CapabilityFlags(fcitx::CapabilityFlag::Preedit) | fcitx::CapabilityFlag::Sensitive);
         assert(reached && !a);
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     if (scenario == "disconnect-destroy") {
         type(engine, *a, "ni"); type(engine, *b, "hao"); type(engine, *c, "ni");
         auto shared = session(*c)->owner.lock();
-        // 按实际安全引用快照顺序选择 A/B，确保销毁的是尚待清窗的下一对象。
+        // 按實際安全引用快照順序選擇 A/B，確保銷燬的是尚待清窗的下一物件。
         std::vector<Input *> order;
         for (const auto &[id, reference] : shared->contexts) {
             (void)id;
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
             assert(first->committed.empty() && second->committed.empty());
             second.reset();
             assert(!engine.process(c.get(), fcitx::Key(FcitxKey_x)));
-            c->commitString("x"); // 清理重入的键只透传一次。
+            c->commitString("x"); // 清理重入的鍵只透傳一次。
             assert(!shared->connection.connected());
         };
         const auto generation = shared->generation;
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     assert(engine.process(original, fcitx::Key(FcitxKey_space)));
     assert(reached && b->committed == "好");
     if (a) {
-        assert(a->committed.empty()); // UI 回调撤销了旧生命周期，但原键不能透传。
+        assert(a->committed.empty()); // UI 回撥撤銷了舊生命週期，但原鍵不能透傳。
         type(engine, *a, "ni "); assert(a->committed == "你");
     }
     type(engine, *b, "ni "); assert(b->committed == "好你" && server.sockets() == 2);

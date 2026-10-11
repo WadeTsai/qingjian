@@ -1,0 +1,93 @@
+# 手動觸發（或推 windows-tw-v* 標籤）：在 GitHub 的 Windows runner 上打青簡的 Windows 安裝包（Inno Setup，.exe），
+# 發到**本倉庫**的 Release 讓 Windows 使用者直接下載。與 release.yml 的 windows job 同一套步驟，
+# 但不要求 releases.json 簽名金鑰、不改版本號門禁：開發版（-dev）也能打，檔名會接 git 短雜湊。
+# 產品資料與本地整句模型仍按 tools/release/data.lock 從上游 qingjian-team/qingjian 的 data-vN Release 下載並校驗。
+name: windows-installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['windows-tw-v*']
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      # 沒有程式碼簽章憑證：Server 不帶 uiAccess（沒簽名的 exe 帶 uiAccess=true 起不來）
+      QINGJIAN_UIACCESS: '0'
+      PYTHON: python
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+        with:
+          toolchain: 1.96.0
+          # 安裝包另帶一份 32 位元 TSF DLL（build.ps1 編）
+          targets: i686-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Fetch product data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tools/release/data-fetch.sh
+          ls -la data/generated data/generated/dicts data/models/hanzhang-zhiwei data/models/hanzhang-tongbian
+
+      # 與 release.yml 同版本（7.1.0，自帶簡體與繁體中文翻譯）。釘死 GitHub Release 上的檔案。
+      - name: Install Inno Setup 7.1.0
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_0/innosetup-7.1.0-x64.exe'
+          $expected = '0362a383ed217d4c4239b5933866dd96d3eb2102737da92f80f6057a4b40df2f'
+          $exe = Join-Path $env:RUNNER_TEMP 'innosetup.exe'
+          Invoke-WebRequest -Uri $url -OutFile $exe
+          $actual = (Get-FileHash -Path $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Inno Setup 安裝程式 SHA-256 不符：$actual" }
+          Start-Process -FilePath $exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -Wait
+          & "${env:ProgramFiles}\Inno Setup 7\ISCC.exe" --version
+
+      - name: Build installer
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File apps\windows\installer\build.ps1
+
+      - name: Publish to this repository's releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' apps/windows/server/Cargo.toml | head -1)"
+          short="$(git rev-parse --short HEAD)"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="windows-tw-v${version}-${short}"
+          fi
+          exe="$(ls target/installer/*.exe | head -1)"
+          sha="$(sha256sum "$exe" | cut -d' ' -f1)"
+          notes="青簡 Windows 安裝包（繁體中文）${version}，建自 ${GITHUB_SHA}。
+
+- 檔案：$(basename "$exe")
+- SHA-256：${sha}
+- 同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下選用「青簡」預設輸出繁體字。
+- 測試版沒有程式碼簽章，SmartScreen 會攔：點「其他資訊 → 仍要執行」。安裝目錄請保持預設的 C:\\Program Files\\Qingjian。"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" "$exe" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$tag" "$exe" --repo "$GITHUB_REPOSITORY" --prerelease \
+              --target "$GITHUB_SHA" --title "青簡 Windows ${version}（繁體中文）" --notes "$notes"
+          fi
+          echo "已發佈：https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag"

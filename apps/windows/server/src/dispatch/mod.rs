@@ -29,7 +29,7 @@ use qingjian_render::Mode;
 pub use self::candidates::{CandidateSink, NoopSink, RenderSettings};
 pub use self::code::find_code_table;
 use self::composed::Composed;
-pub use self::config::RouterConfig;
+pub use self::config::{RouterConfig, enforce_traditional};
 use self::reload::ConfigReload;
 pub use self::reload::{DataDirs, attach_cloud};
 pub use self::rescore::find_model;

@@ -278,8 +278,8 @@ Server 側輔碼接線：`RouterConfig.aux_code_key` / `aux_code_show`（`apply_
 由 Server 經協議下發給 DLL（`InputSettings`，見下文「按鍵行為設定」），改完在下一拍（約 320 ms）生效；
 `ctrl+alt+space` 走 TSF 保留鍵登記（`com/key/preserved.rs` 的 `GUID_SWITCH_MODE`）。系統的 Ctrl + Space（「輸入法/非輸入法切換」）不進勾選項但適配它：
 它翻的「輸入法開 / 關」compartment（`com/mode/sink.rs`）關 = 英文、開 = 中文，我們切模式時把開關寫成一致；開關一變也作廢被截走 Space 的那次「單擊 Ctrl」。
-語言 profile 登記三個（`tsf/src/com/profile/language.rs` 的 `PROFILES`）：「中文(簡體)」0x0804 的「青简」、「中文(台灣)」0x0404 的「青簡」與「青簡注音」，同一個 CLSID、各自固定的 profile GUID，
-`DllRegisterServer` 一起登記、共用一張圖示；每個 profile 帶一組 `ProfileFlags { traditional, zhuyin }`（`profile/flags.rs`）：「中文(台灣)」下的兩個不看 `[general] traditional` 就出繁體，
+語言 profile 登記兩個（`tsf/src/com/profile/language.rs` 的 `PROFILES`）：「中文(台灣)」0x0404 的「青簡」與「青簡注音」，同一個 CLSID、各自固定的 profile GUID，
+`DllRegisterServer` 一起登記、共用一張圖示，並移除早期版本在「中文(簡體)」0x0804 下登記的「青简」（`LEGACY_PROFILES`）；每個 profile 帶一組 `ProfileFlags { zhuyin }`（`profile/flags.rs`），繁體一律報開（Windows 版 Server 也以 `enforce_traditional` 強制 `[general] traditional`），
 「青簡注音」還不看 `[general] scheme`、拼音側按大千注音（與微軟在同一語言下分「注音」「拼音」兩個輸入法一樣，注音使用者在列表裡直接選）。
 DLL 連上 Server 後用 `ITfInputProcessorProfiles::GetActiveLanguageProfile` 查當前是哪個，不是預設（簡體、按配置方案）才發 `ClientMessage::Profile { traditional, zhuyin }`
 （協議 v9 起；`zhuyin` 欄位是同一版本週期內補的、`serde(default)`，協議號不再升；開會話預設按簡體 + 配置方案），同一執行緒在 profile 間切換由 `ITfActiveLanguageProfileNotifySink` 收到再報；

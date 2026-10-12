@@ -127,10 +127,10 @@ pub enum ClientMessage {
         session: SessionId,
     },
 
-    /// 這個會話所線上程用的是青簡的哪個語言 profile（v9 起）：Windows 上青簡在「中文(簡體)」下登記「青简」，
-    /// 「中文(台灣)」下登記「青簡」與「青簡注音」。「中文(台灣)」下的兩個不看 `[general] traditional` 就出繁體
-    ///（配置開著時全都出繁體）；「青簡注音」還不看 `[general] scheme`、按大千注音解鍵。
-    /// 開會話後不是預設 profile（簡體、按配置方案）才報一次，之後同一執行緒在 profile 間切換再報；
+    /// 這個會話所線上程用的是青簡的哪個語言 profile（v9 起）：Windows 上青簡只在「中文(台灣)」下登記「青簡」與「青簡注音」
+    ///（早期版本還在「中文(簡體)」下登記過一個，已移除；Windows 版 Server 一律繁體輸出）。
+    /// 繁體的 profile 不看 `[general] traditional` 就出繁體；「青簡注音」還不看 `[general] scheme`、按大千注音解鍵。
+    /// 開會話後不是預設 profile（拼音、按配置方案）才報一次，之後同一執行緒在 profile 間切換再報；
     /// 沒有 profile 概念的平臺（Linux）不發，Server 按預設 profile 算。不等回話。
     Profile {
         /// 會話標識。

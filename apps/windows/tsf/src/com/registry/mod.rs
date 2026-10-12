@@ -1,5 +1,6 @@
 //! 自注冊：寫 COM 的 InprocServer32，經 `ITfInputProcessorProfiles` / `ITfCategoryMgr` 把青簡登記成鍵盤類文本服務，
-//! 語言 profile 在「中文(簡體)」下登記一個、「中文(台灣)」下登記兩個（拼音與注音，見 [`crate::com::profile::language`]）。
+//! 語言 profile 只在「中文(台灣)」下登記兩個（拼音與注音，見 [`crate::com::profile::language`]）；
+//! 早期版本在「中文(簡體)」下登記過的那個，註冊時先拿掉再登記新的，升級後列表裡不再有簡體的青簡。
 //! 寫的是 `HKEY_CLASSES_ROOT`，所以 regsvr32 要管理員。輸入法圖示檔案在 [`icon`]。
 
 mod icon;
@@ -18,7 +19,7 @@ use windows::Win32::UI::TextServices::{
 use windows::core::{GUID, Result};
 use windows_registry::CLASSES_ROOT;
 
-use crate::com::profile::language::PROFILES;
+use crate::com::profile::language::{LEGACY_PROFILES, PROFILES};
 use crate::com::{CLSID_QINGJIAN, CLSID_QINGJIAN_STR, SERVICE_DESCRIPTION};
 
 /// 除「鍵盤類 TIP」外還要宣告沉浸式 / 系統托盤等能力，否則 Win10/11 的輸入切換器會把它過濾掉（表現為「裝上又消失」）。
@@ -60,11 +61,17 @@ fn register_profiles() -> Result<()> {
         let profiles: ITfInputProcessorProfiles = unsafe {
             CoCreateInstance(&CLSID_TF_InputProcessorProfiles, None, CLSCTX_INPROC_SERVER)?
         };
-        // 三個 profile 共用一張圖示。
+        // 兩個 profile 共用一張圖示。
         let icon = icon::install()
             .map(|path| wide_z(&path.to_string_lossy()))
             .unwrap_or_else(|| vec![0]);
         unsafe { profiles.Register(&CLSID_QINGJIAN)? };
+        // 升級自還登記著簡體 profile 的版本：先把它拿掉（沒登記過就是個空操作，失敗也不擋註冊）。
+        for legacy in &LEGACY_PROFILES {
+            let _ = unsafe {
+                profiles.RemoveLanguageProfile(&CLSID_QINGJIAN, legacy.langid, &legacy.guid)
+            };
+        }
         for profile in &PROFILES {
             // AddLanguageProfile 按 null 掃描讀字串，不補 0 會多讀相鄰記憶體（曾顯示成「青簡C」）。
             let description = wide_z(profile.description);
@@ -106,7 +113,7 @@ fn unregister_profiles() -> Result<()> {
             )
         } {
             unsafe {
-                for profile in &PROFILES {
+                for profile in PROFILES.iter().chain(LEGACY_PROFILES.iter()) {
                     let _ = profiles.RemoveLanguageProfile(
                         &CLSID_QINGJIAN,
                         profile.langid,

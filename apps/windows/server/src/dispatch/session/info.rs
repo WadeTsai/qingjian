@@ -14,7 +14,8 @@ pub(crate) struct SessionInfo {
     pub(crate) protocol: u32,
 
     /// 該會話用的是繁體的語言 profile（「中文(台灣)」下的青簡 / 青簡注音，DLL 隨 `ClientMessage::Profile` 報來）：
-    /// 不看 `[general] traditional` 就出繁體。開會話時按簡體算，DLL 只在不是預設 profile 時才報。
+    /// 不看 `[general] traditional` 就出繁體。開會話時按不是算，DLL 只在不是預設 profile 時才報。
+    /// Windows 版的 Server 配置已強制繁體（`config::enforce_traditional`），這一位只在 Router 作為庫使用時有分別。
     pub(crate) traditional: bool,
 
     /// 該會話用的是注音的語言 profile（「中文(台灣)」下的青簡注音）：不看 `[general] scheme`，拼音側按大千注音。

@@ -23,7 +23,7 @@ impl TextService_Impl {
                 log("已連上 Server");
                 // 按鍵行為設定隨 `OpenSession` 的回包一起下來（DLL 不讀配置檔案，AppContainer 裡讀不到）。
                 self.apply_input_settings(input);
-                // Server 開會話按「中文(簡體)」的青簡算；本執行緒用的是「中文(台灣)」的青簡 / 青簡注音就告訴它。
+                // Server 開會話按「中文(台灣)」的青簡（拼音）算；本執行緒用的是青簡注音就告訴它。
                 self.report_profile();
             }
             Err(error) => {

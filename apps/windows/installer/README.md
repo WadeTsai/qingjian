@@ -30,7 +30,7 @@ Server 與設定程式按 **exe 相對**定位隨包資源（`qingjian_platform:
 2. **應用容器許可權**：`icacls` 給安裝目錄加 `ALL APPLICATION PACKAGES`（SID `*S-1-15-2-1`）讀+執行。
    不加的話 UWP/AppContainer 應用（工作列搜尋、設定）讀不到 DLL，切不到青簡。
 3. **註冊文本服務**：64 位 DLL 用 `regsvr32`、32 位 DLL 用 `SysWOW64\regsvr32`，各註冊一次（各自寫進自己檢視的 HKCR，`CTF\TIP` 兩邊共用；要管理員——安裝程式本就提權）。
-   DLL 自己把語言 profile 登記在「中文(簡體)」與「中文(台灣)」兩種語言下（後者有「青簡」與「青簡注音」兩個），繁體中文系統的使用者在自己的語言下就能加上。
+   DLL 自己把語言 profile 只登記在「中文(台灣)」語言下（「青簡」與「青簡注音」兩個，都出繁體），並移除早期版本登記在「中文(簡體)」下的那個；沒裝這個語言的系統要先加語言。
    安裝程式介面隨系統語言顯示簡體或繁體（`[Languages]` 兩條；快捷方式與啟動項名字不隨語言變，免得升級時留下兩套）。
 4. **清舊 DLL**：裝完刪歷次版本留下的 `qingjian_tsf*.dll`，仍被應用佔用的登記成重啟後刪（`RestartReplace`）。
 5. **登入自啟**：「啟動」資料夾放 Server 快捷方式（Explorer 走 ShellExecute 拉起才拿到 uiAccess；計劃任務拿不到）。

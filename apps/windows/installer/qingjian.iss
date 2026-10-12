@@ -24,8 +24,8 @@
 #ifndef AppVersionNumeric
   #define AppVersionNumeric AppVersion
 #endif
-#define AppName "青简"
-#define Publisher "青简"
+#define AppName "青簡"
+#define Publisher "青簡"
 #define WebsiteUrl "https://qingjian.im"
 ; 指令碼相對倉庫根（ime/）：installer → windows → apps → ime
 #define Repo "..\..\.."
@@ -63,13 +63,14 @@ ShowLanguageDialog=auto
 [Languages]
 ; 簡體與繁體兩套介面文案（Inno Setup 7.0.2 起兩份翻譯都隨編譯器帶，見 build.ps1 對 ISCC 版本的要求）。
 ; 快捷方式、程式組、啟動項的名字不隨語言變：升級時換了語言會留下另一套同功能的快捷方式（啟動項會起兩個 Server）。
+; 名字固定用繁體「青簡」；早期版本用的簡體「青简」那套在 [InstallDelete] 裡清掉，否則同樣會留兩套。
 Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "cht"; MessagesFile: "compiler:Languages\ChineseTraditional.isl"
 
 [Messages]
 ; 完成頁：DLL 會裝進每個應用程序，裝之前就開著的應用要用新版必須重啟（見檔案頭「升級」）。
 ; 這是最容易被誤解成「設定/新版沒生效」的一點，所以放在完成頁明說。
-chs.FinishedLabel=安装完成。请注销后重新登录（或重启电脑），青简才会在所有应用里生效。%n%n不方便注销的话，先关掉再重新打开要打字的应用也可以。%n%n本版本只支持繁体中文：青简只登记在「中文(台灣)」语言下，有「青簡」（拼音）与「青簡注音」（注音）两个，都输出繁体。系统没装「中文(台灣)」语言的，请先到「设置 → 时间和语言 → 语言和区域 → 添加语言」加上，再在它的「语言选项 → 添加键盘」里加入青简。
+chs.FinishedLabel=安装完成。请注销后重新登录（或重启电脑），青簡才会在所有应用里生效。%n%n不方便注销的话，先关掉再重新打开要打字的应用也可以。%n%n本版本只支持繁体中文：青簡只登记在「中文(台灣)」语言下，有「青簡」（拼音）与「青簡注音」（注音）两个，都输出繁体。系统没装「中文(台灣)」语言的，请先到「设置 → 时间和语言 → 语言和区域 → 添加语言」加上，再在它的「语言选项 → 添加键盘」里加入青簡。
 cht.FinishedLabel=安裝完成。請登出後重新登入（或重新啟動電腦），青簡才會在所有應用程式裡生效。%n%n不方便登出的話，先關掉再重新開啟要打字的應用程式也可以。%n%n本版本只支援繁體中文：青簡只登記在「中文(台灣)」語言下，有「青簡」（拼音）與「青簡注音」（注音，鍵盤排列可在設定裡選標準或倚天）兩個，都輸出繁體字。若輸入法列表裡沒有自動出現，從「設定 → 時間與語言 → 語言與地區 → 中文(台灣) → 語言選項 → 新增鍵盤」加入。
 
 [CustomMessages]
@@ -121,14 +122,14 @@ Source: "{#Repo}\assets\sample\dict.tsv";        DestDir: "{app}\assets\sample";
 Source: "{#Repo}\target\release\qingjian-server.exe";   DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\青简设置"; Filename: "{app}\qingjian-settings.exe"; IconFilename: "{app}\qingjian.ico"
-Name: "{group}\卸载青简"; Filename: "{uninstallexe}"
+Name: "{group}\青簡設定"; Filename: "{app}\qingjian-settings.exe"; IconFilename: "{app}\qingjian.ico"
+Name: "{group}\解除安裝青簡"; Filename: "{uninstallexe}"
 ; 登入自啟：登入時 Explorer 走 ShellExecute 拉起本快捷方式 → AppInfo 授予 uiAccess，候選窗才能蓋過商店 / 工作列搜尋。
 ; 用 {commonstartup}（所有使用者「啟動」資料夾）而非 {userstartup}：本安裝器是 admin 機器級安裝，
 ; admin 模式下寫每使用者區會落到「誰提權就寫誰」的 profile（Inno 會告警且可能不是目標使用者）；
 ; 機器級「啟動」項對每個登入使用者都在其會話裡由該使用者的 Explorer 拉起，仍是 per-user 執行、仍授予 uiAccess。
 ; （計劃任務直接拉起拿不到 uiAccess，故不用 schtasks。）
-Name: "{commonstartup}\青简 Server"; Filename: "{app}\qingjian-server.exe"; WorkingDir: "{app}"; IconFilename: "{app}\qingjian.ico"
+Name: "{commonstartup}\青簡 Server"; Filename: "{app}\qingjian-server.exe"; WorkingDir: "{app}"; IconFilename: "{app}\qingjian.ico"
 
 [Run]
 ; ① UWP/AppContainer 應用要能讀安裝目錄才能載入 DLL（*S-1-15-2-1 = ALL APPLICATION PACKAGES，按 SID 與語言無關）。
@@ -161,6 +162,10 @@ Filename: "{syswow64}\regsvr32.exe"; Parameters: "/u /s ""{app}\{#TsfDll32}"""; 
 [InstallDelete]
 ; 更早版本裝在當前使用者「啟動」資料夾裡的自啟快捷方式：與機器級那份並存會起兩個 Server（兩條狀態條）。
 Type: files; Name: "{userstartup}\Qingjian Server.lnk"
+; 產品名從簡體「青简」改成繁體「青簡」之前的版本留下的程式組與啟動項：程式組整個資料夾刪（裡面只有我們的兩個快捷方式），
+; 啟動項不刪會與「青簡 Server」並存、登入起兩個 Server。本安裝器一直是 admin 機器級安裝，所以在 {commonprograms} / {commonstartup}。
+Type: filesandordirs; Name: "{commonprograms}\青简"
+Type: files; Name: "{commonstartup}\青简 Server.lnk"
 ; 更早版本裝的模型三件套（現在只帶正式命名的 .qjm）：留著白佔 56 MB。
 Type: files; Name: "{app}\data\model\model.safetensors"
 Type: files; Name: "{app}\data\model\config.json"

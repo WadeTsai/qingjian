@@ -119,7 +119,7 @@ extern "system" fn DllRegisterServer() -> HRESULT {
     match registry::register() {
         Ok(()) => S_OK,
         Err(error) => {
-            log::log(&format!("DllRegisterServer 失败: {error}"));
+            log::log(&format!("DllRegisterServer 失敗: {error}"));
             error.code()
         }
     }

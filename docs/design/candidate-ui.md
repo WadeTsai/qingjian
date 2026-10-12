@@ -189,13 +189,13 @@ CLI 用 `--fuzzy z-zh,n-l` 或 `--fuzzy all` 臨時開。
 
 ### 雙拼（預設關，`[general] shuangpin`）
 
-七套方案：小鶴（`xiaohe`）、自然碼（`ziranma`）、微軟（`microsoft`）、搜狗（`sogou`）、智慧ABC（`abc`）、小浪（`xiaolang`）、首道（`shoudao`）。鍵位表在 Core `shuangpin::table`，
-按 Rime 的 `double_pinyin*.schema.yaml` 核對（搜狗來自 rime-ice 的整理，小浪來自使用者提供的搜狗小浪雙拼與 Rime 配置，智慧ABC 按公開鍵位資料核對，首道按作者倉庫 shoudaoshuangpin/shoudaoshouyouplus 的鍵點陣圖、並與永珍拼音的拼寫運算對過），每套方案對全部音節做往返測試；微軟與搜狗只差微軟的 `v` 鍵兼作 üe。
+七套方案：小鶴（`xiaohe`）、自然碼（`ziranma`）、微軟（`microsoft`）、搜狗（`sogou`）、智能ABC（`abc`）、小浪（`xiaolang`）、首道（`shoudao`）。鍵位表在 Core `shuangpin::table`，
+按 Rime 的 `double_pinyin*.schema.yaml` 核對（搜狗來自 rime-ice 的整理，小浪來自使用者提供的搜狗小浪雙拼與 Rime 配置，智能ABC 按公開鍵位資料核對，首道按作者倉庫 shoudaoshuangpin/shoudaoshouyouplus 的鍵點陣圖、並與永珍拼音的拼寫運算對過），每套方案對全部音節做往返測試；微軟與搜狗只差微軟的 `v` 鍵兼作 üe。
 開著時緩衝區裡存的仍是敲的鍵，Engine 在切分前把鍵兩兩配對解成全拼（音節之間自動帶 `'`，沒有切分歧義），
 之後查詞、整句、雲聯想、學習全部走全拼那一套：拼音行顯示解出來的全拼（`nihc` → `ni'hao`），學習按全拼記（`user-choices.tsv` 的鍵與全拼共用，切回全拼也受益），
 上屏消耗按「候選蓋住幾個音節、每個音節幾個鍵」換算回緩衝區（`kdfave` 選 開發 吃掉 4 個鍵，剩 `ve`）。
 末尾落單的一鍵當聲母 / 母音前綴出簡拼候選（`kdf` → kai f…）；配不出音節的鍵起原樣留作尾巴（`nibl` → `ni'bl`）。
-零聲母：小鶴 / 自然碼寫 `aa` `ai` `ah`（a、ai、ang）一族，微軟 / 搜狗寫 `o` + 韻母鍵（`oa` `ol` `oh`），雙寫母音的寫法也認。智慧ABC 只認 `o` + 韻母鍵，`aa` / `ee` 解為 zha / che。
+零聲母：小鶴 / 自然碼寫 `aa` `ai` `ah`（a、ai、ang）一族，微軟 / 搜狗寫 `o` + 韻母鍵（`oa` `ol` `oh`），雙寫母音的寫法也認。智能ABC 只認 `o` + 韻母鍵，`aa` / `ee` 解為 zha / che。
 微軟 / 搜狗的 `;` 是 ing：組句中末尾有落單聲母時敲 `;` 進緩衝區（`x;` → xing），其他時候仍是標點，殼問 `Engine::takes_semicolon`。
 
 雙拼下 v / u / i 都是音節鍵，模式鍵換成對應的大寫字母（`ModeKeys::shifted`，搜狗 / 微軟雙拼的做法）：中文模式、沒在組句時 `Shift`+`V` / `Shift`+`U` 進表示式 / 問字，

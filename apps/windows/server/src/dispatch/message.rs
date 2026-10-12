@@ -17,14 +17,14 @@ impl Router {
                 app,
                 protocol,
             } => {
-                tracing::debug!(?session, app, protocol, "会话打开");
+                tracing::debug!(?session, app, protocol, "會話開啟");
                 if protocol != PROTOCOL_VERSION {
                     tracing::warn!(
                         ?session,
                         app,
                         dll = protocol,
                         server = PROTOCOL_VERSION,
-                        "DLL 与 Server 的协议版本不同（应用还没重启、用着旧 DLL？），照常服务"
+                        "DLL 與 Server 的協議版本不同（應用還沒重啟、用著舊 DLL？），照常服務"
                     );
                 }
                 // 同一會話重開（DLL 斷線重連）：從乾淨狀態起。
@@ -55,16 +55,16 @@ impl Router {
             ClientMessage::Poll { session } => Some(self.handle_poll(session)),
             ClientMessage::Commit { session } => {
                 let text = self.commit_raw_for(session);
-                tracing::debug!(?session, ?text, "焦点离开，结束组句");
+                tracing::debug!(?session, ?text, "焦點離開，結束組句");
                 Some(ServerMessage::Committed { session, text })
             }
             ClientMessage::Surrounding { session, text } => {
-                tracing::trace!(?session, chars = text.chars().count(), "收到光标前文");
+                tracing::trace!(?session, chars = text.chars().count(), "收到游標前文");
                 self.set_surrounding(session, text);
                 None
             }
             ClientMessage::Privacy { session, private } => {
-                tracing::debug!(?session, private, "输入框私密状态");
+                tracing::debug!(?session, private, "輸入框私密狀態");
                 self.set_privacy(session, private);
                 None
             }
@@ -101,7 +101,7 @@ impl Router {
                 })
             }
             ClientMessage::ImeSwitched { session } => {
-                tracing::debug!(?session, "切成了别的输入法");
+                tracing::debug!(?session, "切成了別的輸入法");
                 self.handle_ime_switched();
                 None
             }
@@ -110,12 +110,12 @@ impl Router {
                 traditional,
                 zhuyin,
             } => {
-                tracing::debug!(?session, traditional, zhuyin, "语言 profile");
+                tracing::debug!(?session, traditional, zhuyin, "語言 profile");
                 self.set_profile(session, traditional, zhuyin);
                 None
             }
             ClientMessage::Indicator { session, command } => {
-                tracing::debug!(?session, ?command, "任务栏图标菜单");
+                tracing::debug!(?session, ?command, "工作列圖示選單");
                 self.handle_indicator(command);
                 None
             }
@@ -126,7 +126,7 @@ impl Router {
                     self.focused = None;
                 }
                 self.flush_learning();
-                tracing::debug!(?session, "会话关闭");
+                tracing::debug!(?session, "會話關閉");
                 None
             }
         }
@@ -147,7 +147,7 @@ impl Router {
             tracing::debug!(
                 ?session,
                 request = self.selection_seq,
-                "翻译选中文字：请 DLL 读选区"
+                "翻譯選中文字：請 DLL 讀選區"
             );
             return ServerMessage::RequestSelection {
                 session,
@@ -184,7 +184,7 @@ impl Router {
         self.tick();
         let learned = self.engine.poll_glosses();
         if learned > 0 {
-            tracing::info!(learned, "释义兜底写入个人释义表");
+            tracing::info!(learned, "釋義兜底寫入個人釋義表");
         }
         let frame = if self.focused == Some(session) {
             self.poll_prediction();

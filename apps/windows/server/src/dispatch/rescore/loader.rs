@@ -36,7 +36,7 @@ impl ModelLoader {
                     if scorer.vocab().sep().is_some() {
                         let p2c = P2cScorer::new(scorer).expect("P2C vocab checked above");
                         p2c.0.score_p2c("ni", &["你"])?;
-                        Ok((Box::new(p2c) as Box<dyn SentenceScorer>, "含章·通变"))
+                        Ok((Box::new(p2c) as Box<dyn SentenceScorer>, "含章·通變"))
                     } else {
                         scorer.score("", &["的"])?;
                         Ok((Box::new(scorer) as Box<dyn SentenceScorer>, "含章·知微"))
@@ -47,7 +47,7 @@ impl ModelLoader {
                         path = %path.display(),
                         kind,
                         total_ms = started.elapsed().as_millis(),
-                        "本地整句模型已加载并预热"
+                        "本地整句模型已載入並預熱"
                     );
                 }
                 let _ = tx.send(loaded.map(|(scorer, _)| scorer));
@@ -55,7 +55,7 @@ impl ModelLoader {
         match spawned {
             Ok(_) => Some(Self { result }),
             Err(error) => {
-                tracing::warn!(%error, "起不了模型加载线程，本地整句模型不用");
+                tracing::warn!(%error, "起不了模型載入執行緒，本地整句模型不用");
                 None
             }
         }

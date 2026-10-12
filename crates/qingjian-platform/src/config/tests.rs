@@ -84,14 +84,14 @@ fn writing_appearance_migrates_legacy_theme_line() {
     let path = std::env::temp_dir().join("qingjian-config-migrate-theme-test.toml");
     std::fs::write(
         &path,
-        "[general]\n# 候选窗口外观：system 跟随系统 / light 浅色 / dark 深色\ntheme = \"dark\"\nlayout = \"vertical\"\n",
+        "[general]\n# 候選視窗外觀：system 跟隨系統 / light 淺色 / dark 深色\ntheme = \"dark\"\nlayout = \"vertical\"\n",
     )
     .unwrap();
     Config::set_value(&path, "general", "appearance", "light").unwrap();
     let text = std::fs::read_to_string(&path).unwrap();
     assert!(text.contains(&format!("{THEME_COMMENT}theme = \"qingjian\"\nlayout")));
     assert!(text.contains(&format!("{APPEARANCE_COMMENT}appearance = \"light\"")));
-    assert_eq!(text.matches("候选窗口外观").count(), 1);
+    assert_eq!(text.matches("候選視窗外觀").count(), 1);
     let general = Config::load(&path).unwrap().general;
     assert_eq!(general.appearance(), Appearance::Light);
     assert_eq!(general.theme_id(), DEFAULT_THEME);
@@ -110,7 +110,7 @@ fn writing_theme_first_keeps_legacy_appearance() {
     let path = std::env::temp_dir().join("qingjian-config-migrate-theme-first-test.toml");
     std::fs::write(
         &path,
-        "[general]\n# 候选窗口外观：system 跟随系统 / light 浅色 / dark 深色\ntheme = \"dark\"\n",
+        "[general]\n# 候選視窗外觀：system 跟隨系統 / light 淺色 / dark 深色\ntheme = \"dark\"\n",
     )
     .unwrap();
     // 沒切過外觀、直接選了主題：舊的深色不能丟，註釋也要換掉
@@ -118,7 +118,7 @@ fn writing_theme_first_keeps_legacy_appearance() {
     let text = std::fs::read_to_string(&path).unwrap();
     assert!(text.contains(&format!("{THEME_COMMENT}theme = \"wechat\"")));
     assert!(text.contains(&format!("{APPEARANCE_COMMENT}appearance = \"dark\"")));
-    assert_eq!(text.matches("候选窗口外观").count(), 1);
+    assert_eq!(text.matches("候選視窗外觀").count(), 1);
     let general = Config::load(&path).unwrap().general;
     assert_eq!(general.appearance(), Appearance::Dark);
     assert_eq!(general.theme_id(), "wechat");
@@ -144,14 +144,14 @@ fn set_bool_keeps_comments_and_flips_only_that_key() {
     let path = std::env::temp_dir().join("qingjian-config-set-bool-test.toml");
     std::fs::write(
         &path,
-        "# 头注释\n[fuzzy]\n# 说明\nz_zh = false\nn_l = true\n",
+        "# 頭註釋\n[fuzzy]\n# 說明\nz_zh = false\nn_l = true\n",
     )
     .unwrap();
     Config::set_bool(&path, "fuzzy", "z_zh", true).unwrap();
     Config::set_bool(&path, "predict", "enabled", true).unwrap();
     let text = std::fs::read_to_string(&path).unwrap();
     assert!(
-        text.starts_with("# 头注释\n[fuzzy]\n# 说明\nz_zh = true\nn_l = true\n"),
+        text.starts_with("# 頭註釋\n[fuzzy]\n# 說明\nz_zh = true\nn_l = true\n"),
         "{text}"
     );
     let config = Config::load(&path).unwrap();
@@ -180,7 +180,7 @@ fn set_bool_starts_from_template_when_missing() {
     let _ = std::fs::remove_file(&path);
     Config::set_bool(&path, "predict", "enabled", true).unwrap();
     let text = std::fs::read_to_string(&path).unwrap();
-    assert!(text.contains("# 青简输入法配置"));
+    assert!(text.contains("# 青簡輸入法配置"));
     assert!(Config::load(&path).unwrap().predict.enabled);
     let _ = std::fs::remove_file(&path);
 }

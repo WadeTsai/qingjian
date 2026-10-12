@@ -99,7 +99,7 @@ impl ConfigReload {
             self.dirs.user_dicts.as_deref(),
             &self.applied_dictionaries,
         );
-        tracing::info!(count = dictionaries.len(), "附加词库已热重装");
+        tracing::info!(count = dictionaries.len(), "附加詞庫已熱重灌");
         dictionaries
     }
 }

@@ -70,7 +70,7 @@ impl Router {
             return;
         }
         let Some(path) = &self.model_path else {
-            tracing::info!("没有本地整句模型文件，不重排");
+            tracing::info!("沒有本地整句模型檔案，不重排");
             return;
         };
         self.model_loader = ModelLoader::spawn(path);
@@ -81,7 +81,7 @@ impl Router {
         self.model_loader = None;
         self.engine.set_async_sentence_scorer(None);
         self.rescore.stop();
-        tracing::info!("本地整句模型已卸载（[model] enabled = false）");
+        tracing::info!("本地整句模型已解除安裝（[model] enabled = false）");
     }
 
     /// 載入執行緒有結果了就接到 Engine 上；每次按鍵 / tick 順手看一眼，不阻塞。
@@ -99,7 +99,7 @@ impl Router {
                         self.engine
                             .log_session(env!("CARGO_PKG_VERSION"), "windows");
                     }
-                    Err(error) => tracing::warn!(%error, "本地整句模型加载失败，不重排"),
+                    Err(error) => tracing::warn!(%error, "本地整句模型載入失敗，不重排"),
                 }
                 self.model_loader = None;
             }
@@ -172,7 +172,7 @@ impl Router {
         if !self.engine.poll_rescoring() {
             // 等太久多半是前文變了（上屏後接著打下一段）、結果作廢；真卡住也只是這輪不重排
             if self.rescore.expired() {
-                tracing::debug!("等本地整句模型超时，本轮不重排");
+                tracing::debug!("等本地整句模型超時，本輪不重排");
                 self.rescore.stop();
             }
             return;

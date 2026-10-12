@@ -47,18 +47,18 @@ fn apply_scheme(engine: &mut Engine, pinyin: Scheme, wubi: bool, table: Option<&
     let Some(path) = table else {
         tracing::warn!(
             table = BUNDLED_TABLE,
-            "选了形码方案但找不到码表，仍按拼音输入；随包数据里应当带一份",
+            "選了形碼方案但找不到碼錶，仍按拼音輸入；隨包資料裡應當帶一份",
         );
         engine.set_code_table(None);
         return;
     };
     match CodeTable::from_path(path) {
         Ok(table) => {
-            tracing::info!(table = %path.display(), entries = table.len(), "形码码表已载入");
+            tracing::info!(table = %path.display(), entries = table.len(), "形碼碼錶已載入");
             engine.set_code_table(Some(table));
         }
         Err(error) => {
-            tracing::error!(%error, table = %path.display(), "形码码表读不了，仍按拼音输入");
+            tracing::error!(%error, table = %path.display(), "形碼碼錶讀不了，仍按拼音輸入");
             engine.set_code_table(None);
         }
     }

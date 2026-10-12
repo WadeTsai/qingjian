@@ -31,8 +31,8 @@ impl Appearance {
     /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
-            Self::System => "跟随系统",
-            Self::Light => "浅色",
+            Self::System => "跟隨系統",
+            Self::Light => "淺色",
             Self::Dark => "深色",
         }
     }

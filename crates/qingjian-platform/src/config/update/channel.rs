@@ -28,7 +28,7 @@ impl UpdateChannel {
     pub fn label(self) -> &'static str {
         match self {
             Self::Stable => "正式版",
-            Self::Beta => "测试版",
+            Self::Beta => "測試版",
         }
     }
 

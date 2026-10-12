@@ -51,13 +51,13 @@ pub fn serve_pipe(
         Ok(first) => first,
         Err(error) if error.raw_os_error() == Some(ERROR_ACCESS_DENIED.0 as i32) => {
             return Err(io::Error::other(
-                "已有一个 qingjian-server 在运行（命名管道被占），本进程退出",
+                "已有一個 qingjian-server 在執行（命名管道被佔），本程序退出",
             ));
         }
         Err(error) => return Err(error),
     };
     thread::spawn(move || accept_loop(&pipe, first, sender));
-    tracing::info!(pipe = name, "命名管道监听中");
+    tracing::info!(pipe = name, "命名管道監聽中");
     // 按 Router 的節拍來 tick：在等本地整句模型就幾十毫秒一次，否則一秒看一次配置檔案。
     // 到點時間是絕對的，不隨訊息重新計時——前臺程序裡的 DLL 隔幾百毫秒就問一次切模式（SyncMode），
     // 若每收一條訊息就重等一秒，tick 永遠到不了，熱載入與模型接入都會停擺。
@@ -92,7 +92,7 @@ fn accept_loop(name: &HSTRING, first: File, sender: Sender<Work>) {
         let stream = match instance.and_then(wait_client) {
             Ok(stream) => stream,
             Err(error) => {
-                tracing::error!(%error, "建管道实例失败，停止接受");
+                tracing::error!(%error, "建管道例項失敗，停止接受");
                 break;
             }
         };
@@ -114,7 +114,7 @@ fn pipe_security_descriptor() -> PSECURITY_DESCRIPTOR {
         )
     };
     if let Err(error) = converted {
-        tracing::warn!(%error, "构建管道安全描述符失败，退回默认 DACL（UWP 应用可能连不上）");
+        tracing::warn!(%error, "構建管道安全描述符失敗，退回預設 DACL（UWP 應用可能連不上）");
         return PSECURITY_DESCRIPTOR::default();
     }
     descriptor
@@ -174,7 +174,7 @@ fn serve_connection(mut stream: File, sender: Sender<Work>) {
             Ok(Some(message)) => message,
             Ok(None) => break,
             Err(error) => {
-                tracing::warn!(%error, "客户端会话读出错");
+                tracing::warn!(%error, "客戶端會話讀出錯");
                 break;
             }
         };
@@ -195,5 +195,5 @@ fn serve_connection(mut stream: File, sender: Sender<Work>) {
         }
     }
     let _ = unsafe { DisconnectNamedPipe(HANDLE(stream.as_raw_handle())) };
-    tracing::debug!("客户端断开");
+    tracing::debug!("客戶端斷開");
 }

@@ -217,13 +217,13 @@ impl GeneralConfig {
             return match key.parse() {
                 Ok(scheme) => scheme,
                 Err(_) => {
-                    tracing::warn!(key, "不认识的拼音方案，按全拼");
+                    tracing::warn!(key, "不認識的拼音方案，按全拼");
                     Scheme::Pinyin
                 }
             };
         }
         if self.zhuyin == Some(true) {
-            tracing::info!("[general] zhuyin 已并入 scheme，可改成 scheme = \"zhuyin\"");
+            tracing::info!("[general] zhuyin 已併入 scheme，可改成 scheme = \"zhuyin\"");
             return Scheme::Zhuyin;
         }
         let Some(legacy) = self
@@ -238,12 +238,12 @@ impl GeneralConfig {
             Ok(scheme) => {
                 tracing::info!(
                     key = scheme.key(),
-                    "[general] shuangpin 已并入 scheme，可改成它"
+                    "[general] shuangpin 已併入 scheme，可改成它"
                 );
                 Scheme::Shuangpin(scheme)
             }
             Err(_) => {
-                tracing::warn!(key = legacy, "不认识的双拼方案，按全拼");
+                tracing::warn!(key = legacy, "不認識的雙拼方案，按全拼");
                 Scheme::Pinyin
             }
         }
@@ -273,7 +273,7 @@ impl GeneralConfig {
             Err(_) => {
                 tracing::warn!(
                     key = self.zhuyin_layout.trim(),
-                    "不认识的注音键盘排列，按大千"
+                    "不認識的注音鍵盤排列，按大千"
                 );
                 ZhuyinLayout::Dachen
             }
@@ -291,7 +291,7 @@ impl GeneralConfig {
         if key == "wubi86" {
             return true;
         }
-        tracing::warn!(key, "不认识的形码方案，按关");
+        tracing::warn!(key, "不認識的形碼方案，按關");
         false
     }
 

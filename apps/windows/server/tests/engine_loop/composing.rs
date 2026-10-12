@@ -375,7 +375,7 @@ fn self_drawn_window_gets_input_mode() {
     let modes = sink.1.lock().unwrap();
     let mode = modes.last().expect("自绘窗收到过帧");
     assert!(!mode.english && mode.traditional && mode.full_width);
-    assert_eq!(mode.scheme, "小鹤双拼");
+    assert_eq!(mode.scheme, "小鶴雙拼");
 }
 
 /// 「中文(台灣)」下的青簡：DLL 報來繁體 profile，配置沒開繁體輸出也出繁體候選，自繪窗的輸入狀態跟著顯示繁；

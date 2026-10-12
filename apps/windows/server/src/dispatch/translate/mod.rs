@@ -42,13 +42,13 @@ impl Router {
         self.pending_selection = None;
         let text = text.trim();
         if text.is_empty() || !self.engine.prediction_enabled() {
-            tracing::info!("翻译选中文字：没有可读的选区（或云服务已关）");
+            tracing::info!("翻譯選中文字：沒有可讀的選區（或雲服務已關）");
             return empty;
         }
         self.last_rect = Some(rect);
         self.translation = Some(Translation { result: None });
         self.engine.request_translation(text);
-        tracing::debug!(chars = text.chars().count(), "翻译选中文字：已发翻译请求");
+        tracing::debug!(chars = text.chars().count(), "翻譯選中文字：已發翻譯請求");
         let frame = self.self_drawn_frame();
         self.reconcile_candidates(&frame);
         empty
@@ -96,7 +96,7 @@ impl Router {
         let text = translation
             .result
             .clone()
-            .unwrap_or_else(|| "翻译中…".to_owned());
+            .unwrap_or_else(|| "翻譯中…".to_owned());
         Frame {
             preedit: Vec::new(),
             preedit_mode: self.config.preedit,

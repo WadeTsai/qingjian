@@ -52,7 +52,7 @@ pub fn load(
     for dir in [bundled_dir, user_dir].into_iter().flatten() {
         for (stem, path) in list(dir) {
             if !config.is_enabled(&stem) {
-                tracing::debug!(name = %stem, "码表已关闭，跳过");
+                tracing::debug!(name = %stem, "碼錶已關閉，跳過");
                 continue;
             }
             match AuxCodeTable::open(&path) {
@@ -63,11 +63,11 @@ pub fn load(
                         entries = table.len(),
                         words = table.word_count(),
                         license = %table.metadata().map_or("", |m| m.license.as_str()),
-                        "码表已加载"
+                        "碼錶已載入"
                     );
                     loaded.push(Arc::new(table));
                 }
-                Err(error) => tracing::warn!(file = %path.display(), %error, "码表加载失败，跳过"),
+                Err(error) => tracing::warn!(file = %path.display(), %error, "碼錶載入失敗，跳過"),
             }
         }
     }

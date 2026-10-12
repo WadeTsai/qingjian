@@ -28,17 +28,17 @@ pub fn validate_phrases(phrases: &[CustomPhrase]) -> Result<(), String> {
     let mut occupied = std::collections::BTreeSet::new();
     for phrase in phrases {
         if !valid_code(&phrase.code) {
-            return Err("输入码须为 1–32 个小写英文字母".into());
+            return Err("輸入碼須為 1–32 個小寫英文字母".into());
         }
         if !(1..=9).contains(&phrase.position) {
-            return Err("候选位置须为 1–9".into());
+            return Err("候選位置須為 1–9".into());
         }
         if phrase.text.is_empty() {
-            return Err("自定义短语不能为空".into());
+            return Err("自定義短語不能為空".into());
         }
         if !occupied.insert((&phrase.code, phrase.position)) {
             return Err(format!(
-                "输入码 {} 的第 {} 位已被占用，不能保存",
+                "輸入碼 {} 的第 {} 位已被佔用，不能儲存",
                 phrase.code, phrase.position
             ));
         }
@@ -131,9 +131,9 @@ mod tests {
                 ("yx", "qi@example.com"),
                 ("omw", "On my way!"),
                 ("ee", "："),
-                ("Gs", "大写不算"),
-                ("a1", "带数字不算"),
-                ("", "空码不算"),
+                ("Gs", "大寫不算"),
+                ("a1", "帶數字不算"),
+                ("", "空碼不算"),
                 ("kong", ""),
             ],
         );
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn replacements_stop_at_nine_slots_per_code() {
         let base: Vec<_> = (1..=9).map(|n| phrase("x", &n.to_string(), n)).collect();
-        let merged = merge_replacements(&base, [("x", "第十条")]);
+        let merged = merge_replacements(&base, [("x", "第十條")]);
         assert_eq!(merged.len(), 9);
     }
 }

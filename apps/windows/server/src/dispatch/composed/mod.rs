@@ -66,7 +66,7 @@ impl Router {
                     }
                 }
                 None => {
-                    tracing::info!("翻译选中文字：云端没有给出译文");
+                    tracing::info!("翻譯選中文字：雲端沒有給出譯文");
                     self.translation = None;
                 }
             }

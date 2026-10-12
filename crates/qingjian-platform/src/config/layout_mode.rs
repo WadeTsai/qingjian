@@ -27,8 +27,8 @@ impl LayoutMode {
     /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
-            Self::Vertical => "竖排",
-            Self::Horizontal => "横排",
+            Self::Vertical => "豎排",
+            Self::Horizontal => "橫排",
         }
     }
 }

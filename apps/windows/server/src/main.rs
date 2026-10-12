@@ -30,7 +30,7 @@ fn write_config_template() -> Option<Result<bool, ConfigError>> {
 fn load_config() -> Config {
     let mut config = match config_path() {
         Some(path) => Config::load(&path).unwrap_or_else(|error| {
-            tracing::error!(%error, path = %path.display(), "配置解析失败，用默认值");
+            tracing::error!(%error, path = %path.display(), "配置解析失敗，用預設值");
             Config::default()
         }),
         None => Config::default(),
@@ -73,7 +73,7 @@ fn sample_dict(root: &Path) -> PathBuf {
 /// 正式詞庫裝配失敗回落樣例詞庫，連樣例都裝不起來才報錯。
 fn assemble_with_fallback(mut spec: AssemblySpec, root: &Path) -> Result<Engine, ServerError> {
     assembly::assemble(&spec).or_else(|error| {
-        tracing::error!(%error, dict = %spec.dict.display(), "正式词库装配失败，回落样例词库");
+        tracing::error!(%error, dict = %spec.dict.display(), "正式詞庫裝配失敗，回落樣例詞庫");
         spec.dict = sample_dict(root);
         assembly::assemble(&spec)
     })
@@ -105,7 +105,7 @@ fn init_logging(config: &Config) -> Option<tracing_appender::non_blocking::Worke
                 .filename_suffix("log")
                 .max_log_files(7)
                 .build(&dir)
-                .expect("构建滚动日志文件");
+                .expect("構建滾動日誌檔案");
             let (writer, guard) = tracing_appender::non_blocking(
                 qingjian_platform::logs::secrets::MaskingWriter::new(appender),
             );
@@ -128,7 +128,7 @@ fn theme_preview(dir: Option<String>) -> i32 {
     attach_parent_console();
     let Some(dir) = dir else {
         eprintln!(
-            "用法：qingjian-server {} <主题目录>",
+            "用法：qingjian-server {} <主題目錄>",
             qingjian_render::preview::FLAG
         );
         return 2;
@@ -171,8 +171,8 @@ fn main() {
     let config = load_config();
     let _log_guard = init_logging(&config);
     match template {
-        Some(Ok(true)) => tracing::info!("已写出配置模板"),
-        Some(Err(error)) => tracing::warn!(%error, "写配置模板失败"),
+        Some(Ok(true)) => tracing::info!("已寫出配置模板"),
+        Some(Err(error)) => tracing::warn!(%error, "寫配置模板失敗"),
         _ => {}
     }
     let language = learning_language(&config);
@@ -211,14 +211,14 @@ fn main() {
     let mut engine = match assemble_with_fallback(spec, &root) {
         Ok(engine) => engine,
         Err(error) => {
-            tracing::error!(%error, "样例词库也装配失败");
+            tracing::error!(%error, "樣例詞庫也裝配失敗");
             std::process::exit(1);
         }
     };
     engine.set_fuzzy(config.fuzzy);
     // Windows 端此前漏裝 custom_phrases（macOS 端 apply_config 有）；失敗只記日誌不阻塞啟動
     if let Err(error) = engine.set_custom_phrases(config.custom_phrases.clone()) {
-        tracing::warn!(%error, "自定义短语配置未应用");
+        tracing::warn!(%error, "自定義短語配置未應用");
     }
     // 拼音側與形碼側在 `configure_code_table` 裡一起裝配（雙拼 / 注音 / 混輸都在那）
     engine.set_traditional_mode(config.general.traditional);
@@ -270,7 +270,7 @@ fn main() {
         model = model_path.as_deref().map(|p| p.display().to_string()).unwrap_or_default(),
         model_enabled = config.model.enabled,
         sessions = router.session_count(),
-        "青簡 Windows Server 就绪"
+        "青簡 Windows Server 就緒"
     );
 
     serve(router);
@@ -294,8 +294,8 @@ fn grant_appcontainer_log_access() {
         .status();
     match status {
         Ok(status) if status.success() => {}
-        Ok(status) => tracing::warn!(%status, "给 AppContainer 授权日志目录失败"),
-        Err(error) => tracing::warn!(%error, "跑 icacls 失败"),
+        Ok(status) => tracing::warn!(%status, "給 AppContainer 授權日誌目錄失敗"),
+        Err(error) => tracing::warn!(%error, "跑 icacls 失敗"),
     }
 }
 
@@ -320,15 +320,15 @@ fn serve(mut router: Router) {
             router.set_candidate_sink(Box::new(ui.clone()));
             router.set_status_sink(Box::new(ui));
         }
-        Err(error) => tracing::error!(%error, "UI 线程启动失败，将不显示候选框 / 状态条"),
+        Err(error) => tracing::error!(%error, "UI 執行緒啟動失敗，將不顯示候選框 / 狀態條"),
     }
     if let Err(error) = pipe::serve_pipe(pipe::DEFAULT_PIPE_NAME, &mut router, work_tx, work_rx) {
-        tracing::error!(%error, "命名管道服务退出");
+        tracing::error!(%error, "命名管道服務退出");
         std::process::exit(1);
     }
 }
 
 #[cfg(not(windows))]
 fn serve(_router: Router) {
-    tracing::warn!("命名管道传输仅 Windows 提供；本平台只装配 Engine 供测试");
+    tracing::warn!("命名管道傳輸僅 Windows 提供；本平臺只裝配 Engine 供測試");
 }

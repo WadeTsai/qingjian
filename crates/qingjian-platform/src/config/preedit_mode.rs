@@ -31,9 +31,9 @@ impl PreeditMode {
     /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
-            Self::Both => "行内 + 候选窗口",
-            Self::Inline => "只在行内",
-            Self::Window => "只在候选窗口",
+            Self::Both => "行內 + 候選視窗",
+            Self::Inline => "只在行內",
+            Self::Window => "只在候選視窗",
         }
     }
 

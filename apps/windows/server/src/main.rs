@@ -26,15 +26,17 @@ fn write_config_template() -> Option<Result<bool, ConfigError>> {
     Some(Config::write_template_if_missing(&config_path()?))
 }
 
-/// 檔案不存在按預設值；解析失敗記錯誤退回預設。
+/// 檔案不存在按預設值；解析失敗記錯誤退回預設。Windows 版一律繁體輸出（`dispatch::enforce_traditional`）。
 fn load_config() -> Config {
-    match config_path() {
+    let mut config = match config_path() {
         Some(path) => Config::load(&path).unwrap_or_else(|error| {
             tracing::error!(%error, path = %path.display(), "配置解析失败，用默认值");
             Config::default()
         }),
         None => Config::default(),
-    }
+    };
+    dispatch::enforce_traditional(&mut config);
+    config
 }
 
 /// 讀金鑰：工作目錄 `.env`，再疊加 `%APPDATA%\Qingjian\.env`；不覆蓋已有環境變數。

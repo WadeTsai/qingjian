@@ -14,7 +14,6 @@ pub(crate) enum Message {
     ZhuyinLayout(Option<usize>),
     ShuangpinRawPreedit(bool),
     Wubi(bool),
-    Traditional(bool),
     Emoji(bool),
     EnglishCandidates(bool),
     EnglishInChinese(bool),

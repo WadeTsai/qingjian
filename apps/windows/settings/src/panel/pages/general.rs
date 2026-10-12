@@ -117,14 +117,6 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
                 .on_toggled(context.callback(Message::Wubi)),
         ),
         field(
-            "繁體輸出",
-            "打字時將候選詞轉換為繁體中文。關著時，在系統「中文(台灣)」語言下選用的「青簡」「青簡注音」仍然輸出繁體，\
-             「中文(簡體)」下的「青簡」輸出簡體。",
-            ToggleSwitch::new()
-                .is_on(g.traditional)
-                .on_toggled(context.callback(Message::Traditional)),
-        ),
-        field(
             "候選後面顯示 emoji",
             "開著時有對應 emoji 的詞後面跟一兩個（kaixin → 開心 😄）；關掉候選裡只有字詞。",
             ToggleSwitch::new()

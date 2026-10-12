@@ -6,6 +6,13 @@ use qingjian_platform::{
 
 use super::RenderSettings;
 
+/// Windows 版只支援繁體中文：青簡只登記在系統的「中文(台灣)」語言下，不管配置檔案裡 `[general] traditional`
+/// 寫的是什麼，一律按開著算。啟動讀配置與熱加載都先過這一步，之後 Router 再從它建 [`RouterConfig`]。
+/// 設定介面也不再給這個開關；配置檔案裡的值只給 Linux / macOS 用。
+pub fn enforce_traditional(config: &mut Config) {
+    config.general.traditional = true;
+}
+
 /// Router 要用的配置項，與 macOS 殼的 `Host` 欄位對齊。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouterConfig {
@@ -96,7 +103,7 @@ pub struct RouterConfig {
     /// 形碼側開沒開（`[general] wubi`）。與拼音同時開著就是混輸。
     pub wubi: bool,
 
-    /// 繁體輸出（`[general] traditional`），給候選視窗主題顯示簡 / 繁。
+    /// 繁體輸出（`[general] traditional`），給候選視窗主題顯示簡 / 繁。Windows 版經 [`enforce_traditional`] 一律為開。
     pub traditional: bool,
 
     /// 輔碼觸發鍵（`[general] aux_code_key`，預設 `;`）；非法值退回預設。
@@ -172,5 +179,22 @@ impl From<&Config> for RouterConfig {
 impl Default for RouterConfig {
     fn default() -> Self {
         Self::from(&Config::default())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use qingjian_platform::Config;
+
+    use super::{RouterConfig, enforce_traditional};
+
+    /// Windows 版不管配置檔案裡寫什麼都出繁體：強制後建出的 RouterConfig 繁體位為開。
+    #[test]
+    fn enforce_traditional_overrides_the_config_file() {
+        let mut config = Config::default();
+        assert!(!config.general.traditional);
+        enforce_traditional(&mut config);
+        assert!(config.general.traditional);
+        assert!(RouterConfig::from(&config).traditional);
     }
 }

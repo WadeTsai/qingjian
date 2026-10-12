@@ -195,7 +195,9 @@ impl Router {
             return;
         }
         match Config::load(&path) {
-            Ok(config) => {
+            Ok(mut config) => {
+                // 與啟動時一樣：Windows 版不管檔案裡寫什麼都出繁體
+                super::config::enforce_traditional(&mut config);
                 self.apply_config(&config);
                 tracing::info!("配置已热加载");
             }

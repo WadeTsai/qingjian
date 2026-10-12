@@ -16,7 +16,7 @@ Windows 端的整體結構、為什麼是兩個 package、構建與註冊步驟�
   Server；`OnKeyDown` 轉發按鍵，`edit_session` / `composition` 經 `ITfContext` 做 preedit 內聯與上屏，
   `anchor` 把組句 / 選區的螢幕矩形報給 Server 擺候選視窗（視窗在 Server 程序自繪），`poll` 定時拉取雲聯想的非同步
   結果。`DllRegisterServer`（`registry`）寫 InprocServer32 並經 `ITfInputProcessorProfiles` /
-  `ITfCategoryMgr` 把青簡登記成鍵盤類文本服務，語言 profile 在「中文(簡體)」下一個、「中文(台灣)」下兩個（拼音的「青簡」與注音的「青簡注音」，`com/profile/language.rs`），
-  `com/profile` 查當前啟用的是哪個並把簡 / 繁、注音與否報給 Server。
+  `ITfCategoryMgr` 把青簡登記成鍵盤類文本服務，語言 profile 只在「中文(台灣)」下兩個（拼音的「青簡」與注音的「青簡注音」，`com/profile/language.rs`；早期在「中文(簡體)」下登記過的那個註冊時順手移除），
+  `com/profile` 查當前啟用的是哪個並把注音與否報給 Server（繁體一律報開）。
 
 DLL 側日誌在 `%LOCALAPPDATA%\Qingjian\logs\tsf.<日期>.log`（與 Server / 設定程式同目錄，字首區分），按天一個檔案、只留最近 7 天。

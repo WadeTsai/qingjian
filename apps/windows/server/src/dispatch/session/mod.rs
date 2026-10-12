@@ -34,6 +34,7 @@ impl Router {
     }
 
     /// 聚焦會話該不該出繁體：配置開著就是；關著時看它用的是不是繁體的語言 profile（Windows「中文(台灣)」下的青簡 / 青簡注音）。
+    /// Windows 版的 Server 配置一律開著（`config::enforce_traditional`），所以實際總是繁體；關著的分支只在 Router 作為庫測試時走到。
     pub(super) fn traditional_output(&self) -> bool {
         self.config.traditional
             || self

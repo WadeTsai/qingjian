@@ -83,7 +83,7 @@ jobs:
             "" \
             "- 檔案：$(basename "$exe")" \
             "- SHA-256：${sha}" \
-            "- 同時登記在「中文(台灣)」與「中文(简体)」兩種語言下；在「中文(台灣)」下選用「青簡」預設輸出繁體字。" \
+            "- 只支援繁體中文：只登記在「中文(台灣)」語言下，「青簡」（拼音）與「青簡注音」（注音）都輸出繁體字；升級時會移除舊版登記在「中文(简体)」下的青簡。" \
             "- 測試版沒有程式碼簽章，SmartScreen 會攔：點「其他資訊 → 仍要執行」。安裝目錄請保持預設的 C:\\Program Files\\Qingjian。")"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$tag" "$exe" --repo "$GITHUB_REPOSITORY" --clobber

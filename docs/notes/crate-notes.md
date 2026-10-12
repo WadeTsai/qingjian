@@ -42,7 +42,7 @@ TSV 解析、查詢與生成工具把 `lue` / `nue` 統一成 `lve` / `nve`。
 按文本去重，編碼打全的形碼詞在前、拼音居中、只命中字首的形碼詞墊後（一律形碼在前的話 `kai` 的首選會變成編碼 `kaik` 的詞）；混輸下模式鍵同雙拼換成大寫，四碼以內不做拼寫糾錯，且五筆碼最長 4 位、第 5 個字母起自然只剩拼音。
 拼音那套在純形碼下全部不適用，靠 `modes()` 返回 `ModeKeys::LETTERLESS` 與 `active_correction` 直接返回 `None` 關掉；
 譯詞標註、生詞記錄、輸入日誌、使用者選擇學習與個人 n-gram 仍照常工作。
-`Engine` 是對外唯一門面，`Translator` / `Learner` trait 在 `engine` 模組；詞庫是「主詞庫 + 附加詞庫（`set_extra_dictionaries`）+ 使用者詞」的列表；繁體輸出（`traditional` 開關與 `traditional_map` 對映）依賴 `ferrous-opencc`（`s2tw`）在出候選與上屏邊界轉換，內部保持簡體。
+`Engine` 是對外唯一門面，`Translator` / `Learner` trait 在 `engine` 模組；詞庫是「主詞庫 + 附加詞庫（`set_extra_dictionaries`）+ 使用者詞」的列表；繁體輸出（`traditional` 開關與 `traditional_map` 對映）依賴 `ferrous-opencc`（`s2tw`）在出候選與上屏邊界轉換，內部保持簡體；除英文詞與 emoji 外每種候選（詞庫詞、整句、雲端詞、模型生成的整句、形碼、自定義短語、快捷候選）都轉，測試在 `engine/tests/traditional.rs`。
 - 中英混輸的英文詞位置：`Engine::set_chinese_first`（配置 `[general] chinese_first`，預設關）關著時拼音不像話的輸入英文排第一（`extras::insert_english`，
   使用者老選中文詞時仍讓中文在前），開著時整句先插、英文詞緊隨其後排第二（`query_inner` 裡兩步的先後按開關掉轉）；句末英文詞併入整句（`EnglishTail`）不受它影響。
   預設關是回放定的（9241 詞 / 269 條英文上屏：預設開英文首選 82.5% → 7.1%）。
@@ -248,7 +248,7 @@ IMK 輸入法，原始碼按 `app / host / imk / candidates / menubar / preferen
 - 日誌在 `~/Library/Logs/Qingjian/`（按天分檔案留 7 天，刪了會重建），使用者資料與配置在 `~/Library/Application Support/Qingjian/`。
 - 配置項：雲聯想 `[predict]`（偏好設定「雲服務」頁有「測試連線」按鈕：`qingjian_predict::ConnectionTest` 起執行緒發一條最小請求，`Host` 用獨立定時器 `CloudTestMonitor` 輪詢結果顯示到視窗底部；
   `reasoning_effort` 預設 `none`，DeepSeek V4 預設思考，不關正文為空）；模糊音 `[fuzzy]` 預設都關；`[general]` 學習語言（`off` 不顯示譯文）/ 每頁候選數 / 翻頁鍵 / 外觀 / 豎排橫排 / 拼音顯示位置 /
-  英文模式候選開關 / 中文優先 `chinese_first` / 中文模式英文詞 `english_in_chinese`（`Engine::set_english_in_chinese`）/ emoji 候選 `emoji`（`Engine::set_emoji_candidates`）/ 雙拼方案 `shuangpin`（小鶴 / 自然碼 / 微軟 / 搜狗 / 智慧ABC / 小浪 / 首道，空為全拼）/ 日誌級別 `log_level`（預設 info 不含敲的內容，debug 逐鍵記，熱切換）/ 輸入日誌 `input_log`；
+  英文模式候選開關 / 中文優先 `chinese_first` / 中文模式英文詞 `english_in_chinese`（`Engine::set_english_in_chinese`）/ emoji 候選 `emoji`（`Engine::set_emoji_candidates`）/ 雙拼方案 `shuangpin`（小鶴 / 自然碼 / 微軟 / 搜狗 / 智能ABC / 小浪 / 首道，空為全拼）/ 日誌級別 `log_level`（預設 info 不含敲的內容，debug 逐鍵記，熱切換）/ 輸入日誌 `input_log`；
   `[shortcut]` 模式鍵 v / u、`question_mark`（預設關，開了空緩衝區敲 `?` 進問字）、上屏第一 / 第二個譯詞的修飾鍵 `translation` / `translation_second`、刪候選 `delete_candidate`（預設 shift，使用者詞整刪、詞庫詞清學習）、翻譯選中文字 `translate_selection`；
   `[apps] english_candidates_on` 按應用標識列出英文模式給候選的應用（白名單，預設瀏覽器 / 聊天 / 辦公 / 筆記，`*` 字首匹配，`["*"]` 處處都給），`english_candidates_off` 從中排除；
   `[dictionaries] domains` 開啟隨包的領域詞庫（`Resources/dicts/` 11 本，預設只開 `idioms`），`disabled` 關掉使用者目錄 `dicts/` 裡的某本匯入詞庫；

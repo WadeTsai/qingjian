@@ -17,7 +17,7 @@ fn router(size: usize) -> Router {
             (1..=9)
                 .map(|position| CustomPhrase {
                     code: "qq".into(),
-                    text: format!("第{position}项"),
+                    text: format!("第{position}項"),
                     position,
                     enabled: true,
                 })
@@ -103,7 +103,7 @@ fn shift_tab_precedes_prediction_and_english_commit() {
     let mut router = router(1);
     let normal = KeyModifiers::default();
     compose(&mut router, "qq", normal);
-    router.sentence = Some("可控补全".into());
+    router.sentence = Some("可控補全".into());
     let result = key(
         &mut router,
         9,
@@ -114,10 +114,10 @@ fn shift_tab_precedes_prediction_and_english_commit() {
         },
     );
     assert_eq!(result.1, None);
-    assert_eq!(router.sentence.as_deref(), Some("可控补全"));
+    assert_eq!(router.sentence.as_deref(), Some("可控補全"));
     assert_eq!(
         key(&mut router, 9, None, normal).1.as_deref(),
-        Some("可控补全")
+        Some("可控補全")
     );
     let english = KeyModifiers {
         english_mode: true,

@@ -62,13 +62,13 @@ impl Scheme {
     /// 介面上的名字。`const` 的理由同上。
     pub const fn label(self) -> &'static str {
         match self {
-            Self::Xiaohe => "小鹤双拼",
-            Self::Ziranma => "自然码",
-            Self::Microsoft => "微软双拼",
-            Self::Sogou => "搜狗双拼",
+            Self::Xiaohe => "小鶴雙拼",
+            Self::Ziranma => "自然碼",
+            Self::Microsoft => "微軟雙拼",
+            Self::Sogou => "搜狗雙拼",
             Self::Abc => "智能ABC",
-            Self::Xiaolang => "小浪双拼",
-            Self::Shoudao => "首道双拼",
+            Self::Xiaolang => "小浪雙拼",
+            Self::Shoudao => "首道雙拼",
         }
     }
 
@@ -250,7 +250,7 @@ mod tests {
             for syllable in parser::SYLLABLES {
                 let keys = scheme
                     .encode(syllable)
-                    .unwrap_or_else(|| panic!("{scheme}: {syllable} 编不出"));
+                    .unwrap_or_else(|| panic!("{scheme}: {syllable} 編不出"));
                 let decoded = scheme
                     .syllable(keys[0], keys[1])
                     .unwrap_or_else(|| panic!("{scheme}: {syllable} → {keys:?} 解不回"));
@@ -303,7 +303,7 @@ mod tests {
                     };
                     assert!(
                         zero <= max_zero,
-                        "{scheme}: {first}{second} 对应多个零声母音节"
+                        "{scheme}: {first}{second} 對應多個零聲母音節"
                     );
                     if zero >= 1 {
                         // 首道的 `en` `er` 以 sh 鍵開頭，但 sh 配不出 ian / ie，仍然不撞
@@ -315,7 +315,7 @@ mod tests {
                         });
                         assert!(
                             !clash,
-                            "{scheme}: {first}{second} 既是零声母写法又能拼成声母 + 韵母"
+                            "{scheme}: {first}{second} 既是零聲母寫法又能拼成聲母 + 韻母"
                         );
                     }
                 }

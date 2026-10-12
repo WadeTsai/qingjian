@@ -11,11 +11,11 @@ pub struct Book {
 /// 參照書目，按字數從薄到厚。字數是通行版本的約數，只求量級對。
 pub const BOOKS: &[Book] = &[
     Book {
-        title: "道德经",
+        title: "道德經",
         hanzi: 5_000,
     },
     Book {
-        title: "论语",
+        title: "論語",
         hanzi: 16_000,
     },
     Book {
@@ -23,27 +23,27 @@ pub const BOOKS: &[Book] = &[
         hanzi: 25_000,
     },
     Book {
-        title: "边城",
+        title: "邊城",
         hanzi: 60_000,
     },
     Book {
-        title: "活着",
+        title: "活著",
         hanzi: 120_000,
     },
     Book {
-        title: "围城",
+        title: "圍城",
         hanzi: 250_000,
     },
     Book {
-        title: "三国演义",
+        title: "三國演義",
         hanzi: 640_000,
     },
     Book {
-        title: "红楼梦",
+        title: "紅樓夢",
         hanzi: 730_000,
     },
     Book {
-        title: "西游记",
+        title: "西遊記",
         hanzi: 820_000,
     },
     Book {
@@ -74,10 +74,10 @@ mod tests {
     #[test]
     fn picks_the_thickest_book_not_exceeding_the_count() {
         let (book, ratio) = book_scale(0);
-        assert_eq!(book.title, "道德经");
+        assert_eq!(book.title, "道德經");
         assert_eq!(ratio, 0.0);
         let (book, ratio) = book_scale(240_000);
-        assert_eq!(book.title, "活着");
+        assert_eq!(book.title, "活著");
         assert_eq!(ratio, 2.0);
         let (book, _) = book_scale(5_000_000);
         assert_eq!(book.title, "平凡的世界");

@@ -28,8 +28,8 @@ impl ShiftLetter {
     /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
-            Self::Passthrough => "交给应用",
-            Self::Compose => "进组句",
+            Self::Passthrough => "交給應用",
+            Self::Compose => "進組句",
         }
     }
 

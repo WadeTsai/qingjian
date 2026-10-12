@@ -45,11 +45,11 @@ impl Router {
             StatusEvent::ToggleMode => {
                 // 關掉內建英文模式後這一格不切模式：DLL 那邊也會攔（配置改了沒切走再切回時兩邊都擋住）
                 if !self.config.english_mode {
-                    tracing::debug!("内置英文模式已关闭，状态条不切模式");
+                    tracing::debug!("內建英文模式已關閉，狀態條不切模式");
                     return;
                 }
                 self.english = !self.english;
-                tracing::debug!(english = self.english, "状态条：切换中英模式");
+                tracing::debug!(english = self.english, "狀態條：切換中英模式");
             }
             StatusEvent::TogglePunctuation => {
                 // 中英各記一份，切的是當前模式那份；還沒報過模式時按中文算。
@@ -62,7 +62,7 @@ impl Router {
                     self.config.full_width = full_width;
                     "full_width_punctuation"
                 };
-                tracing::debug!(english, full_width, "状态条：切换全角标点");
+                tracing::debug!(english, full_width, "狀態條：切換全形標點");
                 self.persist("general", key, full_width);
             }
             StatusEvent::Moved(x, y) => {
@@ -96,7 +96,7 @@ impl Router {
             return;
         };
         if let Err(error) = Config::set_value(path, section, key, value) {
-            tracing::warn!(%error, section, key, "写回配置失败");
+            tracing::warn!(%error, section, key, "寫回配置失敗");
         }
     }
 

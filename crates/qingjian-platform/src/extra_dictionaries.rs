@@ -54,7 +54,7 @@ pub fn load(
     if let Some(dir) = bundled_dir {
         for (stem, path) in list(dir) {
             if !config.is_domain_enabled(&stem) {
-                tracing::debug!(name = %stem, "随包领域词库未打开，跳过");
+                tracing::debug!(name = %stem, "隨包領域詞庫未開啟，跳過");
                 continue;
             }
             loaded.extend(open(&stem, &path));
@@ -63,7 +63,7 @@ pub fn load(
     if let Some(dir) = user_dir {
         for (stem, path) in list(dir) {
             if !config.is_enabled(&stem) {
-                tracing::debug!(name = %stem, "附加词库已关闭，跳过");
+                tracing::debug!(name = %stem, "附加詞庫已關閉，跳過");
                 continue;
             }
             loaded.extend(open(&stem, &path));
@@ -80,12 +80,12 @@ fn open(stem: &str, path: &Path) -> Option<Dictionary> {
                 file = %path.display(),
                 entries = dictionary.len(),
                 license = %dictionary.metadata().map_or("", |m| m.license.as_str()),
-                "附加词库已加载"
+                "附加詞庫已載入"
             );
             Some(dictionary)
         }
         Err(error) => {
-            tracing::warn!(file = %path.display(), %error, "附加词库加载失败，跳过");
+            tracing::warn!(file = %path.display(), %error, "附加詞庫載入失敗，跳過");
             None
         }
     }

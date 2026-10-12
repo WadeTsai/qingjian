@@ -32,13 +32,13 @@ impl Router {
     /// 上屏第 `digit` 個候選的第 `sense` 條譯文；沒有那條譯文就吞掉按鍵不動。
     fn commit_translation_on_page(&mut self, digit: usize, sense: usize) -> Effect {
         let Some(candidate) = self.annotated_candidate_on_page(digit) else {
-            tracing::debug!(digit, "这一格没有候选");
+            tracing::debug!(digit, "這一格沒有候選");
             return Effect::Navigated;
         };
         match self.engine.commit_translation(&candidate, sense) {
             Some(text) => Effect::Changed(Some(text)),
             None => {
-                tracing::debug!(digit, sense, "这个候选没有这条译文");
+                tracing::debug!(digit, sense, "這個候選沒有這條譯文");
                 Effect::Navigated
             }
         }
@@ -47,17 +47,17 @@ impl Router {
     /// 刪第 `digit` 個候選（使用者詞整刪、詞庫詞清學習記錄），提示隨下一幀下發。
     fn forget_on_page(&mut self, digit: usize) -> Effect {
         let Some(candidate) = self.candidate_on_page(digit) else {
-            tracing::debug!(digit, "这一格没有候选，没什么可删");
+            tracing::debug!(digit, "這一格沒有候選，沒什麼可刪");
             return Effect::Navigated;
         };
         let forgotten = self.engine.forget(&candidate);
         let text = &candidate.text;
         let message = if forgotten.user_word {
-            format!("已删除用户词「{text}」")
+            format!("已刪除使用者詞「{text}」")
         } else if forgotten.learning {
-            format!("已忘掉对「{text}」的学习记录")
+            format!("已忘掉對「{text}」的學習記錄")
         } else {
-            format!("「{text}」是词库里的词，也没有学习记录，没什么可删")
+            format!("「{text}」是詞庫裡的詞，也沒有學習記錄，沒什麼可刪")
         };
         tracing::info!(%message);
         self.notice = Some(message);

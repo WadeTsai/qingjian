@@ -17,7 +17,7 @@ impl Router {
             return;
         };
         if self.focused_dll_protocol() < CLICK_SINCE {
-            tracing::debug!("DLL 协议太老，不收候选窗口的点击");
+            tracing::debug!("DLL 協議太老，不收候選視窗的點選");
             return;
         }
         if self.translation.is_some() || !self.composing() {
@@ -32,10 +32,10 @@ impl Router {
                 .and_then(|candidate| self.engine.commit_translation(&candidate, sense)),
         };
         let Some(text) = text else {
-            tracing::debug!(?target, "点中的格子没有可上屏的");
+            tracing::debug!(?target, "點中的格子沒有可上屏的");
             return;
         };
-        tracing::debug!(?target, "点击上屏");
+        tracing::debug!(?target, "點選上屏");
         let pending = self.take_clicked(session).unwrap_or_default();
         self.clicked = Some((session, pending + &text));
         self.recompose();

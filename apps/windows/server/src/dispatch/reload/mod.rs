@@ -34,7 +34,7 @@ fn mtime(path: &Path) -> Option<SystemTime> {
 /// 按 `[predict]` 接雲聯想與釋義兜底；關著或缺金鑰就退回本地實現。啟動與熱載入共用。
 pub fn attach_cloud(engine: &mut Engine, predict: &PredictConfig) {
     if !predict.enabled {
-        tracing::info!("云联想未开启（[predict] enabled = false）");
+        tracing::info!("雲聯想未開啟（[predict] enabled = false）");
         engine.set_predictor(Box::new(NoPredictor));
         engine.set_gloss_filler(Box::new(NoGlossFiller));
         return;
@@ -42,17 +42,17 @@ pub fn attach_cloud(engine: &mut Engine, predict: &PredictConfig) {
     match CloudPredictor::new(predict) {
         Ok(predictor) => {
             engine.set_predictor(Box::new(predictor));
-            tracing::info!(model = %predict.model, "云联想已接入");
+            tracing::info!(model = %predict.model, "雲聯想已接入");
         }
         Err(error) => {
-            tracing::warn!(%error, "云联想接入失败（缺 API key？），退回本地候选");
+            tracing::warn!(%error, "雲聯想接入失敗（缺 API key？），退回本地候選");
             engine.set_predictor(Box::new(NoPredictor));
         }
     }
     match CloudGlossFiller::new(predict) {
         Ok(filler) => engine.set_gloss_filler(Box::new(filler)),
         Err(error) => {
-            tracing::warn!(%error, "释义兜底未启用");
+            tracing::warn!(%error, "釋義兜底未啟用");
             engine.set_gloss_filler(Box::new(NoGlossFiller));
         }
     }
@@ -68,24 +68,24 @@ fn swap_translator(
 ) -> bool {
     let Some(language) = language else {
         engine.set_translator(Box::new(NoTranslator));
-        tracing::info!("学习语言已关，不显示译文");
+        tracing::info!("學習語言已關，不顯示譯文");
         return true;
     };
     let Some(path) = assembly::glossary_file(root, language) else {
         tracing::warn!(
             language = language.code(),
-            "没有这门语言的释义表，学习语言不变"
+            "沒有這門語言的釋義表，學習語言不變"
         );
         return false;
     };
     match assembly::load_glossary(language, &path, user_dir) {
         Ok(glossary) => {
-            tracing::info!(language = language.code(), "释义表已切换");
+            tracing::info!(language = language.code(), "釋義表已切換");
             engine.set_translator(Box::new(glossary));
             true
         }
         Err(error) => {
-            tracing::warn!(%error, "释义表加载失败，学习语言不变");
+            tracing::warn!(%error, "釋義表載入失敗，學習語言不變");
             false
         }
     }
@@ -199,9 +199,9 @@ impl Router {
                 // 與啟動時一樣：Windows 版不管檔案裡寫什麼都出繁體
                 super::config::enforce_traditional(&mut config);
                 self.apply_config(&config);
-                tracing::info!("配置已热加载");
+                tracing::info!("配置已熱載入");
             }
-            Err(error) => tracing::error!(%error, "配置热加载解析失败，保持原配置"),
+            Err(error) => tracing::error!(%error, "配置熱載入解析失敗，保持原配置"),
         }
     }
 
@@ -213,7 +213,7 @@ impl Router {
             .engine
             .set_custom_phrases(config.custom_phrases.clone())
         {
-            tracing::warn!(%error, "自定义短语配置未应用，保持原短语");
+            tracing::warn!(%error, "自定義短語配置未應用，保持原短語");
         }
         self.engine.set_learning(config.general.learning);
         self.engine.set_mode_keys(config.shortcut.mode);
@@ -291,7 +291,7 @@ impl Router {
         if let Some(reload) = &mut self.reload {
             reload.code_files = reload.dirs.code_snapshot();
         }
-        tracing::info!(count = tables.len(), "辅码码表已重装");
+        tracing::info!(count = tables.len(), "輔碼碼錶已重灌");
         self.engine.set_aux_codes(tables);
     }
 }

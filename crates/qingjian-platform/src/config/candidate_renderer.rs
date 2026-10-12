@@ -30,8 +30,8 @@ impl CandidateRenderer {
     /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
-            Self::Qingjian => "青简渲染器",
-            Self::System => "系统绘制",
+            Self::Qingjian => "青簡渲染器",
+            Self::System => "系統繪製",
         }
     }
 }

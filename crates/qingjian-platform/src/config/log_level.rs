@@ -19,8 +19,8 @@ impl LogLevel {
     /// 介面上的名字。
     pub fn label(self) -> &'static str {
         match self {
-            Self::Info => "简略（info）",
-            Self::Debug => "详细（debug）",
+            Self::Info => "簡略（info）",
+            Self::Debug => "詳細（debug）",
         }
     }
 

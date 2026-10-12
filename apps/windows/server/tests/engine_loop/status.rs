@@ -96,7 +96,7 @@ fn status_bar_shows_shuangpin_scheme_in_chinese() {
         english: false,
     });
 
-    assert_eq!(recorder.calls(), vec![Some("中 · 小鹤双拼".to_owned())]);
+    assert_eq!(recorder.calls(), vec![Some("中 · 小鶴雙拼".to_owned())]);
 }
 
 #[test]

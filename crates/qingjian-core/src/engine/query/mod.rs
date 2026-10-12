@@ -72,10 +72,12 @@ impl Engine {
         if self.traditional
             && let Some(opencc) = &self.opencc
         {
+            // 除英文詞與 emoji 外都轉：模型直接生成的整句、形碼碼錶的字詞、自定義短語與快捷候選（中文數字）
+            // 也是簡體出來的，漏了哪一種使用者就會在繁體模式下看到簡體。
             for candidate in &mut query.candidates.items {
-                if matches!(
+                if !matches!(
                     candidate.kind,
-                    CandidateKind::Chinese | CandidateKind::Sentence | CandidateKind::Cloud
+                    CandidateKind::English | CandidateKind::Emoji
                 ) {
                     let traditional_text = opencc.convert(&candidate.text);
                     self.traditional_map

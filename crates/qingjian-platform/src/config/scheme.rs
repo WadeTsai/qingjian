@@ -60,7 +60,7 @@ impl Scheme {
             Self::Pinyin => "全拼",
             Self::Shuangpin(scheme) => scheme.label(),
             Self::Zhuyin => "注音",
-            Self::Off => "关（只用形码）",
+            Self::Off => "關（只用形碼）",
         }
     }
 
@@ -99,7 +99,7 @@ impl Scheme {
 pub fn scheme_label(pinyin: Scheme, wubi: bool) -> String {
     let mut parts: Vec<&str> = Vec::new();
     if wubi {
-        parts.push("五笔（86）");
+        parts.push("五筆（86）");
     }
     if pinyin.is_on() && (wubi || pinyin != Scheme::Pinyin) {
         parts.push(pinyin.label());

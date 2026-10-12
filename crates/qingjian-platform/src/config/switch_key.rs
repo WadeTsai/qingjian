@@ -34,8 +34,8 @@ impl SwitchKey {
     /// 介面上的名字。
     pub const fn label(self) -> &'static str {
         match self {
-            Self::Shift => "单击 Shift",
-            Self::Control => "单击 Ctrl",
+            Self::Shift => "單擊 Shift",
+            Self::Control => "單擊 Ctrl",
             Self::CtrlAltSpace => "Ctrl + Alt + Space",
         }
     }
@@ -112,7 +112,7 @@ impl SwitchKeys {
     pub fn describe(self) -> String {
         let labels: Vec<&str> = self.keys().map(SwitchKey::label).collect();
         if labels.is_empty() {
-            "无".to_owned()
+            "無".to_owned()
         } else {
             labels.join("、")
         }
@@ -142,7 +142,7 @@ impl SwitchKeysVisitor {
     fn add<E: de::Error>(keys: SwitchKeys, text: &str) -> Result<SwitchKeys, E> {
         SwitchKey::parse(text)
             .map(|key| keys.with(key, true))
-            .ok_or_else(|| E::custom(format!("未知的中英切换键「{text}」")))
+            .ok_or_else(|| E::custom(format!("未知的中英切換鍵「{text}」")))
     }
 }
 
@@ -150,7 +150,7 @@ impl<'de> Visitor<'de> for SwitchKeysVisitor {
     type Value = SwitchKeys;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("切换键列表，如 [\"shift\", \"control\"]")
+        formatter.write_str("切換鍵列表，如 [\"shift\", \"control\"]")
     }
 
     /// 老配置的單個值。
@@ -211,8 +211,8 @@ mod tests {
             .with(SwitchKey::CtrlAltSpace, true)
             .with(SwitchKey::Shift, true);
         assert_eq!(keys.config_values(), ["shift", "ctrl+alt+space"]);
-        assert_eq!(keys.describe(), "单击 Shift、Ctrl + Alt + Space");
-        assert_eq!(SwitchKeys::NONE.describe(), "无");
+        assert_eq!(keys.describe(), "單擊 Shift、Ctrl + Alt + Space");
+        assert_eq!(SwitchKeys::NONE.describe(), "無");
         let json = serde_json::to_string(&keys).unwrap();
         assert_eq!(json, r#"["shift","ctrl+alt+space"]"#);
         assert_eq!(serde_json::from_str::<SwitchKeys>(&json).unwrap(), keys);

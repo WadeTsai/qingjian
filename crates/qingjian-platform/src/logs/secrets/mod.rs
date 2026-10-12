@@ -65,11 +65,11 @@ mod tests {
         register("sk-writer-0123456789abcdef");
         let mut writer = MaskingWriter::new(Vec::new());
         writer
-            .write_all("WARN 重载失败 line=sk-writer-0123456789abcdef\n".as_bytes())
+            .write_all("WARN 過載失敗 line=sk-writer-0123456789abcdef\n".as_bytes())
             .unwrap();
         assert_eq!(
             String::from_utf8(writer.into_inner()).unwrap(),
-            "WARN 重载失败 line=***\n"
+            "WARN 過載失敗 line=***\n"
         );
     }
 }

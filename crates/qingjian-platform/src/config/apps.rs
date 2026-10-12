@@ -211,11 +211,11 @@ mod tests {
         assert!(apps.english_candidates_on(Some("firefox")));
         assert!(
             apps.english_candidates_on(Some("ORG.KDE.Kate")),
-            "匹配大小写不敏感"
+            "匹配大小寫不敏感"
         );
         assert!(
             apps.english_candidates_on(Some("libreoffice-writer")),
-            "* 前缀匹配"
+            "* 字首匹配"
         );
         assert!(!apps.english_candidates_on(Some("konsole")));
         assert!(!apps.english_candidates_on(Some("blender")));
@@ -227,17 +227,17 @@ mod tests {
         assert_eq!(
             apps.english_candidates_on(Some("chrome.exe")),
             cfg!(windows),
-            "Windows 預設名单按 exe 名"
+            "Windows 預設名單按 exe 名"
         );
         assert_eq!(
             apps.english_candidates_on(Some("com.apple.Safari")),
             cfg!(target_os = "macos"),
-            "macOS 預設名单按 bundle identifier"
+            "macOS 預設名單按 bundle identifier"
         );
         assert_eq!(
             apps.english_candidates_on(Some("kate")),
             cfg!(not(any(windows, target_os = "macos"))),
-            "Linux 預設名单按 fcitx5 的 program 名"
+            "Linux 預設名單按 fcitx5 的 program 名"
         );
         assert!(!apps.english_candidates_everywhere());
     }
@@ -252,7 +252,7 @@ english_candidates_off = ["Photoshop.exe"]"#,
         assert!(apps.english_candidates_everywhere());
         assert!(apps.english_candidates_on(Some("anything.exe")));
         assert!(!apps.english_candidates_on(Some("photoshop.exe")));
-        assert!(apps.english_candidates_on(None), "认不出应用也给");
+        assert!(apps.english_candidates_on(None), "認不出應用也給");
     }
 
     #[test]
@@ -278,7 +278,7 @@ english_candidates_off = ["Photoshop.exe"]"#,
         assert!(!apps.english_candidates_on(Some("日本語")));
         assert!(
             apps.english_candidates_on(Some("jetbrains-idea")),
-            "既有前缀匹配不受影响"
+            "既有字首匹配不受影響"
         );
     }
 }

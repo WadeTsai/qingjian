@@ -270,7 +270,7 @@ fn main() {
         model = model_path.as_deref().map(|p| p.display().to_string()).unwrap_or_default(),
         model_enabled = config.model.enabled,
         sessions = router.session_count(),
-        "青简 Windows Server 就绪"
+        "青簡 Windows Server 就绪"
     );
 
     serve(router);

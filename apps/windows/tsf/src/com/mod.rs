@@ -45,7 +45,7 @@ pub(crate) const CLSID_QINGJIAN: GUID = GUID::from_u128(0x4fdca82d_e923_49bf_9e7
 pub(crate) const CLSID_QINGJIAN_STR: &str = "{4FDCA82D-E923-49BF-9E75-BB906B93B8BB}";
 
 /// 文本服務（CLSID 登錄檔項）的名字。各語言下顯示的名字跟 profile 走，見 [`profile::language`]。
-pub(crate) const SERVICE_DESCRIPTION: &str = "青简";
+pub(crate) const SERVICE_DESCRIPTION: &str = "青簡";
 
 /// 存活的 COM 物件 + LockServer 計數，[`DllCanUnloadNow`] 據它判斷能否解除安裝。
 static DLL_REFERENCES: AtomicIsize = AtomicIsize::new(0);

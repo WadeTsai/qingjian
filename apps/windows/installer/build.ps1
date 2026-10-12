@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    在 Windows 上打青简安装包：release 构建三个产物 + 用 Inno Setup 编 qingjian.iss。
+    在 Windows 上打青簡安装包：release 构建三个产物 + 用 Inno Setup 编 qingjian.iss。
 .DESCRIPTION
     在编译机（MSVC 工具链 + Inno Setup）上跑。步骤：
       1) cargo build --release 出 DLL / Server / 设置程序，再单独编一份 32 位 DLL；
